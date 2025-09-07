@@ -4,7 +4,11 @@
 
 .Login {
     &__message {
-        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 63px;
+        padding: 0 20px;
         background-color: #262426;
         font-size: 1.2rem;
         text-align: center;
@@ -33,13 +37,12 @@
         flex-flow: column nowrap;
         align-items: center;
         justify-content: space-around;
+        gap: 1rem 10px;
 
         &__input {
-            $input-background: hsl(253deg, 4%, 23%);
+            $input-background: hsl(253deg 4% 23%);
 
             width: 215px;
-            margin-right: 10px;
-            margin-bottom: 1rem;
             padding: 11px 15px;
             outline: 0;
             border: globals.$input-border-width solid globals.$input-border-color;
@@ -57,7 +60,7 @@
             &:-webkit-autofill:focus {
                 -webkit-text-fill-color: globals.$input-autofill-text-color;
                 box-shadow: 0 0 0 1000px globals.$input-autofill-background-color inset;
-                transition: background-color 50000ms ease-in-out 0;
+                transition: background-color 50000ms ease-in-out 0ms;
             }
 
             &:focus {
@@ -67,12 +70,30 @@
             }
         }
 
+        &__password {
+            flex: 0 0 auto;
+
+            &__input {
+                display: block;
+            }
+
+            &__forgot-link {
+                margin-top: 5px;
+                /* stylelint-disable declaration-no-important */
+                color: color.adjust(globals.$input-text-color, $lightness: -30%) !important;
+                font-size: 0.95rem !important;
+                font-style: italic !important;
+                /* stylelint-enable declaration-no-important */
+            }
+        }
+
         &__submit {
+            @extend %reset-button;
+
             display: inline-flex;
             align-items: center;
             justify-content: center;
             padding: 13px 18px;
-            border: 0;
             border-radius: globals.$border-radius-normal;
             color: #fff;
             font-size: 1rem;
@@ -80,31 +101,30 @@
             text-decoration: none;
             white-space: nowrap;
             user-select: none;
-            cursor: pointer;
             transition: all 500ms;
 
             // NOTE: Dans le dégradé ci-dessous, la partie au delà de `100%` est la partie affichée
             //       lors du survol, pour permettre d'animer le background via `background-size`.
             //       (CSS ne permettant pas d'animer les dégradés dans `background-image`)
-            /* stylelint-disable declaration-colon-newline-after, order/properties-order */
+            /* stylelint-disable order/properties-order */
             background-position: left center;
             background-size: 100% auto;
             background-image: linear-gradient(
                 45deg,
-                hsl(201deg, 100%, 50%) 0%,
-                hsl(204deg, 100%, 48%) 20%,
-                hsl(205deg, 100%, 44%) 40%,
-                hsl(205deg, 100%, 40%) 60%,
-                hsl(206deg, 100%, 36%) 80%,
-                hsl(206deg, 100%, 32%) 100%,
-                hsl(201deg, 100%, 45%) 120%,
-                hsl(204deg, 100%, 43%) 140%,
-                hsl(205deg, 100%, 39%) 160%,
-                hsl(205deg, 100%, 35%) 180%,
-                hsl(206deg, 100%, 31%) 200%,
-                hsl(206deg, 100%, 27%) 220%
+                hsl(201deg 100% 50%) 0%,
+                hsl(204deg 100% 48%) 20%,
+                hsl(205deg 100% 44%) 40%,
+                hsl(205deg 100% 40%) 60%,
+                hsl(206deg 100% 36%) 80%,
+                hsl(206deg 100% 32%) 100%,
+                hsl(201deg 100% 45%) 120%,
+                hsl(204deg 100% 43%) 140%,
+                hsl(205deg 100% 39%) 160%,
+                hsl(205deg 100% 35%) 180%,
+                hsl(206deg 100% 31%) 200%,
+                hsl(206deg 100% 27%) 220%
             );
-            /* stylelint-enable declaration-colon-newline-after, order/properties-order */
+            /* stylelint-enable order/properties-order */
 
             &:hover,
             &:focus {
@@ -117,12 +137,13 @@
             }
         }
 
-        @media (min-width: 600px) {
+        @media (width >= 600px) {
             flex-flow: row nowrap;
+            align-items: flex-start;
             justify-content: center;
 
-            &__input {
-                margin-bottom: 0;
+            &__submit {
+                margin-top: 1px;
             }
         }
     }

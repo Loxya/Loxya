@@ -1,12 +1,12 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import config from '@/globals/config';
 import apiEvents from '@/stores/api/events';
 import Button from '@/themes/default/components/Button';
 import IconMessage from '@/themes/default/components/IconMessage';
 import Content from './Content';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 
 type Props = {

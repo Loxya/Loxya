@@ -45,17 +45,17 @@ export type CategoryEdit = {
 
 const all = async (): Promise<CategoryDetails[]> => {
     const response = await requester.get('/categories');
-    return CategoryDetailsSchema.array().parse(response.data);
+    return CategoryDetailsSchema.array().parse(response);
 };
 
 const create = async (data: CategoryEdit): Promise<CategoryDetails> => {
     const response = await requester.post('/categories', data);
-    return CategoryDetailsSchema.parse(response.data);
+    return CategoryDetailsSchema.parse(response);
 };
 
 const update = async (id: Category['id'], data: Partial<CategoryEdit>): Promise<CategoryDetails> => {
     const response = await requester.put(`/categories/${id}`, data);
-    return CategoryDetailsSchema.parse(response.data);
+    return CategoryDetailsSchema.parse(response);
 };
 
 const remove = async (id: Category['id']): Promise<void> => {

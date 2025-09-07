@@ -1,17 +1,38 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiSubcategories from '@/stores/api/subcategories';
 import { confirm, prompt } from '@/utils/alert';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { CategoryDetails } from '@/stores/api/categories';
 import type { SubCategory } from '@/stores/api/subcategories';
 
 type Props = {
     /** La catégorie dans laquelle on souhaite ajouter les approbateurs. */
     category: CategoryDetails,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à modifier la catégorie.
+     *
+     * @param id - Identifiant de la catégorie.
+     * @param previousName - Ancien nom de la catégorie.
+     */
+    onEditCategory?(id: CategoryDetails['id'], previousName: string): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à supprimer la catégorie.
+     *
+     * @param id - Identifiant de la catégorie supprimée.
+     */
+    onDeleteCategory?(id: CategoryDetails['id']): void,
+
+    /**
+     * Fonction appelée lorsqu'une sous-catégorie de la catégorie
+     * a été modifiée.
+     */
+    onSubCategoryChange?(): void,
 };
 
 type Data = {
@@ -25,6 +46,21 @@ const CategoriesGlobalSettingsItem = defineComponent({
         category: {
             type: Object as PropType<Props['category']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onEditCategory: {
+            type: Function as PropType<Props['onEditCategory']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDeleteCategory: {
+            type: Function as PropType<Props['onDeleteCategory']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubCategoryChange: {
+            type: Function as PropType<Props['onSubCategoryChange']>,
+            default: undefined,
         },
     },
     emits: [
@@ -193,7 +229,10 @@ const CategoriesGlobalSettingsItem = defineComponent({
                         <Dropdown>
                             <Button
                                 icon="list"
-                                to={{ name: 'materials', query: { category: id } }}
+                                to={{
+                                    name: 'materials',
+                                    query: { category: id.toString() },
+                                }}
                             >
                                 {__('page.settings.categories.display-materials-list')}
                             </Button>
@@ -224,7 +263,10 @@ const CategoriesGlobalSettingsItem = defineComponent({
                                     <Button
                                         to={{
                                             name: 'materials',
-                                            query: { category: id, subCategory: subCategoryId },
+                                            query: {
+                                                category: id.toString(),
+                                                subCategory: subCategoryId.toString(),
+                                            },
                                         }}
                                         icon="list"
                                     >

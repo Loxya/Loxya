@@ -10,8 +10,11 @@ export enum Group {
     /** Représente le groupe des administrateurs. */
     ADMINISTRATION = 'administration',
 
-    /** Représente le groupe des gestionnaires, membres de l'équipe. */
-    MANAGEMENT = 'management',
+    /** Représente le groupe des superviseurs. */
+    SUPERVISION = 'supervision',
+
+    /** Représente le groupe des opérateurs, membres de l'équipe. */
+    OPERATION = 'operation',
 
     /**
      * Représente le groupe des utilisateurs ayant accès au
@@ -42,7 +45,8 @@ const all = (): GroupDetails[] => {
 
     return [
         { id: Group.ADMINISTRATION, name: __('groups.administration') },
-        { id: Group.MANAGEMENT, name: __('groups.management') },
+        { id: Group.SUPERVISION, name: __('groups.supervision') },
+        { id: Group.OPERATION, name: __('groups.operation') },
         { id: Group.READONLY_PLANNING_GENERAL, name: __('groups.readonly-planning-general') },
     ];
 };

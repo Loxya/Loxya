@@ -2,7 +2,7 @@ import './index.scss';
 import DateTime from '@/utils/datetime';
 import truncate from 'lodash/truncate';
 import Period, { PeriodReadableFormat } from '@/utils/period';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
 import EventDetails, { TabIndex as EventDetailsTab } from '@/themes/default/modals/EventDetails';
 import CriticalError from '@/themes/default/components/CriticalError';
@@ -11,7 +11,7 @@ import Loading from '@/themes/default/components/Loading';
 import showModal from '@/utils/showModal';
 
 import type Color from '@/utils/color';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { CalendarItem } from '@/themes/default/components/MonthCalendar';
 import type { Technician, TechnicianEvent } from '@/stores/api/technicians';
 
@@ -28,7 +28,7 @@ type Data = {
     isFetched: boolean,
     assignments: TechnicianEvent[],
     hasCriticalError: boolean,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Onglet du planning du technicien. */
@@ -47,7 +47,7 @@ const TechnicianViewSchedule = defineComponent({
         isFetched: false,
         hasCriticalError: false,
         assignments: [],
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         formattedAssignments(): CalendarItem[] {
@@ -97,7 +97,7 @@ const TechnicianViewSchedule = defineComponent({
         this.fetchData();
 
         // - Actualise le timestamp courant toutes les 60 secondes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {

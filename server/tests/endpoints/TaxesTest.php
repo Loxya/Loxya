@@ -105,7 +105,7 @@ final class TaxesTest extends ApiTestCase
             'value' => '100', // => Devrait être `null` vu que c'est un groupe.
         ]);
         $this->assertApiValidationError([
-            'name' => "1 min. characters, 30 max. characters.",
+            'name' => "Min. 1 characters, max. 30 characters.",
             'is_rate' => "This field should not be specified.",
             'value' => "This field should not be specified.",
         ]);

@@ -1,5 +1,6 @@
 import authStore from './auth';
 import settingsStore from './settings';
+import countriesStore from './countries';
 
 import type { State as AuthStoreState } from './auth';
 import type { State as SettingsStoreState } from './settings';
@@ -12,4 +13,5 @@ export type RootState = {
 export default {
     auth: authStore,
     settings: settingsStore,
+    countries: countriesStore,
 };

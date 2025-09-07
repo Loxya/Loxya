@@ -7,6 +7,7 @@ use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Loxya\Config\Config;
 use Loxya\Http\Request;
+use Loxya\Models\Country;
 use Loxya\Models\Event;
 use Loxya\Models\Material;
 use Loxya\Services\Auth;
@@ -62,8 +63,8 @@ final class EntryController extends BaseController
         }
 
         $lastUpdate = max([
-            Material::orderBy('updated_at', 'DESC')->first()->updated_at,
-            Event::orderBy('updated_at', 'DESC')->first()->updated_at,
+            Material::orderBy('updated_at', 'DESC')->first()?->updated_at,
+            Event::orderBy('updated_at', 'DESC')->first()?->updated_at,
         ]);
 
         return $response->withJson(['last_update' => $lastUpdate?->format('Y-m-d H:i:s')], StatusCode::STATUS_OK);
@@ -98,11 +99,18 @@ final class EntryController extends BaseController
                 'cookie' => $rawConfig['auth']['cookie'],
                 'timeout' => $rawConfig['sessionExpireHours'],
             ],
-            'companyName' => $rawConfig['companyData']['name'],
+            'organization' => [
+                'name' => $rawConfig['companyData']['name'],
+                'country' => ($rawConfig['companyData']['country'] ?? null) !== null
+                    ? Country::tryFromCode($rawConfig['companyData']['country'])
+                    : null,
+            ],
             'defaultPaginationLimit' => $rawConfig['maxItemsPerPage'],
             'maxConcurrentFetches' => $rawConfig['maxConcurrentFetches'],
+            'maxFetchPeriod' => $rawConfig['maxFetchPeriod'],
             'defaultLang' => $rawConfig['defaultLang'],
             'currency' => $rawConfig['currency'],
+            'returnPolicy' => $rawConfig['returnPolicy']->value,
             'billingMode' => $rawConfig['billingMode']->value,
             'maxFileUploadSize' => $rawConfig['maxFileUploadSize'],
             'authorizedFileTypes' => $rawConfig['authorizedFileTypes'],

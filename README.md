@@ -6,7 +6,7 @@
     <p>
         Application de <strong>gestion de location de matériel</strong> simple, efficace, modulable et open-source.
         <br /><br />
-        <a href="https://robertmanager.org">Site officiel</a> | <a href="https://forum.robertmanager.org">Forum</a> | <a href="https://newsletter.robertmanager.org/abo.php">Abonnement à la newsletter</a>
+        <a href="https://loxya.com">Site officiel</a> | <a href="https://forum.robertmanager.org">Forum</a> | <a href="https://loxya.com/news#subscribe">Abonnement à la newsletter</a>
     </p>
 </div>
 
@@ -53,4 +53,4 @@ Vous pouvez utiliser l'application depuis n'importe où via internet, et un navi
 
 ## Licence
 
-Veuillez vous référer au [fichier de licence disponible à la racine du projet](/LICENCE.md).
+Veuillez vous référer au [fichier de licence disponible à la racine du projet](/LICENCE).

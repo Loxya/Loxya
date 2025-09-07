@@ -1,7 +1,7 @@
 import './index.scss';
-import axios from 'axios';
 import omit from 'lodash/omit';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import FormField from '@/themes/default/components/FormField';
@@ -9,17 +9,18 @@ import Button from '@/themes/default/components/Button';
 import apiUsers from '@/stores/api/users';
 import { ApiErrorCode } from '@/stores/api/@codes';
 
+import type { Simplify } from 'type-fest';
 import type { Session } from '@/stores/api/session';
 import type {
     UserDetails,
     UserEditSelf as UserEditSelfCore,
 } from '@/stores/api/users';
 
-type UserEditSelf = (
+type UserEditSelf = Simplify<(
     & UserEditSelfCore
     // eslint-disable-next-line @typescript-eslint/naming-convention
     & { password_confirmation: UserEditSelf['password'] }
-);
+)>;
 
 const normalizeFormData = (savedData: Session | UserDetails): UserEditSelf => ({
     first_name: savedData.first_name,
@@ -120,16 +121,14 @@ const ProfileUserSettings = defineComponent({
                 );
                 this.validationErrors = undefined;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    this.$toasted.error(__('errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                    } else {
-                        this.$toasted.error(__('errors.unexpected-while-saving'));
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the user profile`, error);
+                this.$toasted.error(__('errors.unexpected-while-saving'));
             } finally {
                 this.isSaving = false;
             }

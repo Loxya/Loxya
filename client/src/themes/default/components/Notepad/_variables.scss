@@ -3,7 +3,7 @@
 
 /// Couleur de fond du notepad.
 /// @type Color
-$background-color: rgba(51, 51, 51, 0.65) !default;
+$background-color: rgb(51 51 51 / 65%) !default;
 
 /// Couleur du texte du notepad.
 /// @type Color
@@ -31,7 +31,7 @@ $line-rule-width: 1px !default;
 
 /// Couleur de la ligne de guide en bas de chaque ligne.
 /// @type Color
-$line-rule-color: rgba(255, 255, 255, 0.11) !default;
+$line-rule-color: rgb(255 255 255 / 11%) !default;
 
 //
 // - Désactivé.

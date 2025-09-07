@@ -1,4 +1,5 @@
 declare module 'vue-tables-2-premium' {
+    import type { MoveEvent } from 'vuedraggable';
     import type { CreateElement, VNode, VNodeClass } from 'vue';
     import type { PaginationParams } from '@/stores/api/@types';
 
@@ -6,7 +7,7 @@ declare module 'vue-tables-2-premium' {
     // - Common types
     //
 
-    type ColumnVisibility =
+    type ColumnVisibility = (
         | `${'min' | 'not' | 'max'}_mobile`
         | `${'min' | 'not' | 'max'}_mobileP`
         | `${'min' | 'not' | 'max'}_mobileL`
@@ -15,7 +16,8 @@ declare module 'vue-tables-2-premium' {
         | `${'min' | 'not' | 'max'}_tabletL`
         | `${'min' | 'not' | 'max'}_desktop`
         | `${'min' | 'not' | 'max'}_desktopLarge`
-        | `${'min' | 'not' | 'max'}_desktopHuge`;
+        | `${'min' | 'not' | 'max'}_desktopHuge`
+    );
 
     type ColumnsVisibility = Record<string, ColumnVisibility>;
 
@@ -24,6 +26,7 @@ declare module 'vue-tables-2-premium' {
     );
 
     type RowClickEventPayload<Datum = any> = { row: Datum, event: PointerEvent, index: number };
+    type RowDragEventPayload<Datum = any> = { row: Datum, event: MoveEvent, newIndex: number };
 
     type BaseTableOptions<Datum> = {
         uniqueKey?: string,
@@ -128,6 +131,7 @@ declare module 'vue-tables-2-premium' {
     export type ColumnSearcher<Datum = any> = (row: Datum, query: string) => boolean;
 
     export type ClientTableOptions<Datum = any, Filters = any> = BaseTableOptions<Datum> & {
+        orderable?: boolean,
         initFilters?: Filters,
         customSorting?: Record<string, ColumnSorter<Datum>>,
         filterAlgorithm?: Record<string, ColumnSearcher<Datum>>,

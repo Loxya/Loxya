@@ -1,6 +1,6 @@
 import './index.scss';
 import showModal from '@/utils/showModal';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import QuantityInput from '@/themes/default/components/QuantityInput';
 import Dropdown from '@/themes/default/components/Dropdown';
 import Button from '@/themes/default/components/Button';
@@ -10,7 +10,7 @@ import { InventoryLock } from '../../../_types';
 // - Modales
 import CommentEdition from '../../../modals/CommentEdition';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type {
     AwaitedMaterial,
     InventoryMaterialData,
@@ -67,6 +67,13 @@ type Props = {
      * matériel dans l'inventaire.
      */
     error?: string,
+
+    /**
+     * Fonction appelée lorsque l'inventaire du matériel change.
+     *
+     * @param newInventory - Le nouvel inventaire du matériel.
+     */
+    onChange?(newInventory: InventoryMaterialData): void,
 };
 
 /** L'inventaire d'un materiel. */
@@ -101,6 +108,11 @@ const InventoryItemMaterial = defineComponent({
             type: Boolean as PropType<Required<Props>['withComments']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['change'],
     computed: {
@@ -110,6 +122,17 @@ const InventoryItemMaterial = defineComponent({
 
         id(): AwaitedMaterial['id'] {
             return this.material.id;
+        },
+
+        location(): string | null {
+            const { material } = this;
+            const { park_id: parkId } = material;
+
+            const parkName: string | null = parkId !== null
+                ? (this.$store.getters['parks/getName'](parkId) ?? null)
+                : null;
+
+            return parkName;
         },
 
         //
@@ -275,18 +298,20 @@ const InventoryItemMaterial = defineComponent({
                 return;
             }
 
+            const { strict } = this;
+
             if (actual < 0) {
                 actual = 0;
             }
 
-            if (this.strict && actual > this.awaitedQuantity) {
+            if (strict && actual > this.awaitedQuantity) {
                 actual = this.awaitedQuantity;
             }
 
             // - On déclenche un événement avec le nouvel état d'inventaire du matériel.
             const newInventory: InventoryMaterialData = { actual };
             if (this.withBrokenCount) {
-                const broken = this.brokenQuantity > actual ? actual : this.brokenQuantity;
+                const broken = Math.min(this.brokenQuantity, actual);
                 (newInventory as InventoryMaterialData<true>).broken = broken;
             }
             if (this.withComments && !this.isCommentLocked) {
@@ -300,18 +325,20 @@ const InventoryItemMaterial = defineComponent({
                 return;
             }
 
+            const { strict } = this;
+
             if (broken < 0) {
                 broken = 0;
             }
 
-            if (this.strict && broken > this.awaitedQuantity) {
+            if (strict && broken > this.awaitedQuantity) {
                 broken = this.awaitedQuantity;
             }
 
             // - On déclenche un événement avec le nouvel état d'inventaire du matériel.
             const newInventory: InventoryMaterialData<true> = {
                 broken,
-                actual: this.actualQuantity < broken ? broken : this.actualQuantity,
+                actual: Math.max(this.actualQuantity, broken),
             };
             if (this.withComments && !this.isCommentLocked) {
                 (newInventory as InventoryMaterialData<boolean, true>).comment = this.inventoryComment ?? null;
@@ -347,6 +374,7 @@ const InventoryItemMaterial = defineComponent({
             strict,
             inventoryComment,
             inheritedComment,
+            location,
             isComplete,
             isReadOnlyQuantity,
             isCommentLocked,
@@ -384,6 +412,11 @@ const InventoryItemMaterial = defineComponent({
                                 {__('global.ref-ref', { reference })}
                             </span>
                         </div>
+                        {!!location && (
+                            <div class="InventoryItemMaterial__location">
+                                {location}
+                            </div>
+                        )}
                         <div class="InventoryItemMaterial__awaited-quantity">
                             {__('global.awaited-qty-dots')}
                             <strong class="InventoryItemMaterial__awaited-quantity__count">

@@ -1,4 +1,5 @@
 @use 'sass:color';
+
 @use '~vue2-datepicker/scss' as datepicker with (
     $default-color: $text-base-color,
     $primary-color: $primary-color,
@@ -9,12 +10,12 @@
     $disabled-color: $text-muted-color,
 
     $calendar-hover-color: $text-base-color,
-    $calendar-hover-background-color: rgba($primary-color, 0.2),
+    $calendar-hover-background-color: rgb($primary-color, 0.2),
     $calendar-in-range-color: $text-base-color,
-    $calendar-in-range-background-color: rgba($primary-color, 0.4),
+    $calendar-in-range-background-color: rgb($primary-color, 0.4),
     $time-hover-color: $text-base-color,
     $time-active-color: $text-base-color,
-    $time-hover-background-color: rgba($primary-color, 0.2),
+    $time-hover-background-color: rgb($primary-color, 0.2),
 );
 
 .#{datepicker.$namespace} {
@@ -99,14 +100,14 @@
         text-align: center;
         transition: all 300ms ease;
 
-        &:hover:not(.disabled):not(.readonly) {
-            background: rgba($primary-color, 0.2);
+        &:hover:not(.disabled, .readonly) {
+            background: rgb($primary-color, 0.2);
             color: #fff;
         }
 
         &.active,
         &.active:hover {
-            background: rgba($primary-color, 0.4);
+            background: rgb($primary-color, 0.4);
 
             &.readonly {
                 background: #535353;
@@ -129,7 +130,7 @@
 
             &.active {
                 transform: scale(1.05);
-                box-shadow: 0 1px 2px 1px rgba(32, 32, 32, 0.24);
+                box-shadow: 0 1px 2px 1px rgb(32 32 32 / 24%);
 
                 &.readonly {
                     background-color: #6e6e6e;
@@ -145,7 +146,7 @@
             }
 
             &:hover,
-            &.active:not(.in-range):not(.hover-in-range) {
+            &.active:not(.in-range, .hover-in-range) {
                 border-radius: $border-radius-normal;
             }
         }
@@ -200,11 +201,11 @@
 
     &-datepicker-btn-confirm {
         padding: 9px 15px;
-        background-color: $bg-color-button-success;
+        background-color: $interactive-element-success-background-color;
 
         &:hover,
         &:focus {
-            background-color: color.adjust($bg-color-button-success, $lightness: 8%);
+            background-color: color.adjust($interactive-element-success-background-color, $lightness: 8%);
         }
     }
 

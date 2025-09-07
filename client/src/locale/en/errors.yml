@@ -1,5 +1,6 @@
 unexpected: 'An unexpected error occurred, please try again.'
 unexpected-while-saving: 'An unexpected error occurred while saving, please try again.'
+unexpected-while-submitting: 'An unexpected error occurred while submitting, please try again.'
 unexpected-while-deleting: 'An unexpected error occurred while deleting, please try again.'
 unexpected-while-restoring: 'An unexpected error occurred while restoring, please try again.'
 unexpected-while-calculating: 'An unexpected error occurred while calculating, please try again.'

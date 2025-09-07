@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
 import apiDocuments from '@/stores/api/documents';
 import CriticalError from '@/themes/default/components/CriticalError';
@@ -7,9 +7,8 @@ import FileManager from '@/themes/default/components/FileManager';
 import Loading from '@/themes/default/components/Loading';
 import { confirm } from '@/utils/alert';
 
-import type { ComponentRef } from 'vue';
-import type { ProgressCallback } from 'axios';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
+import type { ProgressCallback } from '@/globals/requester';
 import type { Document } from '@/stores/api/documents';
 import type { Technician } from '@/stores/api/technicians';
 

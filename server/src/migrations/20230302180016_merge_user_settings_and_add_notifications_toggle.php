@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\SelectQuery;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -31,8 +28,7 @@ final class MergeUserSettingsAndAddNotificationsToggle extends AbstractMigration
         $users = $this->fetchAll(sprintf('SELECT * FROM `%susers`', $prefix));
 
         foreach (array_column($users, 'id') as $userId) {
-            /** @var SelectQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+            $qb = $this->getSelectBuilder();
             $userSettings = $qb
                 ->select(['language'])
                 ->from(sprintf('%suser_settings', $prefix))
@@ -41,8 +37,7 @@ final class MergeUserSettingsAndAddNotificationsToggle extends AbstractMigration
 
             $language = !empty($userSettings) ? $userSettings['language'] : $defaultLanguage;
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%susers', $prefix))
                 ->set(['language' => strtolower($language)])

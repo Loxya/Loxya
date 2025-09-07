@@ -1,14 +1,8 @@
 @use './variables' as *;
 @use '~@/themes/default/style/globals';
+@use 'sass:map';
 
 .Link {
-    //
-    // - Custom properties
-    //
-
-    --color: var(--Link--color, #{$color});
-    --hover-color: var(--Link--hover-color, #{$hover-color});
-
     //
     // - Règles
     //
@@ -22,8 +16,28 @@
     touch-action: auto;
     cursor: pointer;
     gap: $internal-spacing;
+    transition: color 200ms ease;
 
     &:hover {
         color: var(--hover-color);
+    }
+
+    //
+    // - Variantes
+    //
+
+    // stylelint-disable-next-line scss/dollar-variable-first-in-block, order/order
+    $variants: (
+        default: $default-variant,
+        primary: $primary-variant,
+    );
+
+    @each $name, $variant in $variants {
+        $--modifier: if($name == 'default', null, --#{$name});
+
+        &#{$--modifier} {
+            --color: #{map.get($variant, color)};
+            --hover-color: #{map.get($variant, hover-color)};
+        }
     }
 }

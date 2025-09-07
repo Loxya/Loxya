@@ -1,4 +1,9 @@
+import { Layout } from '@/themes/default/layouts';
+import { Group } from '@/stores/api/groups';
+
+// - Pages
 import Login from './Login';
+import ResetPassword from './ResetPassword';
 import Schedule, { pages as schedulePages } from './Schedule';
 import EventEdit from './EventEdit';
 import EventDeparture from './EventDeparture';
@@ -12,8 +17,8 @@ import CompanyEdit from './CompanyEdit';
 import Materials from './Materials';
 import MaterialEdit from './MaterialEdit';
 import MaterialView from './MaterialView';
-import Attributes from './Attributes';
-import AttributeEdit from './AttributeEdit';
+import Properties from './Properties';
+import PropertyEdit from './PropertyEdit';
 import Technicians, { pages as techniciansPages } from './Technicians';
 import TechnicianEdit from './TechnicianEdit';
 import TechnicianView from './TechnicianView';
@@ -22,7 +27,6 @@ import Parks from './Parks';
 import ParkEdit from './ParkEdit';
 import UserSettings from './Settings/User';
 import GlobalSettings, { pages as globalSettingsPages } from './Settings/Global';
-import { Group } from '@/stores/api/groups';
 
 import type { RouteConfig } from 'vue-router';
 
@@ -36,8 +40,17 @@ const pages: RouteConfig[] = [
         path: '/login',
         component: Login,
         meta: {
-            layout: 'minimalist',
-            requiresAuth: false,
+            layout: Layout.BLANK,
+            requiresLogin: false,
+        },
+    },
+    {
+        name: 'reset-password',
+        path: '/reset-password',
+        component: ResetPassword,
+        meta: {
+            layout: Layout.MINIMALIST,
+            requiresLogin: false,
         },
     },
 
@@ -59,10 +72,11 @@ const pages: RouteConfig[] = [
         path: '/schedule',
         component: Schedule,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
                 Group.READONLY_PLANNING_GENERAL,
             ],
         },
@@ -78,8 +92,8 @@ const pages: RouteConfig[] = [
         path: '/events/new',
         component: EventEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -87,8 +101,8 @@ const pages: RouteConfig[] = [
         path: '/events/:id(\\d+)/departure-inventory',
         component: EventDeparture,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -96,8 +110,8 @@ const pages: RouteConfig[] = [
         path: '/events/:id(\\d+)/return-inventory',
         component: EventReturn,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -105,8 +119,8 @@ const pages: RouteConfig[] = [
         path: '/events/:id(\\d+)',
         component: EventEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
 
@@ -119,7 +133,7 @@ const pages: RouteConfig[] = [
         path: '/users',
         component: Users,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
@@ -128,7 +142,7 @@ const pages: RouteConfig[] = [
         path: '/users/new',
         component: UserEdit,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
@@ -137,7 +151,7 @@ const pages: RouteConfig[] = [
         path: '/users/:id(\\d+)',
         component: UserEdit,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
@@ -151,8 +165,8 @@ const pages: RouteConfig[] = [
         path: '/beneficiaries',
         component: Beneficiaries,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -160,8 +174,8 @@ const pages: RouteConfig[] = [
         path: '/beneficiaries/:id(\\d+)/view',
         component: BeneficiaryView,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -169,8 +183,8 @@ const pages: RouteConfig[] = [
         path: '/beneficiaries/new',
         component: BeneficiaryEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -178,8 +192,8 @@ const pages: RouteConfig[] = [
         path: '/beneficiaries/:id(\\d+)',
         component: BeneficiaryEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
 
@@ -192,8 +206,8 @@ const pages: RouteConfig[] = [
         path: '/companies/new',
         component: CompanyEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -201,8 +215,8 @@ const pages: RouteConfig[] = [
         path: '/companies/:id(\\d+)',
         component: CompanyEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
 
@@ -215,8 +229,8 @@ const pages: RouteConfig[] = [
         path: '/materials',
         component: Materials,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -224,8 +238,8 @@ const pages: RouteConfig[] = [
         path: '/materials/new',
         component: MaterialEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -233,8 +247,8 @@ const pages: RouteConfig[] = [
         path: '/materials/:id(\\d+)',
         component: MaterialEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -242,40 +256,40 @@ const pages: RouteConfig[] = [
         path: '/materials/:id(\\d+)/view',
         component: MaterialView,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
 
     //
-    // - Attributs
+    // - Caractéristiques spéciales
     //
 
     {
-        name: 'attributes',
-        path: '/attributes',
-        component: Attributes,
+        name: 'properties',
+        path: '/properties',
+        component: Properties,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION],
         },
     },
     {
-        name: 'add-attribute',
-        path: '/attributes/new',
-        component: AttributeEdit,
+        name: 'add-property',
+        path: '/properties/new',
+        component: PropertyEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION],
         },
     },
     {
-        name: 'edit-attribute',
-        path: '/attributes/:id(\\d+)',
-        component: AttributeEdit,
+        name: 'edit-property',
+        path: '/properties/:id(\\d+)',
+        component: PropertyEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION],
         },
     },
 
@@ -287,8 +301,8 @@ const pages: RouteConfig[] = [
         path: '/technicians',
         component: Technicians,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
         children: techniciansPages,
     },
@@ -297,8 +311,8 @@ const pages: RouteConfig[] = [
         path: '/technicians/new',
         component: TechnicianEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -306,8 +320,8 @@ const pages: RouteConfig[] = [
         path: '/technicians/:id(\\d+)',
         component: TechnicianEdit,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -315,8 +329,8 @@ const pages: RouteConfig[] = [
         path: '/technicians/:id(\\d+)/view',
         component: TechnicianView,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
     {
@@ -324,8 +338,8 @@ const pages: RouteConfig[] = [
         path: '/roles',
         component: Roles,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION, Group.MANAGEMENT],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
         },
     },
 
@@ -338,7 +352,7 @@ const pages: RouteConfig[] = [
         path: '/parks',
         component: Parks,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
@@ -347,7 +361,7 @@ const pages: RouteConfig[] = [
         path: '/parks/new',
         component: ParkEdit,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
@@ -356,7 +370,7 @@ const pages: RouteConfig[] = [
         path: '/parks/:id(\\d+)',
         component: ParkEdit,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
@@ -370,10 +384,11 @@ const pages: RouteConfig[] = [
         path: '/user-settings',
         component: UserSettings,
         meta: {
-            requiresAuth: true,
+            requiresLogin: true,
             requiresGroups: [
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
                 Group.READONLY_PLANNING_GENERAL,
             ],
         },
@@ -382,8 +397,8 @@ const pages: RouteConfig[] = [
         path: '/settings',
         component: GlobalSettings,
         meta: {
-            requiresAuth: true,
-            requiresGroups: [Group.ADMINISTRATION],
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION],
         },
         children: globalSettingsPages,
     },

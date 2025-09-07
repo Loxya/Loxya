@@ -1,6 +1,6 @@
-/* stylelint-disable selector-class-pattern, scss/no-global-function-names */
+@use 'sass:color';
 
-@use 'vue-select/src/scss/vue-select' with (
+@use '~vue-select/src/scss/vue-select' with (
     $vs-dropdown-min-width: 130px,
 );
 
@@ -61,7 +61,7 @@
         text-overflow: ellipsis;
 
         &--highlight {
-            background: rgba(255, 255, 255, 0.07);
+            background: rgb(255 255 255 / 7%);
             color: $input-text-color;
         }
     }
@@ -137,7 +137,7 @@
 
             &:focus,
             &:hover {
-                color: adjust-color($text-soft-color, $lightness: 20%);
+                color: color.adjust($text-soft-color, $lightness: 20%);
             }
         }
 

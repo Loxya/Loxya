@@ -1,11 +1,10 @@
 import './index.scss';
 import trim from 'lodash/trim';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Textarea from '@/themes/default/components/Textarea';
 import Button from '@/themes/default/components/Button';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
 import type { AwaitedMaterial } from '../../_types';
 
 type Props = {
@@ -67,7 +66,7 @@ const ModalInventoryCommentEdition = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             let value: string | null;
@@ -115,8 +114,11 @@ const ModalInventoryCommentEdition = defineComponent({
                         <Textarea
                             ref="input"
                             class="ModalInventoryCommentEdition__input"
-                            v-model={this.value}
                             rows={5}
+                            value={this.value}
+                            onInput={(value: string) => {
+                                this.value = value;
+                            }}
                         />
                     </form>
                 </div>

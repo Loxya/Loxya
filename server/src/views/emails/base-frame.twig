@@ -1,0 +1,87 @@
+{% extends 'emails/base.twig' %}
+
+{% block head %}
+    <style type="text/css" rel="stylesheet" media="all">
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header__logo {
+            max-width: 300px;
+            max-height: 60px;
+        }
+
+        .body {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .body__header {
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .body__footer {
+            margin-top: 25px;
+            font-size: 13px;
+            text-align: center;
+            color: #888;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #f4f4f4;
+            }
+
+            .body {
+                background-color: #333;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            }
+            .body__footer {
+                color: #ccc;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="header">
+            {% set logo = organization.logo is not empty ? organization.logo : 'logo/minimalist.svg' %}
+            <img
+                class="header__logo"
+                src="{{ ('img/' ~ logo)|image64 }}"
+                alt="{{ organization.logo is not empty ? organization.name : 'Loxya' }}"
+            />
+        </div>
+        <div class="body">
+            {% if block('title') is defined %}
+                <h1 class="body__header">{% block title %}{% endblock %}</h1>
+            {% endif %}
+            <div class="body__content">
+                {% block content %}{% endblock %}
+            </div>
+            <div class="body__footer">
+                &copy; {{ 'now'|date('Y') }} Loxya. Tous droits réservés.
+            </div>
+        </div>
+    <div>
+{% endblock %}

@@ -1,7 +1,7 @@
 import './index.scss';
 import throttle from 'lodash/throttle';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiEvents from '@/stores/api/events';
 import Icon from '@/themes/default/components/Icon';
 import Input from '@/themes/default/components/Input';
@@ -9,12 +9,19 @@ import Button from '@/themes/default/components/Button';
 import Result from './Result';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventSummary } from '@/stores/api/events';
 
 type Props = {
     /** ID d'un événement à ne pas inclure dans la recherche. */
     exclude?: number | null,
+
+    /**
+     * Fonction appelée lorsque l'un des résultats est choisi par l'utilisateur.
+     *
+     * @param id - L'id de l'événement choisi.
+     */
+    onSelect?(id: EventSummary['id']): void,
 };
 
 type InstanceProperties = {
@@ -42,6 +49,11 @@ const ImportFromEventSearch = defineComponent({
         exclude: {
             type: Number as PropType<Props['exclude']>,
             default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSelect: {
+            type: Function as PropType<Props['onSelect']>,
+            default: undefined,
         },
     },
     emits: ['select'],
@@ -100,7 +112,7 @@ const ImportFromEventSearch = defineComponent({
             }
         },
 
-        handleSelect(id: MouseEvent) {
+        handleSelect(id: EventSummary['id']) {
             this.$emit('select', id);
         },
 
@@ -160,10 +172,13 @@ const ImportFromEventSearch = defineComponent({
                 <div class="ImportFromEventSearch__search">
                     <Input
                         type="text"
-                        v-model={this.searchTerm}
+                        value={this.searchTerm}
                         placeholder={__('type-to-search-event')}
                         class="ImportFromEventSearch__search__input"
                         onKeyup={handleKeyup}
+                        onInput={(value: string) => {
+                            this.searchTerm = value;
+                        }}
                     />
                     <Button
                         type="primary"

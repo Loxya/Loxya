@@ -21,44 +21,44 @@
                     showLegalNumbers: false,
                     showLogo: false,
                 })
-            -}}
+            ~}}
         </td>
         <td class="two-third">
             <h1 class="box center">{{ __('materials-list') }}</h1>
             <h3 class="center">
                 {{ __('as-of-date', date|format_date('long', locale=locale)) }}
-                {% if parkOnlyName is not null %}
-                    {{ __('for-park') }}
-                {% else %}
-                    ({{ __('all-parks') }})
-                {% endif %}
+                {%- if parkOnlyName is not null ~%}
+                {{ __('for-park') }}
+                {%- else ~%}
+                ({{ __('all-parks') }})
+                {%- endif ~%}
             </h3>
-            {% if parkOnlyName is not null %}
+            {%- if parkOnlyName is not null ~%}
             <h2 class="center">{{ parkOnlyName }}</h2>
-            {% endif %}
+            {%- endif ~%}
         </td>
     </tr>
 </table>
 
-{% for park in parksMaterialsList %}
-    {% if parkOnlyName is null %}
+{%- for park in parksMaterialsList ~%}
+    {%- if parkOnlyName is null ~%}
     <h3 class="listing-title">
-        {% if park['name'] is not empty %}
-            {{ park['name'] }}
-        {% else %}
-            ({{ __('unknown-park') }})
-        {% endif %}
+        {%- if park['name'] is not empty ~%}
+        {{ park['name'] }}
+        {%- else ~%}
+        ({{ __('unknown-park') }})
+        {%- endif ~%}
     </h3>
-    {% endif %}
+    {%- endif ~%}
     <table class="listing-table">
         <thead>
             <tr>
                 <th style="width: 30mm;">{{ __('reference') }}</th>
                 <th>
                     {{ __('designation') }}
-                    {% if park['name'] is not empty %}
-                        <span class="right" class="normal lightest">- {{ __('park-name', park['name']) }}</span>
-                    {% endif %}
+                    {%- if park['name'] is not empty ~%}
+                    <span class="right" class="normal lightest">- {{ __('park-name', park['name']) }}</span>
+                    {%- endif ~%}
                 </th>
                 <th class="right" style="width: 15mm;">{{ __('replacement-value') }}</th>
                 <th class="center" style="width: 12mm;">{{ __('stock-quantity') }}</th>
@@ -66,23 +66,23 @@
             </tr>
         </thead>
         <tbody>
-        {% for subCategory, materialsList in park['materials'] %}
+        {%- for subCategory, materialsList in park['materials'] ~%}
             <tr>
                 <td class="section-title" colspan="5">
-                    {% if subCategory == '--' %}
-                        {{ __('not-categorized') }}
-                    {% else %}
-                        {{ subCategory|replace({ '__other': __('other-materials') }) }}
-                    {% endif %}
+                    {%- if subCategory == '--' ~%}
+                    {{ __('not-categorized') }}
+                    {%- else ~%}
+                    {{ subCategory|replace({ '__other': __('other-materials') }) }}
+                    {%- endif ~%}
                 </td>
             </tr>
-            {% for material in materialsList %}
-                {{ include('blocks/materials/line-list.twig', { material }) }}
-            {% endfor %}
-        {% endfor %}
+            {%- for material in materialsList ~%}
+            {{ include('blocks/materials/line-list.twig', { material }) }}
+            {%- endfor ~%}
+        {%- endfor ~%}
         </tbody>
     </table>
-{% endfor %}
+{%- endfor ~%}
 
 <h3 class="listing-title">{{ __('notes') }}</h3>
 <div class="inset" style="height: 100mm;"></div>

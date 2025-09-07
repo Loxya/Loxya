@@ -30,8 +30,8 @@ $size: 1.7rem;
             width: $size;
             height: $size;
             border-radius: 50%;
-            background: globals.$bg-color-button-default;
-            box-shadow: 1px 2px 4px 0 rgba(0, 0, 0, 0.5);
+            background: globals.$interactive-element-default-background-color;
+            box-shadow: 1px 2px 4px 0 rgb(0 0 0 / 50%);
             transition: background 300ms;
         }
     }
@@ -66,7 +66,7 @@ $size: 1.7rem;
             background-color: color.adjust(globals.$bg-color-emphasis, $lightness: 3%);
 
             &__button {
-                background-color: color.adjust(globals.$bg-color-button-default, $lightness: 8%);
+                background-color: color.adjust(globals.$interactive-element-default-background-color, $lightness: 8%);
             }
         }
     }
@@ -88,12 +88,12 @@ $size: 1.7rem;
 
     &--highlight {
         #{$block}__slide__button {
-            background-color: globals.$bg-color-button-success;
+            background-color: globals.$interactive-element-success-background-color;
         }
 
         &:hover {
             #{$block}__slide__button {
-                background-color: color.adjust(globals.$bg-color-button-success, $lightness: 5%);
+                background-color: color.adjust(globals.$interactive-element-success-background-color, $lightness: 5%);
             }
         }
     }
@@ -118,14 +118,14 @@ $size: 1.7rem;
                 background: globals.$bg-color-emphasis;
 
                 &__button {
-                    background: globals.$bg-color-button-default;
+                    background: globals.$interactive-element-default-background-color;
                 }
             }
         }
 
         &#{$block}--highlight {
             #{$block}__slide__button {
-                background-color: globals.$bg-color-button-success;
+                background-color: globals.$interactive-element-success-background-color;
             }
         }
     }

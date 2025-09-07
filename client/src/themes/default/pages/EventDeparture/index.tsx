@@ -1,9 +1,8 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError, HttpCode } from '@/globals/requester';
 import DateTime, { DateTimeRoundingMethod } from '@/utils/datetime';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import parseInteger from '@/utils/parseInteger';
-import HttpCode from 'status-code-enum';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiEvents from '@/stores/api/events';
 import { BookingEntity } from '@/stores/api/bookings';
@@ -19,7 +18,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 
 import type Period from '@/utils/period';
-import type { ComponentRef } from 'vue';
+import type { ComponentRef, Raw } from 'vue';
 import type {
     EventDetails,
     EventMaterial,
@@ -40,13 +39,12 @@ type Data = (
         id: EventDetails['id'],
         inventoryRaw: InventoryData,
         displayGroup: DisplayGroup,
-        criticalError: string | null,
+        criticalError: ErrorType | null,
         isDirtyRaw: boolean,
         isSaving: boolean,
         isCancelling: boolean,
-        isUpdatingMaterial: boolean,
         inventoryErrors: InventoryMaterialError[] | null,
-        now: DateTime,
+        now: Raw<DateTime>,
     }
     & (
         | { isFetched: false, event: null }
@@ -70,10 +68,9 @@ const EventDeparture = defineComponent({
             isDirtyRaw: false,
             isSaving: false,
             isCancelling: false,
-            isUpdatingMaterial: false,
             criticalError: null,
             inventoryErrors: null,
-            now: DateTime.now(),
+            now: markRaw(DateTime.now()),
         };
     },
     computed: {
@@ -252,7 +249,7 @@ const EventDeparture = defineComponent({
         this.fetchData();
 
         // - Actualise le timestamp courant toutes les 10 secondes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 10_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -379,13 +376,10 @@ const EventDeparture = defineComponent({
                 }
             }
 
-            this.isUpdatingMaterial = true;
-
             await showModal(this.$modal, UpdateBookingMaterials, {
                 defaultBooking: { ...this.event, entity: BookingEntity.EVENT },
             });
 
-            this.isUpdatingMaterial = false;
             this.fetchData();
         },
 
@@ -400,16 +394,14 @@ const EventDeparture = defineComponent({
                 this.setEvent(await apiEvents.one(this.id));
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving event #${this.id} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving event #${this.id} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
 
@@ -432,22 +424,18 @@ const EventDeparture = defineComponent({
                 this.inventoryErrors = null;
                 this.$toasted.success(__('saved'));
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the event #${this.id} departure inventory`, error);
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        const inventoryErrors = InventoryErrorsSchema.safeParse(details);
-                        if (inventoryErrors.success) {
-                            this.inventoryErrors = inventoryErrors.data;
-                            (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
-                            return;
-                        }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    const inventoryErrors = InventoryErrorsSchema.safeParse(error.details);
+                    if (inventoryErrors.success) {
+                        this.inventoryErrors = inventoryErrors.data;
+                        (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
+                        return;
                     }
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the event #${this.id} departure inventory`, error);
+                this.$toasted.error(__('global.errors.unexpected-while-saving'));
             } finally {
                 this.isSaving = false;
             }
@@ -495,7 +483,6 @@ const EventDeparture = defineComponent({
             hasMaterialShortage,
             isInventoryPeriodOpen,
             isInventoryPeriodClosed,
-            isUpdatingMaterial,
             handleSave,
             handleCancel,
             handleTerminate,
@@ -563,7 +550,6 @@ const EventDeparture = defineComponent({
                     inventory={inventory}
                     errors={inventoryErrors}
                     displayGroup={displayGroup}
-                    paused={isUpdatingMaterial}
                     onChange={handleChangeInventory}
                     onRequestCancel={handleCancel}
                 />

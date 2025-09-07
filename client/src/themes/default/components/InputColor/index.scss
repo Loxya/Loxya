@@ -39,14 +39,14 @@
             padding: 6px 8px;
             border: 0;
             background: transparent;
-            color: rgba(0, 0, 0, 0.45);
+            color: rgb(0 0 0 / 45%);
             font-size: 1.25rem;
             transform: translateY(-50%);
             cursor: pointer;
             transition: color linear 300ms;
 
             &--light {
-                color: rgba(255, 255, 255, 0.65);
+                color: rgb(255 255 255 / 65%);
             }
         }
     }

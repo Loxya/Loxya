@@ -1,10 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Illustration from './assets/illustration.svg?inline';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
-import type { VNode } from 'vue';
+import type { PropType } from 'vue';
 
 export enum ErrorType {
     /** La ressource n'a pas été trouvée. */
@@ -69,7 +68,7 @@ const CriticalError = defineComponent({
     render() {
         const { $t: __, displayMessage, type, handleRefresh } = this;
 
-        const renderButton = (): VNode => {
+        const renderButton = (): JSX.Element => {
             if (type === ErrorType.NOT_FOUND) {
                 return (
                     <Button to={{ name: 'home' }} type="primary" class="CriticalError__back-to-home">

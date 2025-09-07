@@ -1,10 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiCompanies from '@/stores/api/companies';
 import parseInteger from '@/utils/parseInteger';
-import axios from 'axios';
-import HttpCode from 'status-code-enum';
 import { ApiErrorCode } from '@/stores/api/@codes';
+import { RequestError, HttpCode } from '@/globals/requester';
 import Page from '@/themes/default/components/Page';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
@@ -18,7 +17,7 @@ type Data = {
     isFetched: boolean,
     isSaving: boolean,
     company: Company | null,
-    criticalError: string | null,
+    criticalError: ErrorType | null,
     validationErrors: Record<string, string> | null,
 };
 
@@ -88,16 +87,14 @@ const CompanyEdit = defineComponent({
                 this.company = await apiCompanies.one(this.id!);
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving company #${this.id!} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving company #${this.id!} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
 
@@ -126,20 +123,17 @@ const CompanyEdit = defineComponent({
                 this.$toasted.success(__('page.company.saved'));
                 this.$router.back();
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the company`, error);
-                    this.$toasted.error(__('errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
-                    } else {
-                        this.$toasted.error(__('errors.unexpected-while-saving'));
-                    }
-                }
                 this.isSaving = false;
+
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the company`, error);
+                this.$toasted.error(__('errors.unexpected-while-saving'));
             }
         },
     },

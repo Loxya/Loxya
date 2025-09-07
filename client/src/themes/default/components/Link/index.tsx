@@ -1,11 +1,12 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import invariant from 'invariant';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import Icon from '@/themes/default/components/Icon';
 
 import type { Location } from 'vue-router';
 import type { TooltipOptions } from 'v-tooltip';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type {
     Props as IconProps,
     Variant as IconVariant,
@@ -35,6 +36,13 @@ type Props = {
     icon?: string | `${string}:${Required<IconProps>['variant']}`,
 
     /**
+     * La variante de lien (= son style).
+     *
+     * @default 'default'
+     */
+    variant?: 'default' | 'primary',
+
+    /**
      * Le contenu d'une éventuelle infobulle qui sera affichée au survol du lien.
      *
      * La valeur peut avoir deux formats différents:
@@ -56,6 +64,13 @@ type Props = {
      * - Si c'est une URL absolue, celle-ci s'ouvrira dans une autre fenêtre / onglet.
      */
     external?: boolean,
+
+    /**
+     * Fonction appelée lorsque le lien a été cliqué.
+     *
+     * @param event - L'événement lié.
+     */
+    onClick?(event: MouseEvent): void,
 };
 
 /** Une lien. */
@@ -70,6 +85,14 @@ const Link = defineComponent({
             type: String as PropType<Props['icon']>,
             default: undefined,
         },
+        variant: {
+            type: String as PropType<Required<Props>['variant']>,
+            default: 'default',
+            validator: (value: unknown) => (
+                typeof value === 'string' &&
+                ['default', 'primary'].includes(value)
+            ),
+        },
         tooltip: {
             type: [String, Object] as PropType<Props['tooltip']>,
             default: undefined,
@@ -78,8 +101,20 @@ const Link = defineComponent({
             type: Boolean as PropType<Required<Props>['external']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
+        },
     },
     emits: ['click'],
+    setup(props) {
+        invariant(
+            !props.external || typeof props.to === 'string',
+            'The `to` props. must be a string when the prop `external` is used.',
+        );
+        return {};
+    },
     computed: {
         normalizedIcon(): IconProps | null {
             if (!this.icon) {
@@ -108,13 +143,15 @@ const Link = defineComponent({
     render() {
         const children = this.$slots.default;
         const {
-            normalizedIcon: icon,
-            normalizedTooltip: tooltip,
             to,
+            variant,
             external,
             handleClick,
+            normalizedIcon: icon,
+            normalizedTooltip: tooltip,
         } = this;
 
+        const className = ['Link', `Link--${variant}`];
         const content = (
             <Fragment>
                 {icon && <Icon {...{ props: icon } as any} class="Link__icon" />}
@@ -124,12 +161,12 @@ const Link = defineComponent({
 
         if (to) {
             if (external) {
-                const isOutside = typeof to === 'string' && to.includes('://');
-
+                // Note: `to` est assuré d'être une string ici vu l'assertion dans le setup.
+                const isOutside = (to as string).includes('://');
                 return (
                     <a
-                        href={to}
-                        class="Link"
+                        href={to as string}
+                        class={className}
                         v-tooltip={tooltip}
                         target={isOutside ? '_blank' : undefined}
                         rel={isOutside ? 'noreferrer noopener' : undefined}
@@ -144,9 +181,9 @@ const Link = defineComponent({
                     {({ href, navigate: handleNavigate }: any) => (
                         <a
                             href={href}
-                            onClick={handleNavigate}
+                            class={className}
                             v-tooltip={tooltip}
-                            class="Link"
+                            onClick={handleNavigate}
                         >
                             {content}
                         </a>
@@ -158,7 +195,7 @@ const Link = defineComponent({
         return (
             <button
                 type="button"
-                class="Link"
+                class={className}
                 v-tooltip={tooltip}
                 onClick={handleClick}
             >

@@ -6,14 +6,13 @@ import isEqual from 'lodash/isEqual';
 import createDeferred from 'p-defer';
 import throttle from 'lodash/throttle';
 import upperFirst from 'lodash/upperFirst';
-import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
+import config, { ReturnPolicy } from '@/globals/config';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
-import { isRequestErrorStatusCode } from '@/utils/errors';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import showModal from '@/utils/showModal';
 import getBookingIcon from '@/utils/getBookingIcon';
 import Fragment from '@/components/Fragment';
@@ -41,8 +40,9 @@ import {
 // - Modals
 import EventDetails from '@/themes/default/modals/EventDetails';
 
+import type Period from '@/utils/period';
 import type { DebouncedMethod } from 'lodash';
-import type { ComponentRef, CreateElement, VNodeClass } from 'vue';
+import type { ComponentRef, CreateElement, Raw } from 'vue';
 import type { PaginatedData, PaginationParams, SortableParams } from '@/stores/api/@types';
 import type { Columns } from '@/themes/default/components/Table/Server';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
@@ -72,10 +72,10 @@ type LazyBooking<F extends boolean = boolean> = (
 
 type Data = {
     filters: Filters,
-    ready: DeferredPromise<undefined>,
+    ready: Raw<DeferredPromise<undefined>>,
     isLoading: boolean,
     hasCriticalError: boolean,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Nombre max. de bookings par page. */
@@ -133,10 +133,10 @@ const ScheduleListing = defineComponent({
         }
 
         return {
-            ready: createDeferred(),
+            ready: markRaw(createDeferred()),
             isLoading: false,
             hasCriticalError: false,
-            now: DateTime.now(),
+            now: markRaw(DateTime.now()),
             filters,
         };
     },
@@ -190,7 +190,7 @@ const ScheduleListing = defineComponent({
                                     return !location ? title : `${title} (${location})`;
                                 }
                                 default: {
-                                    throw new Error(`Unsupported entity ${entity}`);
+                                    throw new Error(`Unsupported entity ${entity as any}`);
                                 }
                             }
                         };
@@ -220,6 +220,62 @@ const ScheduleListing = defineComponent({
                     render(h: CreateElement, { booking }: LazyBooking) {
                         const { mobilization_period: mobilizationPeriod } = booking;
                         const duration = mobilizationPeriod.asDays();
+                        const isPast = booking.mobilization_period.isPast();
+                        const isArchived = booking.is_archived;
+
+                        const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+                        if (isPast && useManualReturn) {
+                            const isOverdue = (
+                                !isArchived &&
+                                !booking.is_return_inventory_done &&
+                                booking.has_materials
+                            );
+                            const wasOverdue = (
+                                booking.is_return_inventory_done &&
+                                booking.return_inventory_datetime !== null &&
+                                booking.mobilization_period.end.isBefore(
+                                    booking.return_inventory_datetime,
+                                )
+                            );
+                            if (isOverdue || wasOverdue) {
+                                const renderOverdueSummary = (): string => {
+                                    // - Si le booking n'a toujours pas été retourné et qu'on en mode strict.
+                                    if (isOverdue) {
+                                        const overduePeriod = booking.mobilization_period.tail(now) as Period<false>;
+                                        return __('page.schedule.listing.overdue-since', {
+                                            duration: overduePeriod.toReadableDuration(__),
+                                        });
+                                    }
+
+                                    // - Si le booking a été retourné en retard.
+                                    const overduePeriod = booking.mobilization_period
+                                        .tail(booking.return_inventory_datetime!) as Period<false>;
+
+                                    return __('page.schedule.listing.late-return-on', {
+                                        date: booking.return_inventory_datetime!.toReadable(),
+                                        duration: overduePeriod.toReadableDuration(__),
+                                    });
+                                };
+
+                                return (
+                                    <Fragment>
+                                        <div title={__('duration-days', { duration }, duration)}>
+                                            {__('page.schedule.listing.initially-planned-period', {
+                                                period: booking.mobilization_period.toReadable(__, PeriodReadableFormat.SHORT),
+                                            })}
+                                        </div>
+                                        <div
+                                            class={['ScheduleListing__overdue', {
+                                                'ScheduleListing__overdue--ongoing': isOverdue,
+                                            }]}
+                                        >
+                                            {renderOverdueSummary()}
+                                        </div>
+                                    </Fragment>
+                                );
+                            }
+                        }
+
                         return (
                             <div title={__('duration-days', { duration }, duration)}>
                                 {upperFirst(mobilizationPeriod.toReadable(__, PeriodReadableFormat.SHORT))}
@@ -265,7 +321,7 @@ const ScheduleListing = defineComponent({
                                 );
                             }
                             default: {
-                                throw new Error(`Unsupported entity ${entity}`);
+                                throw new Error(`Unsupported entity ${entity as any}`);
                             }
                         }
                     },
@@ -338,22 +394,18 @@ const ScheduleListing = defineComponent({
         filters: {
             handler(newFilters: Filters, prevFilters: Filters | undefined) {
                 if (prevFilters !== undefined) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
-                    this.refreshTableDebounced();
+                    this.refreshTableDebounced!();
                 }
 
                 // - Persistance dans le local storage.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
                     persistFilters(newFilters);
                 }
 
                 // - Mise à jour de l'URL.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 const prevRouteQuery = this.$route?.query ?? {};
                 const newRouteQuery = convertFiltersToRouteQuery(newFilters);
                 if (!isEqual(prevRouteQuery, newRouteQuery)) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     this.$router.replace({ query: newRouteQuery });
                 }
             },
@@ -362,6 +414,8 @@ const ScheduleListing = defineComponent({
         },
     },
     created() {
+        this.$store.dispatch('parks/fetch');
+
         // - Binding.
         this.fetch = this.fetch.bind(this);
 
@@ -384,7 +438,7 @@ const ScheduleListing = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
@@ -487,7 +541,7 @@ const ScheduleListing = defineComponent({
             this.ready.resolve();
         },
 
-        async fetch(pagination: PaginationParams & SortableParams): Promise<{ data: PaginatedData<LazyBooking[]> } | undefined> {
+        async fetch(pagination: PaginationParams & SortableParams): Promise<PaginatedData<LazyBooking[]> | undefined> {
             await this.ready.promise;
 
             pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
@@ -517,9 +571,9 @@ const ScheduleListing = defineComponent({
 
                 this.fetchSummaries(lazyData);
 
-                return { data: { data: lazyData, pagination: data.pagination } };
+                return { data: lazyData, pagination: data.pagination };
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     this.refreshTable();
                     return undefined;
                 }
@@ -538,7 +592,7 @@ const ScheduleListing = defineComponent({
             const promises = data
                 .filter((lazy: LazyBooking): lazy is LazyBooking<false> => (
                     !lazy.isComplete &&
-                    lazy.booking.mobilization_period.start.isAfter(this.now)
+                    lazy.booking.mobilization_period.end.isAfter(this.now)
                 ))
                 .map(({ booking }: LazyBooking<false>) => async () => {
                     const finalBooking = await apiBookings.oneSummary(booking.entity, booking.id);
@@ -586,16 +640,32 @@ const ScheduleListing = defineComponent({
             );
         }
 
-        const getRowClass = ({ booking }: LazyBooking): VNodeClass => {
-            const isFuture = !booking.operation_period.isPastOrOngoing();
-            const isPast = booking.operation_period.isPast();
+        const getRowClass = (lazyBooking: LazyBooking): JSX.NodeClass => {
+            const { isComplete, booking } = lazyBooking;
+            const isPast = booking.mobilization_period.isPast();
+            const isArchived = booking.is_archived;
+            const isOverdue = (() => {
+                const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+                if (!isPast || !useManualReturn) {
+                    return false;
+                }
+
+                return (
+                    !isArchived &&
+                    !booking.is_return_inventory_done &&
+                    booking.has_materials
+                );
+            })();
 
             const hasWarnings: boolean = (
-                // - Si le booking est à venir et qu'il manque du matériel.
-                (isFuture && !!(booking as BookingSummary).has_missing_materials) ||
+                // - Si le booking est en cours ou à venir et qu'il manque du matériel.
+                (!isPast && isComplete && booking.has_missing_materials === true) ||
 
                 // - Si le booking est passé et qu'il a du matériel manquant.
-                (isPast && !booking.is_archived && !!booking.has_not_returned_materials)
+                (isPast && !isArchived && booking.has_not_returned_materials === true) ||
+
+                // - S'il y a un retard.
+                isOverdue
             );
 
             return ['ScheduleListing__table__row', {

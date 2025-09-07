@@ -1,7 +1,7 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError } from '@/globals/requester';
 import { confirm } from '@/utils/alert';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import showModal from '@/utils/showModal';
 import apiDegressiveRates from '@/stores/api/degressive-rates';
 import apiSettings from '@/stores/api/settings';
@@ -157,12 +157,9 @@ const DegressiveRatesGlobalSettings = defineComponent({
                 this.$store.dispatch('settings/fetch');
                 this.$toasted.success(__('saved'));
             } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
                 this.$toasted.error(__('global.errors.unexpected-while-saving'));
             } finally {

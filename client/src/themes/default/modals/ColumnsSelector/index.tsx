@@ -1,10 +1,10 @@
 import './index.scss';
 import upperFirst from 'lodash/upperFirst';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import SwitchToggle from '@/themes/default/components/SwitchToggle';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Column } from '@/themes/default/components/Table';
 
 type Props = {

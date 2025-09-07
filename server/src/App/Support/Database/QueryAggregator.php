@@ -71,6 +71,14 @@ final class QueryAggregator
     }
 
     /**
+     * Retourne le premier élément de l'agrégat.
+     */
+    public function first()
+    {
+        return $this->get()->first();
+    }
+
+    /**
      * Ajoute un `order by` à l'agrégat.
      *
      * Attention, la/les colonne(s) doivent être présentes dans chaque éléments de l'agrégat.

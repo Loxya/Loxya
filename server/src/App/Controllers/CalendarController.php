@@ -89,7 +89,7 @@ final class CalendarController extends BaseController
         $events = Event::query()
             ->tap(static function (Builder $query) use ($settings, $minDate) {
                 switch ($settings['displayedPeriod']) {
-                    case PublicCalendarPeriodDisplay::BOTH:
+                    case PublicCalendarPeriodDisplay::BOTH->value:
                         return $query
                             ->where(static function (Builder $subQuery) use ($minDate) {
                                 $subQuery
@@ -99,12 +99,12 @@ final class CalendarController extends BaseController
                             ->orderBy('mobilization_start_date', 'asc')
                             ->orderBy('operation_start_date', 'asc');
 
-                    case PublicCalendarPeriodDisplay::OPERATION:
+                    case PublicCalendarPeriodDisplay::OPERATION->value:
                         return $query
                             ->where('operation_end_date', '>', $minDate)
                             ->orderBy('operation_start_date', 'asc');
 
-                    case PublicCalendarPeriodDisplay::MOBILIZATION:
+                    case PublicCalendarPeriodDisplay::MOBILIZATION->value:
                         return $query
                             ->where('mobilization_end_date', '>', $minDate)
                             ->orderBy('mobilization_start_date', 'asc');
@@ -124,14 +124,14 @@ final class CalendarController extends BaseController
 
             // - Période d'opération.
             $shouldDisplayOperationPeriod = (
-                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH ||
-                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::OPERATION
+                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH->value ||
+                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::OPERATION->value
             );
             if ($shouldDisplayOperationPeriod) {
                 $addCalendarEvent(
                     sprintf('/event/%d', $event->id),
                     (
-                        $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH
+                        $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH->value
                             ? $this->i18n->translate('label-with-period-flag.operation', $event->title)
                             : $event->title
                     ),
@@ -150,14 +150,14 @@ final class CalendarController extends BaseController
 
             // - Période de mobilisation.
             $shouldDisplayMobilizationPeriod = (
-                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH ||
-                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::MOBILIZATION
+                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH->value ||
+                $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::MOBILIZATION->value
             );
             if ($shouldDisplayMobilizationPeriod) {
                 $addCalendarEvent(
                     sprintf('/event/%d?period=mobilization', $event->id),
                     (
-                        $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH
+                        $settings['displayedPeriod'] === PublicCalendarPeriodDisplay::BOTH->value
                             ? $this->i18n->translate('label-with-period-flag.mobilization', $event->title)
                             : $event->title
                     ),

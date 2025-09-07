@@ -19,7 +19,7 @@
     cursor: pointer;
     user-select: none;
 
-    /* stylelint-disable declaration-colon-newline-after, indentation */
+    /* stylelint-disable @stylistic/indentation */
     @if ($border-width > 0) {
         background-image: url(
             'data:image/svg+xml,' +
@@ -39,7 +39,7 @@
             '</svg>'
         );
     }
-    /* stylelint-enable declaration-colon-newline-after, indentation */
+    /* stylelint-enable @stylistic/indentation */
 
     &__content {
         width: 100%;

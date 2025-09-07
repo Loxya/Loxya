@@ -20,7 +20,7 @@ final class CreateCommand extends CoreCreateCommand
     {
         $this
             ->setDescription("Création d'une nouvelle migration.")
-            ->addArgument('name', InputArgument::REQUIRED, "Nom de la classe de la migration (en CamelCase)?");
+            ->addArgument('name', InputArgument::REQUIRED, "Nom de la classe de la migration (en CamelCase).");
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

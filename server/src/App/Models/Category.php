@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Loxya\Contracts\Serializable;
 use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Catégorie de matériel.
@@ -26,7 +26,7 @@ use Respect\Validation\Validator as V;
  * @property-read Collection<array-key, SubCategory> $subCategories
  * @property-read Collection<array-key, SubCategory> $sub_categories
  * @property-read Collection<array-key, Material> $materials
- * @property-read Collection<array-key, Attribute> $attributes
+ * @property-read Collection<array-key, Property> $properties
  */
 final class Category extends BaseModel implements Serializable
 {
@@ -40,7 +40,7 @@ final class Category extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
         ];
     }
@@ -85,15 +85,15 @@ final class Category extends BaseModel implements Serializable
             ->orderBy('id');
     }
 
-    public function attributes(): BelongsToMany
+    public function properties(): BelongsToMany
     {
-        return $this->belongsToMany(Attribute::class, 'attribute_categories')
-            ->using(AttributeCategory::class)
+        return $this->belongsToMany(Property::class, 'property_categories')
+            ->using(PropertyCategory::class)
             ->select([
-                'attributes.id',
-                'attributes.name',
-                'attributes.type',
-                'attributes.unit',
+                'properties.id',
+                'properties.name',
+                'properties.type',
+                'properties.unit',
             ])
             ->orderBy('id');
     }

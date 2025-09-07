@@ -1,6 +1,6 @@
 import './index.scss';
 import Decimal from 'decimal.js';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import config, { BillingMode } from '@/globals/config';
 import formatAmount from '@/utils/formatAmount';
 import Icon from '@/themes/default/components/Icon';
@@ -8,7 +8,7 @@ import Fragment from '@/components/Fragment';
 import IconMessage from '@/themes/default/components/IconMessage';
 
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 
 type Props = {

@@ -1,11 +1,11 @@
 import './index.scss';
 import omit from 'lodash/omit';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { Group } from '@/stores/api/groups';
 import Button from '@/themes/default/components/Button';
 import Item from './Item';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails, EventMaterial } from '@/stores/api/events';
 import type { EventMaterialWithQuantityDetails } from './_types';
 
@@ -27,7 +27,8 @@ const EventDetailsReturnSummary = defineComponent({
         isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
 
@@ -81,7 +82,7 @@ const EventDetailsReturnSummary = defineComponent({
                             icon="tasks"
                             to={{
                                 name: 'event-return-inventory',
-                                params: { id: event.id },
+                                params: { id: event.id.toString() },
                             }}
                         >
                             {__('modal.event-details.materials.view-return-inventory')}

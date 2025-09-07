@@ -1,6 +1,8 @@
 unexpected: "Une erreur inattendue s'est produite, veuillez ré-essayer."
 unexpected-while-saving: >-
     Une erreur inattendue s'est produite lors de l'enregistrement, veuillez ré-essayer.
+unexpected-while-submitting: >-
+    Une erreur inattendue s'est produite lors de la soumission, veuillez ré-essayer.
 unexpected-while-deleting: >-
     Une erreur inattendue s'est produite lors de la suppression, veuillez ré-essayer.
 unexpected-while-restoring: >-

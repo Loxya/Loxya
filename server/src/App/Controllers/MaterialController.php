@@ -9,7 +9,7 @@ use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Loxya\Config\Config;
-use Loxya\Http\Request;
+use Loxya\Http\Request as HttpRequest;
 use Loxya\Models\Country;
 use Loxya\Models\Document;
 use Loxya\Models\Enums\Group;
@@ -50,31 +50,31 @@ final class MaterialController extends BaseController
     // -
     // ------------------------------------------------------
 
-    public function getOne(Request $request, Response $response): ResponseInterface
+    public function getOne(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
         $material = Material::findOrFail($id);
 
         $data = $this->_formatOne($material);
         return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
-    public function getAll(Request $request, Response $response): ResponseInterface
+    public function getAll(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $search = $request->getSearchArrayQueryParam('search');
-        $paginated = $request->getBooleanQueryParam('paginated', true);
-        $limit = $request->getIntegerQueryParam('limit');
-        $ascending = $request->getBooleanQueryParam('ascending', true);
-        $quantitiesPeriod = $request->getPeriodQueryParam('quantitiesPeriod');
-        $orderBy = $request->getOrderByQueryParam('orderBy', Material::class);
-        $onlyDeleted = $request->getBooleanQueryParam('onlyDeleted', false);
-        $withDeleted = $request->getQueryParam('withDeleted', false);
+        $search = $httpRequest->getSearchArrayQueryParam('search');
+        $paginated = $httpRequest->getBooleanQueryParam('paginated', true);
+        $limit = $httpRequest->getIntegerQueryParam('limit');
+        $ascending = $httpRequest->getBooleanQueryParam('ascending', true);
+        $quantitiesPeriod = $httpRequest->getPeriodQueryParam('quantitiesPeriod');
+        $orderBy = $httpRequest->getOrderByQueryParam('orderBy', Material::class);
+        $onlyDeleted = $httpRequest->getBooleanQueryParam('onlyDeleted', false);
+        $withDeleted = $httpRequest->getQueryParam('withDeleted', false);
 
         // - Filtres
-        $categoryId = $request->getQueryParam('category');
-        $subCategoryId = $request->getIntegerQueryParam('subCategory');
-        $parkId = $request->getIntegerQueryParam('park');
-        $tags = $request->getIntegerArrayQueryParam('tags');
+        $categoryId = $httpRequest->getQueryParam('category');
+        $subCategoryId = $httpRequest->getIntegerQueryParam('subCategory');
+        $parkId = $httpRequest->getIntegerQueryParam('park');
+        $tags = $httpRequest->getIntegerArrayQueryParam('tags');
 
         $isComplexeOrderBy = (
             in_array($orderBy, ['stock_quantity', 'out_of_order_quantity'], true) &&
@@ -148,7 +148,7 @@ final class MaterialController extends BaseController
         //
 
         $results = $paginated
-            ? $this->paginate($request, $query, $limit)
+            ? $this->paginate($httpRequest, $query, $limit)
             : ['data' => $query->get()];
 
         $results['data'] = Material::allWithAvailabilities(
@@ -163,9 +163,9 @@ final class MaterialController extends BaseController
         return $response->withJson($results, StatusCode::STATUS_OK);
     }
 
-    public function getAllWhileEvent(Request $request, Response $response): ResponseInterface
+    public function getAllWhileEvent(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $eventId = $request->getIntegerAttribute('eventId');
+        $eventId = $httpRequest->getIntegerAttribute('eventId');
 
         $currentEvent = Event::findOrFail($eventId);
         $materials = Material::query()
@@ -186,12 +186,12 @@ final class MaterialController extends BaseController
         return $response->withJson($materials, StatusCode::STATUS_OK);
     }
 
-    public function printAll(Request $request, Response $response): ResponseInterface
+    public function printAll(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $onlyParkId = $request->getIntegerQueryParam('park');
+        $onlyParkId = $httpRequest->getIntegerQueryParam('park');
 
         if (!Auth::is(Group::ADMINISTRATION)) {
-            throw new HttpForbiddenException($request);
+            throw new HttpForbiddenException($httpRequest);
         }
 
         /** @var Collection<array-key, Park> $parks */
@@ -235,7 +235,7 @@ final class MaterialController extends BaseController
         $company = Config::get('companyData');
         $company = array_replace($company, [
             'country' => ($company['country'] ?? null) !== null
-                ? Country::where('code', $company['country'])->first()
+                ? Country::tryFromCode($company['country'])
                 : null,
         ]);
 
@@ -257,20 +257,20 @@ final class MaterialController extends BaseController
         return $pdf->asResponse($response);
     }
 
-    public function getDocuments(Request $request, Response $response): ResponseInterface
+    public function getDocuments(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
         $material = Material::findOrFail($id);
 
         return $response->withJson($material->documents, StatusCode::STATUS_OK);
     }
 
-    public function getBookings(Request $request, Response $response): ResponseInterface
+    public function getBookings(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
-        $limit = $request->getIntegerQueryParam('limit');
-        $ascending = $request->getBooleanQueryParam('ascending', false);
-        $period = $request->getPeriodQueryParam('period');
+        $id = $httpRequest->getIntegerAttribute('id');
+        $limit = $httpRequest->getIntegerQueryParam('limit');
+        $ascending = $httpRequest->getBooleanQueryParam('ascending', false);
+        $period = $httpRequest->getPeriodQueryParam('period');
 
         $material = Material::findOrFail($id);
 
@@ -279,13 +279,13 @@ final class MaterialController extends BaseController
             ->add(Event::class, (
                 $material->events()
                     ->when($period !== null, static fn (Builder $subQuery) => (
-                        $subQuery->inPeriod($period)
+                        $subQuery->inPeriod($period, withOverdue: true)
                     ))
                     ->with(['beneficiaries', 'technicians', 'materials'])
             ))
             ->orderBy('mobilization_start_date', $ascending ? 'asc' : 'desc');
 
-        $results = $this->paginate($request, $query, $limit ?? 50);
+        $results = $this->paginate($httpRequest, $query, $limit ?? 50);
 
         // - Le prefetching a été supprimé car ça ajoutait une trop grosse
         //   utilisation de la mémoire, et ralentissait beaucoup la requête.
@@ -307,19 +307,19 @@ final class MaterialController extends BaseController
         return $response->withJson($results, StatusCode::STATUS_OK);
     }
 
-    public function getPicture(Request $request, Response $response): ResponseInterface
+    public function getPicture(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
         $material = Material::findOrFail($id);
 
         $picturePath = $material->picture_real_path;
         if (!$picturePath) {
-            throw new HttpNotFoundException($request, "Il n'y a pas d'image pour ce matériel.");
+            throw new HttpNotFoundException($httpRequest, "There is no image for this material.");
         }
 
         // - Le fichier source est introuvable ...
         if (!file_exists($picturePath)) {
-            throw new HttpNotFoundException($request);
+            throw new HttpNotFoundException($httpRequest);
         }
 
         /** @var Response $response */
@@ -335,11 +335,11 @@ final class MaterialController extends BaseController
     // -
     // ------------------------------------------------------
 
-    public function create(Request $request, Response $response): ResponseInterface
+    public function create(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $postData = (array) $request->getParsedBody();
+        $postData = (array) $httpRequest->getParsedBody();
         if (empty($postData)) {
-            throw new HttpBadRequestException($request, "No data was provided.");
+            throw new HttpBadRequestException($httpRequest, "No data was provided.");
         }
 
         $material = Material::new($postData);
@@ -348,14 +348,14 @@ final class MaterialController extends BaseController
         return $response->withJson($data, StatusCode::STATUS_CREATED);
     }
 
-    public function update(Request $request, Response $response): ResponseInterface
+    public function update(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
         $material = Material::findOrFail($id);
 
-        $postData = (array) $request->getParsedBody();
+        $postData = (array) $httpRequest->getParsedBody();
         if (empty($postData)) {
-            throw new HttpBadRequestException($request, "No data was provided.");
+            throw new HttpBadRequestException($httpRequest, "No data was provided.");
         }
 
         $material->edit($postData);
@@ -364,15 +364,15 @@ final class MaterialController extends BaseController
         return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
-    public function attachDocument(Request $request, Response $response): ResponseInterface
+    public function attachDocument(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
         $material = Material::findOrFail($id);
 
         /** @var UploadedFileInterface[] $uploadedFiles */
-        $uploadedFiles = $request->getUploadedFiles();
+        $uploadedFiles = $httpRequest->getUploadedFiles();
         if (count($uploadedFiles) !== 1) {
-            throw new HttpBadRequestException($request, "Invalid number of files sent: a single file is expected.");
+            throw new HttpBadRequestException($httpRequest, "Invalid number of files sent: a single file is expected.");
         }
 
         $file = array_values($uploadedFiles)[0];
@@ -383,9 +383,9 @@ final class MaterialController extends BaseController
         return $response->withJson($document, StatusCode::STATUS_CREATED);
     }
 
-    public function delete(Request $request, Response $response): ResponseInterface
+    public function delete(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
 
         /** @var Material $material */
         $material = Material::withTrashed()->findOrFail($id);
@@ -401,9 +401,9 @@ final class MaterialController extends BaseController
         return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 
-    public function restore(Request $request, Response $response): ResponseInterface
+    public function restore(HttpRequest $httpRequest, Response $response): ResponseInterface
     {
-        $id = $request->getIntegerAttribute('id');
+        $id = $httpRequest->getIntegerAttribute('id');
 
         /** @var Material $material */
         $material = Material::onlyTrashed()->findOrFail($id);

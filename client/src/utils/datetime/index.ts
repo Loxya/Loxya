@@ -1405,6 +1405,10 @@ class DateTime {
         const normalizedUnit = TIME_UNITS_MAP[unit];
         const unitMax: number = TIME_UNITS_MAX[normalizedUnit];
         invariant(
+            precision > 0,
+            `Invalid precision (${precision}), must be superior to 0.`,
+        );
+        invariant(
             precision <= unitMax,
             `Invalid precision (${precision}), must be inferior or equal to ${unitMax}.`,
         );

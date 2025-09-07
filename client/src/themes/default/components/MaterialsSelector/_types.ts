@@ -4,7 +4,9 @@ import type { Tag } from '@/stores/api/tags';
 import type { Park } from '@/stores/api/parks';
 import type { Category } from '@/stores/api/categories';
 import type { SubCategory } from '@/stores/api/subcategories';
+import type { Booking as BookingCore } from '@/stores/api/bookings';
 import type {
+    EventDetails,
     EventMaterial,
 } from '@/stores/api/events';
 import type {
@@ -40,11 +42,25 @@ export type Filters = {
 };
 
 //
+// - Bookable
+//
+
+export enum BookableEntity {
+    EVENT = 'event',
+}
+
+export type Bookable = (
+    | BookingCore
+    | { entity: BookableEntity.EVENT } & EventDetails
+);
+
+//
 // - Embedded materiel
 //
 
-export type EmbeddedMaterial =
-    | EventMaterial;
+export type EmbeddedMaterial = (
+    | EventMaterial
+);
 
 //
 // - Source material

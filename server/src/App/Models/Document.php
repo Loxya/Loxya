@@ -12,9 +12,9 @@ use Loxya\Config\Enums\Feature;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Str;
+use Loxya\Support\Validation\Validator as V;
 use Monolog\Level as LogLevel;
 use Psr\Http\Message\UploadedFileInterface;
-use Respect\Validation\Validator as V;
 
 /**
  * Document attaché à un matériel, un événement,
@@ -53,7 +53,7 @@ final class Document extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'entity_type' => V::custom([$this, 'checkEntityType']),
             'entity_id' => V::custom([$this, 'checkEntityId']),
             'name' => V::custom([$this, 'checkName']),
@@ -143,11 +143,11 @@ final class Document extends BaseModel implements Serializable
 
         return V::create()
             ->notEmpty()
-            ->anyOf(
-                V::equals(Material::TYPE),
-                V::equals(Event::TYPE),
-                V::equals(Technician::TYPE),
-            )
+            ->in([
+                Material::TYPE,
+                Event::TYPE,
+                Technician::TYPE,
+            ])
             ->validate($value);
     }
 

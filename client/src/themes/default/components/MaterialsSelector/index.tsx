@@ -1,10 +1,9 @@
 import './index.scss';
 import invariant from 'invariant';
 import config from '@/globals/config';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import showModal from '@/utils/showModal';
 import isMaterialResyncable from './utils/isMaterialResyncable';
-import { BookingEntity } from '@/stores/api/bookings';
 import apiMaterials from '@/stores/api/materials';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
@@ -18,14 +17,14 @@ import store from './store';
 import ImportFromEvent from './modals/ImportFromEvent';
 import ResyncMaterialData from './modals/ResyncMaterialData';
 
-import type { PropType } from '@vue/composition-api';
-import type { Booking } from '@/stores/api/bookings';
+import type { PropType } from 'vue';
 import type { MaterialWithAvailability, MaterialWithContext } from '@/stores/api/materials';
 import type {
     EventDetails,
     EventMaterial,
 } from '@/stores/api/events';
 import type {
+    Bookable,
     SelectedMaterial,
     EmbeddedMaterial,
     SourceMaterial,
@@ -44,35 +43,55 @@ type Props = {
     defaultValues?: SelectedMaterial[],
 
     /**
-     * Le booking (événement) dans lequel le matériel va être ajouté.
+     * Le bookable ({@see {@link Bookable}}) dans lequel le matériel va être ajouté.
      *
      * Si spécifié, le comportement du component changera comme suit:
      * - Si la valeur de `withBilling` est non spécifiée, c'est la valeur du
-     *   champ `is_billable` du booking qui sera utilisée.
-     * - Si la devise du booking ne correspond pas à la devise courante de l'application,
+     *   champ `is_billable` du bookable qui sera utilisée.
+     * - Si la devise du bookable ne correspond pas à la devise courante de l'application,
      *   il ne sera possible que de modifier les quantités du matériel déjà existant,
      *   il ne sera pas possible d'importer depuis des modèles, ni de resynchroniser
      *   les prix (vu que la devise n'est plus la même).
      *
      * NOTE: À noter que les matériels déjà contenu dans cette prop. ne seront pas
-     * directement utilisés. C'est à dire que si vous passez un booking sans
+     * directement utilisés. C'est à dire que si vous passez un bookable sans
      * passer `defaultValues`, il n'y aura pas de matériel pré-sélectionné.
      */
-    booking?: Booking,
+    bookable?: Bookable,
 
     /**
      * Doit-on afficher les informations liées à la facturation ?
      *
-     * Si non spécifié et qu'un `booking` est passé, c'est la valeur de
+     * Si non spécifié et qu'un `bookable` est passé, c'est la valeur de
      * son champ `is_billable` qui sera utilisée, sinon `false`.
      */
     withBilling?: boolean,
+
+    /**
+     * Fonction appelée lorsque le sélecteur de matériel est prêt.
+     * (Déclenché lorsque la récupération du matériel est terminée notamment)
+     */
+    onReady?(): void,
+
+    /**
+     * Fonction appelée lorsque la sélection de matériel a changé.
+     *
+     * @param materials - La nouvelle sélection de matériel.
+     */
+    onChange?(materials: SelectedMaterial[]): void,
+
+    /**
+     * Fonction appelée lorsque les données d'un matériel ont été resynchronisées.
+     *
+     * @param updatedMaterial - Les données du matériel qui a été resynchronisé.
+     */
+    onMaterialResynced?(updatedMaterial: EmbeddedMaterial): void,
 };
 
 type Data = {
     isInitialized: boolean,
     isFetched: boolean,
-    criticalError: boolean,
+    hasCriticalError: boolean,
     filters: Filters,
     rawMaterials: (
         | MaterialWithAvailability[]
@@ -105,8 +124,8 @@ const getEmptyFilters = (onlySelected: boolean): Filters => ({
 const MaterialsSelector = defineComponent({
     name: 'MaterialsSelector',
     props: {
-        booking: {
-            type: Object as PropType<Props['booking']>,
+        bookable: {
+            type: Object as PropType<Props['bookable']>,
             default: undefined,
         },
         defaultValues: {
@@ -115,6 +134,21 @@ const MaterialsSelector = defineComponent({
         },
         withBilling: {
             type: Boolean as PropType<Props['withBilling']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onReady: {
+            type: Function as PropType<Props['onReady']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onMaterialResynced: {
+            type: Function as PropType<Props['onMaterialResynced']>,
             default: undefined,
         },
     },
@@ -131,35 +165,35 @@ const MaterialsSelector = defineComponent({
         return {
             isInitialized: false,
             isFetched: false,
-            criticalError: false,
+            hasCriticalError: false,
             filters: getEmptyFilters(false),
             rawMaterials: [],
         };
     },
     computed: {
         materials(): SourceMaterial[] {
-            const { booking, withBillingFinal: withBilling } = this;
+            const { bookable, withBillingFinal: withBilling } = this;
 
             return this.rawMaterials.map(
                 (material: MaterialWithAvailability | MaterialWithContext) => {
                     const overrides: SourceMaterialOverrides | null = (() => {
-                        if (booking === undefined) {
+                        if (bookable === undefined) {
                             return null;
                         }
 
-                        if (!booking.is_billable || !withBilling) {
-                            const bookingMaterial = booking.materials.find(
+                        if (!bookable.is_billable || !withBilling) {
+                            const bookingMaterial = bookable.materials.find(
                                 ({ id }: EmbeddedMaterial) => (id === material.id),
                             );
                             return bookingMaterial === undefined ? null : {
                                 name: bookingMaterial.name,
                                 reference: bookingMaterial.reference,
                                 replacement_price: bookingMaterial.unit_replacement_price,
-                                currency: booking.currency,
+                                currency: bookable.currency,
                             };
                         }
 
-                        const bookingMaterial = booking.materials.find(
+                        const bookingMaterial = bookable.materials.find(
                             ({ id }: EmbeddedMaterial) => (id === material.id),
                         );
                         return bookingMaterial === undefined ? null : {
@@ -169,7 +203,7 @@ const MaterialsSelector = defineComponent({
                             degressive_rate: bookingMaterial.degressive_rate,
                             rental_price_period: bookingMaterial.unit_price_period,
                             replacement_price: bookingMaterial.unit_replacement_price,
-                            currency: booking.currency,
+                            currency: bookable.currency,
                         };
                     })();
 
@@ -182,7 +216,7 @@ const MaterialsSelector = defineComponent({
             if (this.withBilling !== undefined) {
                 return this.withBilling;
             }
-            return this.booking?.is_billable ?? false;
+            return this.bookable?.is_billable ?? false;
         },
 
         hasSelectedMaterials(): boolean {
@@ -190,16 +224,16 @@ const MaterialsSelector = defineComponent({
         },
 
         isEditOnly(): boolean {
-            if (this.booking === undefined) {
+            if (this.bookable === undefined) {
                 return false;
             }
 
-            // - Si la devise du booking n'est pas la même que la devise courante, on bloque
+            // - Si la devise du bookable n'est pas la même que la devise courante, on bloque
             //   en édition only (comprendre: uniquement la modification des quantités de
             //   l'existant) car le matériel tiers est dans une autre devise et les deux ne
             //   peuvent pas être réconciliés, pour cela il faudrait prendre en charge la
             //   conversion.
-            return !config.currency.isSame(this.booking.currency);
+            return !config.currency.isSame(this.bookable.currency);
         },
 
         // ------------------------------------------------------
@@ -256,7 +290,7 @@ const MaterialsSelector = defineComponent({
             const event: EventDetails | undefined = (
                 await showModal(this.$modal, ImportFromEvent, {
                     materials: this.materials,
-                    booking: this.booking,
+                    bookable: this.bookable,
                     withBilling,
                 })
             );
@@ -274,7 +308,7 @@ const MaterialsSelector = defineComponent({
             const withBilling = this.withBillingFinal;
             const updatedMaterial: EmbeddedMaterial | undefined = (
                 await showModal(this.$modal, ResyncMaterialData, {
-                    booking: this.booking,
+                    bookable: this.bookable,
                     withBilling,
                     material,
                 })
@@ -319,23 +353,22 @@ const MaterialsSelector = defineComponent({
         },
 
         async fetchMaterials() {
-            const { entity, id } = this.booking ?? { entity: null, id: null };
+            const { bookable } = this;
 
             try {
-                if (entity && entity === BookingEntity.EVENT) {
-                    this.rawMaterials = await apiMaterials.allWhileEvent(id);
-                } else {
-                    this.rawMaterials = await apiMaterials.all({
-                        withDeleted: true,
-                        paginated: false,
-                    });
-                }
+                this.rawMaterials = await (() => {
+                    if (bookable === undefined) {
+                        return apiMaterials.all({ withDeleted: true, paginated: false });
+                    }
+
+                    return apiMaterials.allWhileEvent(bookable.id);
+                })();
 
                 this.isFetched = true;
                 this.$emit('ready');
             } catch {
                 if (!this.isFetched) {
-                    this.criticalError = true;
+                    this.hasCriticalError = true;
 
                     // - On ne tente pas de refetch si on est en erreur critique...
                     if (this.fetchInterval) {
@@ -395,7 +428,7 @@ const MaterialsSelector = defineComponent({
             isEditOnly,
             isFetched,
             materials,
-            criticalError,
+            hasCriticalError,
             hasSelectedMaterials,
             withBillingFinal: withBilling,
             handleFiltersChange,
@@ -412,10 +445,10 @@ const MaterialsSelector = defineComponent({
             hasSelectedMaterials || filters.onlySelected
         );
 
-        if (criticalError || !isInitialized || !isFetched) {
+        if (hasCriticalError || !isInitialized || !isFetched) {
             return (
                 <div class="MaterialsSelector MaterialsSelector--not-ready">
-                    {criticalError ? <CriticalError /> : <Loading />}
+                    {hasCriticalError ? <CriticalError /> : <Loading />}
                 </div>
             );
         }
@@ -428,7 +461,7 @@ const MaterialsSelector = defineComponent({
                     onClick={handleEventImport}
                     disabled={isEditOnly}
                 >
-                    {__('add-materials-from.dropdown.choices.an-event')}
+                    {__('add-materials-from.an-event')}
                 </Button>
             </Dropdown>
         );
@@ -463,8 +496,9 @@ const MaterialsSelector = defineComponent({
     },
 });
 
-export type { SelectedMaterial };
+export type { Bookable, SelectedMaterial };
 
+export { BookableEntity } from './_types';
 export { default as getEmbeddedMaterialsQuantities } from './utils/getEmbeddedMaterialsQuantities';
 export { default as hasQuantitiesChanged } from './utils/hasQuantitiesChanged';
 

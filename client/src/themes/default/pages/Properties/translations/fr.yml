@@ -1,0 +1,46 @@
+title: Caractéristiques spéciales
+
+no-limit: Sans limite
+add-properties: Ajouter des caractéristiques
+add-btn: Ajouter une caractéristique
+all-categories-not-limited: Toutes catégories (non limité)
+deleted: Caractéristique supprimée.
+
+confirm-permanently-delete:
+    '1': "Voulez-vous vraiment supprimer définitivement cette caractéristique spéciale\_?\n\n                ATTENTION\_: Toutes les données relatives à cette caractéristique spéciale seront supprimées DÉFINITIVEMENT\_!!"
+    '2': "Désolé d'insister, mais cette opération est IRRÉVERSIBLE.\n\n                Voulez-vous VRAIMENT supprimer cette caractéristique spéciale\_?"
+
+config:
+    unit: "Unité\_:"
+    list-choices: "Choix\_:"
+    period-precision:
+        label: "Précision\_:"
+        value:
+            free: Libre
+            daily: Journées entières
+            hourly: À l'heure près
+    max-length:
+        label: "Taille max.\_:"
+        value:
+            - "{count} caractère"
+            - "{count} caractères"
+
+columns:
+    name: Nom de la caractéristique
+    entities: "Utilisé pour"
+    type: Type de donnée
+    is-totalisable: "Totalisable\_?"
+    limited-to-categories: Limitée aux catégories
+
+types:
+    string: Texte
+    text: Texte multi-lignes
+    integer: Nombre entier
+    float: Nombre décimal
+    boolean: Booléen (Oui / Non)
+    list: Liste de choix
+    period: Période
+    date: Date
+
+entities:
+    material: Matériel

@@ -1,10 +1,9 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError, HttpCode } from '@/globals/requester';
 import config from '@/globals/config';
-import HttpCode from 'status-code-enum';
 import parseInteger from '@/utils/parseInteger';
 import apiTechnicians from '@/stores/api/technicians';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { confirm } from '@/utils/alert';
 import { Tabs, Tab } from '@/themes/default/components/Tabs';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
@@ -12,6 +11,8 @@ import Loading from '@/themes/default/components/Loading';
 import Page from '@/themes/default/components/Page';
 import Button from '@/themes/default/components/Button';
 import MultiSwitch from '@/themes/default/components/MultiSwitch';
+
+// - Tabs
 import Infos from './tabs/Infos';
 import Schedule from './tabs/Schedule';
 import Documents from './tabs/Documents';
@@ -76,7 +77,10 @@ const TechnicianView = defineComponent({
                 return [
                     <Button
                         type="edit"
-                        to={{ name: 'edit-technician', params: { id } }}
+                        to={{
+                            name: 'edit-technician',
+                            params: { id: id.toString() },
+                        }}
                         collapsible
                     >
                         {__('action-edit')}
@@ -177,16 +181,14 @@ const TechnicianView = defineComponent({
                 this.selectTabFromRouting();
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving technician #${this.id} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving technician #${this.id} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
     },
@@ -222,17 +224,17 @@ const TechnicianView = defineComponent({
                         actions={tabsActions}
                     >
                         <Tab title={__('informations')} icon="info-circle">
-                            <Infos technician={technician} />
+                            <Infos technician={technician!} />
                         </Tab>
                         <Tab title={__('schedule')} icon="calendar-alt">
-                            <Schedule technician={technician} />
+                            <Schedule technician={technician!} />
                         </Tab>
                         <Tab title={__('documents')} icon="file-pdf">
-                            <Documents ref="documents" technician={technician} />
+                            <Documents ref="documents" technician={technician!} />
                         </Tab>
                         <Tab title={__('page.technician-view.assignments.title')} icon="tools">
                             <Assignments
-                                technician={technician}
+                                technician={technician!}
                                 displayMode={assignmentsDisplayMode}
                             />
                         </Tab>

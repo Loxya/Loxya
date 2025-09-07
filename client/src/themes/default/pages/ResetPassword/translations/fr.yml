@@ -1,0 +1,84 @@
+return-to-login: Revenir à la page de connexion
+
+errors:
+    reset-session-expired: |
+        Le délai pour réinitialiser le mot de passe a expiré.
+        Veuillez recommencer la procédure.
+
+    resend-too-soon:
+        with-delay:
+            Un code de réinitialisation a déjà été envoyé très récemment.
+            Veuillez attendre {time} avant de recommencer.
+        without-delay:
+            Un code de réinitialisation a déjà été envoyé très récemment.
+            Veuillez attendre quelques minutes avant de recommencer.
+
+steps:
+    informations:
+        title: Réinitialisation du mot de passe
+        continue: Continuer
+        introduction:
+            Saisissez l'adresse e-mail associée à votre compte
+            et nous vous enverrons un code pour réinitialiser votre
+            mot de passe.
+
+        errors:
+            mandatory-email: Ce champ est obligatoire.
+            invalid-email: Cette adresse e-mail est invalide.
+
+    verification:
+        without-ongoing:
+            instructions:
+                obsolete: |
+                    Le code de réinitialisation de mot de passe
+                    précédemment envoyé n'est plus valide.
+
+                    Vous pouvez en demander un nouveau ci-dessous.
+
+                too-many-attempts: |
+                    Trop de tentatives incorrectes ont été effectuées.
+                    Veuillez demander un nouveau code pour continuer.
+
+            action:
+                without-delay: Renvoyer un code maintenant
+                with-delay: Renvoyer un code ({seconds}s)
+
+        with-ongoing:
+            instructions:
+                Veuillez saisir le code de vérification que vous avez
+                reçu par e-mail à l'adresse <highlight>{email}</highlight>.
+
+            action-resend:
+                without-delay: "Vous n'avez pas reçu le code\_? Cliquez-ici pour envoyer le renvoyer"
+                with-delay: "Vous n'avez pas reçu le code\_? Cliquez-ici pour envoyer le renvoyer (possible dans {seconds}s)"
+
+        verified:
+            instructions:
+                Votre demande a été validée. Vous pouvez maintenant choisir un nouveau
+                mot de passe en cliquant sur le bouton ci-dessous.
+
+            action: Choisir un nouveau mot de passe
+
+        errors:
+            wrong-code: Le code spécifié est invalide.
+
+    finalization:
+        title: Nouveau mot de passe
+
+        password-modified: |
+            Votre mot de passe a bien été modifiée.
+            Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
+
+        introduction: |
+            Utilisez le formulaire ci-dessous pour définir votre nouveau mot de passe.
+            Vous pourrez ensuite vous connecter avec celui-ci.
+
+        fields:
+            password: Nouveau mot de passe
+            password-confirmation: Confirmation du mot de passe
+
+        errors:
+            mandatory-field: Ce champ est obligatoire.
+            invalid-confirmation: La confirmation ne correspond pas.
+
+        action: Changer le mot de passe

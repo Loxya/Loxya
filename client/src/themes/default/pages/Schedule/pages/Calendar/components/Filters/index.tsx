@@ -3,12 +3,12 @@ import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 import { z } from '@/utils/validation';
 import isTruthy from '@/utils/isTruthy';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import SwitchToggle from '@/themes/default/components/SwitchToggle';
 import SearchPanel from '@/themes/default/components/SearchPanel';
 
 import type { Options } from '@/utils/formatOptions';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { SchemaInfer } from '@/utils/validation';
 import type { Category } from '@/stores/api/categories';
 import type { ParkSummary } from '@/stores/api/parks';
@@ -31,6 +31,19 @@ export type Filters = SchemaInfer<typeof FiltersSchema>;
 type Props = {
     /** Les valeurs actuelles des filtres. */
     values: Filters,
+
+    /**
+     * Fonction appelée lorsque les filtres ont changés.
+     *
+     * @param newFilters - Les nouveaux filtres.
+     */
+    onChange?(newFilters: Filters): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a soumis
+     * les changements dans les filtres.
+     */
+    onSubmit?(): void,
 };
 
 /** Filtres de la page calendrier. */
@@ -43,6 +56,16 @@ const ScheduleCalendarFilters = defineComponent({
             validator: (value: unknown) => (
                 FiltersSchema.safeParse(value).success
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
         },
     },
     emits: ['change', 'submit'],

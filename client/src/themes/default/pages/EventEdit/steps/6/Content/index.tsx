@@ -1,19 +1,18 @@
 import './index.scss';
 import config from '@/globals/config';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import upperFirst from 'lodash/upperFirst';
 import Fragment from '@/components/Fragment';
 import Icon from '@/themes/default/components/Icon';
 import Link from '@/themes/default/components/Link';
 import MaterialsSorted from '@/themes/default/components/MaterialsSorted';
-import MissingMaterials from '@/themes/default/components/MissingMaterials';
+import MissingMaterials, { BookableEntity } from '@/themes/default/components/MissingMaterials';
 import IconMessage from '@/themes/default/components/IconMessage';
 import Totals from '@/themes/default/components/Totals';
 import formatEventTechniciansList from '@/utils/formatEventTechniciansList';
-import { BookingEntity } from '@/stores/api/bookings';
 import { PeriodReadableFormat } from '@/utils/period';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails, EventExtra } from '@/stores/api/events';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 import type {
@@ -163,7 +162,10 @@ const EventEditStepOverviewContent = defineComponent({
                                         const renderName = (): JSX.Element => {
                                             const name = (
                                                 <Link
-                                                    to={{ name: 'view-beneficiary', params: { id: beneficiary.id } }}
+                                                    to={{
+                                                        name: 'view-beneficiary',
+                                                        params: { id: beneficiary.id.toString() },
+                                                    }}
                                                     class="EventEditStepOverviewContent__participants__item__values__item__link"
                                                 >
                                                     {fullName}
@@ -208,7 +210,10 @@ const EventEditStepOverviewContent = defineComponent({
                                                 <div class="EventEditStepOverviewContent__participants__technician__name">
                                                     <Link
                                                         class="EventEditStepOverviewContent__participants__item__values__item__link"
-                                                        to={{ name: 'view-technician', params: { id: technician.id } }}
+                                                        to={{
+                                                            name: 'view-technician',
+                                                            params: { id: technician.id.toString() },
+                                                        }}
                                                     >
                                                         {technician.name}
                                                     </Link>
@@ -259,7 +264,7 @@ const EventEditStepOverviewContent = defineComponent({
                         <Fragment>
                             {!!event.has_missing_materials && (
                                 <div class="EventEditStepOverviewContent__materials__missing">
-                                    <MissingMaterials booking={{ entity: BookingEntity.EVENT, ...event }} />
+                                    <MissingMaterials bookable={{ entity: BookableEntity.EVENT, ...event }} />
                                 </div>
                             )}
                             <div class="EventEditStepOverviewContent__materials__list">

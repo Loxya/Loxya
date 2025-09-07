@@ -1,64 +1,66 @@
 @use '~@/themes/default/style/globals';
 
 .Roles {
+    display: flex;
+    flex-direction: column;
     height: 100%;
 
     &__list {
-        flex: 0 0 auto;
+        flex: 1;
         display: flex;
         flex-flow: row wrap;
         justify-content: center;
         padding: 0;
         gap: globals.$spacing-small;
-    }
 
-    &__item {
-        $sub-block: &;
+        &__item {
+            $sub-block: &;
 
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        margin: 0;
-        padding: 15px 20px;
-        border-radius: globals.$border-radius-large;
-        background: globals.$bg-color-emphasis;
-        font-size: 1.2rem;
-
-        &__name {
-            flex: 1;
-            color: globals.$text-base-color;
-
-            > .Icon {
-                margin-right: globals.$spacing-medium;
-                color: globals.$text-light-color;
-            }
-        }
-
-        &__actions {
+            flex: 0 0 auto;
             display: flex;
-            margin-left: 1rem;
-            transition: none;
-            gap: globals.$spacing-thin;
-        }
+            align-items: center;
+            margin: 0;
+            padding: 15px 20px;
+            border-radius: globals.$border-radius-large;
+            background: globals.$bg-color-emphasis;
+            font-size: 1.2rem;
 
-        //
-        // - Responsive
-        //
+            &__name {
+                flex: 1;
+                color: globals.$text-base-color;
 
-        @media (min-width: globals.$screen-tablet) {
-            min-width: 350px;
-        }
-
-        @media (min-width: globals.$screen-desktop) {
-            min-width: 450px;
+                > .Icon {
+                    margin-right: globals.$spacing-medium;
+                    color: globals.$text-light-color;
+                }
+            }
 
             &__actions {
-                visibility: hidden;
+                display: flex;
+                margin-left: 1rem;
+                transition: none;
+                gap: globals.$spacing-thin;
             }
 
-            &:hover {
-                #{$sub-block}__actions {
-                    visibility: visible;
+            //
+            // - Responsive
+            //
+
+            @media (min-width: globals.$screen-tablet) {
+                min-width: 350px;
+            }
+
+            @media (min-width: globals.$screen-desktop) {
+                min-width: 450px;
+
+                &__actions {
+                    visibility: hidden;
+                }
+
+                &:hover {
+                    #{$sub-block}__actions {
+                        visibility: visible;
+                    }
                 }
             }
         }

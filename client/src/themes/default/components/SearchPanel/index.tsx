@@ -1,9 +1,9 @@
 import './index.scss';
 import omit from 'lodash/omit';
+import { defineComponent } from 'vue';
 import { z } from '@/utils/validation';
 import ClickOutside from 'vue-click-outside';
 import { MountingPortal as Portal } from 'portal-vue';
-import { defineComponent } from '@vue/composition-api';
 import Button from '@/themes/default/components/Button';
 import Select from '@/themes/default/components/Select';
 import DatePicker from '@/themes/default/components/DatePicker';
@@ -20,10 +20,11 @@ import {
     offset,
 } from '@floating-ui/dom';
 
-import type { ComponentRef, RawComponent } from 'vue';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type Period from '@/utils/period';
+import type { SelectRef } from '@/themes/default/components/Select';
+import type { DatePickerRef } from '@/themes/default/components/DatePicker';
 import type { Simplify } from 'type-fest';
-import type { PropType } from '@vue/composition-api';
 import type {
     TokenValue,
     CustomToken,
@@ -100,8 +101,8 @@ export type FilterDefinition = Simplify<(
 )>;
 
 type ModalFilterComponentRef = (
-    | ComponentRef<typeof Select>
-    | ComponentRef<typeof DatePicker>
+    | SelectRef
+    | DatePickerRef
 );
 
 type Filters = {
@@ -109,14 +110,14 @@ type Filters = {
     [filter: FilterDefinition['type']]: (
         | TokenValue
         | TokenValue[]
-        | Period
+        | Raw<Period>
         | null
     ),
 };
 
 type Tokens = Array<CustomToken | string>;
 
-type Props = {
+type Props<F extends Filters = Filters> = {
     /**
      * Liste des filtres disponibles.
      *
@@ -126,7 +127,20 @@ type Props = {
     definitions?: FilterDefinition[],
 
     /** Les valeurs actuelles des filtres. */
-    values: Filters,
+    values: F,
+
+    /**
+     * Fonction appelée lorsque les filtres ont changés.
+     *
+     * @param newFilters - Les nouveaux filtres.
+     */
+    onChange?(newFilters: F): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a soumis
+     * les changements dans les filtres.
+     */
+    onSubmit?(): void,
 };
 
 type InstanceProperties = {
@@ -159,19 +173,27 @@ const SearchPanel = defineComponent({
                 FiltersSchema.safeParse(value).success
             ),
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
     },
     emits: ['change', 'submit'],
     setup: (): InstanceProperties => ({
         cancelModalPositionUpdater: undefined,
     }),
-    data(): Data {
-        return {
-            tokens: [], // - Cf. les watchers.
-            search: '', // - Cf. les watchers.
-            showModal: false,
-            modalPosition: { x: 0, y: 0 },
-        };
-    },
+    data: (): Data => ({
+        tokens: [], // - Cf. les watchers.
+        search: '', // - Cf. les watchers.
+        showModal: false,
+        modalPosition: { x: 0, y: 0 },
+    }),
     computed: {
         hasModalFilters(): boolean {
             return this.definitions.some((definition: FilterDefinition) => {
@@ -235,11 +257,7 @@ const SearchPanel = defineComponent({
         },
         values: {
             handler(newValues: Filters) {
-                // @ts-expect-error -- `this` fait bien référence au component.
-                const { coreDefinitions: definitions, tokens: prevTokens } = this as {
-                    definitions: TokenDefinition[],
-                    tokens: Tokens,
-                };
+                const { coreDefinitions: definitions, tokens: prevTokens } = this;
 
                 const existingTokens: Tokens = [];
 
@@ -254,12 +272,11 @@ const SearchPanel = defineComponent({
                     existingTokens[index] = _token;
                 });
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 this.search = [...newTerms].join(' ');
 
                 // - Custom tokens.
                 const newTokens: Tokens = [];
-                definitions.forEach((definition: FilterDefinition) => {
+                definitions.forEach((definition: TokenDefinition) => {
                     if (definition.disabled) {
                         return;
                     }
@@ -281,8 +298,7 @@ const SearchPanel = defineComponent({
                     }
                 });
 
-                // @ts-expect-error -- `this` fait bien référence au component.
-                this.tokens = existingTokens.concat(...newTokens)
+                this.tokens = existingTokens.concat(...newTerms, ...newTokens)
                     .filter((token: Tokens[number] | undefined) => token !== undefined);
             },
             immediate: true,
@@ -290,14 +306,8 @@ const SearchPanel = defineComponent({
         },
         tokens: {
             handler(newTokens: Tokens) {
-                // @ts-expect-error -- `this` fait bien référence au component.
-                const { definitions, getDefaultValues } = this as {
-                    getDefaultValues(options?: { keepModalOnly?: boolean, keepSearch?: boolean }): Filters,
-                    definitions: FilterDefinition[],
-                };
-
                 const definitionsMap: Map<FilterDefinition['type'], FilterDefinition> = new Map(
-                    definitions.map((definition: FilterDefinition) => (
+                    this.definitions.map((definition: FilterDefinition) => (
                         [definition.type, definition]
                     )),
                 );
@@ -327,15 +337,13 @@ const SearchPanel = defineComponent({
                         }
                         return { ...result, [definition.type]: value };
                     },
-                    getDefaultValues({ keepModalOnly: true, keepSearch: true }),
+                    this.getDefaultValues({ keepModalOnly: true, keepSearch: true }),
                 );
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (!hasChanged(this.values, newValues)) {
                     return;
                 }
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 this.$emit('change', newValues);
             },
             deep: true,
@@ -379,7 +387,7 @@ const SearchPanel = defineComponent({
             this.$emit('submit');
         },
 
-        handleFilterChange(type: FilterDefinition['type'], newValue: TokenValue | Period | null) {
+        handleFilterChange(type: FilterDefinition['type'], newValue: TokenValue | Raw<Period> | null) {
             const definition = this.definitions.find(
                 (_definition: FilterDefinition) => _definition.type === type,
             );
@@ -409,7 +417,7 @@ const SearchPanel = defineComponent({
         },
 
         handleClickOutsideModal(e: Event) {
-            // - Si l’élément cliqué n'est plus dans le DOM, on part du principe
+            // - Si l'élément cliqué n'est plus dans le DOM, on part du principe
             //   qu'il faisait partie de la modale des filtres, sans quoi le clic
             //   serait considéré comme "outside" et fermerait la modale.
             //   (e.g. Un tag supprimé, bouton de reset, ...).
@@ -427,8 +435,10 @@ const SearchPanel = defineComponent({
 
                     const kind = definition.kind ?? FilterKind.LIST;
                     if (kind === FilterKind.PERIOD) {
-                        const $picker = $filter.$refs?.picker as ComponentRef<RawComponent> | undefined;
-                        const $popup = $picker?.$refs?.popup as ComponentRef<RawComponent> | undefined;
+                        /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+                        const $picker = $filter.$refs?.picker as ComponentRef | undefined;
+                        const $popup = $picker?.$refs?.popup as ComponentRef | undefined;
+                        /* eslint-enable @typescript-eslint/no-unnecessary-type-assertion */
 
                         return (
                             ($picker?.$el.contains(e.target as HTMLElement) ?? false) ||
@@ -612,8 +622,8 @@ const SearchPanel = defineComponent({
                                             placeholder={definition.placeholder}
                                             disabled={definition.disabled}
                                             highlight={highlighted}
-                                            value={value}
-                                            onChange={(newValue: Period | null) => {
+                                            value={value as Period<true>}
+                                            onChange={(newValue: Raw<Period> | null) => {
                                                 handleFilterChange(definition.type, newValue);
                                             }}
                                             withSnippets
@@ -633,7 +643,7 @@ const SearchPanel = defineComponent({
                                         placeholder={definition.placeholder}
                                         multiple={definition.multiSelect ?? false}
                                         highlight={highlighted}
-                                        value={value}
+                                        value={value as string | number | Array<string | number> | null}
                                         onChange={(newValue: TokenValue | null) => {
                                             handleFilterChange(definition.type, newValue);
                                         }}
@@ -657,9 +667,16 @@ const SearchPanel = defineComponent({
     },
 });
 
+//
+// - Exports
+//
+
+type SearchPanelGeneric = <F extends Filters>(props: Props<F>) => JSX.Element;
+
 export type {
     TokenOptions,
     TokenOption,
 } from '@/themes/default/components/Search';
 
-export default SearchPanel;
+export type SearchPanelRef = ComponentRef<typeof SearchPanel>;
+export default SearchPanel as any as SearchPanelGeneric;

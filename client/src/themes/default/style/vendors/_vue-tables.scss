@@ -115,7 +115,7 @@
 
     &__row {
         &--warning > td {
-            background-color: rgba($text-warning-color, 0.25);
+            background-color: rgb($text-warning-color, 0.25);
         }
     }
 
@@ -138,7 +138,7 @@
 
         .dropdown-toggle {
             padding: 0.78rem;
-            border: 1px solid $bg-color-button-default;
+            border: 1px solid $interactive-element-default-background-color;
             background: none;
             color: $help-text-color;
 
@@ -157,7 +157,7 @@
             margin: 0;
             padding: 10px;
             background-color: $bg-color-emphasis;
-            box-shadow: 3px 3px 14px rgba(0, 0, 0, 0.4);
+            box-shadow: 3px 3px 14px rgb(0 0 0 / 40%);
 
             li {
                 list-style: none;

@@ -7,16 +7,16 @@
     align-items: center;
     padding: 8px 10px;
     border-radius: 0;
-    background-color: rgba(97, 97, 97, 0.5);
+    background-color: rgb(97 97 97 / 50%);
     color: globals.$text-base-color;
     cursor: pointer;
     transition: all 300ms;
     user-select: none;
     gap: globals.$spacing-thin;
     box-shadow:
-        0 1px 2px 0 rgba(0, 0, 0, 0.03),
-        0 1px 6px -1px rgba(0, 0, 0, 0.02),
-        0 2px 4px 0 rgba(0, 0, 0, 0.02);
+        0 1px 2px 0 rgb(0 0 0 / 3%),
+        0 1px 6px -1px rgb(0 0 0 / 2%),
+        0 2px 4px 0 rgb(0 0 0 / 2%);
 
     &__input {
         display: none;
@@ -40,11 +40,11 @@
     }
 
     &:not(#{$block}--active):hover {
-        background-color: rgba(97, 97, 97, 0.7);
+        background-color: rgb(97 97 97 / 70%);
     }
 
     &--active {
-        background-color: rgba(97, 97, 97, 0.2);
+        background-color: rgb(97 97 97 / 20%);
         color: globals.$text-soft-color;
         cursor: auto;
         box-shadow: none;

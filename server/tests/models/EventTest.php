@@ -5,8 +5,8 @@ namespace Loxya\Tests;
 
 use Illuminate\Support\Carbon;
 use Loxya\Errors\Exception\ValidationException;
-use Loxya\Models\Attribute;
 use Loxya\Models\Event;
+use Loxya\Models\Property;
 use Loxya\Models\User;
 use Loxya\Services\I18n;
 use Loxya\Support\Arr;
@@ -18,7 +18,7 @@ final class EventTest extends TestCase
     public function testInPeriodScope(): void
     {
         // - Récupère les événements de 2018
-        $result = Event::inPeriod('2018-01-01', '2018-12-31')->get();
+        $result = Event::inPeriod(new Period('2018-01-01', '2018-12-31'))->get();
         $expected = [
             [
                 'id' => 3,
@@ -53,6 +53,7 @@ final class EventTest extends TestCase
                 'author_id' => 1,
                 'manager_id' => null,
                 'preparer_id' => null,
+                'request_id' => null,
                 'created_at' => '2018-12-14 12:20:00',
                 'updated_at' => '2018-12-14 12:30:00',
                 'deleted_at' => null,
@@ -97,6 +98,7 @@ final class EventTest extends TestCase
                 'author_id' => 1,
                 'manager_id' => 2,
                 'preparer_id' => null,
+                'request_id' => null,
                 'created_at' => '2018-12-01 12:50:45',
                 'updated_at' => '2018-12-05 08:31:21',
                 'deleted_at' => null,
@@ -147,6 +149,7 @@ final class EventTest extends TestCase
                 'author_id' => 1,
                 'manager_id' => 1,
                 'preparer_id' => null,
+                'request_id' => null,
                 'created_at' => '2018-12-16 12:50:45',
                 'updated_at' => null,
                 'deleted_at' => null,
@@ -156,21 +159,16 @@ final class EventTest extends TestCase
         $this->assertEquals($expected, $result->toArray());
 
         // - Récupère les événements de la fin décembre 2018.
-        $results = Event::inPeriod('2018-12-19', '2018-12-31')->get();
+        $results = Event::inPeriod(new Period('2018-12-19', '2018-12-31'))->get();
         $this->assertCount(1, $results);
         $this->assertEquals(2, $results[0]->id);
 
-        // - Récupère les événements d'une journée si un seul argument est passé.
-        $results = Event::inPeriod('2018-12-15')->get();
-        $this->assertCount(1, $results);
-        $this->assertEquals(3, $results[0]->id);
-
         // - Doit accepter les formats relatifs.
         $results = Event::query()
-            ->inPeriod(
+            ->inPeriod(new Period(
                 'first day of December 2018', // -> `2018-12-01`
                 'third sun of December 2018', // -> `2018-12-16`
-            )
+            ))
             ->get();
         $this->assertCount(1, $results);
         $this->assertEquals(3, $results[0]->id);
@@ -231,7 +229,7 @@ final class EventTest extends TestCase
 
     public function testHasMissingMaterials(): void
     {
-        Carbon::setTestNow(Carbon::create(2024, 2, 26, 13, 40, 0));
+        static::setNow(Carbon::create(2024, 2, 26, 13, 40, 0));
 
         // - L'événement #1 contient des pénuries.
         $event = tap(Event::findOrFail(1), static function (Event $event) {
@@ -457,9 +455,11 @@ final class EventTest extends TestCase
 
         // - Avec des erreurs de base...
         $event = $generateEvent([
+            'title' => '',
             'color' => 'not-a-color',
         ]);
         $expectedErrors = [
+            'title' => "Ce champ est obligatoire.",
             'color' => "Code de couleur invalide (doit être un code hexadécimal).",
         ];
         $this->assertFalse($event->isValid());
@@ -468,7 +468,7 @@ final class EventTest extends TestCase
 
     public function testToPdf(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 9, 23, 12, 0, 0));
+        static::setNow(Carbon::create(2022, 9, 23, 12, 0, 0));
 
         $result = Event::findOrFail(1)->toPdf(new I18n('fr_CH'));
         $this->assertInstanceOf(Pdf::class, $result);
@@ -483,7 +483,7 @@ final class EventTest extends TestCase
 
     public function testEdit(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $event = Event::findOrFail(4)->edit([
             'title' => ' Test update ',
@@ -523,6 +523,8 @@ final class EventTest extends TestCase
                 'reference' => null,
                 'description' => null,
                 'manager_id' => null,
+                'preparer_id' => null,
+                'request_id' => null,
                 'materials_count' => 46,
                 'is_return_inventory_started' => false,
                 'has_missing_materials' => true,
@@ -543,7 +545,6 @@ final class EventTest extends TestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_author_id' => null,
                 'return_inventory_datetime' => null,
-                'preparer_id' => null,
                 'positions' => [
                     [
                         'id' => 5,
@@ -579,8 +580,8 @@ final class EventTest extends TestCase
                         'country_id' => null,
                         'full_address' => "156 bis, avenue des tests poussés\n88080 Wazzaville",
                         'company_id' => null,
-                        'color' => null,
                         'can_make_reservation' => 0,
+                        'color' => null,
                         'note' => null,
                         'created_at' => '2018-01-01 00:02:00',
                         'updated_at' => '2022-01-01 00:02:00',
@@ -744,7 +745,7 @@ final class EventTest extends TestCase
 
     public function testEditBadBeneficiaries(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $this->expectException(\InvalidArgumentException::class);
         Event::findOrFail(4)->edit(['beneficiaries' => 'not_an_array']);
@@ -752,7 +753,7 @@ final class EventTest extends TestCase
 
     public function testEditBadTechnicians(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $this->expectException(\InvalidArgumentException::class);
         Event::findOrFail(4)->edit(['technicians' => 'not_an_array']);
@@ -760,7 +761,7 @@ final class EventTest extends TestCase
 
     public function testEditBadMaterials(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $this->expectException(\InvalidArgumentException::class);
         Event::findOrFail(4)->edit(['materials' => 'not_an_array']);
@@ -768,7 +769,7 @@ final class EventTest extends TestCase
 
     public function testSyncBeneficiaries(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $beneficiaries = [2, 3];
         $event = Event::findOrFail(4);
@@ -780,7 +781,7 @@ final class EventTest extends TestCase
 
     public function testSyncTechnicians(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $technicians = [
             [
@@ -840,7 +841,7 @@ final class EventTest extends TestCase
 
     public function testSyncTechniciansValidationErrors(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $errors = null;
         try {
@@ -874,7 +875,7 @@ final class EventTest extends TestCase
 
     public function testSyncMaterials(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 2, 20, 13, 30, 0));
+        static::setNow(Carbon::create(2019, 2, 20, 13, 30, 0));
 
         $materials = [
             ['id' => 2, 'quantity' => 4],
@@ -911,7 +912,7 @@ final class EventTest extends TestCase
 
     public function testDuplicate(): void
     {
-        Carbon::setTestNow(Carbon::create(2021, 07, 23, 12, 31, 24));
+        static::setNow(Carbon::create(2021, 07, 23, 12, 31, 24));
 
         $originalData = Event::findOrFail(1)
             ->append(['technicians', 'materials'])
@@ -1362,7 +1363,7 @@ final class EventTest extends TestCase
 
     public function testChangeDatesLonger(): void
     {
-        Carbon::setTestNow(Carbon::create(2018, 11, 10, 15, 0, 0));
+        static::setNow(Carbon::create(2018, 11, 10, 15, 0, 0));
 
         // - On invalide l'inventaire de retour pour pouvoir modifier.
         $event = Event::findOrFail(1);
@@ -1391,7 +1392,7 @@ final class EventTest extends TestCase
 
     public function testChangeDatesHalfTime(): void
     {
-        Carbon::setTestNow(Carbon::create(2018, 12, 10, 15, 0, 0));
+        static::setNow(Carbon::create(2018, 12, 10, 15, 0, 0));
 
         // - On invalide l'inventaire de retour pour pouvoir modifier.
         $event = Event::findOrFail(1);
@@ -1439,14 +1440,14 @@ final class EventTest extends TestCase
         $this->assertEquals([4, 5], $results);
     }
 
-    public function testTotalisableAttributes(): void
+    public function testTotalisableProperties(): void
     {
-        $getTestValues = static fn (Attribute $attribute) => (
-            $attribute->only(['id', 'name', 'value', 'unit'])
+        $getTestValues = static fn (Property $property) => (
+            $property->only(['id', 'name', 'value', 'unit'])
         );
 
-        // - Totaux des attributs numériques pour l'événement #1.
-        $result = Event::findOrFail(1)->totalisable_attributes;
+        // - Totaux des caractéristiques numériques pour l'événement #1.
+        $result = Event::findOrFail(1)->totalisable_properties;
         $expected = [
             1 => [
                 'id' => 1,
@@ -1463,8 +1464,8 @@ final class EventTest extends TestCase
         ];
         $this->assertSame($expected, $result->map($getTestValues)->toArray());
 
-        // - Totaux des attributs numériques pour l'événement #2.
-        $result = Event::findOrFail(2)->totalisable_attributes;
+        // - Totaux des caractéristiques numériques pour l'événement #2.
+        $result = Event::findOrFail(2)->totalisable_properties;
         $expected = [
             1 => [
                 'id' => 1,

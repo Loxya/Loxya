@@ -1,7 +1,7 @@
 import './index.scss';
 import Decimal from 'decimal.js';
 import stringIncludes from '@/utils/stringIncludes';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import config from '@/globals/config';
 import formatAmount from '@/utils/formatAmount';
@@ -18,7 +18,7 @@ import isMaterialResyncable from '../../utils/isMaterialResyncable';
 import store from '../../store';
 
 import type { Tag } from '@/stores/api/tags';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { ClientTableInstance } from 'vue-tables-2-premium';
 import type { RentalPrice } from '../../utils/getRentalPriceData';
 import type { SourceMaterial, Filters } from '../../_types';
@@ -43,6 +43,23 @@ type Props = {
      * Lorsqu'activé, il n'est plus possible d'ajouter du matériel.
      */
     isEditOnly: boolean,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à
+     * resynchroniser les données d'un matériel.
+     *
+     * @param id - Identifiant du matériel à resynchroniser.
+     */
+    onRequestResyncMaterialData?(id: SourceMaterial['id']): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à
+     * afficher tout le matériel.
+     *
+     * Utile par exemple pour pouvoir ajouter du matériel qui n'est
+     * pas encore dans la liste.
+     */
+    onRequestShowAllMaterials?(): void,
 };
 
 type Data = {
@@ -70,6 +87,16 @@ const MaterialsSelectorList = defineComponent({
         isEditOnly: {
             type: Boolean as PropType<Props['isEditOnly']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRequestResyncMaterialData: {
+            type: Function as PropType<Props['onRequestResyncMaterialData']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRequestShowAllMaterials: {
+            type: Function as PropType<Props['onRequestShowAllMaterials']>,
+            default: undefined,
         },
     },
     emits: [
@@ -155,7 +182,7 @@ const MaterialsSelectorList = defineComponent({
 
                 return !(Object.entries(filterResolvers) as Array<[keyof Filters, FilterResolver<keyof Filters>]>).some(
                     <T extends keyof Filters>([field, filterResolver]: [T, FilterResolver<T>]) => (
-                        filters[field] ? !filterResolver(material, filters[field]!) : false
+                        filters[field] ? !filterResolver(material, filters[field]) : false
                     ),
                 );
             });

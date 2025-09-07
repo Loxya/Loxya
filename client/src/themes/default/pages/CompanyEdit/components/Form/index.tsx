@@ -1,13 +1,12 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import pick from 'lodash/pick';
 import cloneDeep from 'lodash/cloneDeep';
 import FormField from '@/themes/default/components/FormField';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 import type { Country } from '@/stores/api/countries';
 import type { Company, CompanyEdit } from '@/stores/api/companies';
@@ -20,7 +19,20 @@ type Props = {
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Record<keyof CompanyEdit, string>,
+    errors?: Partial<Record<keyof CompanyEdit, string>> | null,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur soumet les changements.
+     *
+     * @param data - Les données soumises.
+     */
+    onSubmit?(data: CompanyEdit): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur manifeste
+     * son souhait d'annuler l'edition.
+     */
+    onCancel?(): void,
 };
 
 type Data = {
@@ -29,6 +41,7 @@ type Data = {
 
 const DEFAULT_VALUES: CompanyEdit = Object.freeze({
     legal_name: '',
+    registration_id: '',
     phone: '',
     street: '',
     postal_code: '',
@@ -55,6 +68,16 @@ const CompanyEditForm = defineComponent({
         errors: {
             type: Object as PropType<Required<Props>['errors']>,
             default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
+            default: undefined,
         },
     },
     emits: ['submit', 'cancel'],
@@ -133,6 +156,12 @@ const CompanyEditForm = defineComponent({
                         v-model={data.legal_name}
                         error={errors?.legal_name}
                         required
+                    />
+                    <FormField
+                        label="registration-id"
+                        autocomplete="off"
+                        v-model={data.registration_id}
+                        error={errors?.registration_id}
                     />
                     <FormField
                         label="phone"

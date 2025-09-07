@@ -1,13 +1,12 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import formatAmount from '@/utils/formatAmount';
 import { DateTimeReadableFormat } from '@/utils/datetime';
 import EmptyMessage from '@/themes/default/components/EmptyMessage';
 import { ClientTable } from '@/themes/default/components/Table';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
-import type { CreateElement } from 'vue';
+import type { PropType, CreateElement } from 'vue';
 import type { Estimate } from '@/stores/api/estimates';
 import type { Columns } from '@/themes/default/components/Table/Client';
 

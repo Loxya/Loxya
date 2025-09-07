@@ -1,8 +1,8 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { BookingsViewMode } from '@/stores/api/users';
 import MultiSwitch from '@/themes/default/components/MultiSwitch';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Option } from '@/themes/default/components/MultiSwitch';
 
 type Props = {

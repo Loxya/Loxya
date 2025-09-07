@@ -35,9 +35,11 @@ class Assert extends AssertCore
     public static function notEmpty($value, $message = '')
     {
         if ($value instanceof Collection) {
+            // @phpstan-ignore-next-line possiblyImpure.methodCall
             if ($value->isEmpty()) {
                 static::reportInvalidArgument(\sprintf(
                     $message ?: 'Expected a non-empty collection.',
+                    // @phpstan-ignore-next-line possiblyImpure.methodCall
                     static::valueToString($value),
                 ));
             }

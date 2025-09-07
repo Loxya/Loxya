@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { confirm } from '@/utils/alert';
 import apiEstimates from '@/stores/api/estimates';
 import { Group } from '@/stores/api/groups';
@@ -7,7 +7,7 @@ import formatAmount from '@/utils/formatAmount';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Estimate } from '@/stores/api/estimates';
 
 type Props = {
@@ -21,6 +21,13 @@ type Props = {
      * "cible" a été régénéré depuis.
      */
     outdated?: boolean,
+
+    /**
+     * Fonction appelée lorsque le devis a été supprimé.
+     *
+     * @param id - L'identifiant du devis supprimé.
+     */
+    onDeleted?(id: Estimate['id']): void,
 };
 
 type Data = {
@@ -39,6 +46,11 @@ const EventDetailsEstimate = defineComponent({
             type: Boolean as PropType<Required<Props>['outdated']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDeleted: {
+            type: Function as PropType<Props['onDeleted']>,
+            default: undefined,
+        },
     },
     emits: ['deleted'],
     data: (): Data => ({
@@ -53,7 +65,8 @@ const EventDetailsEstimate = defineComponent({
         userCanDelete(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
     },

@@ -1,6 +1,6 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { TooltipOptions } from 'v-tooltip';
 
 /** Les différentes variantes disponibles pour les icônes. */

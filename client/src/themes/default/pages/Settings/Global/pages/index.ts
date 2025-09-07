@@ -1,5 +1,7 @@
 import config, { BillingMode } from '@/globals/config';
 import isTruthy from '@/utils/isTruthy';
+import { Group } from '@/stores/api/groups';
+import store from '@/themes/default/globals/store';
 import EventSummarySettings from './EventSummary';
 import CategoriesSettings from './Categories';
 import TagsSettings from './Tags';
@@ -7,6 +9,7 @@ import CalendarSettings from './Calendar';
 import InventoriesSettings from './Inventories';
 import TaxesSettings from './Taxes';
 import DegressiveRatesSettings from './DegressiveRates';
+import EstimatesInvoicesSettings from './EstimatesInvoices';
 
 import type { RouteConfig } from 'vue-router';
 
@@ -16,18 +19,31 @@ export type Page = (
         meta: {
             icon: string,
             title: string,
+            requiresGroups: Group[],
         },
     }
 );
 
-const pages: Page[] = [
+const pages: Array<Page | RouteConfig> = [
     {
         name: 'global-settings',
         path: '',
+        redirect: () => {
+            const defaultView = store.getters['auth/is'](Group.ADMINISTRATION)
+                ? 'calendar'
+                : 'categories';
+
+            return { name: `global-settings:${defaultView}` };
+        },
+    },
+    {
+        name: 'global-settings:calendar',
+        path: 'calendar',
         component: CalendarSettings,
         meta: {
             icon: 'calendar-alt',
             title: 'page.settings.calendar.title',
+            requiresGroups: [Group.ADMINISTRATION],
         },
     },
     {
@@ -37,6 +53,7 @@ const pages: Page[] = [
         meta: {
             icon: 'sitemap',
             title: 'page.settings.categories.title',
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION],
         },
     },
     {
@@ -46,6 +63,7 @@ const pages: Page[] = [
         meta: {
             icon: 'tags',
             title: 'page.settings.tags.title',
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION],
         },
     },
     {
@@ -55,6 +73,7 @@ const pages: Page[] = [
         meta: {
             icon: 'print',
             title: 'page.settings.event-summary.title',
+            requiresGroups: [Group.ADMINISTRATION],
         },
     },
     {
@@ -64,6 +83,7 @@ const pages: Page[] = [
         meta: {
             icon: 'tasks',
             title: 'page.settings.inventories.title',
+            requiresGroups: [Group.ADMINISTRATION],
         },
     },
     config.billingMode !== BillingMode.NONE && {
@@ -73,6 +93,7 @@ const pages: Page[] = [
         meta: {
             icon: 'percentage',
             title: 'page.settings.taxes.title',
+            requiresGroups: [Group.ADMINISTRATION],
         },
     },
     config.billingMode !== BillingMode.NONE && {
@@ -82,6 +103,17 @@ const pages: Page[] = [
         meta: {
             icon: 'funnel-dollar',
             title: 'page.settings.degressive-rates.title',
+            requiresGroups: [Group.ADMINISTRATION],
+        },
+    },
+    config.billingMode !== BillingMode.NONE && {
+        name: 'global-settings:estimates-invoices',
+        path: 'estimates-invoices',
+        component: EstimatesInvoicesSettings,
+        meta: {
+            icon: 'file-invoice',
+            title: 'page.settings.estimates-invoices.title',
+            requiresGroups: [Group.ADMINISTRATION],
         },
     },
 ].filter(isTruthy);

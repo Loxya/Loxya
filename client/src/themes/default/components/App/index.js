@@ -1,8 +1,7 @@
 import invariant from 'invariant';
-import HttpCode from 'status-code-enum';
-import layouts from '@/themes/default/layouts';
-import { isRequestErrorStatusCode } from '@/utils/errors';
-import { defineComponent } from '@vue/composition-api';
+import { HttpCode, RequestError } from '@/globals/requester';
+import layouts, { Layout } from '@/themes/default/layouts';
+import { defineComponent } from 'vue';
 
 // @vue/component
 const App = defineComponent({
@@ -10,7 +9,7 @@ const App = defineComponent({
     computed: {
         layout() {
             const { meta } = this.$route;
-            return meta?.layout ?? 'default';
+            return meta?.layout ?? Layout.DEFAULT;
         },
     },
     watch: {
@@ -22,7 +21,7 @@ const App = defineComponent({
     created() {
         // - Configure Axios pour qu'il redirige en cas de soucis de connexion lors des requêtes API.
         this.$http.interceptors.response.use((response) => response, (error) => {
-            if (isRequestErrorStatusCode(error, HttpCode.ClientErrorUnauthorized)) {
+            if (error instanceof RequestError && error.httpCode === HttpCode.Unauthorized) {
                 this.$store.dispatch('auth/logout').then(() => {
                     this.$router.replace({ name: 'login', hash: '#expired' })
                         .catch(() => {});
@@ -61,12 +60,12 @@ const App = defineComponent({
     render() {
         const { layout } = this;
         invariant(layout in layouts, `The \`${layout}\` layout doesn't exist.`);
-        const Layout = layouts[layout];
+        const LayoutComponent = layouts[layout];
 
         return (
-            <Layout>
+            <LayoutComponent>
                 <router-view key={this.$route.path} />
-            </Layout>
+            </LayoutComponent>
         );
     },
 });

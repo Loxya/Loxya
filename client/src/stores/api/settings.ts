@@ -47,7 +47,7 @@ const SettingsSchema = z.strictObject({
         customText: z.strictObject({
             title: z.string().nullable(),
             content: z.string().nullable(),
-        }),
+        }).optional(),
         materialDisplayMode: z.nativeEnum(MaterialDisplayMode),
         showLegalNumbers: z.boolean(),
         showReplacementPrices: z.boolean(),
@@ -78,6 +78,34 @@ const SettingsSchema = z.strictObject({
         defaultDegressiveRate: z.number().nullable(),
         defaultTax: z.number().nullable(),
     }),
+    estimates: z.strictObject({
+        customText: z.strictObject({
+            title: z.string().nullable(),
+            content: z.string().nullable(),
+        }).optional(),
+        showBookingDescription: z.boolean(),
+        showMobilizationPeriod: z.boolean(),
+        showTotalReplacementPrice: z.boolean(),
+        showPictures: z.boolean(),
+        showDescriptions: z.boolean(),
+        showReplacementPrices: z.boolean(),
+        showUnitPrices: z.boolean(),
+        showTotalisableProperties: z.boolean(),
+    }),
+    invoices: z.strictObject({
+        customText: z.strictObject({
+            title: z.string().nullable(),
+            content: z.string().nullable(),
+        }).optional(),
+        showBookingDescription: z.boolean(),
+        showMobilizationPeriod: z.boolean(),
+        showTotalReplacementPrice: z.boolean(),
+        showPictures: z.boolean(),
+        showDescriptions: z.boolean(),
+        showReplacementPrices: z.boolean(),
+        showUnitPrices: z.boolean(),
+        showTotalisableProperties: z.boolean(),
+    }),
 });
 
 // ------------------------------------------------------
@@ -104,17 +132,17 @@ export type SettingsEdit = PartialDeep<Settings>;
 
 const all = async (): Promise<Settings> => {
     const response = await requester.get('/settings');
-    return SettingsSchema.parse(response.data);
+    return SettingsSchema.parse(response);
 };
 
 const update = async (data: SettingsEdit): Promise<Settings> => {
     const response = await requester.put('/settings', data);
-    return SettingsSchema.parse(response.data);
+    return SettingsSchema.parse(response);
 };
 
 const reset = async (key: string): Promise<Settings> => {
     const response = await requester.delete(`/settings/${key}`);
-    return SettingsSchema.parse(response.data);
+    return SettingsSchema.parse(response);
 };
 
 export default { all, update, reset };

@@ -2,13 +2,12 @@ import './index.scss';
 import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import isTruthy from '@/utils/isTruthy';
 import { confirm } from '@/utils/alert';
 import apiUsers from '@/stores/api/users';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
-import { isRequestErrorStatusCode } from '@/utils/errors';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import { Group } from '@/stores/api/groups';
 import Fragment from '@/components/Fragment';
@@ -220,7 +219,7 @@ const Users = defineComponent({
                                     type="edit"
                                     to={{
                                         name: 'edit-user',
-                                        params: { id: user.id },
+                                        params: { id: user.id.toString() },
                                     }}
                                 >
                                     {__('action-edit')}
@@ -245,12 +244,9 @@ const Users = defineComponent({
     watch: {
         filters: {
             handler() {
-                // @ts-expect-error -- `this` fait bien référence au component.
-                this.refreshTableDebounced();
+                this.refreshTableDebounced!();
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
-                    // @ts-expect-error -- `this` fait bien référence au component..
                     persistFilters(FILTERS_PERSISTENCE_KEY, this.filters);
                 }
             },
@@ -383,7 +379,7 @@ const Users = defineComponent({
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
                 return data;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     this.refreshTable();
                     return undefined;
                 }

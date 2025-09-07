@@ -7,29 +7,29 @@ describe('Companies Api', () => {
     describe('all()', () => {
         it('parse the returned data correctly', async () => {
             const paginatedData = withPaginationEnvelope(data.default());
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiCompanies.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiCompanies.all()).resolves.toMatchSnapshot();
         });
     });
 
     describe('one()', () => {
         it.each(data.default())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: datum });
-            expect(await apiCompanies.one(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(datum);
+            await expect(apiCompanies.one(datum.id)).resolves.toMatchSnapshot();
         });
     });
 
     describe('create()', () => {
         it.each(data.default())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
-            expect(await apiCompanies.create({} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
+            await expect(apiCompanies.create({} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('update()', () => {
         it.each(data.default())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiCompanies.update(datum.id, {} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiCompanies.update(datum.id, {} as any)).resolves.toMatchSnapshot();
         });
     });
 });

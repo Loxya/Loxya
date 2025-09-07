@@ -9,15 +9,15 @@ describe('Technicians Api', () => {
     describe('all()', () => {
         it('parse the returned data correctly', async () => {
             const paginatedData = withPaginationEnvelope(data.default());
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiTechnicians.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiTechnicians.all()).resolves.toMatchSnapshot();
         });
     });
 
     describe('allWhileEvent()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.withEvents() });
-            expect(await apiTechnicians.allWhileEvent(1)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(data.withEvents());
+            await expect(apiTechnicians.allWhileEvent(1)).resolves.toMatchSnapshot();
         });
     });
 
@@ -27,12 +27,12 @@ describe('Technicians Api', () => {
         it('parse the returned data correctly when paginated', async () => {
             const paginatedData = withPaginationEnvelope(data.withEvents());
 
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiTechnicians.allWithAssignments({ period })).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiTechnicians.allWithAssignments({ period })).resolves.toMatchSnapshot();
         });
 
         it('parse the returned data correctly when not paginated', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.withEvents() });
+            jest.spyOn(requester, 'get').mockResolvedValue(data.withEvents());
             const response = await apiTechnicians.allWithAssignments({ paginated: false, period });
             expect(response).toMatchSnapshot();
         });
@@ -40,51 +40,51 @@ describe('Technicians Api', () => {
 
     describe('one()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: datum });
-            expect(await apiTechnicians.one(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(datum);
+            await expect(apiTechnicians.one(datum.id)).resolves.toMatchSnapshot();
         });
     });
 
     describe('create()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
-            expect(await apiTechnicians.create({} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
+            await expect(apiTechnicians.create({} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('update()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiTechnicians.update(datum.id, {} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiTechnicians.update(datum.id, {} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('documents()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: documents.default() });
-            expect(await apiTechnicians.documents(1)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(documents.default());
+            await expect(apiTechnicians.documents(1)).resolves.toMatchSnapshot();
         });
     });
 
     describe('assignments()', () => {
         it.each(data.withEvents())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: datum.events });
-            expect(await apiTechnicians.assignments(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(datum.events);
+            await expect(apiTechnicians.assignments(datum.id)).resolves.toMatchSnapshot();
         });
     });
 
     describe('attachDocument()', () => {
         it.each(documents.default())('parse the returned data correctly (with document #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
             const fakeFile = new File(['__TEST__'], 'my-document.txt', { type: 'text/plain' });
-            expect(await apiTechnicians.attachDocument(1, fakeFile)).toMatchSnapshot();
+            await expect(apiTechnicians.attachDocument(1, fakeFile)).resolves.toMatchSnapshot();
         });
     });
 
     describe('restore()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiTechnicians.restore(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiTechnicians.restore(datum.id)).resolves.toMatchSnapshot();
         });
     });
 });

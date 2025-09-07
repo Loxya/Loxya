@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 use Brick\Math\BigDecimal as Decimal;
 use Brick\Math\RoundingMode;
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\BillingMode;
 use Loxya\Services\I18n;
@@ -273,8 +270,7 @@ final class AddTaxesAndCoefficients extends AbstractMigration
             ->update();
 
         if ($isBillingEnabled) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%smaterials', $prefix))
                 ->set('degressive_rate_id', $defaultDegressiveRateId)
@@ -307,8 +303,7 @@ final class AddTaxesAndCoefficients extends AbstractMigration
         // - Taxes
         //
 
-        /** @var DeleteQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+        $qb = $this->getDeleteBuilder();
         $qb
             ->delete(sprintf('%ssettings', $prefix))
             ->where(['key' => 'billing.defaultTax'])
@@ -321,8 +316,7 @@ final class AddTaxesAndCoefficients extends AbstractMigration
         // - Taux dégressifs
         //
 
-        /** @var DeleteQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+        $qb = $this->getDeleteBuilder();
         $qb
             ->delete(sprintf('%ssettings', $prefix))
             ->where(['key' => 'billing.defaultDegressiveRate'])

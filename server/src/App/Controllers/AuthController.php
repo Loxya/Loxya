@@ -7,6 +7,7 @@ use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Loxya\Config\Config;
+use Loxya\Events\LoginEvent;
 use Loxya\Http\Enums\FlashType;
 use Loxya\Http\Request;
 use Loxya\Models\User;
@@ -37,9 +38,13 @@ final class AuthController extends BaseController
 
     public function getSelf(Request $request, Response $response): ResponseInterface
     {
-        $user = Auth::user()->serialize(User::SERIALIZE_SESSION);
+        $user = Auth::user();
+        if ($user === null) {
+            throw new HttpUnauthorizedException($request);
+        }
 
-        return $response->withJson($user, StatusCode::STATUS_OK);
+        $data = $user->serialize($user::SERIALIZE_SESSION);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     public function loginWithForm(Request $request, Response $response): ResponseInterface
@@ -57,9 +62,13 @@ final class AuthController extends BaseController
             throw new HttpUnauthorizedException($request, "Wrong credentials provided.");
         }
 
+        // - On trigger l'event de login.
+        LoginEvent::dispatch($user);
+
+        // - On retourne les infos de l'utilisateur, avec son token de session.
         $result = $user->serialize(User::SERIALIZE_SESSION);
 
-        $result['token'] = Auth\JWT::generateToken($user);
+        $result['token'] = Auth\JWT::generateToken($request, $user);
         if (Config::getEnv() === 'test') {
             $result['token'] = '__FAKE-TOKEN__';
         }

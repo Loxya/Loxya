@@ -1,0 +1,9 @@
+/var/loxya/logs/*.log {
+    daily
+    size 200M
+    rotate 7
+    nocompress
+    missingok
+    notifempty
+    copytruncate
+}

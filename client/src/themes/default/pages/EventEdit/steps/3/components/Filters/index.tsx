@@ -1,10 +1,10 @@
 import { z } from '@/utils/validation';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import SearchPanel from '@/themes/default/components/SearchPanel';
 
 import type { Role } from '@/stores/api/roles';
 import type { SchemaInfer } from '@/utils/validation';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 import type { FilterDefinition } from '@/themes/default/components/SearchPanel';
 
@@ -22,6 +22,19 @@ export type Filters = SchemaInfer<typeof FiltersSchema>;
 type Props = {
     /** Les valeurs actuelles des filtres. */
     values: Filters,
+
+    /**
+     * Fonction appelée lorsque les filtres ont changés.
+     *
+     * @param newFilters - Les nouveaux filtres.
+     */
+    onChange?(newFilters: Filters): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a soumis
+     * les changements dans les filtres.
+     */
+    onSubmit?(): void,
 };
 
 /** Filtres de l'étape 3 de l'edition d'un événement: Assignation des techniciens. */
@@ -34,6 +47,16 @@ const EventEditStepTechniciansFilters = defineComponent({
             validator: (value: unknown) => (
                 FiltersSchema.safeParse(value).success
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
         },
     },
     emits: ['change', 'submit'],

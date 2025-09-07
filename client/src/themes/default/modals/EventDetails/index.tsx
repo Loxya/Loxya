@@ -1,7 +1,7 @@
 import './index.scss';
 import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { confirm } from '@/utils/alert';
 import { Tabs, Tab } from '@/themes/default/components/Tabs';
 import apiEvents from '@/stores/api/events';
@@ -10,6 +10,8 @@ import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import Button from '@/themes/default/components/Button';
 import Header from './components/Header';
+
+// - Tabs
 import Infos from './tabs/Infos';
 import Technicians from './tabs/Technicians';
 import Materials from './tabs/Materials';
@@ -18,8 +20,7 @@ import Invoices from './tabs/Invoices';
 import Documents from './tabs/Documents';
 import Note from './tabs/Note';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type { EventDetails as Event, EventTechnician } from '@/stores/api/events';
 import type { Session } from '@/stores/api/session';
 import type { Estimate } from '@/stores/api/estimates';
@@ -54,7 +55,7 @@ type Props = {
     /**
      * Fonction appelée lorsque l'événement liée à l'id passé a été mis à jour.
      *
-     * @param event - L'événement, mise à jour.
+     * @param event - L'événement, mis à jour.
      */
     onUpdated?(event: Event): void,
 
@@ -79,7 +80,7 @@ type Data = {
     event: Event | null,
     hasCriticalError: boolean,
     isFetched: boolean,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Modale de détails d'un événement. */
@@ -121,17 +122,22 @@ const EventDetails = defineComponent({
         event: null,
         hasCriticalError: false,
         isFetched: false,
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         isAdmin(): boolean {
             return this.$store.getters['auth/is']([Group.ADMINISTRATION]);
         },
 
+        isSupervisor(): boolean {
+            return this.$store.getters['auth/is']([Group.SUPERVISION]);
+        },
+
         isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
 
@@ -193,10 +199,6 @@ const EventDetails = defineComponent({
             return false;
         },
 
-        showHistory(): boolean {
-            return this.isAdmin;
-        },
-
         hasEventTechnicians(): boolean {
             if (!this.isTechniciansEnabled || !this.event) {
                 return false;
@@ -211,6 +213,13 @@ const EventDetails = defineComponent({
             return this.event.materials.length > 0;
         },
 
+        hasTechniciansProblems(): boolean {
+            if (!this.isTechniciansEnabled || !this.event) {
+                return false;
+            }
+            return !!this.event.has_unassigned_mandatory_positions;
+        },
+
         hasMaterialsProblems(): boolean {
             if (!this.event) {
                 return false;
@@ -222,7 +231,8 @@ const EventDetails = defineComponent({
                 has_not_returned_materials: hasNotReturnedMaterials,
             } = event;
 
-            // - Si l'événement est en cours ou à venir et qu'il manque du matériel.
+            // - Si l'événement est en cours ou à venir (période nominale)
+            //   et qu'il manque du matériel.
             if (!isEventPast && hasMissingMaterials) {
                 return true;
             }
@@ -239,7 +249,7 @@ const EventDetails = defineComponent({
         this.fetchData();
 
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -360,6 +370,7 @@ const EventDetails = defineComponent({
             hasEventTechnicians,
             isTechniciansEnabled,
             hasMaterials,
+            hasTechniciansProblems,
             hasMaterialsProblems,
             hasCriticalError,
             handleUpdated,
@@ -392,8 +403,8 @@ const EventDetails = defineComponent({
         return (
             <div class="EventDetails">
                 <Header
-                    event={event}
-                    onSaved={handleUpdated}
+                    event={event!}
+                    onUpdated={handleUpdated}
                     onDeleted={handleDeleted}
                     onDuplicated={handleDuplicated}
                     onClose={handleClose}
@@ -401,15 +412,16 @@ const EventDetails = defineComponent({
                 <div class="EventDetails__content">
                     <Tabs defaultIndex={defaultTabIndex} onChange={handleTabChange}>
                         <Tab title={__('informations')} icon="info-circle">
-                            <Infos event={event} />
+                            <Infos event={event!} />
                         </Tab>
                         {isTechniciansEnabled && (
                             <Tab
                                 title={__('technicians')}
                                 icon="people-carry"
-                                disabled={!hasEventTechnicians}
+                                disabled={!hasTechniciansProblems && !hasEventTechnicians}
+                                warning={hasTechniciansProblems}
                             >
-                                <Technicians event={event} />
+                                <Technicians event={event!} />
                             </Tab>
                         )}
                         <Tab
@@ -418,12 +430,12 @@ const EventDetails = defineComponent({
                             disabled={!hasMaterials}
                             warning={hasMaterialsProblems}
                         >
-                            <Materials event={event} />
+                            <Materials event={event!} />
                         </Tab>
                         {showBilling && (
                             <Tab title={__('estimates')} icon="file-signature">
                                 <Estimates
-                                    event={event}
+                                    event={event! as Event<true>}
                                     onCreated={handleEstimateCreated}
                                     onDeleted={handleEstimateDeleted}
                                 />
@@ -432,19 +444,19 @@ const EventDetails = defineComponent({
                         {showBilling && (
                             <Tab title={__('invoice')} icon="file-invoice-dollar">
                                 <Invoices
-                                    event={event}
+                                    event={event! as Event<true>}
                                     onCreated={handleInvoiceCreated}
                                 />
                             </Tab>
                         )}
                         {showDocumentsAndNotes && (
                             <Tab title={__('documents')} icon="file-pdf">
-                                <Documents ref="documents" event={event} />
+                                <Documents ref="documents" event={event!} />
                             </Tab>
                         )}
                         {showDocumentsAndNotes && (
                             <Tab title={__('notes')} icon="clipboard:regular">
-                                <Note event={event} onUpdated={handleUpdated} />
+                                <Note event={event!} onUpdated={handleUpdated} />
                             </Tab>
                         )}
                     </Tabs>

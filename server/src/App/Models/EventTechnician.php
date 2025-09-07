@@ -12,7 +12,7 @@ use Loxya\Contracts\PeriodInterface;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Period;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Technicien mandaté sur un événement.
@@ -29,8 +29,6 @@ use Respect\Validation\Validator as V;
  * @property-read Role|null $role
  *
  * @method static Builder|static inPeriod(PeriodInterface $period)
- * @method static Builder|static inPeriod(string|\DateTimeInterface $start, string|\DateTimeInterface|null $end)
- * @method static Builder|static inPeriod(string|\DateTimeInterface|PeriodInterface $start, string|\DateTimeInterface|null $end = null)
  */
 final class EventTechnician extends BaseModel implements Serializable
 {
@@ -46,7 +44,7 @@ final class EventTechnician extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'event_id' => V::custom([$this, 'checkEventId']),
             'technician_id' => V::custom([$this, 'checkTechnicianId']),
             'start_date' => V::custom([$this, 'checkDates']),
@@ -65,7 +63,7 @@ final class EventTechnician extends BaseModel implements Serializable
     {
         V::nullable(V::intVal())->check($value);
 
-        // - L'identifiant de l’événement n'est pas encore défini, on skip.
+        // - L'identifiant de l'événement n'est pas encore défini, on skip.
         if (!$this->exists && $value === null) {
             return true;
         }
@@ -240,7 +238,7 @@ final class EventTechnician extends BaseModel implements Serializable
         $period = Period::tryFrom($rawPeriod);
 
         $this->start_date = $period?->getStartDate()->format('Y-m-d H:i:s');
-        $this->end_date = $period?->getEndDate()->format('Y-m-d H:i:s');
+        $this->end_date = $period?->getEndDate()?->format('Y-m-d H:i:s');
     }
 
     // ------------------------------------------------------
@@ -255,7 +253,7 @@ final class EventTechnician extends BaseModel implements Serializable
      *
      * Si l'assignation pendant la nouvelle période de référence n'est pas possible, `null` sera retourné.
      *
-     * @param Period $newRefPeriod La nouvelle période référence (dans laquelle l'assignation doit être contenue).
+     * @param Period $newRefPeriod La nouvelle période de référence (dans laquelle l'assignation doit être contenue).
      *
      * @return Period|null La nouvelle période d'assignation si elle est possible, `null` sinon.
      */
@@ -269,7 +267,7 @@ final class EventTechnician extends BaseModel implements Serializable
 
         // - Si l'assignation se retrouve en dehors de la nouvelle période
         //   => Il n'y a pas de nouvelle période (et donc théoriquement plus d'assignation).
-        if ($periodStart >= $newRefPeriodEnd) {
+        if ($newRefPeriodEnd !== null && $periodStart >= $newRefPeriodEnd) {
             return null;
         }
         if ($periodEnd <= $newRefPeriodStart) {
@@ -281,7 +279,7 @@ final class EventTechnician extends BaseModel implements Serializable
             $periodStart = $newRefPeriodStart
                 ->roundMinutes(15, 'ceil');
         }
-        if ($periodEnd > $newRefPeriodEnd) {
+        if ($newRefPeriodEnd !== null && $periodEnd > $newRefPeriodEnd) {
             $periodEnd = $newRefPeriodEnd
                 ->roundMinutes(15, 'floor');
         }
@@ -298,28 +296,20 @@ final class EventTechnician extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    /**
-     * @param Builder $query
-     * @param string|\DateTimeInterface|PeriodInterface $start
-     * @param string|\DateTimeInterface|null $end (optional)
-     */
-    public function scopeInPeriod(Builder $query, $start, $end = null): Builder
+    public function scopeInPeriod(Builder $query, PeriodInterface $period): Builder
     {
-        if ($start instanceof PeriodInterface) {
-            $end = $start->getEndDate();
-            $start = $start->getStartDate();
-        }
-
-        // - Si pas de date de fin: Période de 24 heures.
-        $start = new CarbonImmutable($start);
-        $end = new CarbonImmutable($end ?? $start->addDay());
+        $start = $period->getStartDate();
+        $end = $period->getEndDate();
 
         return $query
             ->whereRelation('event', 'deleted_at', null)
-            ->where([
-                ['start_date', '<', $end],
-                ['end_date', '>', $start],
-            ]);
+            ->where(static fn (Builder $subQuery) => (
+                $subQuery
+                    ->where('end_date', '>', $start)
+                    ->when($end !== null, static fn (Builder $subSubQuery) => (
+                        $subSubQuery->where('start_date', '<', $end)
+                    ))
+            ));
     }
 
     // ------------------------------------------------------

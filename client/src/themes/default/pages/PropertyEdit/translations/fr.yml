@@ -1,0 +1,62 @@
+title: "Modifier la caractéristique «\_{name}\_»"
+title-simple: Modifier la caractéristique
+title-create: Nouvelle caractéristique
+
+name: Nom de la caractéristique
+define-entities: "Portée de la caractéristique\_:"
+define-entities-help: Au moins une valeur doit être sélectionnée.
+type: Type de donnée
+type-not-modifiable: Le type de donnée ne peut pas être modifié.
+unit: Unité de mesure à afficher
+max-length: Taille maximum du texte
+
+totalisable:
+    label: "Est totalisable\_?"
+    help: |
+        Permet d'utiliser la caractéristique dans les totaux
+        sous la liste du matériel des fiches de sortie.
+
+list-choices:
+    label: Choix
+    warning-edit: |
+        Attention: modifier les choix (autre qu'en les ré-ordonnant) alors que celles-ci
+        sont utilisées dans du matériel provoquera la perte des valeurs associés.
+
+limit-to-categories:
+    label: "Limiter la caractéristique aux catégories\_:"
+    help: Si aucune catégorie n'est sélectionnée, il n'y aura pas de limitation.
+
+period-precision:
+    label: Précision des dates
+    options:
+        free: Libre
+        daily: Journées entières
+        hourly: À l'heure près
+    warning-edit: |
+        Attention: modifier la précision des dates affectera
+        les périodes déjà saisies dans les matériels.
+
+entities:
+    material: Matériel
+
+types:
+    string: Texte
+    text: Texte multi-lignes
+    integer: Nombre entier
+    float: Nombre décimal
+    boolean: Booléen (Oui / Non)
+    list: Liste de choix
+    period: Période (date de début et de fin)
+    date: Date
+
+confirm-update-entities: >-
+    Des valeurs de la portée de la caractéristique ont été enlevées. Si vous sauvegardez
+    ces modifications, les valeurs existantes concernées par la portée de cette caractéristique
+    seront supprimées. Souhaitez-vous vraiment continuer ?
+confirm-update-categories: >-
+    Les catégories limitant la caractéristique ont changé. Si vous sauvegardez ces modifications,
+    les valeurs existantes pour cette caractéristique seront supprimées. Souhaitez-vous
+    vraiment continuer ?
+yes-update: Oui, mettre à jour la caractéristique
+
+saved: Caractéristique sauvegardée.

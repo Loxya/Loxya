@@ -1,8 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import generateUniqueId from 'lodash/uniqueId';
+import { defineComponent } from 'vue';
 import Icon, { Variant } from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
 export type OptionData = {
@@ -18,6 +19,17 @@ type Props = {
 
     /** L'option est-elle celle qui est active ? */
     active: boolean,
+
+    /**
+     * Fonction appelée lorsqu'un l'option est sélectionnée.
+     *
+     * @param value - La valeur de l'option.
+     */
+    onSelect?(value: OptionData['value']): void,
+};
+
+type InstanceProperties = {
+    uniqueId: string | undefined,
 };
 
 /** Une option pour le MultiSwitch. */
@@ -32,8 +44,16 @@ const MultiSwitchOption = defineComponent({
             type: Boolean as PropType<Required<Props>['active']>,
             default: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSelect: {
+            type: Function as PropType<Props['onSelect']>,
+            default: undefined,
+        },
     },
     emits: ['select'],
+    setup: (): InstanceProperties => ({
+        uniqueId: undefined,
+    }),
     computed: {
         normalizedIcon(): IconProps | null {
             const { icon } = this.data;
@@ -54,6 +74,11 @@ const MultiSwitchOption = defineComponent({
             return { name };
         },
     },
+    created() {
+        const { $options } = this;
+
+        this.uniqueId = generateUniqueId(`${$options.name!}-`);
+    },
     methods: {
         handleClick() {
             if (this.active) {
@@ -64,17 +89,17 @@ const MultiSwitchOption = defineComponent({
         },
     },
     render() {
-        const { data, normalizedIcon: icon, active, handleClick } = this;
+        const { uniqueId, data, normalizedIcon: icon, active, handleClick } = this;
 
         const classNames = ['MultiSwitchOption', {
             'MultiSwitchOption--active': active,
         }];
 
         return (
-            <label for={`multiSwitchValue-${data.value}`} class={classNames}>
+            <label for={uniqueId} class={classNames}>
                 <input
                     type="radio"
-                    id={`multiSwitchValue-${data.value}`}
+                    id={uniqueId}
                     class="MultiSwitchOption__input"
                     checked={active}
                     onClick={handleClick}

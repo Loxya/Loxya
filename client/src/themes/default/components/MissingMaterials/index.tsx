@@ -1,38 +1,44 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiEvents from '@/stores/api/events';
 import { BookingEntity } from '@/stores/api/bookings';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Booking as BookingCore } from '@/stores/api/bookings';
 import type { Event, EventMaterialWithQuantityMissing } from '@/stores/api/events';
 
-type Booking =
-    | BookingCore
-    | { entity: BookingEntity.EVENT } & Event;
+export enum BookableEntity {
+    EVENT = 'event',
+}
 
-type BookingMaterialWithQuantityMissing =
-    | EventMaterialWithQuantityMissing;
+type Bookable = (
+    | BookingCore
+    | { entity: BookableEntity.EVENT } & Event
+);
+
+type BookableMaterialWithQuantityMissing = (
+    | EventMaterialWithQuantityMissing
+);
 
 type Props = {
     /**
-     * Le booking (événement ou réservation) dont on
+     * Le bookable ({@see {@link Bookable}}) dont on
      * veut afficher le matériel manquant.
      */
-    booking: Booking,
+    bookable: Bookable,
 };
 
 type Data = {
     hasCriticalError: boolean,
-    missingMaterials: BookingMaterialWithQuantityMissing[],
+    missingMaterials: BookableMaterialWithQuantityMissing[],
 };
 
-/** Liste du matériel manquant d'un booking. */
+/** Liste du matériel manquant d'un bookable. */
 const MissingMaterials = defineComponent({
     name: 'MissingMaterials',
     props: {
-        booking: {
-            type: Object as PropType<Props['booking']>,
+        bookable: {
+            type: Object as PropType<Props['bookable']>,
             required: true,
         },
     },
@@ -56,15 +62,9 @@ const MissingMaterials = defineComponent({
         // ------------------------------------------------------
 
         async fetchData() {
-            const { booking } = this;
+            const { bookable } = this;
             try {
-                // TODO: Utiliser directement un endpoint de `/api/bookings`.
-                this.missingMaterials = await (() => {
-                    if (booking.entity === BookingEntity.EVENT) {
-                        return apiEvents.missingMaterials(booking.id);
-                    }
-                    throw new Error(`Unsupported entity ${(booking as any).entity}`);
-                })();
+                this.missingMaterials = await apiEvents.missingMaterials(bookable.id);
             } catch {
                 this.hasCriticalError = true;
             }
@@ -81,6 +81,7 @@ const MissingMaterials = defineComponent({
     render() {
         const {
             __,
+            bookable,
             missingMaterials,
             hasCriticalError,
             hasMissingMaterials,
@@ -105,6 +106,13 @@ const MissingMaterials = defineComponent({
             return null;
         }
 
+        const renderHelp = (): JSX.Node => {
+            if ([BookingEntity.EVENT, BookableEntity.EVENT].includes(bookable.entity)) {
+                return __('help.event');
+            }
+            return __('help.general');
+        };
+
         return (
             <div class="MissingMaterials">
                 <div class="MissingMaterials__header">
@@ -112,11 +120,11 @@ const MissingMaterials = defineComponent({
                         {__('title')}
                     </h3>
                     <p class="MissingMaterials__header__help">
-                        {__('help.event')}
+                        {renderHelp()}
                     </p>
                 </div>
                 <ul class="MissingMaterials__list">
-                    {missingMaterials.map((missingMaterial: BookingMaterialWithQuantityMissing) => (
+                    {missingMaterials.map((missingMaterial: BookableMaterialWithQuantityMissing) => (
                         <li key={missingMaterial.id} class="MissingMaterials__list__item">
                             <div class="MissingMaterials__list__item__name">
                                 {missingMaterial.name}

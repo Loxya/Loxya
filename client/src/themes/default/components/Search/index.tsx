@@ -1,11 +1,11 @@
 import './index.scss';
 import { z } from '@/utils/validation';
-import { computed, defineComponent } from '@vue/composition-api';
+import { computed, defineComponent } from 'vue';
 import { RawTokenSchema } from './_schemas';
 import Icon from '@/themes/default/components/Icon';
 import generateUniqueId from 'lodash/uniqueId';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -30,6 +30,20 @@ type Props = {
      * @default "Recherche"
      */
     placeholder?: string,
+
+    /**
+     * Fonction appelée lorsque la recherche change.
+     *
+     * @param newValue - La nouvelle valeur de recherche.
+     */
+    onChange?(newValue: string | null): void,
+
+    /**
+     * Fonction appelée lors de la soumission de la recherche.
+     *
+     * @param value - La valeur soumise.
+     */
+    onSubmit?(value: string | null): void,
 };
 
 type Data = {
@@ -54,7 +68,7 @@ const Search = defineComponent({
     },
     props: {
         value: {
-            // TODO [vue@>2.7]: Mettre `[Array, String, undefined, null] as PropType<Props['value']>,` en Vue 2.7.
+            // TODO [vue@>3]: Mettre `[Array, String, undefined, null]` en Vue 3.
             // @see https://github.com/vuejs/core/issues/3948#issuecomment-860466204
             type: [Array, String] as PropType<Props['value']>,
             default: undefined,
@@ -64,7 +78,7 @@ const Search = defineComponent({
             ),
         },
         defaultValue: {
-            // TODO [vue@>2.7]: Mettre `[Array, String, null] as PropType<Props['value']>,` en Vue 2.7.
+            // TODO [vue@>3]: Mettre `[Array, String, null]` en Vue 3.
             // @see https://github.com/vuejs/core/issues/3948#issuecomment-860466204
             type: [Array, String] as PropType<Required<Props>['defaultValue']>,
             default: null,
@@ -75,6 +89,16 @@ const Search = defineComponent({
         },
         placeholder: {
             type: String as PropType<Props['placeholder']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
             default: undefined,
         },
     },

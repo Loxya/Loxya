@@ -14,8 +14,9 @@ use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Assert;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 
 /**
  * Taxe (ou groupe de taxes).
@@ -42,7 +43,7 @@ final class Tax extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
             'is_group' => V::boolType(),
             'is_rate' => V::custom([$this, 'checkIsRate']),
@@ -264,7 +265,7 @@ final class Tax extends BaseModel implements Serializable
             "Unable to add components to a non-group tax."
         ));
 
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('name'),
             new Rule\Key('is_rate'),
             new Rule\Key('value'),

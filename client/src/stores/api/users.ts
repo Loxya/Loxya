@@ -151,39 +151,39 @@ export type GetAllParams = (
 
 const all = async (params: GetAllParams = {}): Promise<PaginatedData<User[]>> => {
     const response = await requester.get('/users', { params });
-    return withPaginationEnvelope(UserSchema).parse(response.data);
+    return withPaginationEnvelope(UserSchema).parse(response);
 };
 
 const one = async (id: User['id'] | 'self'): Promise<UserDetails> => {
     const response = await requester.get(`/users/${id}`);
-    return UserDetailsSchema.parse(response.data);
+    return UserDetailsSchema.parse(response);
 };
 
 const create = async (data: UserEdit): Promise<UserDetails> => {
     const response = await requester.post('/users', data);
-    return UserDetailsSchema.parse(response.data);
+    return UserDetailsSchema.parse(response);
 };
 
 async function update(id: 'self', data: UserEditSelf): Promise<UserDetails>;
 async function update(id: User['id'], data: UserEdit): Promise<UserDetails>;
 async function update(id: User['id'] | 'self', data: UserEdit | UserEditSelf): Promise<UserDetails> {
     const response = await requester.put(`/users/${id}`, data);
-    return UserDetailsSchema.parse(response.data);
+    return UserDetailsSchema.parse(response);
 }
 
 const getSettings = async (id: User['id'] | 'self'): Promise<UserSettings> => {
     const response = await requester.get(`/users/${id}/settings`);
-    return UserSettingsSchema.parse(response.data);
+    return UserSettingsSchema.parse(response);
 };
 
 const updateSettings = async (id: User['id'] | 'self', data: UserSettingsEdit): Promise<UserSettings> => {
     const response = await requester.put(`/users/${id}/settings`, data);
-    return UserSettingsSchema.parse(response.data);
+    return UserSettingsSchema.parse(response);
 };
 
 const restore = async (id: User['id']): Promise<UserDetails> => {
     const response = await requester.put(`/users/restore/${id}`);
-    return UserDetailsSchema.parse(response.data);
+    return UserDetailsSchema.parse(response);
 };
 
 const remove = async (id: User['id']): Promise<void> => {

@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Step } from '..';
 
 type Props = {
@@ -14,6 +14,9 @@ type Props = {
 
     /** L'étape est-elle l'étape active ? */
     active: boolean,
+
+    /** Fonction appelée lorsque l'élément a été cliqué. */
+    onClick?(): void,
 };
 
 /** Une étape dans une navigation multi-étapes. */
@@ -31,6 +34,11 @@ const StepperItem = defineComponent({
         active: {
             type: Boolean as PropType<Props['active']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
         },
     },
     emits: ['click'],

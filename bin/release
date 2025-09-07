@@ -1,27 +1,59 @@
 #!/usr/bin/env bash
 
-VERSION_NUMBER=${1:-$(<./VERSION)}
-isProduction=true
+ROOT="$(dirname "$(dirname "$(readlink -f "$0")")")"
+cd $ROOT
 
-while getopts "v:" option
-do
-    case $option in
-    (v) VERSION_NUMBER=$OPTARG ; [ $OPTARG == 'testing' ] && isProduction=false ;;
-    (*) printf "Option inconue : '-%s'\n" "$opt" && exit 1 ;;
+VERSION_NUMBER=''
+PRE_RELEASE=''
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --pre-release)
+            if [[ -z "$2" || ! "$2" =~ ^[0-9]+$ ]]; then
+                echo -e "\e[1m\e[31m\nERREUR: L'option \`--pre-release\` attend un entier.\e[0m" >&2
+                exit 1
+            fi
+            PRE_RELEASE="$2"
+            shift 2
+        ;;
+        -*)
+            echo -e "\e[1m\e[31m\nERREUR: Option inconnue : \`$1\`.\e[0m" >&2
+            exit 1
+        ;;
+        *)
+            if [[ -z "$VERSION_NUMBER" ]]; then
+                VERSION_NUMBER="$1"
+                shift
+            else
+                echo -e "\e[1m\e[31m\nERREUR: Argument en trop : \`$1\`.\e[0m" >&2
+                exit 1
+            fi
+        ;;
     esac
 done
-
-VERSION="${VERSION_NUMBER}"
-
-releaseName="Loxya-${VERSION}"
-distFolder="./dist/${releaseName}"
-
-# - Header message
-headerMessage="\e[1m\e[34m* Script de distribution de la version \e[4m$VERSION_NUMBER OSS\e[0m\e[1m\e[34m *"
-if ! $isProduction; then
-    headerMessage="\e[1m\e[33m* Test du script de distribution de la version \e[4mOSS\e[0m\e[1m\e[33m *"
+if [[ -z "$VERSION_NUMBER" ]]; then
+    VERSION_NUMBER=$(sed -E 's/(-beta\.[0-9]+)?$//' < ./VERSION)
+fi
+if [[ ! "$VERSION_NUMBER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo -e "\e[1m\e[31m\nERREUR: La version doit être au format \`X.Y.Z\`.\e[0m" >&2
+    exit 1
 fi
 
+# - Version
+isPreRelease=$([[ -n "$PRE_RELEASE" ]] && echo true || echo false)
+if ! $isPreRelease; then
+    VERSION="${VERSION_NUMBER}"
+else
+    VERSION="${VERSION_NUMBER}-beta.${PRE_RELEASE}"
+fi
+FULL_VERSION="${VERSION}"
+
+BUILD_PATH="$ROOT/build"
+RELEASE_NAME="Loxya-${FULL_VERSION}"
+RELEASE_PATH="$ROOT/dist/$RELEASE_NAME"
+
+# - Header message
+headerVersion="$VERSION_NUMBER"; $isPreRelease && headerVersion+=" (Beta $PRE_RELEASE)"
+headerMessage="\e[1m\e[34m* Script de distribution de la version \e[4m$headerVersion\e[0m\e[1m\e[34m *"
 echo -e "
       ██╗      ██████╗ ██╗  ██╗██╗   ██╗ █████╗
       ██║     ██╔═══██╗╚██╗██╔╝╚██╗ ██╔╝██╔══██╗
@@ -40,9 +72,9 @@ if ! [ -x "$(command -v jq)" ]; then
 fi
 
 echo -ne "\e[1m\e[34m\n-> Mise à jour du CHANGELOG et du fichier de version...\e[0m"
-if $isProduction; then
+if ! $isPreRelease; then
     echo
-    CHANGELOG_REGEX="$VERSION\s+\(UNRELEASED\)"
+    CHANGELOG_REGEX="$FULL_VERSION\s+\(UNRELEASED\)"
     grep -i -E "$CHANGELOG_REGEX" ./CHANGELOG.md > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         read -p "   Le CHANGELOG n'a pas pu être mis à jour automatiquement, voulez-vous continuer (y/n) ? " -n 1 -r
@@ -52,38 +84,37 @@ if $isProduction; then
         fi
         echo
     fi
-    sed -i -E "s/$CHANGELOG_REGEX/$VERSION \($(date '+%Y-%m-%d')\)/i" ./CHANGELOG.md
-    echo $VERSION > ./VERSION
+    sed -i -E "s/$CHANGELOG_REGEX/$FULL_VERSION \($(date '+%Y-%m-%d')\)/i" ./CHANGELOG.md
+    echo $FULL_VERSION > ./VERSION
 else
-    echo -e "\e[1m\e[33m Omise (testing mode).\e[0m"
+    echo -e "\e[1m\e[33m Omise (version beta).\e[0m"
 fi
 
 echo -e "\e[1m\e[34m-> Suppression de l'éventuelle ancienne version distribuable pour cette version...\e[0m"
-rm -rf $distFolder ./dist/${releaseName}.zip
+rm -rf "$BUILD_PATH" "$RELEASE_PATH" "$RELEASE_PATH.zip"
 
 echo -e "\e[1m\e[34m-> Compilation des sources du client...\e[0m"
-(cd ./client && yarn install --frozen-lockfile --silent)
-(cd ./client && yarn run --silent build --silent > /dev/null)
+(cd ./client && npm install --silent > /dev/null)
+(cd ./client && npm run build --silent -- --production --silent > /dev/null)
 
 echo -e "\e[1m\e[34m-> Copie des sources vers le dossier de distribution...\e[0m"
-mkdir -p $distFolder
-cp -r ./server/src dist
-mv ./dist/src $distFolder/src
+mkdir -p "$BUILD_PATH"
+cp -r ./server/src "$BUILD_PATH"
 
-cp -R ./server/bin $distFolder/bin
-cp ./server/.htaccess $distFolder/.htaccess
-cp ./server/composer.json $distFolder/composer.json
-cp ./server/composer.lock $distFolder/composer.lock
-cp ./LICENCE.md $distFolder/LICENCE.md
+cp -R ./server/bin "$BUILD_PATH/bin"
+cp ./server/.htaccess "$BUILD_PATH/.htaccess"
+cp ./server/composer.json "$BUILD_PATH/composer.json"
+cp ./server/composer.lock "$BUILD_PATH/composer.lock"
+cp ./LICENCE "$BUILD_PATH/LICENCE"
 
-rm $distFolder/src/VERSION
-cp ./VERSION $distFolder/src/VERSION
+rm -r "$BUILD_PATH/src/VERSION"
+echo "$FULL_VERSION" > "$BUILD_PATH/src/VERSION"
 
-rm $distFolder/src/public/webclient
-cp -R ./client/dist $distFolder/src/public/webclient
+rm "$BUILD_PATH/src/public/webclient"
+cp -R ./client/dist "$BUILD_PATH/src/public/webclient"
 
 echo -e "\e[1m\e[34m-> Nettoyage du dossier de distribution (suppression des fichiers inutiles / privés)...\e[0m"
-cd $distFolder
+cd "$BUILD_PATH"
 rm -f src/App/Config/install.json
 rm -f src/App/Config/install.json.bckp
 rm -f src/App/Config/settings.json
@@ -103,8 +134,9 @@ echo -e "\e[1m\e[34m-> Installation des dépendances back-end...\e[0m"
 query=(
     'del(."require-dev")'
     'del(.autoload."psr-4"."Loxya\\Tests\\")'
-    'del(.autoload."psr-4"."Loxya\\Fixtures\\")'
+    'del(.autoload."psr-4"."Loxya\\Tests\\Fixtures\\")'
     'del(.scripts."create-migration")'
+    'del(.scripts."phpstan")'
     'del(.scripts."lint")'
     'del(.scripts."lint:fix")'
     'del(.scripts."test")'
@@ -115,11 +147,32 @@ mv tmp.composer.json composer.json
 composer update --lock --quiet
 composer install --quiet
 
+cd "$ROOT"
+
+echo -e "\e[1m\e[34m-> Création de l'image Docker liée...\e[0m"
+docker build \
+    --build-context source="$BUILD_PATH" \
+    -t "loxya/loxya:${VERSION}" \
+    ./.docker
+
+if ! $isPreRelease; then
+    echo -e "\e[1m\e[34m-> Tagging de l'image...\e[0m"
+    MINOR_VERSION="$(echo "$VERSION_NUMBER" | cut -d. -f1-2)"
+    MAJOR_VERSION="$(echo "$VERSION_NUMBER" | cut -d. -f1)"
+
+    docker tag "loxya/loxya:${VERSION}" "loxya/loxya:${MINOR_VERSION}"
+    docker tag "loxya/loxya:${VERSION}" "loxya/loxya:${MAJOR_VERSION}"
+    docker tag "loxya/loxya:${VERSION}" "loxya/loxya:latest"
+fi
+
 echo -e "\e[1m\e[34m-> Empaquetage de la release dans un fichier ZIP...\e[0m"
-cd .. && zip -r --quiet "${releaseName}.zip" $releaseName
+mkdir -p "$RELEASE_PATH" && cp -r "$BUILD_PATH"/. "$RELEASE_PATH"
+cd "$RELEASE_PATH/.." && zip -r --quiet "$RELEASE_PATH.zip" "$RELEASE_NAME"
+rm -rf "$RELEASE_PATH"
 
 echo -e "\e[1m\e[34m-> Suppression du dossier temporaire...\e[0m"
-cd .. && rm -rf $distFolder
+rm -rf "$BUILD_PATH"
 
 echo -e "\e[1m\e[32m\nTerminé !!\e[0m"
-echo -e "\n=> Vous pouvez maintenant récupérer le distribuable \`./dist/${releaseName}.zip\`."
+echo -e "\n=> L'image docker \`loxya/loxya:${VERSION}\` est prête à être poussée sur le registre."
+echo -e "\n=> Vous pouvez maintenant récupérer le distribuable \`./dist/${RELEASE_NAME}.zip\`."

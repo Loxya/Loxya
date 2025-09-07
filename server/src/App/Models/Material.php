@@ -5,12 +5,12 @@ namespace Loxya\Models;
 
 use Brick\Math\BigDecimal as Decimal;
 use Brick\Math\RoundingMode;
-use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,8 +29,10 @@ use Loxya\Support\Assert;
 use Loxya\Support\Database\QueryAggregator;
 use Loxya\Support\Period;
 use Loxya\Support\Str;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Psr\Http\Message\UploadedFileInterface;
-use Respect\Validation\Validator as V;
+use Respect\Validation\Rules as Rule;
 
 /**
  * Matériel.
@@ -71,7 +73,7 @@ use Respect\Validation\Validator as V;
  * @property-read CarbonImmutable|null $updated_at
  * @property-read CarbonImmutable|null $deleted_at
  *
- * @property-read Collection<array-key, Attribute> $attributes
+ * @property-read Collection<array-key, MaterialProperty> $properties
  * @property-read Collection<array-key, Event> $events
  * @property-read Collection<array-key, Document> $documents
  * @property-read Collection<array-key, Tag> $tags
@@ -125,7 +127,7 @@ final class Material extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'name' => V::notEmpty()->length(2, 191),
             'reference' => V::custom([$this, 'checkReference']),
             'picture' => V::custom([$this, 'checkPicture']),
@@ -321,12 +323,10 @@ final class Material extends BaseModel implements Serializable
         return $this->belongsTo(SubCategory::class);
     }
 
-    public function attributes(): BelongsToMany
+    public function properties(): HasMany
     {
-        return $this->belongsToMany(Attribute::class, 'material_attributes')
-            ->using(MaterialAttribute::class)
-            ->withPivot('value')
-            ->orderByPivot('id');
+        return $this->hasMany(MaterialProperty::class, 'material_id')
+            ->orderBy('id');
     }
 
     public function events(): BelongsToMany
@@ -460,28 +460,29 @@ final class Material extends BaseModel implements Serializable
         return $this->getRelationValue('tags');
     }
 
-    /** @return Collection<array-key, Attribute> */
-    public function getAttributesAttribute(): Collection
+    /** @return Collection<array-key, Property> */
+    public function getPropertiesAttribute(): Collection
     {
-        $attributes = $this->getRelationValue('attributes');
-        if (!$attributes) {
+        $properties = $this->getRelationValue('properties');
+        if (!$properties) {
             return new Collection();
         }
 
-        return $attributes
-            ->filter(function ($attribute) {
-                if ($attribute->categories->isEmpty()) {
+        return $properties
+            ->filter(function (MaterialProperty $materialProperty) {
+                $property = $materialProperty->property;
+                if ($property->categories->isEmpty()) {
                     return true;
                 }
 
                 return (
                     $this->category !== null &&
-                    $attribute->categories->contains('id', $this->category->id)
+                    $property->categories->contains('id', $this->category->id)
                 );
             })
-            ->map(static function ($attribute) {
-                $attribute->value = $attribute->pivot->value;
-                return $attribute->append(['value']);
+            ->map(static function (MaterialProperty $materialProperty) {
+                $materialProperty->property->value = $materialProperty->value;
+                return $materialProperty->property->append(['value']);
             })
             ->sortBy('name')
             ->values();
@@ -499,7 +500,6 @@ final class Material extends BaseModel implements Serializable
         }
 
         $contextPeriod = $this->context->operation_period;
-
         $durationDays = $contextPeriod->asDays();
 
         // - Pas de dégressivité.
@@ -551,7 +551,7 @@ final class Material extends BaseModel implements Serializable
             $query->add($modelClass, $modelQuery);
         }
 
-        return $query->orderBy('mobilization_start_date')->get()->first();
+        return $query->orderBy('mobilization_start_date')->first();
     }
 
     public function getReturnInventoryTodoAttribute(): Event|null
@@ -572,13 +572,12 @@ final class Material extends BaseModel implements Serializable
                                 ->orWhereColumn('quantity_returned', '<', 'quantity')
                         ))
                 ))
-                ->where('mobilization_end_date', '>=', (Carbon::now()->subDays(30)))
-                ->returnInventoryTodo();
+                ->returnInventoryTodo(lax: true);
 
             $query->add($modelClass, $modelQuery);
         }
 
-        return $query->orderByDesc('mobilization_end_date')->get()->first();
+        return $query->orderByDesc('mobilization_end_date')->first();
     }
 
     // ------------------------------------------------------
@@ -769,64 +768,82 @@ final class Material extends BaseModel implements Serializable
             }
         }
 
-        return dbTransaction(function () use ($data) {
-            $hasFailed = false;
-            $validationErrors = [];
+        $this->fill(Arr::except($data, ['tags', 'properties']));
 
-            try {
-                $this->fill(Arr::except($data, ['tags', 'approvers', 'attributes']))->save();
-            } catch (ValidationException $e) {
-                $validationErrors = $e->getValidationErrors();
-                $hasFailed = true;
+        $validationErrors = [];
+        if (!$this->isValid()) {
+            $validationErrors = $this->validationErrors();
+        }
+
+        // - Tags
+        $tags = null;
+        if (array_key_exists('tags', $data)) {
+            Assert::isArray($data['tags'], "Key `tags` must be an array.");
+
+            $tags = [];
+            foreach ($data['tags'] as $tagId) {
+                if (empty($tagId)) {
+                    continue;
+                }
+
+                $relatedTag = is_numeric($tagId) ? Tag::find($tagId) : null;
+                if ($relatedTag === null) {
+                    $validationErrors['tags'] = __('field-contains-invalid-values');
+                    break;
+                }
+
+                $tags[] = $relatedTag->id;
             }
+        }
+
+        // - Caractéristiques spéciales
+        $properties = null;
+        if (array_key_exists('properties', $data)) {
+            $propertiesSchema = V::arrayType()->each(new SchemaStrict(
+                new Rule\Key('id'),
+                new Rule\Key('value'),
+            ));
+            if (!$propertiesSchema->validate($data['properties'])) {
+                throw new \InvalidArgumentException("Invalid data format.");
+            }
+
+            $properties = (new CoreCollection($data['properties']))
+                ->filter(static fn ($propertyData) => (
+                    !in_array($propertyData['value'], [null, ''], true)
+                ))
+                ->map(static fn ($propertyData) => (
+                    new MaterialProperty([
+                        'property_id' => $propertyData['id'],
+                        'value' => $propertyData['value'],
+                    ])
+                ));
+
+            $errors = $properties
+                ->filter(static fn ($property) => !$property->isValid())
+                ->map(static fn ($property) => $property->validationErrors())
+                ->all();
+
+            if (!empty($errors)) {
+                $validationErrors['properties'] = $errors;
+            }
+        }
+
+        if (!empty($validationErrors)) {
+            throw new ValidationException($validationErrors);
+        }
+
+        return dbTransaction(function () use ($tags, $properties) {
+            $this->save();
 
             // - Tags
-            if (isset($data['tags'])) {
-                Assert::isArray($data['tags'], "Key `tags` must be an array.");
-
-                $tags = [];
-                foreach ($data['tags'] as $tagId) {
-                    if (empty($tagId)) {
-                        continue;
-                    }
-
-                    $relatedTag = is_numeric($tagId) ? Tag::find($tagId) : null;
-                    if ($relatedTag === null) {
-                        $validationErrors['tags'] = __('field-contains-invalid-values');
-                        $hasFailed = true;
-                        break;
-                    }
-
-                    $tags[] = $relatedTag->id;
-                }
-
-                if (!$hasFailed) {
-                    $this->tags()->sync($tags);
-                }
+            if ($tags !== null) {
+                $this->tags()->sync($tags);
             }
 
-            // - Attributs
-            if (isset($data['attributes'])) {
-                Assert::isArray($data['attributes'], "Key `attributes` must be an array.");
-
-                $attributes = [];
-                foreach ($data['attributes'] as $attribute) {
-                    if (empty($attribute['value'])) {
-                        continue;
-                    }
-
-                    $attributes[$attribute['id']] = [
-                        'value' => (string) $attribute['value'],
-                    ];
-                }
-
-                if (!$hasFailed) {
-                    $this->attributes()->sync($attributes);
-                }
-            }
-
-            if ($hasFailed) {
-                throw new ValidationException($validationErrors);
+            // - Caractéristiques spéciales
+            if ($properties !== null) {
+                MaterialProperty::flushForMaterial($this);
+                $this->properties()->saveMany($properties);
             }
 
             return $this->refresh();
@@ -952,8 +969,10 @@ final class Material extends BaseModel implements Serializable
     {
         $query->with([
             'tags',
-            'attributes' => [
-                'categories',
+            'properties' => [
+                'property' => [
+                    'categories',
+                ],
             ],
         ]);
 
@@ -970,50 +989,78 @@ final class Material extends BaseModel implements Serializable
      * Permet de récupérer la collection de matériel passée en argument, dans laquelle
      * sont injectées les données de disponibilités, pour une période donnée.
      *
-     * Si un événement, une réservation ou un panier est fourni en tant que `$period`, son propre
+     * Si un événement est fourni en tant que `$context`, son propre
      * matériel sera exclu du calcul des disponibilités.
      *
-     * Ces disponibilités dépendent de la valeur du paramètre `$period` qui peut contenir:
+     * Ces disponibilités dépendent de la valeur du paramètre `$context` qui peut contenir:
      * - Soit une instance implémentant `PeriodInterface` dont les dates seront utilisées pour les dispos.
      * - Soit `null` si les disponibilités doivent être récupérées sans prendre en compte de période.
      *
      * @template TCollection of Collection<array-key, Material>|LazyCollection<array-key, Material>
      *
      * @param TCollection $materials La liste du matériel.
-     * @param PeriodInterface|null $period Le booking (ou simple Period) à utiliser comme limite de temps.
+     * @param PeriodInterface|null $context Le booking (ou simple Period) à utiliser comme limite de temps.
      *
      * @return TCollection
      */
     public static function allWithAvailabilities(
         Collection|LazyCollection $materials,
-        ?PeriodInterface $period = null,
+        ?PeriodInterface $context = null,
     ): Collection|LazyCollection {
         if ($materials->isEmpty()) {
             return new Collection([]);
         }
 
-        // - NOTE : Ne pas prefetch le materiel des bookables via `->with()`,
-        //   car cela peut surcharger la mémoire rapidement.
-        // FIXME: Utiliser le principe du lazy-loading pour optimiser l'utilisation de la mémoire.
+        $period = match (true) {
+            // - Dans le cas d'un événement, on
+            //   utilise la période de mobilisation car on ne veut pas
+            //   considérer la période de retard dans le calcul des
+            //   disponibilités de l'événement.
+            $context instanceof Event => (
+                $context->mobilization_period
+            ),
+            default => $context !== null ? new Period($context) : null,
+        };
+
         $otherBorrowings = new Collection();
         if ($period !== null) {
+            $otherBorrowingProcessor = static fn (Event $borrowing) => [
+                'period' => new Period($borrowing->getStartDate(), $borrowing->getEndDate()),
+                'materials' => $borrowing->materials->reduce(
+                    static function ($acc, $borrowingMaterial) {
+                        $acc[$borrowingMaterial->material_id] = [
+                            'quantity' => $borrowingMaterial->quantity,
+                        ];
+                        return $acc;
+                    },
+                    [],
+                ),
+            ];
+
             $otherBorrowings = (new Collection())
                 // - Événements.
                 ->concat(
-                    Event::inPeriod($period)
+                    Event::inPeriod($period, withOverdue: true)
+                        ->with([
+                            'materials' => [
+                                'material',
+                            ],
+                        ])
                         ->when(
-                            $period instanceof Event && $period->exists,
-                            static function (Builder $query) use ($period) {
-                                /** @var Event $period */
-                                $query->where('id', '!=', $period->id);
+                            $context instanceof Event && $context->exists,
+                            static function (Builder $query) use ($context) {
+                                /** @var Event $context */
+                                $query->where('id', '!=', $context->id);
                             },
                         )
-                        ->get(),
+                        ->chunkMap($otherBorrowingProcessor, 500),
                 );
 
-            /** @var CoreCollection<array-key, Event> $otherBorrowings */
+            /** @var CoreCollection<array-key, array> $otherBorrowings */
             $otherBorrowings = $otherBorrowings
-                ->sortBy(static fn (PeriodInterface $otherBorrowing) => $otherBorrowing->getStartDate())
+                ->sortBy(static fn ($otherBorrowing) => (
+                    $otherBorrowing['period']->getStartDate()
+                ))
                 ->values();
         }
 
@@ -1022,8 +1069,8 @@ final class Material extends BaseModel implements Serializable
         $otherBorrowingsByPeriods = $otherBorrowings
             ->reduce(
                 static fn ($dates, $otherBorrowing) => $dates->push(
-                    $otherBorrowing->getStartDate()->format('Y-m-d H:i:s'),
-                    $otherBorrowing->getEndDate()->format('Y-m-d H:i:s'),
+                    $otherBorrowing['period']->getStartDate()->format('Y-m-d H:i:s'),
+                    $otherBorrowing['period']->getEndDate()?->format('Y-m-d H:i:s'),
                 ),
                 new CoreCollection(),
             )
@@ -1032,14 +1079,17 @@ final class Material extends BaseModel implements Serializable
                 if ($a === $b) {
                     return 0;
                 }
+                if ($a === null || $b === null) {
+                    return $a === null ? 1 : -1;
+                }
                 return strtotime($a) < strtotime($b) ? -1 : 1;
             })
             ->values()
             ->sliding(2)
             ->mapSpread(static function ($startDate, $endDate) use ($otherBorrowings) {
                 $period = new Period($startDate, $endDate);
-                return $otherBorrowings->filter(static fn (PeriodInterface $otherBorrowing) => (
-                    $period->overlaps($otherBorrowing)
+                return $otherBorrowings->filter(static fn ($otherBorrowing) => (
+                    $period->overlaps($otherBorrowing['period'])
                 ));
             });
 
@@ -1048,14 +1098,12 @@ final class Material extends BaseModel implements Serializable
 
         // - Récupération des quantités utilisées pour chaque
         //   matériel pendant la période pour utilisation ultérieure.
-        $materialsUsage = new CoreCollection([]);
+        $materialsUsage = new CoreCollection();
         foreach ($otherBorrowingsByPeriods as $periodIndex => $otherBorrowingsPeriod) {
             /** @var Event $otherBorrowing */
             foreach ($otherBorrowingsPeriod as $otherBorrowing) {
-                /** @var Collection<array-key, EventMaterial> $borrowingMaterials */
-                $borrowingMaterials = $otherBorrowing->materials->keyBy('material_id')->all();
-                foreach ($borrowingMaterials as $materialId => $borrowingMaterial) {
-                    $quantity = $borrowingMaterial->quantity;
+                foreach ($otherBorrowing['materials'] as $materialId => $material) {
+                    $quantity = $material['quantity'];
 
                     // - Si le matériel était déjà présent dans une autre période.
                     $existingUsage = $materialsUsage->get($materialId);
@@ -1074,19 +1122,29 @@ final class Material extends BaseModel implements Serializable
         // - Optimisation: Plus utilisé après et potentiellement volumineux.
         unset($otherBorrowingsByPeriods);
 
-        return $materials->map(static function ($material) use ($materialsUsage) {
-            $material = clone $material;
-            $materialUsage = $materialsUsage->get($material->id, [
-                'quantities' => [0],
-            ]);
+        return $materials
+            ->chunk(500)
+            ->flatMap(static fn (Collection|LazyCollection $chunk) => (
+                (new Collection($chunk))
+                    ->map(static function ($material) use ($materialsUsage) {
+                        $material = clone $material;
+                        $materialUsage = $materialsUsage->get($material->id, [
+                            'quantities' => [0],
+                        ]);
 
-            $usedCount = max($materialUsage['quantities']);
+                        $usedCount = max($materialUsage['quantities']);
+                        // phpcs:ignore Generic.Files.LineLength
+                        $availableQuantity = (int) $material->stock_quantity - (int) $material->out_of_order_quantity;
+                        $material->available_quantity = max($availableQuantity - $usedCount, 0);
 
-            $availableQuantity = (int) $material->stock_quantity - (int) $material->out_of_order_quantity;
-            $material->available_quantity = max($availableQuantity - $usedCount, 0);
-
-            return $material;
-        });
+                        return $material;
+                    })
+            ))
+            ->pipe(static fn ($collection) => (
+                $collection instanceof CoreCollection
+                    ? new Collection($collection)
+                    : $collection
+            ));
     }
 
     // ------------------------------------------------------
@@ -1111,7 +1169,7 @@ final class Material extends BaseModel implements Serializable
 
         /** @var Material $material */
         $material = tap(clone $this, static function (Material $material) use ($format) {
-            $material->append(['tags', 'attributes']);
+            $material->append(['tags', 'properties']);
 
             switch ($format) {
                 case self::SERIALIZE_WITH_AVAILABILITY:
@@ -1131,11 +1189,7 @@ final class Material extends BaseModel implements Serializable
                     break;
 
                 case self::SERIALIZE_DETAILS:
-                    $material->append([
-                        'available_quantity',
-                        'departure_inventory_todo',
-                        'return_inventory_todo',
-                    ]);
+                    $material->append(['available_quantity']);
                     break;
             }
         });
@@ -1147,14 +1201,16 @@ final class Material extends BaseModel implements Serializable
         }
 
         if ($format === self::SERIALIZE_DETAILS) {
-            if ($material->return_inventory_todo) {
+            $data['return_inventory_todo'] = null;
+            if ($material->return_inventory_todo !== null) {
                 $bookingClass = $material->return_inventory_todo::class;
                 $data['return_inventory_todo'] = $material
                     ->return_inventory_todo
                     ->serialize($bookingClass::SERIALIZE_BOOKING_SUMMARY);
             }
 
-            if ($material->departure_inventory_todo) {
+            $data['departure_inventory_todo'] = null;
+            if ($material->departure_inventory_todo !== null) {
                 $bookingClass = $material->departure_inventory_todo::class;
                 $data['departure_inventory_todo'] = $material
                     ->departure_inventory_todo

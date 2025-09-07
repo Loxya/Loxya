@@ -1,14 +1,13 @@
 import './index.scss';
 import isEqual from 'lodash/isEqual';
 import DateTime from '@/utils/datetime';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import debounce from 'lodash/debounce';
 import showModal from '@/utils/showModal';
 import stringIncludes from '@/utils/stringIncludes';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
-import { isRequestErrorStatusCode } from '@/utils/errors';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import assignmentFormatterFactory from '@/utils/formatTimelineAssignment';
 import Page from '@/themes/default/components/Page';
@@ -39,7 +38,7 @@ import {
 import EventDetails from '@/themes/default/modals/EventDetails';
 
 import type Day from '@/utils/day';
-import type { ComponentRef } from 'vue';
+import type { ComponentRef, Raw } from 'vue';
 import type Period from '@/utils/period';
 import type { DebouncedMethod } from 'lodash';
 import type { Role } from '@/stores/api/roles';
@@ -68,11 +67,11 @@ type Data = {
     isLoading: boolean,
     isFetched: boolean,
     hasCriticalError: boolean,
-    centerDate: Day | null,
-    defaultPeriod: Period,
-    fetchPeriod: Period,
+    centerDate: Raw<Day> | null,
+    defaultPeriod: Raw<Period>,
+    fetchPeriod: Raw<Period>,
     filters: Filters,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Page de listing des techniciens sous forme de timeline. */
@@ -106,17 +105,19 @@ const TechniciansTimeline = defineComponent({
         }
 
         // - Périodes par défaut.
-        const defaultPeriod = getDefaultPeriod();
-        const fetchPeriod = defaultPeriod
-            .setFullDays(true)
-            .offset(FETCH_DELTA);
+        const defaultPeriod = markRaw(getDefaultPeriod());
+        const fetchPeriod = markRaw(
+            defaultPeriod
+                .setFullDays(true)
+                .offset(FETCH_DELTA),
+        );
 
         return {
             technicians: [],
             isLoading: false,
             isFetched: false,
             hasCriticalError: false,
-            now: DateTime.now(),
+            now: markRaw(DateTime.now()),
             centerDate: null,
             defaultPeriod,
             fetchPeriod,
@@ -200,17 +201,14 @@ const TechniciansTimeline = defineComponent({
         filters: {
             handler(newFilters: Filters) {
                 // - Persistance dans le local storage.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
                     persistFilters(newFilters);
                 }
 
                 // - Mise à jour de l'URL.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 const prevRouteQuery = this.$route?.query ?? {};
                 const newRouteQuery = convertFiltersToRouteQuery(newFilters);
                 if (!isEqual(prevRouteQuery, newRouteQuery)) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     this.$router.replace({ query: newRouteQuery });
                 }
             },
@@ -226,7 +224,7 @@ const TechniciansTimeline = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
 
         this.fetchData();
     },
@@ -248,16 +246,16 @@ const TechniciansTimeline = defineComponent({
             this.fetchData();
         },
 
-        handleChangeCenterDate(day: Day) {
+        handleChangeCenterDate(day: Raw<Day>) {
             this.centerDate = day;
 
             const $timeline = this.$refs.timeline as ComponentRef<typeof Timeline>;
             $timeline?.moveTo(day.toDateTime().set('hour', 12));
         },
 
-        handleRangeChanged(newPeriod: Period) {
+        handleRangeChanged(newPeriod: Raw<Period>) {
             localStorage.setItem(TIMELINE_PERIOD_STORAGE_KEY, JSON.stringify(newPeriod));
-            this.centerDate = getCenterDateFromPeriod(newPeriod);
+            this.centerDate = markRaw(getCenterDateFromPeriod(newPeriod));
 
             const newFetchPeriod = newPeriod
                 .setFullDays(true)
@@ -269,7 +267,7 @@ const TechniciansTimeline = defineComponent({
                 newFetchPeriod.end.isAfter(this.fetchPeriod.end)
             );
             if (needFetch) {
-                this.fetchPeriod = newFetchPeriod;
+                this.fetchPeriod = markRaw(newFetchPeriod);
                 this.fetchData();
             }
         },
@@ -336,10 +334,13 @@ const TechniciansTimeline = defineComponent({
             this.isLoading = true;
 
             try {
-                this.technicians = await apiTechnicians.allWithAssignments({ paginated: false, period: this.fetchPeriod });
+                this.technicians = await apiTechnicians.allWithAssignments({
+                    period: this.fetchPeriod,
+                    paginated: false,
+                });
                 this.isFetched = true;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     const $timeline = this.$refs.timeline as ComponentRef<typeof Timeline>;
                     $timeline?.zoomIn(1, false);
                     return;

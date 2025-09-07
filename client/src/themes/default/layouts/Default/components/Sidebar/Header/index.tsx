@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Logo from '@/themes/default/components/Logo';
 
 /** Header de la barre latérale du layout par défaut. */

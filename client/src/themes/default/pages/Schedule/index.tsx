@@ -1,4 +1,4 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
 /** Pages des bookings (calendrier et liste). */
 const Schedule = defineComponent({

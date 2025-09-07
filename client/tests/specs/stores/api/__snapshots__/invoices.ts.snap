@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`Invoices Api Schema 1`] = `
+exports[`Invoices Api has a valid schema 1`] = `
 {
   "currency": /* Currency Instance => */ "EUR",
   "date": /* DateTime Instance => */ "2020-01-30 14:00:00",

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Parks Api all() parse the returned data correctly 1`] = `
 {
@@ -87,7 +87,29 @@ exports[`Parks Api list() parse the returned data correctly 1`] = `
 exports[`Parks Api materials() parse the returned data correctly 1`] = `
 [
   {
-    "attributes": [
+    "category_id": 1,
+    "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+    "degressive_rate_id": 3,
+    "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+    "id": 1,
+    "is_discountable": false,
+    "is_hidden_on_bill": false,
+    "name": "Console Yamaha CL3",
+    "note": null,
+    "out_of_order_quantity": 1,
+    "park_id": 1,
+    "picture": "http://loxya.test/materials/1/picture",
+    "properties": [
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 2,
+        "max_length": null,
+        "name": "Couleur",
+        "type": "string",
+        "value": "Grise",
+      },
       {
         "entities": [
           "material",
@@ -103,16 +125,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
         "entities": [
           "material",
         ],
-        "id": 2,
-        "max_length": null,
-        "name": "Couleur",
-        "type": "string",
-        "value": "Grise",
-      },
-      {
-        "entities": [
-          "material",
-        ],
         "id": 3,
         "is_totalisable": true,
         "name": "Puissance",
@@ -121,18 +133,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
         "value": 850,
       },
     ],
-    "category_id": 1,
-    "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-    "degressive_rate_id": 3,
-    "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-    "id": 1,
-    "is_discountable": false,
-    "is_hidden_on_bill": false,
-    "name": "Console Yamaha CL3",
-    "note": null,
-    "out_of_order_quantity": 1,
-    "park_id": 1,
-    "picture": "http://loxya.test/materials/1/picture",
     "reference": "CL3",
     "rental_price": /* Decimal Instance => */ "300",
     "replacement_price": /* Decimal Instance => */ "19400",
@@ -148,7 +148,19 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
   },
   {
-    "attributes": [
+    "category_id": 1,
+    "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+    "degressive_rate_id": null,
+    "description": "Système de diffusion numérique",
+    "id": 2,
+    "is_discountable": true,
+    "is_hidden_on_bill": false,
+    "name": "Processeur DBX PA2",
+    "note": null,
+    "out_of_order_quantity": 0,
+    "park_id": 1,
+    "picture": null,
+    "properties": [
       {
         "entities": [
           "material",
@@ -172,18 +184,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
         "value": 35,
       },
     ],
-    "category_id": 1,
-    "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-    "degressive_rate_id": null,
-    "description": "Système de diffusion numérique",
-    "id": 2,
-    "is_discountable": true,
-    "is_hidden_on_bill": false,
-    "name": "Processeur DBX PA2",
-    "note": null,
-    "out_of_order_quantity": 0,
-    "park_id": 1,
-    "picture": null,
     "reference": "DBXPA2",
     "rental_price": /* Decimal Instance => */ "25.5",
     "replacement_price": /* Decimal Instance => */ "349.9",
@@ -199,7 +199,19 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
   },
   {
-    "attributes": [
+    "category_id": 2,
+    "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "degressive_rate_id": 1,
+    "description": "Projecteur PAR64 à LED, avec son set de gélatines",
+    "id": 3,
+    "is_discountable": true,
+    "is_hidden_on_bill": false,
+    "name": "PAR64 LED",
+    "note": "Soyez délicats avec ces projos !",
+    "out_of_order_quantity": 4,
+    "park_id": 1,
+    "picture": null,
+    "properties": [
       {
         "entities": [
           "material",
@@ -223,18 +235,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
         "value": 150,
       },
     ],
-    "category_id": 2,
-    "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
-    "degressive_rate_id": 1,
-    "description": "Projecteur PAR64 à LED, avec son set de gélatines",
-    "id": 3,
-    "is_discountable": true,
-    "is_hidden_on_bill": false,
-    "name": "PAR64 LED",
-    "note": "Soyez délicats avec ces projos !",
-    "out_of_order_quantity": 4,
-    "park_id": 1,
-    "picture": null,
     "reference": "PAR64LED",
     "rental_price": /* Decimal Instance => */ "3.5",
     "replacement_price": /* Decimal Instance => */ "89",
@@ -250,7 +250,28 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
   },
   {
-    "attributes": [
+    "category_id": 2,
+    "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+    "degressive_rate_id": 1,
+    "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+    "id": 4,
+    "is_discountable": true,
+    "is_hidden_on_bill": false,
+    "name": "Showtec SDS-6",
+    "note": null,
+    "out_of_order_quantity": 0,
+    "park_id": 1,
+    "picture": null,
+    "properties": [
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 4,
+        "name": "Conforme",
+        "type": "boolean",
+        "value": true,
+      },
       {
         "entities": [
           "material",
@@ -273,28 +294,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
         "unit": "W",
         "value": 60,
       },
-      {
-        "entities": [
-          "material",
-        ],
-        "id": 4,
-        "name": "Conforme",
-        "type": "boolean",
-        "value": true,
-      },
     ],
-    "category_id": 2,
-    "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-    "degressive_rate_id": 1,
-    "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-    "id": 4,
-    "is_discountable": true,
-    "is_hidden_on_bill": false,
-    "name": "Showtec SDS-6",
-    "note": null,
-    "out_of_order_quantity": 0,
-    "park_id": 1,
-    "picture": null,
     "reference": "SDS-6-01",
     "rental_price": /* Decimal Instance => */ "15.95",
     "replacement_price": /* Decimal Instance => */ "59",
@@ -305,7 +305,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
   },
   {
-    "attributes": [],
     "category_id": 1,
     "created_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
     "degressive_rate_id": 3,
@@ -318,6 +317,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "out_of_order_quantity": 8,
     "park_id": 1,
     "picture": null,
+    "properties": [],
     "reference": "XLR10",
     "rental_price": /* Decimal Instance => */ "0.5",
     "replacement_price": /* Decimal Instance => */ "9.5",
@@ -328,18 +328,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
   },
   {
-    "attributes": [
-      {
-        "entities": [
-          "material",
-          "material",
-        ],
-        "id": 5,
-        "name": "Date d'achat",
-        "type": "date",
-        "value": /* Day Instance => */ "2021-01-28",
-      },
-    ],
     "category_id": 1,
     "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
     "degressive_rate_id": 1,
@@ -352,6 +340,42 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": null,
+    "properties": [
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 5,
+        "name": "Date d'achat",
+        "type": "date",
+        "value": /* Day Instance => */ "2021-01-28",
+      },
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 7,
+        "name": "Lieu d'usage",
+        "options": [
+          "Intérieur",
+          "Extérieur",
+          "Polyvalent",
+        ],
+        "type": "list",
+        "value": "Polyvalent",
+      },
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 6,
+        "is_totalisable": true,
+        "name": "Prix d'achat",
+        "type": "float",
+        "unit": "€",
+        "value": 250,
+      },
+    ],
     "reference": "XR18",
     "rental_price": /* Decimal Instance => */ "49.99",
     "replacement_price": /* Decimal Instance => */ "419",
@@ -362,7 +386,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
   },
   {
-    "attributes": [],
     "category_id": 3,
     "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
     "degressive_rate_id": 2,
@@ -375,6 +398,22 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "out_of_order_quantity": 0,
     "park_id": 2,
     "picture": null,
+    "properties": [
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 7,
+        "name": "Lieu d'usage",
+        "options": [
+          "Intérieur",
+          "Extérieur",
+          "Polyvalent",
+        ],
+        "type": "list",
+        "value": "Extérieur",
+      },
+    ],
     "reference": "Transporter",
     "rental_price": /* Decimal Instance => */ "300",
     "replacement_price": /* Decimal Instance => */ "32000",
@@ -385,7 +424,6 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
   },
   {
-    "attributes": [],
     "category_id": 4,
     "created_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
     "degressive_rate_id": 3,
@@ -398,6 +436,22 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
+    "properties": [
+      {
+        "entities": [
+          "material",
+        ],
+        "id": 7,
+        "name": "Lieu d'usage",
+        "options": [
+          "Intérieur",
+          "Extérieur",
+          "Polyvalent",
+        ],
+        "type": "list",
+        "value": "Intérieur",
+      },
+    ],
     "reference": "Decor-Forest",
     "rental_price": /* Decimal Instance => */ "1500",
     "replacement_price": /* Decimal Instance => */ "8500",

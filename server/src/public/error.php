@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+use Twig\Environment as TwigEnvironment;
+use Twig\Loader\FilesystemLoader as TwigFilesystemLoader;
+
 $code = (int) ($code ?? -1);
 $message ??= null;
 
@@ -112,8 +115,8 @@ switch ($code) {
 // - Rendering.
 //
 
-$loader = new \Twig\Loader\FilesystemLoader(VIEWS_FOLDER);
-$twig = new \Twig\Environment($loader, ['cache' => false]);
+$loader = new TwigFilesystemLoader(VIEWS_FOLDER);
+$twig = new TwigEnvironment($loader, ['cache' => false]);
 $viewPath = sprintf('errors/license/%s.twig', $template);
 echo $twig->render($viewPath, array_replace(compact('code', 'message'), $vars));
 exit(1);

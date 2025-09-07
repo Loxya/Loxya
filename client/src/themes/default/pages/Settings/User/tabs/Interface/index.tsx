@@ -1,8 +1,7 @@
 import './index.scss';
-import Vue from 'vue';
-import axios from 'axios';
+import Vue, { defineComponent } from 'vue';
 import config from '@/globals/config';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError } from '@/globals/requester';
 import { Group } from '@/stores/api/groups';
 import apiUsers, { BookingsViewMode, TechniciansViewMode } from '@/stores/api/users';
 import CriticalError from '@/themes/default/components/CriticalError';
@@ -56,7 +55,8 @@ const InterfaceUserSettings = defineComponent({
         isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
 
@@ -152,16 +152,14 @@ const InterfaceUserSettings = defineComponent({
                 this.$store.commit('auth/setInterfaceSettings', updatedSettings);
                 Vue.i18n.set(updatedSettings.language);
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                    } else {
-                        this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the user settings`, error);
+                this.$toasted.error(__('global.errors.unexpected-while-saving'));
             } finally {
                 this.isSaving = false;
             }

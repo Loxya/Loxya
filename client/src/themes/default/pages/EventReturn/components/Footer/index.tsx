@@ -1,9 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import IconMessage from '@/themes/default/components/IconMessage';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 
 type Props = {
@@ -15,6 +15,16 @@ type Props = {
 
     /** L'inventaire de retour est-il en cours de sauvegarde ? */
     isSaving?: boolean,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur souhaite sauvegarder l'inventaire.
+     */
+    onSave?(): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur souhaite terminer l'inventaire.
+     */
+    onTerminate?(): void,
 };
 
 /** Footer de la page d'inventaire de retour d'événement. */
@@ -32,6 +42,16 @@ const EventReturnFooter = defineComponent({
         isSaving: {
             type: Boolean as PropType<Required<Props>['isSaving']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSave: {
+            type: Function as PropType<Props['onSave']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onTerminate: {
+            type: Function as PropType<Props['onTerminate']>,
+            default: undefined,
         },
     },
     emits: ['save', 'terminate'],

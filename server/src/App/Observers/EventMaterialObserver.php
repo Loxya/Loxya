@@ -96,17 +96,19 @@ final class EventMaterialObserver
         // -- Événements ...
         //
 
-        /** @var \Loxya\Models\Event[] $events */
-        $events = $material->events()
+        /** @var Event[] $otherEvents */
+        $otherEvents = $material->events()
             ->where($event->qualifyColumn('id'), '<>', $event->id)
             ->where(static function (Builder $eventQuery) use ($event) {
-                /** @var Builder|\Loxya\Models\Event $eventQuery */
-                $eventQuery->inPeriod($event);
+                // Note: Sans la période de retard car seules les périodes nominales des
+                //       événements sont pertinentes pour le calcul du matériel disponible.
+                /** @var Builder|Event $eventQuery */
+                $eventQuery->inPeriod($event, withOverdue: false);
             })
             ->get();
 
-        foreach ($events as $event) {
-            $event->invalidateCache('has_missing_materials');
+        foreach ($otherEvents as $otherEvent) {
+            $otherEvent->invalidateCache('has_missing_materials');
         }
     }
 }

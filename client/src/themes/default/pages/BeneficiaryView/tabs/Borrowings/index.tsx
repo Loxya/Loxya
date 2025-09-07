@@ -3,7 +3,7 @@ import Day from '@/utils/day';
 import Period from '@/utils/period';
 import DateTime from '@/utils/datetime';
 import parseInteger from '@/utils/parseInteger';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import bookingFormatterFactory from '@/utils/formatTimelineBooking';
 import showModal from '@/utils/showModal';
@@ -17,8 +17,7 @@ import EmptyMessage from '@/themes/default/components/EmptyMessage';
 import config from '@/globals/config';
 import Item from '../../components/BookingsItem';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type { BeneficiaryDetails } from '@/stores/api/beneficiaries';
 import type { TimelineClickEvent, TimelineItem } from '@/themes/default/components/Timeline';
 import type { BookingExcerpt, BookingSummary } from '@/stores/api/bookings';
@@ -37,11 +36,11 @@ type InstanceProperties = {
 
 type Data = {
     bookings: LazyBooking[],
-    defaultShownPeriod: Period,
+    defaultShownPeriod: Raw<Period>,
     hasCriticalError: boolean,
     isPartiallyFetched: boolean,
     isFullyFetched: boolean,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /**
@@ -54,7 +53,7 @@ const MIN_ZOOM = DateTime.duration(1, 'hour');
  * Interval de temps maximum affiché dans la timeline.
  * (Il ne sera pas possible de dé-zoomer au delà de cette limite)
  */
-const MAX_ZOOM = DateTime.duration(60, 'days');
+const MAX_ZOOM = DateTime.duration(config.maxFetchPeriod, 'days');
 
 /**
  * Nombre de requêtes maximum pour la récupération du matériel
@@ -78,15 +77,15 @@ const BeneficiaryViewBorrowings = defineComponent({
     }),
     data: (): Data => ({
         bookings: [],
-        defaultShownPeriod: new Period(
+        defaultShownPeriod: markRaw(new Period(
             Day.today().subDay(7),
             Day.today().addDay(7),
             true,
-        ),
+        )),
         hasCriticalError: false,
         isPartiallyFetched: false,
         isFullyFetched: false,
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         timelineBookings(): TimelineItem[] {
@@ -119,7 +118,7 @@ const BeneficiaryViewBorrowings = defineComponent({
         this.fetchData();
 
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         this.cancelOngoingFetch?.();
@@ -250,7 +249,7 @@ const BeneficiaryViewBorrowings = defineComponent({
                     const promises = lazyBookings
                         .filter((lazy: LazyBooking): lazy is LazyBooking<false> => (
                             !lazy.isComplete &&
-                            lazy.booking.mobilization_period.start.isAfter(this.now)
+                            lazy.booking.mobilization_period.end.isAfter(this.now)
                         ))
                         .map(({ booking }: LazyBooking<false>) => async () => {
                             const finalBooking = await apiBookings.oneSummary(booking.entity, booking.id);

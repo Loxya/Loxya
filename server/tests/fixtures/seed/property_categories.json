@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "property_id": 1,
+        "category_id": 1
+    },
+    {
+        "id": 2,
+        "property_id": 1,
+        "category_id": 2
+    },
+    {
+        "id": 3,
+        "property_id": 3,
+        "category_id": 1
+    },
+    {
+        "id": 4,
+        "property_id": 3,
+        "category_id": 2
+    },
+    {
+        "id": 5,
+        "property_id": 6,
+        "category_id": 3
+    },
+    {
+        "id": 6,
+        "property_id": 6,
+        "category_id": 4
+    }
+]

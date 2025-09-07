@@ -32,7 +32,7 @@ declare module 'vue-simple-calendar' {
         itemTop?: string,
         itemContentHeight?: string,
         itemBorderHeight?: string,
-        periodChangedCallback?: Function,
+        periodChangedCallback?(newPeriod: any): void,
         currentPeriodLabel?: string,
         currentPeriodLabelIcons?: string,
         doEmitItemMouseEvents?: boolean,

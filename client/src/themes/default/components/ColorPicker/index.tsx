@@ -1,11 +1,11 @@
 import './index.scss';
 import Color from '@/utils/color';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import Gradient from './components/Gradient';
 import config from '@/globals/config';
 
 import type { RawColor } from '@/utils/color';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 
 /** Mode de gestion de la transparence. */
 export enum AlphaMode {
@@ -39,7 +39,14 @@ type Props = {
      * - `force`: La gestion de la transparence est activée et les couleurs sont toujours retournées
      *            avec gestion de la transparence activée (RGBA, HSLA, etc.)
      */
-    alphaMode?: AlphaMode,
+    alphaMode?: AlphaMode | `${AlphaMode}`,
+
+    /**
+     * Fonction appelée lorsque la couleur sélectionnée a changé.
+     *
+     * @param newValue - La nouvelle couleur.
+     */
+    onChange?(newValue: Raw<Color>): void,
 };
 
 /**
@@ -108,6 +115,11 @@ const ColorPicker = defineComponent({
                 return (Object.values(AlphaMode) as string[]).includes(value);
             },
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['change'],
     computed: {
@@ -143,22 +155,22 @@ const ColorPicker = defineComponent({
             event.stopPropagation();
         },
 
-        handleGradientChange(newColor: Color) {
+        handleGradientChange(newColor: Raw<Color>) {
             this.$emit('change', newColor);
         },
 
         handleHueChange(e: Event) {
             const hue = +((e.target! as HTMLInputElement).value);
-            this.$emit('change', this.color.withHue(hue));
+            this.$emit('change', markRaw(this.color.withHue(hue)));
         },
 
         handleAlphaChange(e: Event) {
             const alpha = +((e.target! as HTMLInputElement).value) / 100;
-            this.$emit('change', this.color.withAlpha(alpha));
+            this.$emit('change', markRaw(this.color.withAlpha(alpha)));
         },
 
         handleSwatchClick(color: Color) {
-            this.$emit('change', color);
+            this.$emit('change', markRaw(color));
         },
 
         // ------------------------------------------------------

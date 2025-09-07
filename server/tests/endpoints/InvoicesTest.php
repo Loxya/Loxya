@@ -21,7 +21,7 @@ final class InvoicesTest extends ApiTestCase
                         'name' => 'T.V.A.',
                         'is_rate' => true,
                         'value' => '20.000',
-                        'total' => '108.82',
+                        'total' => '108.83',
                     ],
                 ],
                 'total_with_taxes' => '652.96',
@@ -36,7 +36,7 @@ final class InvoicesTest extends ApiTestCase
         $this->client->get('/invoices/999/pdf');
         $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
 
-        // - Téléchargement du PDF de la facture n°1.
+        // - Téléchargement du PDF de la facture #1.
         $responseStream = $this->client->get('/invoices/1/pdf');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertTrue($responseStream->isReadable());

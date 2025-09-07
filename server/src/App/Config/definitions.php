@@ -9,11 +9,7 @@ use Odan\Session\MemorySession;
 use Odan\Session\PhpSession;
 use Odan\Session\SessionInterface;
 use Odan\Session\SessionManagerInterface;
-use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
-use Symfony\Contracts\Cache\CacheInterface;
 
 return [
     'logger' => static function () {
@@ -25,6 +21,10 @@ return [
         $authenticators = $container->get('auth.authenticators');
         return new Services\Auth($authenticators);
     },
+
+    'events' => static fn (ContainerInterface $container) => (
+        new Services\Dispatcher($container)
+    ),
 
     'session' => static function () {
         $shouldSecureCookie = Config::isSslEnabled();
@@ -46,21 +46,25 @@ return [
         ]);
     },
 
-    'auth.authenticators' => DI\add([
-        DI\get(Services\Auth\JWT::class),
-    ]),
+    'auth.authenticators' => static function (ContainerInterface $container) {
+        $authenticators = [
+            $container->get(Services\Auth\JWT::class),
+        ];
 
-    'cache' => static fn (): TagAwareAdapter => (
-        new TagAwareAdapter(
-            new FilesystemAdapter('core', 0, CACHE_FOLDER),
-        )
-    ),
+        if (Config::getEnv() === 'test') {
+            $authenticators[] = $container->get(Services\Auth\Test::class);
+        }
+
+        return $authenticators;
+    },
 
     'flash' => static fn (ContainerInterface $container) => (
         $container->get(SessionInterface::class)->getFlash()
     ),
 
     'console.commands' => DI\add([
+        DI\get(Command\Cleanup\DataCommand::class),
+        DI\get(Command\Cleanup\CacheCommand::class),
         DI\get(Command\Migrations\MigrateCommand::class),
         DI\get(Command\Migrations\StatusCommand::class),
         DI\get(Command\Migrations\RollbackCommand::class),
@@ -75,12 +79,12 @@ return [
     'i18n' => DI\get(Services\I18n::class),
     'view' => DI\get(Services\View::class),
     'mailer' => DI\get(Services\Mailer::class),
+    'cache' => DI\get(Services\Cache::class),
     'httpCache' => DI\get(\Slim\HttpCache\CacheProvider::class),
 
     Services\Auth::class => DI\get('auth'),
     Services\Logger::class => DI\get('logger'),
-    CacheInterface::class => DI\get('cache'),
-    CacheItemPoolInterface::class => DI\get('cache'),
+    Services\Dispatcher::class => DI\get('events'),
     SessionManagerInterface::class => DI\get('session'),
     SessionInterface::class => DI\get('session'),
     FlashInterface::class => DI\get('flash'),

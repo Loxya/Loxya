@@ -1,0 +1,82 @@
+[
+    {
+        "id": 1,
+        "name": "Poids",
+        "entities": ["material"],
+        "type": "float",
+        "config": {
+            "unit": "kg"
+        },
+        "is_totalisable": true,
+        "created_at": "2021-02-12 12:00:00",
+        "updated_at": "2021-02-12 12:00:00"
+    },
+    {
+        "id": 2,
+        "name": "Couleur",
+        "entities": ["material"],
+        "type": "string",
+        "config": {
+            "max_length": null
+        },
+        "is_totalisable": null,
+        "created_at": "2021-02-12 12:01:15",
+        "updated_at": "2021-02-12 12:01:15"
+    },
+    {
+        "id": 3,
+        "name": "Puissance",
+        "entities": ["material"],
+        "type": "integer",
+        "config": {
+            "unit": "W"
+        },
+        "is_totalisable": true,
+        "created_at": "2021-02-12 12:03:02",
+        "updated_at": "2021-02-12 12:04:00"
+    },
+    {
+        "id": 4,
+        "name": "Conforme",
+        "entities": ["material"],
+        "type": "boolean",
+        "config": null,
+        "is_totalisable": null,
+        "created_at": "2021-02-12 12:30:12",
+        "updated_at": "2021-02-12 12:30:12"
+    },
+    {
+        "id": 5,
+        "name": "Date d'achat",
+        "entities": ["material"],
+        "type": "date",
+        "config": null,
+        "is_totalisable": null,
+        "created_at": "2021-02-12 12:35:46",
+        "updated_at": "2021-02-12 14:00:00"
+    },
+    {
+        "id": 6,
+        "name": "Prix d'achat",
+        "entities": ["material"],
+        "type": "float",
+        "config": {
+            "unit": "€"
+        },
+        "is_totalisable": true,
+        "created_at": "2024-07-08 12:00:00",
+        "updated_at": "2024-07-08 12:00:00"
+    },
+    {
+        "id": 7,
+        "name": "Lieu d'usage",
+        "entities": ["material"],
+        "type": "list",
+        "config": {
+            "options": ["Intérieur", "Extérieur", "Polyvalent"]
+        },
+        "is_totalisable": null,
+        "created_at": "2025-04-18 11:00:00",
+        "updated_at": "2025-04-18 11:20:00"
+    }
+]

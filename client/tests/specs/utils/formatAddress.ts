@@ -2,50 +2,44 @@ import formatAddress from '@/utils/formatAddress';
 import countries from '@fixtures/parsed/countries';
 
 describe('formatAddress', () => {
-    const france = countries.default(1);
+    it('returns the address as a string', () => {
+        const country = countries.default(1);
 
-    it('returns the full address as a string', () => {
-        const result = formatAddress('5 rue des tests', '05000', 'Gap', france);
-        expect(result).toEqual('5 rue des tests\n05000 Gap\nFrance');
-    });
+        // - Adresse complète.
+        const result1 = formatAddress('5 rue des tests', '05000', 'Gap', country);
+        expect(result1).toBe('5 rue des tests\n05000 Gap\nFrance');
 
-    it('returns first part of an address as a string', () => {
-        const result = formatAddress('5 rue des tests', null, null, null);
-        expect(result).toEqual('5 rue des tests');
-    });
+        // - Rue uniquement.
+        const result2 = formatAddress('5 rue des tests', null, null, null);
+        expect(result2).toBe('5 rue des tests');
 
-    it('returns second part of an address as a string', () => {
-        const result = formatAddress(null, '05000', null, null);
-        expect(result).toEqual('05000');
-    });
+        // - Code postal uniquement.
+        const result3 = formatAddress(null, '05000', null, null);
+        expect(result3).toBe('05000');
 
-    it('returns second part of an address as a string', () => {
-        const result = formatAddress(null, null, 'Gap', null);
-        expect(result).toEqual('Gap');
-    });
+        // - Ville uniquement.
+        const result4 = formatAddress(null, null, 'Gap', null);
+        expect(result4).toBe('Gap');
 
-    it('returns second part of an address as a string', () => {
-        const result = formatAddress(null, '05000', 'Gap', null);
-        expect(result).toEqual('05000 Gap');
-    });
+        // - Code postal + Ville.
+        const result5 = formatAddress(null, '05000', 'Gap', null);
+        expect(result5).toBe('05000 Gap');
 
-    it('returns second part of an address as a string', () => {
-        const result = formatAddress('5 rue des tests', null, 'Gap', null);
-        expect(result).toEqual('5 rue des tests\nGap');
-    });
+        // - Rue + Ville.
+        const result6 = formatAddress('5 rue des tests', null, 'Gap', null);
+        expect(result6).toBe('5 rue des tests\nGap');
 
-    it('returns third part of an address as a string', () => {
-        const result = formatAddress(null, null, null, france);
-        expect(result).toEqual('France');
-    });
+        // - Pays uniquement.
+        const result7 = formatAddress(null, null, null, country);
+        expect(result7).toBe('France');
 
-    it('returns first and third part of an address as a string', () => {
-        const result = formatAddress('5 rue des tests', null, null, france);
-        expect(result).toEqual('5 rue des tests\nFrance');
+        // - Rue + Pays.
+        const result8 = formatAddress('5 rue des tests', null, null, country);
+        expect(result8).toBe('5 rue des tests\nFrance');
     });
 
     it('returns null when nothing given', () => {
         const result = formatAddress(null, null, null, null);
-        expect(result).toEqual(null);
+        expect(result).toBeNull();
     });
 });

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Loxya\Services\I18n;
 
+use Adbar\Dot as DotArray;
 use Loxya\Services\I18n\Exceptions\ContainerException;
 use Loxya\Services\I18n\Exceptions\NotFoundException;
 
@@ -41,7 +42,7 @@ class Loader implements LoaderInterface
         if (!isset($this->messages[$this->language])) {
             $languageFile = $this->getLanguageFile($this->language);
             if ($this->isLanguageFileExists($this->language)) {
-                $this->messages[$this->language] = new \Adbar\Dot(include $languageFile);
+                $this->messages[$this->language] = new DotArray(include $languageFile);
             } else {
                 throw new ContainerException(vsprintf(
                     'Translations file "%s" for language "%s" not found.',

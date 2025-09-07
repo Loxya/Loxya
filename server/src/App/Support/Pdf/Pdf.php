@@ -161,4 +161,13 @@ final class Pdf implements PdfInterface
         $response->getBody()->write($content);
         return $response;
     }
+
+    public function asMailAttachment(): array
+    {
+        return [
+            'mimeType' => 'application/pdf',
+            'filename' => $this->getName(),
+            'content' => $this->asBinaryString(),
+        ];
+    }
 }

@@ -8,11 +8,12 @@ require_once __DIR__ . '/constants.php';
 require_once __DIR__ . '/../src/App/Config/constants.php';
 require_once __DIR__ . '/../src/App/Config/functions.php';
 
+use Dotenv\Dotenv;
 use Loxya\Kernel;
 use Loxya\Tests\Fixtures;
 
 // - Chargement de l'environnement.
-$dotenv = Dotenv\Dotenv::createImmutable(ROOT_FOLDER, ['.env', '.env.test'], false);
+$dotenv = Dotenv::createImmutable(ROOT_FOLDER, ['.env', '.env.test'], false);
 $dotenv->safeLoad();
 
 $echoError = static function (string $msg): void {

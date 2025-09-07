@@ -22,7 +22,7 @@ calendar:
     loading-event: Chargement de l'événement...
     event-with-missing-material-only: "Avec manque de matériel\_?"
     help-add-event: Créer un nouvel événement
-    help-center-view-on-today: Centrer le calendrier sur aujourd’hui
+    help-center-view-on-today: Centrer le calendrier sur aujourd'hui
     help-timeline-event-operations: |-
         Cliquez une fois pour sélectionner l'événement, afin de le déplacer, le redimensionner ou le supprimer.
         Double-cliquez sur l'événement pour en ouvrir l'aperçu, et en modifier les détails.
@@ -62,4 +62,8 @@ listing:
         parks: Parc(s)
 
     same-as-operation: Identique à l'exploitation.
+    overdue-since: En retard depuis {duration}
+    initially-planned-period: Initialement {period}
+    late-return-on: Retourné le {date} (retard de {duration})
+
 

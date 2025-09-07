@@ -3,18 +3,19 @@ import { z } from '@/utils/validation';
 import { omit } from 'lodash';
 import { TagSchema } from './tags';
 import { DocumentSchema } from './documents';
-import { AttributeWithValueSchema } from './attributes';
+import { PropertyWithValueSchema } from './properties';
 import { BookingSummarySchema, createBookingSummarySchema } from './bookings';
 import { withPaginationEnvelope } from './@schema';
 
+import type { Raw } from 'vue';
 import type Period from '@/utils/period';
-import type { ProgressCallback, AxiosRequestConfig as RequestConfig } from 'axios';
+import type { ProgressCallback, RequestConfig } from '@/globals/requester';
 import type { PaginatedData, SortableParams, PaginationParams } from './@types';
 import type { Park } from './parks';
 import type { Category } from './categories';
 import type { Event } from './events';
 import type { SubCategory } from './subcategories';
-import type { Attribute, AttributeWithValue } from './attributes';
+import type { Property, PropertyWithValue } from './properties';
 import type { Tag } from './tags';
 import type { Document } from './documents';
 import type { SchemaInfer } from '@/utils/validation';
@@ -57,7 +58,7 @@ const MaterialBaseSchema = z.strictObject({
     ),
     is_hidden_on_bill: z.boolean().optional(),
     is_discountable: z.boolean().optional(),
-    attributes: z.lazy(() => AttributeWithValueSchema.array()),
+    properties: z.lazy(() => PropertyWithValueSchema.array()),
     tags: z.lazy(() => TagSchema.array()),
     note: z.string().nullable(),
     created_at: z.datetime(),
@@ -106,7 +107,7 @@ export const createMaterialWithContextSchema = createMaterialSchemaFactory(
     },
 );
 
-const MaterialBookingSummarySchema = z.lazy(() => (
+export const MaterialBookingSummarySchema = z.lazy(() => (
     createBookingSummarySchema({
         pivot: z.strictObject({
             quantity: z.number().positive(),
@@ -171,14 +172,14 @@ export type MaterialBookingSummary = SchemaInfer<typeof MaterialBookingSummarySc
 // - Edition
 //
 
-type MaterialEditAttribute = {
-    id: Attribute['id'],
-    value: AttributeWithValue['value'],
+type MaterialEditProperty = {
+    id: Property['id'],
+    value: PropertyWithValue['value'],
 };
 
 export type MaterialEdit = {
     name: string | null,
-    picture?: File | null,
+    picture?: Raw<File> | null,
     reference: string | null,
     description: string | null,
     park_id: Park['id'] | null,
@@ -194,7 +195,7 @@ export type MaterialEdit = {
     is_discountable: boolean,
     note: string | null,
     tags?: Array<Tag['id']>,
-    attributes?: MaterialEditAttribute[],
+    properties?: MaterialEditProperty[],
 };
 
 //
@@ -210,7 +211,7 @@ export type BaseFilters = Nullable<{
 export type Filters = Simplify<(
     & Omit<BaseFilters, 'category'>
     & Nullable<{
-        quantitiesPeriod?: Period,
+        quantitiesPeriod?: Raw<Period>,
         category?: Category['id'] | typeof UNCATEGORIZED,
         park?: Park['id'],
         tags?: Array<Tag['id']>,
@@ -221,7 +222,7 @@ type GetAllParamsBase = Filters & SortableParams & { withDeleted?: boolean, only
 type GetAllParamsPaginated = GetAllParamsBase & PaginationParams & { paginated?: true };
 type GetAllParamsRaw = GetAllParamsBase & { paginated: false };
 
-type GetBookingsParams = (
+export type GetBookingsParams = (
     & PaginationParams
     & { period?: Period }
     & Pick<SortableParams, 'ascending'>
@@ -250,60 +251,68 @@ async function all({ quantitiesPeriod, ...otherParams }: GetAllParamsPaginated |
         ? withPaginationEnvelope(MaterialWithAvailabilitySchema)
         : MaterialWithAvailabilitySchema.array();
 
-    return schema.parse(response.data);
+    return schema.parse(response);
 }
 
 const allWhileEvent = async (eventId: Event['id']): Promise<MaterialWithContext[]> => {
     const response = await requester.get(`/materials/while-event/${eventId}`);
-    return MaterialWithContextSchema.array().parse(response.data);
+    return MaterialWithContextSchema.array().parse(response);
 };
 
 const one = async (id: Material['id']): Promise<MaterialDetails> => {
     const response = await requester.get(`/materials/${id}`);
-    return MaterialDetailsSchema.parse(response.data);
+    return MaterialDetailsSchema.parse(response);
 };
 
 const create = async (data: MaterialEdit, onProgress?: ProgressCallback): Promise<MaterialDetails> => {
     const response = await requester.post('/materials', data, {
         ...(onProgress ? { onProgress } : {}),
     });
-    return MaterialDetailsSchema.parse(response.data);
+    return MaterialDetailsSchema.parse(response);
 };
 
 const update = async (id: Material['id'], data: Partial<MaterialEdit>, onProgress?: ProgressCallback): Promise<MaterialDetails> => {
     const response = await requester.put(`/materials/${id}`, data, {
         ...(onProgress ? { onProgress } : {}),
     });
-    return MaterialDetailsSchema.parse(response.data);
+    return MaterialDetailsSchema.parse(response);
 };
 
 const restore = async (id: Material['id']): Promise<MaterialDetails> => {
     const response = await requester.put(`/materials/${id}/restore`);
-    return MaterialDetailsSchema.parse(response.data);
+    return MaterialDetailsSchema.parse(response);
 };
 
 const remove = async (id: Material['id']): Promise<void> => {
     await requester.delete(`/materials/${id}`);
 };
 
-const bookings = async (id: Material['id'], params: GetBookingsParams = {}): Promise<PaginatedData<MaterialBookingSummary[]>> => {
+const bookings = async (
+    id: Material['id'],
+    params: GetBookingsParams = {},
+    signal?: AbortSignal,
+): Promise<PaginatedData<MaterialBookingSummary[]>> => {
     const normalizedParams = {
         ...omit(params, ['period']),
         ...params?.period?.toQueryParams('period'),
     };
-    const response = await requester.get(`/materials/${id}/bookings`, { params: normalizedParams });
-    return withPaginationEnvelope(MaterialBookingSummarySchema).parse(response.data);
+    const config: RequestConfig = {
+        params: normalizedParams,
+        ...(signal !== undefined ? { signal } : {}),
+    };
+    const response = await requester.get(`/materials/${id}/bookings`, config);
+    return withPaginationEnvelope(MaterialBookingSummarySchema).parse(response);
 };
 
 const documents = async (id: Material['id']): Promise<Document[]> => {
     const response = await requester.get(`/materials/${id}/documents`);
-    return DocumentSchema.array().parse(response.data);
+    return DocumentSchema.array().parse(response);
 };
 
 const attachDocument = async (id: Material['id'], file: File, options: RequestConfig = {}): Promise<Document> => {
     const formData = new FormData(); formData.append('file', file);
     const response = await requester.post(`/materials/${id}/documents`, formData, options);
-    return DocumentSchema.parse(response.data);
+    return DocumentSchema.parse(response);
 };
 
 export default {

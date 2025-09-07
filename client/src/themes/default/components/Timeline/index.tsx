@@ -11,11 +11,12 @@ import Color from '@/utils/color';
 import Period from '@/utils/period';
 import pick from 'lodash/pick';
 import throttle from 'lodash/throttle';
+import isTruthy from '@/utils/isTruthy';
 import { mountVisData } from './_utils';
 import { getLocale } from '@/globals/lang';
 import styleObjectToString from 'style-object-to-css-string';
 import safeJsonParse from '@/utils/safeJsonParse';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { Timeline as TimelineCore } from '@loxya/vis-timeline';
 import DateTime, { DateTimeRoundingMethod } from '@/utils/datetime';
 import Loading from '@/themes/default/components/Loading';
@@ -25,10 +26,11 @@ import {
     VARIANT_MAP as ICON_VARIANT_MAP,
 } from '@/themes/default/components/Icon';
 
+import type { ClassValue } from 'clsx';
 import type { MomentInput } from 'moment';
 import type { DebouncedMethod } from 'lodash';
 import type { Duration } from '@/utils/datetime';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type {
     SnapTime,
     TimelineItem,
@@ -116,17 +118,93 @@ type Props = {
      * @default false
      */
     stacked?: boolean,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a cliqué quelque part
+     * sur la frise temporelle.
+     *
+     * @param event - L'événement lié.
+     */
+    onClick?(event: TimelineClickEvent): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a double-cliqué
+     * quelque part sur la frise temporelle.
+     *
+     * @param event - L'événement lié.
+     */
+    onDoubleClick?(event: TimelineClickEvent): void,
+
+    /**
+     * Fonction appelée lorsque la période affichée dans la
+     * frise temporelle a changé.
+     *
+     * @param newPeriod - La nouvelle période affichée.
+     */
+    onRangeChanged?(newPeriod: Raw<Period>): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur survole un élément
+     * de la frise temporelle.
+     *
+     * @param identifier - L'identifiant composé de l'élément survolé.
+     */
+    onItemOver?(identifier: TimelineItemIdentifier): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur cesse de survoler un
+     * élément de la frise temporelle.
+     *
+     * @param identifier - L'identifiant composé de l'élément qui n'est
+     *                     plus survolé.
+     */
+    onItemOut?(identifier: TimelineItemIdentifier): void,
+
+    /**
+     * Fonction appelée lorsqu'un élément de la frise temporelle est déplacé.
+     *
+     * @param identifier - L'identifiant composé de l'élément déplacé.
+     * @param newPeriod - La nouvelle période de l'élément.
+     * @param newGroup - L'éventuel nouveau groupe dans lequel l'élément a été déplacé.
+     * @param finish - Un callback à appeler pour confirmer, ou non, le déplacement.
+     */
+    onItemMove?(
+        identifier: TimelineItemIdentifier,
+        newPeriod: Raw<Period>,
+        newGroup: TimelineGroup['id'] | null,
+        finish: TimelineConfirmCallback,
+    ): void,
+
+    /**
+     * Fonction appelée lorsqu'un élément de la frise temporelle est supprimé.
+     *
+     * @param identifier - L'identifiant composé de l'élément supprimé.
+     * @param finish - Un callback à appeler pour confirmer, ou non, la suppression.
+     */
+    onItemRemove?(
+        identifier: TimelineItemIdentifier,
+        finish: TimelineConfirmCallback,
+    ): void,
+
+    /**
+     * Fonction appelée lorsque les données de la frise temporelle changent.
+     *
+     * @param event - L'événement lié.
+     */
+    onDataChange?(event: TimelineDataChangeEvent): void,
 };
 
 type Data = {
-    data: DataSet | undefined,
-    groupData: DataSet | undefined,
+    data: Raw<DataSet> | undefined,
+    groupData: Raw<DataSet> | undefined,
     loading: boolean,
+    now: Raw<DateTime>,
 };
 
 type InstanceProperties = {
     domObserver: MutationObserver | undefined,
     timeline: TimelineCore | undefined,
+    nowTimer: ReturnType<typeof setInterval> | undefined,
     handleDoubleClickThrottled: (
         | DebouncedMethod<typeof Timeline, 'handleDoubleClick'>
         | undefined
@@ -137,7 +215,6 @@ type InstanceProperties = {
  * Frise temporelle qui affiche des éléments
  * à la manière d'un diagramme de Gantt.
  */
-// TODO: Afficher les heures de fermetures.
 const Timeline = defineComponent({
     name: 'Timeline',
     props: {
@@ -188,6 +265,38 @@ const Timeline = defineComponent({
             type: Boolean as PropType<Required<Props>['stacked']>,
             default: false,
         },
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
+        },
+        onDoubleClick: {
+            type: Function as PropType<Props['onDoubleClick']>,
+            default: undefined,
+        },
+        onRangeChanged: {
+            type: Function as PropType<Props['onRangeChanged']>,
+            default: undefined,
+        },
+        onItemOver: {
+            type: Function as PropType<Props['onItemOver']>,
+            default: undefined,
+        },
+        onItemOut: {
+            type: Function as PropType<Props['onItemOut']>,
+            default: undefined,
+        },
+        onItemMove: {
+            type: Function as PropType<Props['onItemMove']>,
+            default: undefined,
+        },
+        onItemRemove: {
+            type: Function as PropType<Props['onItemRemove']>,
+            default: undefined,
+        },
+        onDataChange: {
+            type: Function as PropType<Props['onDataChange']>,
+            default: undefined,
+        },
     },
     emits: [
         'click',
@@ -202,22 +311,19 @@ const Timeline = defineComponent({
     setup: (): InstanceProperties => ({
         handleDoubleClickThrottled: undefined,
         domObserver: undefined,
+        nowTimer: undefined,
         timeline: undefined,
     }),
     data: (): Data => ({
         data: undefined,
         groupData: undefined,
+        now: markRaw(DateTime.now()),
         loading: true,
     }),
     computed: {
         fullOptions(): TimelineOptions {
-            const { $t: __, editable, hideCurrentTime } = this;
+            const { $t: __, editable, hideCurrentTime, zoomMin, zoomMax } = this;
             const period = this.period?.setFullDays(false);
-
-            // Note: Bug bizarre avec l'inférence TS pour ces deux props.,
-            //       ce qui empêche de déstructurer comme les autres.
-            const zoomMax = this.zoomMax as Duration | undefined;
-            const zoomMin = this.zoomMin as Duration;
 
             return {
                 zoomMin: zoomMin.asMilliseconds(),
@@ -329,7 +435,7 @@ const Timeline = defineComponent({
                 } = rawItem;
 
                 const style = typeof rawStyle === 'object' ? { ...rawStyle } : {};
-                const baseClassName = ['Timeline__item'];
+                const baseClassName: ClassValue[] = ['Timeline__item'];
 
                 if (rawColor !== null && rawColor !== undefined) {
                     const color = new Color(rawColor);
@@ -361,34 +467,78 @@ const Timeline = defineComponent({
 
                 invariant(
                     (
-                        TimelineItemPeriodType.ACTUAL in suppliedPeriod ||
+                        TimelineItemPeriodType.ACTUAL in suppliedPeriod &&
                         TimelineItemPeriodType.EXPECTED in suppliedPeriod
                     ),
-                    `Invalid item period, missing \`${TimelineItemPeriodType.ACTUAL}\` and / ` +
-                    `or \`${TimelineItemPeriodType.EXPECTED}\` key.`,
+                    `Invalid item period, missing \`${TimelineItemPeriodType.ACTUAL}\` or ` +
+                    `\`${TimelineItemPeriodType.EXPECTED}\` key.`,
                 );
 
-                return Object.values(TimelineItemPeriodType).reduce(
-                    (items: TimelineItemCore[], type: TimelineItemPeriodType): TimelineItemCore[] => {
-                        let period = suppliedPeriod[type].setFullDays(false);
-                        if (type !== TimelineItemPeriodType.ACTUAL) {
-                            const referencePeriod = suppliedPeriod[TimelineItemPeriodType.ACTUAL].setFullDays(false);
-                            const narrowedPeriod = period.narrow(referencePeriod) as Period<false>;
-                            if (narrowedPeriod === null) {
-                                // eslint-disable-next-line no-console
-                                console.warn(
-                                    `The supplied \`${TimelineItemPeriodType.EXPECTED}\` period does not share any ' +
-                                    'dates with the \`${TimelineItemPeriodType.ACTUAL}\` period, so it has been ignored.`,
-                                );
-                                return items;
-                            }
-                            period = narrowedPeriod;
-                        }
+                const periods: Map<TimelineItemPeriodType, Period<false>> = new Map();
 
-                        return items.concat({
+                // - Période effective
+                const actualPeriod = suppliedPeriod[TimelineItemPeriodType.ACTUAL].setFullDays(false);
+                periods.set(TimelineItemPeriodType.ACTUAL, actualPeriod);
+
+                // - Période prevue.
+                const rawExpectedPeriod = suppliedPeriod[TimelineItemPeriodType.EXPECTED].setFullDays(false);
+                const expectedPeriod = rawExpectedPeriod.narrow(actualPeriod) as Period<false> | null;
+                if (expectedPeriod === null) {
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        `The supplied \`${TimelineItemPeriodType.EXPECTED}\` period ` +
+                        `does not share any dates with the \`${TimelineItemPeriodType.ACTUAL}\` ` +
+                        'period, so it has been ignored.',
+                    );
+                } else {
+                    periods.set(TimelineItemPeriodType.EXPECTED, expectedPeriod);
+                }
+
+                // - Période de retard.
+                if (suppliedPeriod[TimelineItemPeriodType.OVERDUE] !== undefined) {
+                    const overduePeriod = (
+                        suppliedPeriod[TimelineItemPeriodType.OVERDUE] instanceof Period
+                            ? suppliedPeriod[TimelineItemPeriodType.OVERDUE]
+                            // @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date
+                            : actualPeriod.tail(new DateTime(8.64e15))
+                    ) as Period<false>;
+
+                    if (!overduePeriod.start.isSame(actualPeriod.end)) {
+                        // eslint-disable-next-line no-console
+                        console.warn(
+                            `The supplied \`${TimelineItemPeriodType.OVERDUE}\` period ` +
+                            `doest not follow the \`${TimelineItemPeriodType.ACTUAL}\` ` +
+                            'period, so it has been ignored.',
+                        );
+                    } else {
+                        baseClassName.push('Timeline__item--with-overdue');
+                        periods.set(TimelineItemPeriodType.OVERDUE, overduePeriod);
+                    }
+                }
+
+                // - Période entière.
+                const fullPeriod: Period<false> | null = Array.from(periods.values()).reduce(
+                    (currentPeriod: Period<false> | null, period: Period<false>): Period<false> => (
+                        currentPeriod?.merge(period) as Period<false> | null ?? period.clone()
+                    ),
+                    null,
+                );
+
+                // - Est-ce que les périodes sont unifiées ?
+                const arePeriodsUnified = (
+                    expectedPeriod === null ||
+                    actualPeriod.setFullDays(false).isSame(expectedPeriod)
+                );
+                if (arePeriodsUnified) {
+                    baseClassName.push('Timeline__item--unified');
+                }
+
+                return [
+                    ...Array.from(periods.entries()).map(
+                        ([type, period]: [TimelineItemPeriodType, Period<false>]) => ({
                             ...item,
                             id: JSON.stringify({ id: item.id, type }),
-                            content: type === TimelineItemPeriodType.ACTUAL ? summary : '',
+                            content: '',
                             start: period.start.toDate(),
                             end: period.end.toDate(),
                             subgroup: item.id,
@@ -396,17 +546,34 @@ const Timeline = defineComponent({
                             className: clsx(
                                 baseClassName,
                                 `Timeline__item--${type}`,
+                                {
+                                    'Timeline__item--ongoing': this.now.isBetween(period),
+                                    'Timeline__item--past': period.isBefore(this.now),
+                                },
                                 suppliedClassName,
                             ),
-                            ...(
-                                tooltip && type === TimelineItemPeriodType.ACTUAL
-                                    ? { title: tooltip }
-                                    : {}
-                            ),
-                        });
+                        }),
+                    ),
+                    fullPeriod === null ? null : {
+                        ...item,
+                        id: JSON.stringify({ id: item.id, type: null }),
+                        content: summary,
+                        start: fullPeriod.start.toDate(),
+                        end: fullPeriod.end.toDate(),
+                        subgroup: item.id,
+                        style: styleObjectToString(style),
+                        className: clsx(
+                            baseClassName,
+                            `Timeline__item--base`,
+                            {
+                                'Timeline__item--ongoing': this.now.isBetween(fullPeriod),
+                                'Timeline__item--past': fullPeriod.isBefore(this.now),
+                            },
+                            suppliedClassName,
+                        ),
+                        ...(tooltip ? { title: tooltip } : {}),
                     },
-                    [],
-                );
+                ].filter(isTruthy) as TimelineItemCore[];
             });
         },
 
@@ -442,7 +609,7 @@ const Timeline = defineComponent({
                         const button = document.createElement('button');
                         button.className = 'Timeline__group-content__actions__item';
                         button.ariaLabel = ariaLabel ?? null;
-                        button.onclick = onClick;
+                        button.onclick = onClick ?? null;
 
                         // - Icône de l'action.
                         const iconElement = document.createElement('i');
@@ -482,8 +649,7 @@ const Timeline = defineComponent({
         fullOptions: {
             deep: true,
             handler() {
-                const that = this as any as InstanceType<typeof Timeline>;
-                that.timeline!.setOptions(that.fullOptions);
+                this.timeline!.setOptions(this.fullOptions);
             },
         },
     },
@@ -492,12 +658,18 @@ const Timeline = defineComponent({
         this.timeline = undefined;
     },
     mounted() {
+        // - Actualise le timestamp courant toutes les 10 secondes.
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
+
         // Note: Correction du double-call des events `doubletap` + `doubleClick`.
         // @see https://github.com/visjs/vis-timeline/issues/301
         this.handleDoubleClickThrottled = throttle(this.handleDoubleClick.bind(this), 100, { trailing: false });
 
-        this.data = mountVisData(this, 'formattedItems', 'data');
-        this.groupData = mountVisData(this, 'formattedGroups', 'groupData');
+        const data = mountVisData(this, 'formattedItems', 'data');
+        this.data = data !== undefined ? markRaw(data) : undefined;
+
+        const groupData = mountVisData(this, 'formattedGroups', 'groupData');
+        this.groupData = groupData !== undefined ? markRaw(groupData) : undefined;
 
         const options: TimelineOptions = { ...this.fullOptions };
 
@@ -553,7 +725,7 @@ const Timeline = defineComponent({
                     // @see https://github.com/visjs/vis-timeline/blob/v7.4.7/lib/timeline/component/item/Item.js#L203
                     props = this.timeline!.getEventProperties(props);
                 }
-                (this as any)[handlerName](props);
+                this[handlerName](props);
             });
         });
 
@@ -569,6 +741,10 @@ const Timeline = defineComponent({
         );
     },
     beforeDestroy() {
+        if (this.nowTimer) {
+            clearInterval(this.nowTimer);
+        }
+
         this.handleDoubleClickThrottled?.cancel();
 
         this.domObserver?.disconnect();
@@ -594,7 +770,7 @@ const Timeline = defineComponent({
             if (!payload.start || !payload.end) {
                 return;
             }
-            this.$emit('rangeChanged', new Period(payload.start, payload.end));
+            this.$emit('rangeChanged', markRaw(new Period(payload.start, payload.end)));
         },
 
         handleItemOver(rawPayload: ItemOverEvent) {
@@ -635,9 +811,9 @@ const Timeline = defineComponent({
                 return;
             }
 
-            let newPeriod: Period;
+            let newPeriod: Raw<Period>;
             try {
-                newPeriod = new Period(new Date(rawItem.start), new Date(rawItem.end));
+                newPeriod = markRaw(new Period(new Date(rawItem.start), new Date(rawItem.end)));
             } catch (error) {
                 // eslint-disable-next-line no-console
                 console.warn(`Exception occurred while moving event on timeline:`, item, error);
@@ -677,14 +853,16 @@ const Timeline = defineComponent({
         // ------------------------------------------------------
 
         formatTimelineClickEvent(rawPayload: TimelineClickEventCore): TimelineClickEvent {
-            const time = new DateTime(rawPayload.time);
-            const snappedTime = this.snapTime
-                ? time.roundTimeUnit(
-                    this.snapTime.unit,
-                    this.snapTime.precision,
-                    DateTimeRoundingMethod.FLOOR,
-                )
-                : time;
+            const time = markRaw(new DateTime(rawPayload.time));
+            const snappedTime = markRaw(
+                this.snapTime
+                    ? time.roundTimeUnit(
+                        this.snapTime.unit,
+                        this.snapTime.precision,
+                        DateTimeRoundingMethod.FLOOR,
+                    )
+                    : time,
+            );
 
             const item: TimelineItemIdentifier | null = rawPayload.item
                 ? (safeJsonParse<TimelineItemIdentifier>(rawPayload.item as string) ?? null)
@@ -719,7 +897,6 @@ const Timeline = defineComponent({
                 ? date.toDateTime().toDate()
                 : date.toDate();
 
-            // eslint-disable-next-line @typescript-eslint/typedef
             return new Promise((resolve) => {
                 this.timeline!.moveTo(_date, {}, () => {
                     resolve();
@@ -737,7 +914,6 @@ const Timeline = defineComponent({
          *          (utile uniquement si `animate` n'est pas à `false`)
          */
         zoomIn(percentage: number, animate: boolean = true): Promise<void> {
-            // eslint-disable-next-line @typescript-eslint/typedef
             return new Promise((resolve) => {
                 this.timeline!.zoomIn(percentage, { animation: animate }, () => {
                     resolve();

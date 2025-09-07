@@ -1,11 +1,11 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import config from '@/globals/config';
 import formatBytes from '@/utils/formatBytes';
 import Button from '@/themes/default/components/Button';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 
 type Props = {
     /**
@@ -20,6 +20,26 @@ type Props = {
      * Par défaut, il s'agit les types spécifiés dans la configuration globale.
      */
     accept?: string | string[],
+
+    /**
+     * Fonction appelée lorsque le survol en glissé-déposé
+     * débute au-dessus de la zone.
+     */
+    onDragStart?(): void,
+
+    /**
+     * Fonction appelée lorsque le survol en glissé-déposé se termine
+     * (ex: sortie du pointeur de la zone ou dépôt effectif).
+     */
+    onDragStop?(): void,
+
+    /**
+     * Fonction appelée quand des fichiers sont fournis au composant,
+     * via un drag'n'drop ou via le sélecteur de fichiers.
+     *
+     * @param files - Le ou les fichiers fournis.
+     */
+    onInput?(files: Raw<File> | Raw<FileList>): void,
 };
 
 type Data = {
@@ -37,6 +57,21 @@ const DropZone = defineComponent({
         accept: {
             type: [String, Array] as PropType<Required<Props>['accept']>,
             default: () => config.authorizedFileTypes,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDragStart: {
+            type: Function as PropType<Props['onDragStart']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDragStop: {
+            type: Function as PropType<Props['onDragStop']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
         },
     },
     emits: ['input', 'dragStart', 'dragStop'],
@@ -100,10 +135,10 @@ const DropZone = defineComponent({
             }
 
             const { multiple } = this;
-            this.$emit('input', multiple ? files : files[0]);
+            this.$emit('input', markRaw(multiple ? files : files[0]));
         },
 
-        handleClickOpenFileBrowser(e: Event) {
+        handleClickOpenFileBrowser(e: MouseEvent) {
             e.stopPropagation();
 
             const $inputFile = this.$refs.inputFile as HTMLInputElement | undefined;
@@ -122,7 +157,7 @@ const DropZone = defineComponent({
             }
 
             const { multiple } = this;
-            this.$emit('input', multiple ? files : files[0]);
+            this.$emit('input', markRaw(multiple ? files : files[0]));
         },
 
         // ------------------------------------------------------

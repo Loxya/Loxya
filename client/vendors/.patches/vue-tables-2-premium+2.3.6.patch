@@ -1,0 +1,389 @@
+diff --git a/node_modules/vue-tables-2-premium/compiled/components/VtClientTable.js b/node_modules/vue-tables-2-premium/compiled/components/VtClientTable.js
+index 98ab81c..dbc4540 100644
+--- a/node_modules/vue-tables-2-premium/compiled/components/VtClientTable.js
++++ b/node_modules/vue-tables-2-premium/compiled/components/VtClientTable.js
+@@ -103,6 +103,9 @@ var _default2 = {
+     selectAllRows: function selectAllRows() {
+       return this.$refs.table.selectAllRows();
+     },
++    setVisibleColumns: function setVisibleColumns(columns) {
++      return this.$refs.table.setVisibleColumns(columns);
++    },
+     setCustomFilters: function setCustomFilters(params) {
+       var sendRequest = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+       return this.$refs.table.setCustomFilters(params, sendRequest);
+diff --git a/node_modules/vue-tables-2-premium/compiled/components/VtServerTable.js b/node_modules/vue-tables-2-premium/compiled/components/VtServerTable.js
+index 0ada49a..9090e01 100644
+--- a/node_modules/vue-tables-2-premium/compiled/components/VtServerTable.js
++++ b/node_modules/vue-tables-2-premium/compiled/components/VtServerTable.js
+@@ -125,6 +125,9 @@ var _default2 = {
+     selectAllRows: function selectAllRows() {
+       return this.$refs.table.selectAllRows();
+     },
++    setVisibleColumns: function setVisibleColumns(columns) {
++      return this.$refs.table.setVisibleColumns(columns);
++    },
+     getRequestParams: function getRequestParams() {
+       return this.$refs.table.getRequestParams();
+     },
+diff --git a/node_modules/vue-tables-2-premium/compiled/components/VtTableBody.js b/node_modules/vue-tables-2-premium/compiled/components/VtTableBody.js
+index 1df58a5..7099032 100644
+--- a/node_modules/vue-tables-2-premium/compiled/components/VtTableBody.js
++++ b/node_modules/vue-tables-2-premium/compiled/components/VtTableBody.js
+@@ -15,6 +15,8 @@ var _VtGroupRow = _interopRequireDefault(require("./VtGroupRow"));
+ 
+ var _VtChildRow = _interopRequireDefault(require("./VtChildRow"));
+ 
++var _Draggable = _interopRequireDefault(require("vuedraggable"));
++
+ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+ 
+ var _default2 = {
+@@ -24,7 +26,8 @@ var _default2 = {
+     VtNoResultsRow: _VtNoResultsRow["default"],
+     VtTableRow: _VtTableRow["default"],
+     VtChildRow: _VtChildRow["default"],
+-    VtGroupRow: _VtGroupRow["default"]
++    VtGroupRow: _VtGroupRow["default"],
++    Draggable: _Draggable["default"],
+   },
+   render: function render() {
+     var h = arguments[0];
+@@ -32,6 +35,7 @@ var _default2 = {
+       scopedSlots: {
+         "default": function _default(props) {
+           var rows = [];
++          var rowsData = [];
+ 
+           if (props.groupBy) {
+             var addRows = function addRows(data) {
+@@ -84,6 +88,7 @@ var _default2 = {
+                   index: props.initialIndex + index + 1
+                 }
+               }));
++              rowsData.push({ primary: true, data: row });
+ 
+               if (props.hasChildRow && props.openChildRows.includes(row[props.uniqueRowId])) {
+                 rows.push(h("vt-child-row", {
+@@ -92,17 +97,64 @@ var _default2 = {
+                     index: props.initialIndex + index + 1
+                   }
+                 }));
++                rowsData.push({ primary: false, data: row });
+               }
+             });
+           }
+ 
+-          return props.override ? h(props.override, {
+-            attrs: {
+-              props: props
+-            }
+-          }) : h("tbody", {
+-            "class": props.theme.tbody
+-          }, [props.slots.prependBody, props.data.length === 0 ? h("vt-no-results-row") : '', rows, props.slots.appendBody]);
++          if (props.override) {
++            return h(props.override, { attrs: { props: props } });
++          }
++
++          var isEmpty = props.data.length === 0;
++          if (!props.opts.orderable || props.source !== 'client' || props.groupBy || isEmpty) {
++            return h(
++              "tbody",
++              { "class": props.theme.tbody },
++              [
++                props.slots.prependBody,
++                isEmpty ? h("vt-no-results-row") : '',
++                rows,
++                props.slots.appendBody
++              ],
++            );
++          }
++
++          return h(
++            "Draggable",
++            {
++              class: props.theme.tbody,
++              props: {
++                tag: 'tbody',
++                value: props.data,
++                move: function (event) {
++                  const { index } = event.draggedContext;
++                  return rowsData[index]?.primary ?? false;
++                },
++              },
++              attrs: {
++                direction: 'vertical',
++                draggable: '.VueTables__row',
++                filter: '.VueTables__child-row',
++              },
++              on: {
++                end: function (event) {
++                  const item = rowsData[event.oldIndex];
++                  if (!item?.primary || event.oldIndex === event.newIndex) {
++                    return;
++                  }
++
++                  const newIndex = rowsData
++                    .slice(0, event.newIndex)
++                    .filter((_item) => _item.primary)
++                    .length;
++
++                  props.rowEvents.dragEnd(item.data, newIndex, event);
++                },
++              },
++            },
++            rows,
++          );
+         }
+       }
+     });
+diff --git a/node_modules/vue-tables-2-premium/compiled/components/renderless/RLTableBody.js b/node_modules/vue-tables-2-premium/compiled/components/renderless/RLTableBody.js
+index 26cae28..8c00f20 100644
+--- a/node_modules/vue-tables-2-premium/compiled/components/renderless/RLTableBody.js
++++ b/node_modules/vue-tables-2-premium/compiled/components/renderless/RLTableBody.js
+@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
+ exports["default"] = void 0;
+ var _default = {
+   name: 'RLTableBody',
+-  inject: ['opts', 'theme', 'source', 'filteredData', 'tableData', 'colspan', 'openChildRows', 'collapsedGroups', 'scopedSlots', 'slots', 'componentsOverride', 'page', 'limit', 'groupBy'],
++  inject: ['opts', 'theme', 'source', 'filteredData', 'tableData', 'colspan', 'openChildRows', 'collapsedGroups', 'scopedSlots', 'slots', 'componentsOverride', 'page', 'limit', 'groupBy', 'rowWasDragged'],
+   render: function render() {
+     return this.$scopedSlots["default"]({
+       opts: this.opts(),
+@@ -23,7 +23,10 @@ var _default = {
+       groupBy: this.groupBy,
+       slots: this.slots(),
+       override: this.componentsOverride.tableBody,
+-      initialIndex: (this.page() - 1) * this.limit()
++      initialIndex: (this.page() - 1) * this.limit(),
++      rowEvents: {
++        dragEnd: this.rowWasDragged.bind(this),
++      },
+     });
+   }
+ };
+diff --git a/node_modules/vue-tables-2-premium/compiled/config/defaults.js b/node_modules/vue-tables-2-premium/compiled/config/defaults.js
+index 1f5e00f..d0aeaca 100644
+--- a/node_modules/vue-tables-2-premium/compiled/config/defaults.js
++++ b/node_modules/vue-tables-2-premium/compiled/config/defaults.js
+@@ -22,6 +22,7 @@ module.exports = function () {
+     params: {},
+     sortable: true,
+     filterable: true,
++    orderable: false,
+     groupMeta: [],
+     initFilters: {},
+     sendInitialRequest: true,
+@@ -116,6 +117,7 @@ module.exports = function () {
+     rowClassCallback: false,
+     preserveState: false,
+     saveState: false,
++    saveSearch: false,
+     storage: "local",
+     columnsClasses: {},
+     summary: false,
+diff --git a/node_modules/vue-tables-2-premium/compiled/methods/init-state.js b/node_modules/vue-tables-2-premium/compiled/methods/init-state.js
+index ddd9559..0d0baf7 100644
+--- a/node_modules/vue-tables-2-premium/compiled/methods/init-state.js
++++ b/node_modules/vue-tables-2-premium/compiled/methods/init-state.js
+@@ -1,6 +1,6 @@
+ "use strict";
+ 
+-module.exports = function () {
++module.exports = function (persist = true) {
+   var state = {
+     page: 1,
+     query: this.query,
+@@ -8,6 +8,15 @@ module.exports = function () {
+     perPage: this.opts.perPage,
+     customQueries: this.customQueries
+   };
+-  this.storage.setItem(this.stateKey, JSON.stringify(state));
++
++  if (!persist || !this.opts.saveState) {
++    return state;
++  }
++
++  var savedState = this.opts.saveSearch ? state : Object.fromEntries(
++    Object.entries(state).filter(([key]) => key !== 'query')
++  );
++  this.storage.setItem(this.stateKey, JSON.stringify(savedState));
++
+   return state;
+ };
+\ No newline at end of file
+diff --git a/node_modules/vue-tables-2-premium/compiled/methods/row-was-clicked.js b/node_modules/vue-tables-2-premium/compiled/methods/row-was-clicked.js
+index 3b8815a..b7dfbe7 100644
+--- a/node_modules/vue-tables-2-premium/compiled/methods/row-was-clicked.js
++++ b/node_modules/vue-tables-2-premium/compiled/methods/row-was-clicked.js
+@@ -12,7 +12,7 @@ module.exports = function (row, index, event) {
+     data = row;
+   }
+ 
+-  this.dispatch('row-click', {
++  this.dispatch('rowClick', {
+     row: data,
+     index: index,
+     event: event
+diff --git a/node_modules/vue-tables-2-premium/compiled/methods/row-was-dragged.js b/node_modules/vue-tables-2-premium/compiled/methods/row-was-dragged.js
+new file mode 100644
+index 0000000..21a33b2
+--- /dev/null
++++ b/node_modules/vue-tables-2-premium/compiled/methods/row-was-dragged.js
+@@ -0,0 +1,9 @@
++"use strict";
++
++module.exports = function (row, newIndex, event) {
++  this.dispatch('rowDrag', {
++    row: row,
++    newIndex: newIndex,
++    event: event
++  });
++};
+diff --git a/node_modules/vue-tables-2-premium/compiled/methods/set-visible-columns.js b/node_modules/vue-tables-2-premium/compiled/methods/set-visible-columns.js
+new file mode 100644
+index 0000000..71de99a
+--- /dev/null
++++ b/node_modules/vue-tables-2-premium/compiled/methods/set-visible-columns.js
+@@ -0,0 +1,17 @@
++"use strict";
++
++module.exports = function (columns) {
++  var _this = this;
++
++  this.userControlsColumns = true;
++  this.userColumnsDisplay = columns.length === 0
++    ? JSON.parse(JSON.stringify(this.allColumns))
++    : columns;
++
++  this.updateState('userControlsColumns', true);
++  this.updateState('userColumnsDisplay', this.userColumnsDisplay);
++
++  this.$nextTick(function () {
++    _this._setFiltersDOM(_this.query);
++  });
++};
+diff --git a/node_modules/vue-tables-2-premium/compiled/methods/update-state.js b/node_modules/vue-tables-2-premium/compiled/methods/update-state.js
+index 9709590..2a400c8 100644
+--- a/node_modules/vue-tables-2-premium/compiled/methods/update-state.js
++++ b/node_modules/vue-tables-2-premium/compiled/methods/update-state.js
+@@ -1,14 +1,23 @@
+ "use strict";
+ 
+ module.exports = function (key, value) {
+-  if (!this.opts.saveState || !this.activeState) return;
++  if (!this.opts.saveState || !this.activeState) {
++    return;
++  }
+ 
++  var newStateRaw = this.initState(false);
+   try {
+-    var currentState = JSON.parse(this.storage.getItem(this.stateKey));
++    newStateRaw = Object.assign({}, newStateRaw, JSON.parse(this.storage.getItem(this.stateKey)));
+   } catch (e) {
+-    var currentState = this.initState();
+   }
+ 
+-  currentState[key] = value;
+-  this.storage.setItem(this.stateKey, JSON.stringify(currentState));
++  var newState = this.opts.saveSearch ? newStateRaw : Object.fromEntries(
++    Object.entries(newStateRaw).filter(([key]) => key !== 'query')
++  );
++
++  if (this.opts.saveSearch || key !== 'query') {
++    newState[key] = value;
++  }
++
++  this.storage.setItem(this.stateKey, JSON.stringify(newState));
+ };
+\ No newline at end of file
+diff --git a/node_modules/vue-tables-2-premium/compiled/mixins/methods.js b/node_modules/vue-tables-2-premium/compiled/mixins/methods.js
+index 82c5fc7..fb88f3b 100644
+--- a/node_modules/vue-tables-2-premium/compiled/mixins/methods.js
++++ b/node_modules/vue-tables-2-premium/compiled/mixins/methods.js
+@@ -28,6 +28,7 @@ module.exports = {
+   optionText: require('../filters/option-text'),
+   render: require('../methods/render'),
+   rowWasClicked: require('../methods/row-was-clicked'),
++  rowWasDragged: require('../methods/row-was-dragged'),
+   setLimit: require('../methods/set-limit'),
+   getOpenChildRows: require('../methods/get-open-child-rows'),
+   dispatch: require('../methods/dispatch'),
+@@ -41,6 +42,7 @@ module.exports = {
+   columnClass: require('../methods/column-class'),
+   getName: require('../methods/get-name'),
+   toggleColumn: require('../methods/toggle-column'),
++  setVisibleColumns: require('../methods/set-visible-columns'),
+   setUserMultiSort: require('../methods/set-user-multi-sort'),
+   _cellClasses: require('../methods/cell-classes'),
+   _setFiltersDOM: require('../methods/set-filters-dom'),
+diff --git a/node_modules/vue-tables-2-premium/compiled/mixins/provide.js b/node_modules/vue-tables-2-premium/compiled/mixins/provide.js
+index 0e9b7db..d65be0d 100644
+--- a/node_modules/vue-tables-2-premium/compiled/mixins/provide.js
++++ b/node_modules/vue-tables-2-premium/compiled/mixins/provide.js
+@@ -8,6 +8,7 @@ module.exports = function () {
+       return _this.count;
+     },
+     rowWasClicked: this.rowWasClicked,
++    rowWasDragged: this.rowWasDragged,
+     render: this.render,
+     groupBy: this.groupBy,
+     opts: function opts() {
+diff --git a/node_modules/vue-tables-2-premium/compiled/v-client-table.js b/node_modules/vue-tables-2-premium/compiled/v-client-table.js
+index f8f8409..231a9f6 100644
+--- a/node_modules/vue-tables-2-premium/compiled/v-client-table.js
++++ b/node_modules/vue-tables-2-premium/compiled/v-client-table.js
+@@ -189,7 +189,9 @@ exports.install = function (Vue, globalOptions, useVuex) {
+         link.remove();
+       },
+       loadState: function loadState() {
+-        if (!this.opts.saveState) return;
++        if (!this.opts.saveState) {
++            return;
++        }
+ 
+         if (!this.storage.getItem(this.stateKey)) {
+           this.initState();
+@@ -197,7 +199,12 @@ exports.install = function (Vue, globalOptions, useVuex) {
+           return;
+         }
+ 
+-        var state = JSON.parse(this.storage.getItem(this.stateKey));
++        var persistedState = JSON.parse(this.storage.getItem(this.stateKey));
++        if (!this.opts.saveSearch) {
++            delete persistedState.query;
++        }
++
++        var state = Object.assign({}, this.initState(false), persistedState);
+         if (this.opts.filterable) this.setFilter(state.query);
+         this.setOrder(state.orderBy.column, state.orderBy.ascending);
+ 
+diff --git a/node_modules/vue-tables-2-premium/compiled/v-server-table.js b/node_modules/vue-tables-2-premium/compiled/v-server-table.js
+index 0dcfc3d..a0e866f 100644
+--- a/node_modules/vue-tables-2-premium/compiled/v-server-table.js
++++ b/node_modules/vue-tables-2-premium/compiled/v-server-table.js
+@@ -119,7 +119,9 @@ exports.install = function (Vue, globalOptions, useVuex) {
+       loadState: function loadState() {
+         var _this = this;
+ 
+-        if (!this.opts.saveState) return;
++        if (!this.opts.saveState) {
++            return;
++        }
+ 
+         if (!this.storage.getItem(this.stateKey)) {
+           this.initState();
+@@ -127,7 +129,12 @@ exports.install = function (Vue, globalOptions, useVuex) {
+           return;
+         }
+ 
+-        var state = JSON.parse(this.storage.getItem(this.stateKey));
++        var persistedState = JSON.parse(this.storage.getItem(this.stateKey));
++        if (!this.opts.saveSearch) {
++            delete persistedState.query;
++        }
++
++        var state = Object.assign({}, this.initState(false), persistedState);
+ 
+         if (this.vuex) {
+           this.commit("SET_STATE", {

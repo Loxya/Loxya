@@ -1,9 +1,9 @@
 import './index.scss';
 import DateTime from '@/utils/datetime';
 import upperFirst from 'lodash/upperFirst';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 
 type Props = {
     /** La date à afficher en temps relatif. */
@@ -15,7 +15,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Affiche une date de manière relative. */
@@ -31,7 +31,7 @@ const RelativeTime = defineComponent({
         nowTimer: undefined,
     }),
     data: (): Data => ({
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         formattedTime(): string {
@@ -44,7 +44,7 @@ const RelativeTime = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {

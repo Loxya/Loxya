@@ -1,7 +1,6 @@
 import './index.scss';
 import Vue from 'vue';
 import vuexI18n from 'vuex-i18n';
-import vueCompositionApi from '@vue/composition-api';
 import VueJsModal from 'vue-js-modal/dist/index.nocss';
 import { VTooltip } from 'v-tooltip';
 import { ClientTable, ServerTable } from 'vue-tables-2-premium';
@@ -10,8 +9,8 @@ import Portal from 'portal-vue';
 import config from '@/globals/config';
 import { getDefaultLang, getLang } from '@/globals/lang';
 import { init as initRawDateTime } from '@/globals/rawDatetime';
+import requester, { init as initRequester } from '@/globals/requester';
 import initMoment from '@/globals/init/moment';
-import requester from '@/globals/requester';
 import store from '@/themes/default/globals/store';
 import router from '@/themes/default/globals/router';
 import translations from '@/themes/default/locale';
@@ -20,8 +19,10 @@ import App from './components/App';
 
 Vue.config.productionTip = false;
 
-// - Vue Composition API.
-Vue.use(vueCompositionApi);
+// - Initialisation.
+initMoment();
+initRawDateTime();
+initRequester();
 
 // - HTTP (Ajax) lib.
 Vue.prototype.$http = requester;
@@ -62,9 +63,6 @@ Vue.i18n.set((
         : defaultLang
 ));
 
-initMoment();
-initRawDateTime();
-
 // - Tables (order, pagination)
 const tablesConfig = {
     sortIcon: {
@@ -78,19 +76,8 @@ const tablesConfig = {
     perPage: config.defaultPaginationLimit,
     perPageValues: [config.defaultPaginationLimit],
     responseAdapter: (response) => {
-        if (!response) {
-            return { data: [], count: 0 };
-        }
-
-        const _data = response?.data?.data
-            ? response.data
-            : response;
-
-        const { data, pagination } = _data;
-        return {
-            data,
-            count: pagination?.total.items ?? 0,
-        };
+        const { data, pagination } = response ?? { data: [] };
+        return { data, count: pagination?.total.items ?? 0 };
     },
 };
 Vue.use(ClientTable, tablesConfig, false);
@@ -115,10 +102,7 @@ Vue.use(Portal);
 
 const boot = async () => {
     await store.dispatch('auth/fetch');
-
-    if (store.getters['auth/isLogged']) {
-        await store.dispatch('settings/boot');
-    }
+    await store.dispatch('settings/boot');
 
     // eslint-disable-next-line no-new, vue/require-name-property
     new Vue({

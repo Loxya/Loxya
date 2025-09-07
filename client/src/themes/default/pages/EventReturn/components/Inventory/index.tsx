@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import DateTime from '@/utils/datetime';
 import Button from '@/themes/default/components/Button';
 import IconMessage from '@/themes/default/components/IconMessage';
@@ -9,7 +9,7 @@ import Inventory, {
     InventoryErrorsSchema,
 } from '@/themes/default/components/Inventory';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { EventDetails, EventMaterial } from '@/stores/api/events';
 import type {
     AwaitedMaterial,
@@ -38,6 +38,20 @@ type Props = {
 
     /** Les éventuelles erreurs de l'inventaire (par matériel). */
     errors?: InventoryMaterialError[] | null,
+
+    /**
+     * Fonction appelée lorsque l'inventaire d'un des matériels a changé.
+     *
+     * @param id - Identifiant du matériel concerné.
+     * @param inventory - Données d'inventaire mises à jour pour ce matériel.
+     */
+    onChange?(id: AwaitedMaterial['id'], inventory: InventoryMaterialData): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande la
+     * remise en brouillon de l'inventaire.
+     */
+    onRequestCancel?(): void,
 };
 
 type InstanceProperties = {
@@ -45,7 +59,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** L'inventaire de matériel de la page d'inventaire de retour d'événement. */
@@ -76,13 +90,23 @@ const EventReturnInventory = defineComponent({
             type: Array as PropType<Required<Props>['errors']>,
             default: null,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRequestCancel: {
+            type: Function as PropType<Props['onRequestCancel']>,
+            default: undefined,
+        },
     },
     emits: ['change', 'requestCancel'],
     setup: (): InstanceProperties => ({
         nowTimer: undefined,
     }),
     data: (): Data => ({
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         awaitedMaterials(): AwaitedMaterial[] {
@@ -192,7 +216,7 @@ const EventReturnInventory = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les 10 secondes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 10_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -307,7 +331,7 @@ const EventReturnInventory = defineComponent({
                     inventory={inventory}
                     materials={awaitedMaterials}
                     displayGroup={displayGroup}
-                    errors={errors}
+                    errors={errors ?? undefined}
                     onChange={handleChange}
                     locked={isDone || [
                         InventoryLock.STATE,

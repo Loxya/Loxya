@@ -6,6 +6,7 @@ namespace Loxya\Controllers;
 use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
+use Loxya\Config\Config;
 use Loxya\Config\Enums\Feature;
 use Loxya\Controllers\Traits\Crud;
 use Loxya\Errors\Exception\ValidationException;
@@ -34,8 +35,6 @@ final class TechnicianController extends BaseController
         delete as protected _originalDelete;
         restore as protected _originalRestore;
     }
-
-    public const MAX_GET_ALL_ASSIGNMENTS_PERIOD = 3.5 * 30; // - En jours
 
     private I18n $i18n;
 
@@ -126,7 +125,7 @@ final class TechnicianController extends BaseController
                     ->whereHas('event', static function (Builder $query) use ($event) {
                         /** @var Builder|Event $query */
                         $query
-                            ->inPeriod($event)
+                            ->inPeriod($event, withOverdue: false)
                             ->where('id', '!=', $event->id)
                             ->where('deleted_at', null);
                     })
@@ -160,13 +159,14 @@ final class TechnicianController extends BaseController
         }
 
         // - Limitation de la période récupérable.
-        $maxEndDate = $period->getStartDate()->addDays(self::MAX_GET_ALL_ASSIGNMENTS_PERIOD);
+        $maxPeriodDuration = Config::get('maxFetchPeriod', 3 * 30) + 15;
+        $maxEndDate = $period->getStartDate()->addDays($maxPeriodDuration);
         if ($period->getEndDate()->isAfter($maxEndDate)) {
             throw new HttpException(
                 $request,
                 sprintf(
                     'The retrieval period for assignments may not exceed %s days.',
-                    self::MAX_GET_ALL_ASSIGNMENTS_PERIOD,
+                    $maxPeriodDuration,
                 ),
                 StatusCode::STATUS_RANGE_NOT_SATISFIABLE,
             );
@@ -182,7 +182,7 @@ final class TechnicianController extends BaseController
                 ->whereHas('event', static function (Builder $query) use ($period) {
                     /** @var Builder|Event $query */
                     $query
-                        ->inPeriod($period)
+                        ->inPeriod($period, withOverdue: false)
                         ->where('deleted_at', null);
                 })
                 ->get()
@@ -222,7 +222,7 @@ final class TechnicianController extends BaseController
                     $eventTechnician->serialize(
                         EventTechnician::SERIALIZE_FOR_TECHNICIAN,
                     )
-                )
+                ),
             );
 
         return $response->withJson($data, StatusCode::STATUS_OK);

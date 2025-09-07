@@ -11,6 +11,7 @@ import {
     EventMaterialNotBillableSchema,
 } from './events';
 
+import type { Raw } from 'vue';
 import type Decimal from 'decimal.js';
 import type Period from '@/utils/period';
 import type { ZodRawShape } from 'zod';
@@ -43,14 +44,14 @@ export enum BookingEntity {
 // - Schemas secondaires
 //
 
-const BookingMaterialNotBillableSchema = EventMaterialNotBillableSchema;
-const BookingMaterialBillableSchema = EventMaterialBillableSchema;
+const BookingMaterialNotBillableSchema = z.lazy(() => EventMaterialNotBillableSchema);
+const BookingMaterialBillableSchema = z.lazy(() => EventMaterialBillableSchema);
 const BookingMaterialSchema = z.union([
     BookingMaterialNotBillableSchema,
     BookingMaterialBillableSchema,
 ]);
 
-const BookingExtraSchema = EventExtraSchema;
+const BookingExtraSchema = z.lazy(() => EventExtraSchema);
 
 //
 // - Schemas principaux
@@ -71,6 +72,8 @@ export const BookingExcerptSchema = (() => z.strictObject({
     is_archived: z.boolean(),
     is_departure_inventory_done: z.boolean(),
     is_return_inventory_done: z.boolean(),
+    return_inventory_datetime: z.datetime().nullable(),
+    has_materials: z.boolean(),
     has_not_returned_materials: z.boolean().nullable(),
     has_unassigned_mandatory_positions: z.boolean().nullable(),
     categories: z.number().array(), // - Ids des catégories liés.
@@ -100,7 +103,9 @@ export const createBookingSummarySchema = <T extends ZodRawShape>(augmentation: 
     is_archived: z.boolean(),
     is_departure_inventory_done: z.boolean(),
     is_return_inventory_done: z.boolean(),
+    return_inventory_datetime: z.datetime().nullable(),
     has_missing_materials: z.boolean().nullable(),
+    has_materials: z.boolean(),
     has_not_returned_materials: z.boolean().nullable(),
     has_unassigned_mandatory_positions: z.boolean().nullable(),
     categories: z.number().array(), // - Ids des catégories liés.
@@ -114,12 +119,14 @@ export const BookingSummarySchema = createBookingSummarySchema({});
 
 // - Booking schema.
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const createBookingSchema = <T extends ZodRawShape>(augmentation: T) => z.lazy(() => (
-    createEventDetailsSchema({
-        entity: z.literal(BookingEntity.EVENT),
-        ...augmentation,
-    })
-));
+export const createBookingSchema = <T extends ZodRawShape>(augmentation: T) => (
+    z.lazy(() => (
+        createEventDetailsSchema({
+            entity: z.literal(BookingEntity.EVENT),
+            ...augmentation,
+        })
+    ))
+);
 export const BookingSchema = createBookingSchema({});
 
 // ------------------------------------------------------
@@ -175,21 +182,21 @@ export type MaterialQuantity = {
 
 export type MaterialBillingData = {
     id: Material['id'],
-    unit_price: Decimal,
-    discount_rate: Decimal,
+    unit_price: Raw<Decimal>,
+    discount_rate: Raw<Decimal>,
 };
 
 export type ExtraBillingTaxData = {
     name: string,
     is_rate: boolean,
-    value: Decimal,
+    value: Raw<Decimal>,
 };
 
 export type ExtraBillingData = {
     id: number | null,
     description: string | null,
     quantity: number,
-    unit_price: Decimal | null,
+    unit_price: Raw<Decimal> | null,
     tax_id: Tax['id'] | null,
     taxes?: ExtraBillingTaxData[],
 };
@@ -197,25 +204,27 @@ export type ExtraBillingData = {
 export type BillingData = {
     materials: MaterialBillingData[],
     extras: ExtraBillingData[],
-    global_discount_rate: Decimal,
+    global_discount_rate: Raw<Decimal>,
 };
 
-export type MaterialResynchronizableField =
+export type MaterialResynchronizableField = (
     | 'name'
     | 'reference'
     | 'unit_price'
     | 'degressive_rate'
-    | 'taxes';
+    | 'taxes'
+);
 
-export type ExtraResynchronizableField =
-    | 'taxes';
+export type ExtraResynchronizableField = (
+    | 'taxes'
+);
 
 //
 // - Récupération
 //
 
 export type BookingListFilters = Nullable<{
-    period?: Period,
+    period?: Raw<Period>,
     search?: string | string[],
     category?: Category['id'] | typeof UNCATEGORIZED,
     park?: Park['id'],
@@ -231,7 +240,10 @@ type GetAllParamsPaginated = (
     & PaginationParams
     & { paginated?: true }
 );
-type GetAllInPeriodParams = { paginated: false, period: Period };
+type GetAllInPeriodParams = {
+    paginated: false,
+    period: Period,
+};
 
 // ------------------------------------------------------
 // -
@@ -246,28 +258,28 @@ async function all({ period, ...params }: GetAllParamsPaginated | GetAllInPeriod
     const response = await requester.get('/bookings', { params: normalizedParams });
 
     return normalizedParams.paginated
-        ? withPaginationEnvelope(BookingExcerptSchema).parse(response.data)
-        : BookingExcerptSchema.array().parse(response.data);
+        ? withPaginationEnvelope(BookingExcerptSchema).parse(response)
+        : BookingExcerptSchema.array().parse(response);
 }
 
 const oneSummary = async (entity: BookingEntity, id: Booking['id']): Promise<BookingSummary> => {
     const response = await requester.get(`/bookings/${entity}/${id}/summary`);
-    return BookingSummarySchema.parse(response.data);
+    return BookingSummarySchema.parse(response);
 };
 
 const one = async (entity: BookingEntity, id: Booking['id']): Promise<Booking> => {
     const response = await requester.get(`/bookings/${entity}/${id}`);
-    return BookingSchema.parse(response.data);
+    return BookingSchema.parse(response);
 };
 
 const updateMaterials = async (entity: BookingEntity, id: Booking['id'], materials: MaterialQuantity[]): Promise<Booking> => {
     const response = await requester.put(`/bookings/${entity}/${id}/materials`, materials);
-    return BookingSchema.parse(response.data);
+    return BookingSchema.parse(response);
 };
 
 const updateBilling = async (entity: BookingEntity, id: Booking['id'], data: BillingData): Promise<Booking> => {
     const response = await requester.put(`/bookings/${entity}/${id}/billing`, data);
-    return BookingSchema.parse(response.data);
+    return BookingSchema.parse(response);
 };
 
 const resynchronizeMaterial = async (
@@ -277,7 +289,7 @@ const resynchronizeMaterial = async (
     selection: MaterialResynchronizableField[],
 ): Promise<BookingMaterial> => {
     const response = await requester.put(`/bookings/${entity}/${id}/materials/${materialId}/resynchronize`, selection);
-    return BookingMaterialSchema.parse(response.data);
+    return BookingMaterialSchema.parse(response);
 };
 
 const resynchronizeExtra = async (
@@ -287,7 +299,7 @@ const resynchronizeExtra = async (
     selection: ExtraResynchronizableField[],
 ): Promise<BookingExtra> => {
     const response = await requester.put(`/bookings/${entity}/${id}/extras/${extraId}/resynchronize`, selection);
-    return BookingExtraSchema.parse(response.data);
+    return BookingExtraSchema.parse(response);
 };
 
 export default {

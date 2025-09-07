@@ -1,16 +1,16 @@
 import './index.scss';
 import invariant from 'invariant';
 import stringIncludes from '@/utils/stringIncludes';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { UNCATEGORIZED } from '@/stores/api/materials';
-import { groupByCategories /* groupByParks */ } from './_utils';
+import { groupByCategories } from './_utils';
 import { InventoryLock, InventoryErrorsSchema } from './_types';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 import SearchPanel from '@/themes/default/components/MaterialsFilters';
 import Item from './components/Item';
 
+import type { PropType } from 'vue';
 import type { Tag } from '@/stores/api/tags';
-import type { PropType } from '@vue/composition-api';
 import type { Filters } from '@/themes/default/components/MaterialsFilters';
 import type {
     AwaitedMaterial,
@@ -104,6 +104,14 @@ type Props = {
      * - `message`: Un - éventuel - message d'erreur associé.
      */
     errors?: InventoryMaterialError[],
+
+    /**
+     * Fonction appelée lorsque l'inventaire d'un matériel change.
+     *
+     * @param materialId - L'identifiant du matériel pour lequel l'inventaire a changé.
+     * @param inventory - La nouvelle valeur de l'inventaire du matériel.
+     */
+    onChange?(newValue: AwaitedMaterial['id'], materialInventory: InventoryMaterialData): void,
 };
 
 type Data = {
@@ -113,9 +121,6 @@ type Data = {
 /** Inventaire de matériel. */
 const Inventory = defineComponent({
     name: 'Inventory',
-    inject: {
-        globalScanObservationOngoing: { default: { value: false } },
-    },
     props: {
         materials: {
             type: Array as PropType<Props['materials']>,
@@ -152,6 +157,11 @@ const Inventory = defineComponent({
                 typeof displayGroup === 'string' &&
                 (Object.values(DisplayGroup) as string[]).includes(displayGroup)
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],
@@ -213,7 +223,7 @@ const Inventory = defineComponent({
             return materials.filter((material: AwaitedMaterial): boolean => (
                 !(Object.entries(filterResolvers) as Array<[keyof Filters, FilterResolver<keyof Filters>]>).some(
                     <T extends keyof Filters>([field, filterResolver]: [T, FilterResolver<T>]) => (
-                        filters[field] ? !filterResolver(material, filters[field]!) : false
+                        filters[field] ? !filterResolver(material, filters[field]) : false
                     ),
                 )
             ));
@@ -373,7 +383,7 @@ const Inventory = defineComponent({
                 <div class="Inventory__content">
                     {renderState()}
                     {list.map(({ id: sectionId, name: sectionName, materials }: AwaitedMaterialGroup) => {
-                        const key = sectionId ?? (displayGroup !== DisplayGroup.NONE ? null : 'flat');
+                        const key = sectionId ?? (displayGroup !== DisplayGroup.NONE ? undefined : 'flat');
                         return (
                             <div key={key} class="Inventory__section">
                                 <div class="Inventory__section__header">

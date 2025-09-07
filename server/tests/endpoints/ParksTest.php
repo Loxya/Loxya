@@ -81,7 +81,7 @@ final class ParksTest extends ApiTestCase
 
     public function testGetOne(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         // - Avec un enregistrement inexistant.
         $this->client->get('/api/parks/999');
@@ -137,7 +137,7 @@ final class ParksTest extends ApiTestCase
 
     public function testUpdate(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         $this->client->put('/api/parks/1', [
             'name' => 'Mon parc',

@@ -12,7 +12,7 @@ final class PersonTest extends TestCase
         // - Avec un nom / prénom alambiqué, mais valide.
         $data = [
             'first_name' => 'Joséphine 1ère',
-            'last_name' => 'De Latour-Dupin',
+            'last_name' => 'De la rue du four',
         ];
         $this->assertTrue((new Person($data))->isValid());
 

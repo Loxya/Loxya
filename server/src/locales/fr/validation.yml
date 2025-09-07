@@ -52,10 +52,10 @@
 "{{name}} must not be a valid Roman numeral":
     "Ne doit pas être un nombre romain."
 
-"{{name}} must exists":
+"{{name}} must exist":
     "Doit exister."
 
-"{{name}} must not exists":
+"{{name}} must not exist":
     "Ne doit pas exister."
 
 "{{name}} must contain only letters (a-z)":
@@ -191,10 +191,10 @@
     "Ne doit pas être un fichier exécutable."
 
 "{{name}} must be an instance of {{instanceName}}":
-    "Doit être une instance de {{instanceName}}."
+    "Ce champ est invalide."
 
 "{{name}} must not be an instance of {{instanceName}}":
-    "Ne doit pas être une instance de {{instanceName}}."
+    "Ce champ est invalide."
 
 "{{name}} must be between {{minValue}} and {{maxValue}}":
     "La valeur doit être comprise entre {{minValue}} et {{maxValue}}."
@@ -290,10 +290,10 @@
     "Ne doit pas être une date valide."
 
 "{{name}} must be present":
-    "La clé {{name}} doit être présente."
+    "Ce champ devrait être spécifié."
 
 "{{name}} must not be present":
-    "La clé {{name}} ne doit pas être présente."
+    "Ce champ ne devrait pas être spécifié."
 
 "{{name}} must be a valid CNPJ number":
     "Doit être un numéro CNPJ valide."
@@ -313,11 +313,11 @@
 "{{name}} must not start with {{startValue}}":
     "Ne doit pas démarrer par {{startValue}}."
 
-"{{name}} is not considered as \"False\"":
-    "N'est pas considéré «\_False\_»."
+"{{name}} must evaluate to `false`":
+   "La valeur est invalide."
 
-"{{name}} is considered as \"False\"":
-    "Est considéré «\_False\_»."
+"{{name}} must not evaluate to `false`":
+   "La valeur est invalide."
 
 "{{name}} must be {{type}}":
     "Doit être {{type}}."
@@ -428,7 +428,7 @@
     "Ne doit pas être un secteur valide de {{countryName}}."
 
 "{{name}} is always invalid":
-    "Ce champ est toujours non-valide."
+    "Ce champ ne devrait pas être spécifié."
 
 "{{name}} is not valid":
     "Ce champ est invalide."
@@ -524,7 +524,7 @@
     "Ce champ est invalide."
 
 "{{name}} must not be valid":
-    "Ne doit pas être valide."
+    "Ce champ est invalide."
 
 "At least one of these rules must pass for {{name}}":
     "L'une des règles suivantes doit être vérifiée\_:"
@@ -604,11 +604,11 @@
 "{{name}} must not contain the value {{containsValue}}":
     "Ne doit pas contenir la valeur {{containsValue}}."
 
-"{{name}} is not considered as \"Yes\"":
-    "N'est pas considéré comme «\_Yes\_»."
+"{{name}} must be similar to \"Yes\"":
+    "La valeur est invalide."
 
-"{{name}} is considered as \"Yes\"":
-    "Est considéré comme «\_Yes\_»."
+"{{name}} must not be similar to \"Yes\"":
+    "La valeur est invalide."
 
 "{{name}} must be an infinite number":
     "Doit être un nombre infini."
@@ -665,16 +665,22 @@
     "Cette key-chain ne doit pas être valide."
 
 "{{name}} must be numeric":
-    "Ce champ ne peut contenir que des nombres."
+    "Ce champ doit contenir un nombre."
 
 "{{name}} must not be numeric":
     "Ce champ ne peut pas contenir de nombre."
 
 "{{name}} must be of type integer":
-    "Doit être de type integer."
+    "Ce champ doit contenir un nombre entier."
 
 "{{name}} must not be of type integer":
-    "Ne doit pas être de type integer."
+    "Ce champ ne peut pas contenir de nombre entier."
+
+"{{name}} must be of type float":
+    "Ce champ doit contenir un nombre décimal."
+
+"{{name}} must not be of type float":
+    "Ce champ ne peut pas contenir de nombre décimal."
 
 "{{name}} must be positive":
     "Doit être positif."
@@ -706,11 +712,11 @@
 "{{name}} must not contain control characters or {{additionalChars}}":
     "Ne doit contenir que des caractères de contrôle et «\_{{additionalChars}}\_»."
 
-"{{name}} is not considered as \"No\"":
-    "N'est pas considéré comme «\_No\_»."
+"{{name}} must be similar to \"No\"":
+    "La valeur est invalide."
 
-"{{name}} is considered as \"No\"":
-    "Est considéré comme «\_No\_»."
+"{{name}} must not be similar to \"No\"":
+    "La valeur est invalide."
 
 "{{name}} must be multiple of {{multipleOf}}":
     "Doit être un multiple de {{multipleOf}}."
@@ -796,12 +802,6 @@
 "{{name}} must not be negative":
     "Ne doit pas être négatif."
 
-"{{name}} must be of type float":
-    "Doit être de type float."
-
-"{{name}} must not be of type float":
-    "Ne doit pas être de type float."
-
 "{{name}} must be a finite number":
     "Doit être un nombre fini."
 
@@ -845,10 +845,10 @@
     "Ne doit pas avoir une longueur de {{maxValue}} caractères."
 
 "{{name}} must not have a length greater than or equal to {{minValue}}":
-    "{{minValue}} max. characters."
+    "{{maxValue}} caractères max."
 
 "{{name}} must not have a length lower than or equal to {{maxValue}}":
-    "{{maxValue}} max. characters."
+    "{{maxValue}} caractères max."
 
 "{{name}} must be {{age}} years or less":
     "Doit être {{age}} ans ou moins."
@@ -875,22 +875,22 @@
     "Ne doit pas finir par {{endValue}}."
 
 "{{name}} must be a valid JSON string":
-    "Doit être une chaîne JSON valide."
+    "La valeur est invalide."
 
 "{{name}} must not be a valid JSON string":
-    "Ne doit pas être une chaîne JSON valide."
+    "La valeur est invalide."
 
-"{{name}} is not considered as \"True\"":
-    "N'est pas considéré comme «\_True\_»."
+"{{name}} must evaluate to `true`":
+   "La valeur est invalide."
 
-"{{name}} is considered as \"True\"":
-    "Est considéré comme «\_True\_»."
+"{{name}} must not evaluate to `true`":
+   "La valeur est invalide."
 
 "{{name}} must be in {{haystack}}":
-    "Doit être dans {{haystack}}."
+    "La valeur est invalide."
 
 "{{name}} must not be in {{haystack}}":
-    "Ne doit pas être dans {{haystack}}."
+    "La valeur est invalide."
 
 "{{name}} must be a factor of {{dividend}}":
     "Doit être un facteur de {{dividend}}."
@@ -1090,6 +1090,9 @@
 mandatory-field:
     "Ce champ est obligatoire."
 
+invalid-field:
+    "Ce champ est invalide."
+
 invalid-date:
     "Cette date est invalide."
 
@@ -1098,6 +1101,9 @@ invalid-period:
 
 invalid-value:
     "La valeur est invalide."
+
+invalid-name-like:
+    "Ce champ contient des caractères non autorisés."
 
 invalid-positive-amount:
     "Ce montant est invalide, il doit être positif et avec deux chiffres après la virgule maximum."
@@ -1176,12 +1182,6 @@ event-cannot-be-archived:
 
 reservation-cannot-be-archived:
     "Une réservation ne peut pas être archivée si son inventaire de retour n'a pas encore été effectué\_!"
-
-reservation-status-cannot-be-changed:
-    "Une fois assigné, le statut d'une réservation ne peut plus changer."
-
-pending-reservation-cannot-be-archived:
-    "Une réservation en attente ne peut pas être archivée\_!"
 
 field-contains-invalid-values:
     "Le champ contient des valeurs invalides."
@@ -1270,6 +1270,9 @@ invalid-csv-delimiter:
 invalid-csv-file-encoding:
     "L'encodage du fichier CSV est invalide."
 
+invalid-email-domain:
+    "Cette adresse e-mail n'est pas acceptée."
+
 #
 # - Existence messages
 #
@@ -1280,8 +1283,8 @@ invoice-number-already-in-use:
 category-name-already-in-use:
     "Une catégorie existe déjà avec ce nom."
 
-company-legal-name-already-in-use:
-    "Une société existe déjà avec cette raison sociale (nom)."
+email-not-available:
+    "Cette adresse e-mail n'est pas disponible."
 
 document-already-in-use-for-this-material:
     "Un document avec le même nom existe déjà pour ce matériel."
@@ -1316,9 +1319,6 @@ tag-name-already-in-use:
 user-pseudo-already-in-use:
     "Ce pseudo est déjà utilisé."
 
-user-email-already-in-use:
-    "Cet e-mail est déjà utilisé."
-
 role-name-already-in-use:
     "Ce rôle existe déjà."
 
@@ -1348,6 +1348,9 @@ location-does-not-exist-in-selected-park:
 
 list-name-already-in-use:
     "Une liste avec ce nom existe déjà."
+
+wrong-code:
+    "Ce code est incorrect."
 
 #
 # - Upload messages

@@ -1,4 +1,9 @@
 /dist
+/build
+
+.env
+.env.*
+!.env.dist
 
 #
 # - Fichiers spécifiques aux systèmes.

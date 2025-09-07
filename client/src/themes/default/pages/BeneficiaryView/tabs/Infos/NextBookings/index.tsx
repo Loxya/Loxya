@@ -2,7 +2,7 @@ import './index.scss';
 import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
 import { Direction } from '@/stores/api/@types';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import showModal from '@/utils/showModal';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
@@ -11,7 +11,7 @@ import Loading from '@/themes/default/components/Loading';
 import EventDetails from '@/themes/default/modals/EventDetails';
 import Item from '../../../components/BookingsItem';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 import type { BookingExcerpt, BookingSummary } from '@/stores/api/bookings';
 import type { LazyBooking } from '../../../_types';

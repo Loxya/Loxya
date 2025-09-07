@@ -17,25 +17,27 @@ describe('Utils / Day', () => {
     });
 
     describe('today()', () => {
-        jest
-            .useFakeTimers()
-            .setSystemTime(new Date('2024-02-01T14:48:00.000Z'));
+        it('return an instance with the current date', () => {
+            jest
+                .useFakeTimers()
+                .setSystemTime(new Date('2024-02-01T14:48:00.000Z'));
 
-        expect(Day.today().format('YYYY-MM-DD')).toEqual('2024-02-01');
+            expect(Day.today().format('YYYY-MM-DD')).toBe('2024-02-01');
+        });
     });
 
     describe('set()', () => {
         it('should allow to modify single day unit', () => {
             const result1 = new Day('2024-01-01').set('date', 15);
-            expect(result1.format('YYYY-MM-DD')).toEqual('2024-01-15');
+            expect(result1.format('YYYY-MM-DD')).toBe('2024-01-15');
 
             const result2 = new Day('2024-01-01').set('month', 3);
-            expect(result2.format('YYYY-MM-DD')).toEqual('2024-04-01');
+            expect(result2.format('YYYY-MM-DD')).toBe('2024-04-01');
         });
 
         it('should allow to modify multiple units in one go', () => {
             const result = new Day('2024-01-01').set({ date: 15, month: 3 });
-            expect(result.format('YYYY-MM-DD')).toEqual('2024-04-15');
+            expect(result.format('YYYY-MM-DD')).toBe('2024-04-15');
         });
     });
 

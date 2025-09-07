@@ -1,15 +1,14 @@
 import './index.scss';
 import Decimal from 'decimal.js';
 import { confirm } from '@/utils/alert';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { ClientTable, Variant as TableVariant } from '@/themes/default/components/Table';
 import Dropdown from '@/themes/default/components/Dropdown';
 import Button from '@/themes/default/components/Button';
 import Input from '@/themes/default/components/Input';
 import formatAmount from '@/utils/formatAmount';
 
-import type { CreateElement } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { CreateElement, PropType } from 'vue';
 import type { Columns } from '@/themes/default/components/Table/Client';
 import type { BillingMaterial, RawMaterialBillingData } from '../../_types';
 import type Currency from '@/utils/currency';
@@ -29,8 +28,25 @@ type Props = {
 
     /** Les éventuelles erreurs de validation liées aux matériels. */
     errors?: Record<number, any> | string[],
+
+    /**
+     * Fonction appelée lorsque les données de facturation
+     * changent pour un matériel.
+     *
+     * @param updatedMaterial - Les données de facturation du matériel, mises à jour.
+     */
+    onChange?(updatedMaterial: RawMaterialBillingData): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande la
+     * resynchronisation des données d'un matériel.
+     *
+     * @param materialId - L'identifiant du matériel à resynchroniser.
+     */
+    onRequestResync?(materialId: BillingMaterial['id']): void,
 };
 
+/** La liste du matériel dans l'éditeur de facture. */
 const InvoiceEditorMaterials = defineComponent({
     name: 'InvoiceEditorMaterials',
     props: {
@@ -52,6 +68,16 @@ const InvoiceEditorMaterials = defineComponent({
         },
         errors: {
             type: [Array, Object] as PropType<Props['errors']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRequestResync: {
+            type: Function as PropType<Props['onRequestResync']>,
             default: undefined,
         },
     },
@@ -309,8 +335,10 @@ const InvoiceEditorMaterials = defineComponent({
                 return;
             }
 
-            const value = Decimal.min(Decimal.max(rawValue, 0), 1_000_000_000_000 - 1)
-                .toDecimalPlaces(2, Decimal.ROUND_DOWN);
+            const value = markRaw(
+                Decimal.min(Decimal.max(rawValue, 0), 1_000_000_000_000 - 1)
+                    .toDecimalPlaces(2, Decimal.ROUND_DOWN),
+            );
 
             this.$emit('change', { ...datum, unit_price: value });
         },
@@ -327,8 +355,10 @@ const InvoiceEditorMaterials = defineComponent({
                 return;
             }
 
-            const value = Decimal.min(Decimal.max(rawValue, 0), 1_000_000_000_000 - 1)
-                .toDecimalPlaces(2, Decimal.ROUND_DOWN);
+            const value = markRaw(
+                Decimal.min(Decimal.max(rawValue, 0), 1_000_000_000_000 - 1)
+                    .toDecimalPlaces(2, Decimal.ROUND_DOWN),
+            );
 
             this.$emit('change', { ...datum, unit_price: value });
         },
@@ -352,8 +382,10 @@ const InvoiceEditorMaterials = defineComponent({
                 return;
             }
 
-            const value = Decimal.min(Decimal.max(rawValue, 0), 100)
-                .toDecimalPlaces(4, Decimal.ROUND_DOWN);
+            const value = markRaw(
+                Decimal.min(Decimal.max(rawValue, 0), 100)
+                    .toDecimalPlaces(4, Decimal.ROUND_DOWN),
+            );
 
             // - Si le matériel n'est normalement pas remisable, que l'on avait une
             //   remise et que la valeur est mise à zéro, on ne procède pas au
@@ -385,8 +417,10 @@ const InvoiceEditorMaterials = defineComponent({
                 return;
             }
 
-            const value = Decimal.min(Decimal.max(rawValue, 0), 100)
-                .toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+            const value = markRaw(
+                Decimal.min(Decimal.max(rawValue, 0), 100)
+                    .toDecimalPlaces(4, Decimal.ROUND_HALF_UP),
+            );
 
             if (value.isZero() && !material.is_discountable) {
                 const { __ } = this;

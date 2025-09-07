@@ -7,8 +7,8 @@ return [
     'get' => [
         '/session[/]' => 'AuthController:getSelf',
 
-        '/attributes[/]' => 'AttributeController:getAll',
-        '/attributes/{id:[0-9]+}[/]' => 'AttributeController:getOne',
+        '/properties[/]' => 'PropertyController:getAll',
+        '/properties/{id:[0-9]+}[/]' => 'PropertyController:getOne',
 
         '/users[/]' => 'UserController:getAll',
         '/users/{id:(?:[0-9]+|self)}[/]' => 'UserController:getOne',
@@ -77,6 +77,9 @@ return [
     'post' => [
         '/session[/]' => 'AuthController:loginWithForm',
 
+        '/password-reset[/]' => 'PasswordController:requestReset',
+        '/password-reset/set[/]' => 'PasswordController:finalizeReset',
+
         '/users[/]' => 'UserController:create',
 
         '/categories[/]' => 'CategoryController:create',
@@ -103,7 +106,7 @@ return [
         '/materials[/]' => 'MaterialController:create',
         '/materials/{id:[0-9]+}/documents[/]' => 'MaterialController:attachDocument',
 
-        '/attributes[/]' => 'AttributeController:create',
+        '/properties[/]' => 'PropertyController:create',
 
         '/events[/]' => 'EventController:create',
         '/events/{id:[0-9]+}/duplicate[/]' => 'EventController:duplicate',
@@ -118,17 +121,14 @@ return [
             implode('|', array_keys(BookingController::BOOKING_TYPES)),
         ) => 'BookingController:createList',
 
-        '/list-templates[/]' => 'ListTemplateController:create',
-
-        '/cart[/]' => 'CartController:create',
-        '/cart/checkout[/]' => 'CartController:checkout',
-
         sprintf(
             '/bookings/{entity:(?:%s)}/{id:[0-9]+}/report[/]',
             implode('|', array_keys(BookingController::BOOKING_TYPES)),
         ) => 'BookingController:sendListToBorrowers',
     ],
     'put' => [
+        '/password-reset[/]' => 'PasswordController:verifyReset',
+
         '/users/{id:(?:[0-9]+|self)}[/]' => 'UserController:update',
         '/users/restore/{id:[0-9]+}[/]' => 'UserController:restore',
         '/users/{id:(?:[0-9]+|self)}/settings[/]' => 'UserController:updateSettings',
@@ -163,7 +163,7 @@ return [
         '/materials/{id:[0-9]+}[/]' => 'MaterialController:update',
         '/materials/{id:[0-9]+}/restore[/]' => 'MaterialController:restore',
 
-        '/attributes/{id:[0-9]+}[/]' => 'AttributeController:update',
+        '/properties/{id:[0-9]+}[/]' => 'PropertyController:update',
 
         '/events/{id:[0-9]+}[/]' => 'EventController:update',
         '/events/{id:[0-9]+}/note[/]' => 'EventController:updateNote',
@@ -208,7 +208,7 @@ return [
         '/companies/{id:[0-9]+}[/]' => 'CompanyController:delete',
         '/parks/{id:[0-9]+}[/]' => 'ParkController:delete',
         '/materials/{id:[0-9]+}[/]' => 'MaterialController:delete',
-        '/attributes/{id:[0-9]+}[/]' => 'AttributeController:delete',
+        '/properties/{id:[0-9]+}[/]' => 'PropertyController:delete',
         '/documents/{id:[0-9]+}[/]' => 'DocumentController:delete',
         '/estimates/{id:[0-9]+}[/]' => 'EstimateController:delete',
         '/settings/{key:[a-zA-Z0-9-.]+}[/]' => 'SettingController:reset',

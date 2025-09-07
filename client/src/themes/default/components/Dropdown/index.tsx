@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import ClickOutside from 'vue-click-outside';
 import { MountingPortal as Portal } from 'portal-vue';
 import Button, { TYPES } from '@/themes/default/components/Button';
@@ -11,7 +11,7 @@ import {
     offset,
 } from '@floating-ui/dom';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Type, IconLoose } from '@/themes/default/components/Button';
 
 type IconLooseStates = { opened: IconLoose, closed: IconLoose };

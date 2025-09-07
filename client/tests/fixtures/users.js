@@ -1,5 +1,6 @@
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
+import { AuthType } from '@/stores/api/session';
 import { Group } from '@/stores/api/groups';
 import { dataFactory } from './@utils';
 import countries from './countries';
@@ -22,7 +23,7 @@ const data = [
         country_id: 1,
         country: countries.default(1),
         full_address: `1, somewhere av.\n1234 Megacity`,
-        email: 'tester@robertmanager.net',
+        email: 'tester@loxya.com',
         group: Group.ADMINISTRATION,
         language: 'en',
         default_bookings_view: BookingsViewMode.CALENDAR,
@@ -43,11 +44,11 @@ const data = [
         country_id: null,
         country: null,
         full_address: null,
-        email: 'tester2@robertmanager.net',
-        group: Group.MANAGEMENT,
+        email: 'tester2@loxya.com',
+        group: Group.OPERATION,
         language: 'fr',
         default_bookings_view: BookingsViewMode.CALENDAR,
-        default_technicians_view: TechniciansViewMode.LISTING,
+        default_technicians_view: TechniciansViewMode.TIMELINE,
         disable_contextual_popovers: true,
         disable_search_persistence: true,
     },
@@ -64,8 +65,8 @@ const data = [
         country_id: null,
         country: null,
         full_address: `156 bis, avenue des tests poussés\n88080 Wazzaville`,
-        email: 'nobody@robertmanager.net',
-        group: Group.MANAGEMENT,
+        email: 'nobody@loxya.com',
+        group: Group.OPERATION,
         language: 'fr',
         default_bookings_view: BookingsViewMode.LISTING,
         default_technicians_view: TechniciansViewMode.LISTING,
@@ -85,7 +86,7 @@ const data = [
         country_id: 2,
         country: countries.default(2),
         full_address: null,
-        email: 'visitor@robertmanager.net',
+        email: 'visitor@loxya.com',
         group: Group.READONLY_PLANNING_GENERAL,
         language: 'fr',
         default_bookings_view: BookingsViewMode.CALENDAR,
@@ -106,7 +107,7 @@ const data = [
         country_id: null,
         country: null,
         full_address: null,
-        email: 'external@robertmanager.net',
+        email: 'external@loxya.com',
         group: Group.READONLY_PLANNING_GENERAL,
         language: 'en',
         default_bookings_view: BookingsViewMode.CALENDAR,
@@ -154,7 +155,10 @@ const asDetails = dataFactory(data, (user) => (
 ));
 
 /** @type {import('./@utils').FactoryReturnType} */
-const asSession = dataFactory(data);
+const asSession = dataFactory(data, (user) => ({
+    ...user,
+    type: AuthType.USER,
+}));
 
 /** @type {import('./@utils').FactoryReturnType} */
 const settings = dataFactory(data, (user) => (

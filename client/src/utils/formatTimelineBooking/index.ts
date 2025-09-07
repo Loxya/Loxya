@@ -1,10 +1,13 @@
-import config from '@/globals/config';
-import DateTime from '@/utils/datetime';
+import Period from '@/utils/period';
+import DateTime, { DateTimeRoundingMethod } from '@/utils/datetime';
+import config, { ReturnPolicy } from '@/globals/config';
 import { BookingEntity } from '@/stores/api/bookings';
 import getBookingIcon from '@/utils/getBookingIcon';
+import getBookingColor from '@/utils/getBookingColor';
 import getTimelineBookingClassNames from './_utils/getClassNames';
 import getTimelineBookingStatuses from './_utils/getStatuses';
 
+import type Color from '@/utils/color';
 import type { BookingExcerpt, BookingSummary } from '@/stores/api/bookings';
 import type { TimelineItem } from '@/themes/default/components/Timeline';
 import type { BookingTimelineStatus } from './_utils/getStatuses';
@@ -56,12 +59,73 @@ const formatTimelineBookingEvent = (
     options: FormatOptions = {},
 ): TimelineItem => {
     const { isExcerpt, booking, quantity } = context;
-    const { title, color, location, beneficiaries, technicians, manager } = booking;
+    const { title, location, beneficiaries, technicians, manager } = booking;
     const { showEventLocation = true, showEventBorrower = false } = options;
+    const isPast = booking.mobilization_period.isBefore(now);
+    const isArchived = booking.is_archived;
     const hasBorrower = beneficiaries.length > 0;
     const mainBeneficiary = hasBorrower
         ? ([...beneficiaries].shift() ?? null)
         : null;
+
+    // - Le retour de l'événement est-il actuellement en retard ?
+    const isOverdue = (() => {
+        const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+        if (!isPast || !useManualReturn) {
+            return false;
+        }
+
+        return (
+            !isArchived &&
+            !booking.is_return_inventory_done &&
+            booking.has_materials
+        );
+    })();
+
+    // - L'événement a t'il été retourné en retard ?
+    const wasOverdue = (() => {
+        const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+        if (!isPast || !useManualReturn) {
+            return false;
+        }
+
+        return (
+            booking.is_return_inventory_done &&
+            booking.return_inventory_datetime !== null &&
+            booking.mobilization_period.end.isBefore(
+                booking.return_inventory_datetime,
+            )
+        );
+    })();
+
+    // - Y'a t'il un retard (passé ou présent) ?
+    const hasOverdue = isOverdue || wasOverdue;
+
+    // - Période de retard éventuelle.
+    const overduePeriod: Period<false> | undefined = (() => {
+        if (!hasOverdue) {
+            return undefined;
+        }
+
+        return (
+            isOverdue
+                ? booking.mobilization_period.tail(now)
+                : booking.mobilization_period.tail(
+                    booking.return_inventory_datetime!,
+                )
+        ) as Period<false>;
+    })();
+
+    // - Période de retard éventuelle, arrondie aux 15 minutes suivantes.
+    const strictOverduePeriod = overduePeriod === undefined ? undefined : (
+        new Period(
+            overduePeriod.start,
+            overduePeriod.end.roundMinutes(15, DateTimeRoundingMethod.CEIL),
+        )
+    );
+
+    // - Couleur.
+    const color: Color | null = getBookingColor(booking)?.value ?? null;
 
     // - Lieu
     const hasLocation = (location ?? '').length > 0;
@@ -113,9 +177,35 @@ const formatTimelineBookingEvent = (
             .isSame(booking.mobilization_period);
 
         // - Période de mobilisation de l'événement
-        const mobilizationPeriodText = !arePeriodsUnified
-            ? withIcon('clock', booking.mobilization_period.toReadable(__))
-            : null;
+        let mobilizationPeriodText = null;
+        if (!arePeriodsUnified || hasOverdue) {
+            /* eslint-disable @stylistic/function-paren-newline */
+            mobilizationPeriodText = withIcon('clock', (
+                !hasOverdue
+                    ? booking.mobilization_period.toReadable(__)
+                    : __('initially-planned-period', {
+                        period: booking.mobilization_period.toReadable(__),
+                    })
+            ));
+            /* eslint-enable @stylistic/function-paren-newline */
+        }
+
+        // - Retard
+        let overdueText = null;
+        if (hasOverdue) {
+            /* eslint-disable @stylistic/function-paren-newline */
+            overdueText = withIcon('hourglass', (
+                isOverdue
+                    ? __('overdue-since', {
+                        duration: overduePeriod!.toReadableDuration(__),
+                    })
+                    : __('late-return-on', {
+                        date: booking.return_inventory_datetime!.toReadable(),
+                        duration: overduePeriod!.toReadableDuration(__),
+                    })
+            ));
+            /* eslint-enable @stylistic/function-paren-newline */
+        }
 
         // - Statut
         const statusesText = getTimelineBookingStatuses(context, __, now)
@@ -167,6 +257,7 @@ const formatTimelineBookingEvent = (
                 locationText,
                 operationPeriodText,
                 mobilizationPeriodText,
+                overdueText,
                 borrowerText,
                 managerText,
                 techniciansText,
@@ -183,6 +274,7 @@ const formatTimelineBookingEvent = (
         period: {
             expected: booking.operation_period,
             actual: booking.mobilization_period,
+            overdue: isOverdue ? true : strictOverduePeriod,
         },
         summary,
         tooltip,
@@ -195,7 +287,6 @@ const formatTimelineBookingEvent = (
 // - Factory
 //
 
-/* eslint-disable @stylistic/ts/lines-around-comment */
 const factory = (__: I18nTranslate, now: DateTime = DateTime.now(), options: FormatOptions = {}): TimelineBookingFormatter => (
     /**
      * Permet de formater un booking pour une timeline.
@@ -204,7 +295,7 @@ const factory = (__: I18nTranslate, now: DateTime = DateTime.now(), options: For
      * format {@link BookingExcerpt} et ne produira qu'un événement de timeline succinct
      * qui a vocation a être complété en différé lorsque le reste des données aura été chargé.
      *
-     * @param booking - Le booking (événement) que l'on veut formater.
+     * @param booking - Le booking (événement, réservation) que l'on veut formater.
      * @param excerpt - Active le mode "extrait" uniquement qui ne requiert et n'affiche
      *                  qu'un extrait du booking (`false` si non spécifié).
      *                  Seul ce mode accepte un `BookingExcerpt` en entrée.
@@ -226,6 +317,5 @@ const factory = (__: I18nTranslate, now: DateTime = DateTime.now(), options: For
         }
     }
 );
-/* eslint-enable @stylistic/ts/lines-around-comment */
 
 export default factory;

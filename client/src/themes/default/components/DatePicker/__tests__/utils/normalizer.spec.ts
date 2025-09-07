@@ -167,175 +167,179 @@ describe('DatePicker Utils: Normalizer', () => {
     });
 
     describe('normalizeCoreValue()', () => {
-        // - Valeur nulle.
-        [Type.DATE, Type.DATETIME].forEach((dateMode: Type) => {
-            expect(normalizeCoreValue(null, dateMode, false)).toBeNull();
-            expect(normalizeCoreValue(null, dateMode, true)).toBeNull();
-            expect(normalizeCoreValue([] as any, dateMode, true)).toBeNull();
-            expect(normalizeCoreValue([null, null], dateMode, true)).toBeNull();
-            expect(normalizeCoreValue(
-                ['2024-01-01', '2024-01-01', '2024-01-01'] as any,
-                dateMode,
-                true,
-            )).toBeNull();
-        });
+        it('works as expected', () => {
+            // - Valeur nulle.
+            [Type.DATE, Type.DATETIME].forEach((dateMode: Type) => {
+                expect(normalizeCoreValue(null, dateMode, false)).toBeNull();
+                expect(normalizeCoreValue(null, dateMode, true)).toBeNull();
+                expect(normalizeCoreValue([] as any, dateMode, true)).toBeNull();
+                expect(normalizeCoreValue([null, null], dateMode, true)).toBeNull();
+                expect(normalizeCoreValue(
+                    ['2024-01-01', '2024-01-01', '2024-01-01'] as any,
+                    dateMode,
+                    true,
+                )).toBeNull();
+            });
 
-        //
-        // - Type: `date` / Mode: Valeur seule.
-        //
+            //
+            // - Type: `date` / Mode: Valeur seule.
+            //
 
-        // -- Avec une valeur simple ...
-        const result1 = normalizeCoreValue('2024-01-01', Type.DATE, false);
-        expect(result1).toBeInstanceOf(Day);
-        expect(result1!.toString()).toBe('2024-01-01');
+            // -- Avec une valeur simple ...
+            const result1 = normalizeCoreValue('2024-01-01', Type.DATE, false);
+            expect(result1).toBeInstanceOf(Day);
+            expect(result1!.toString()).toBe('2024-01-01');
 
-        // -- Avec un tableau ...
-        const result2 = normalizeCoreValue(['2024-01-01', '2024-01-02'], Type.DATE, false);
-        expect(result2).toBeInstanceOf(Day);
-        expect(result2!.toString()).toBe('2024-01-01');
+            // -- Avec un tableau ...
+            const result2 = normalizeCoreValue(['2024-01-01', '2024-01-02'], Type.DATE, false);
+            expect(result2).toBeInstanceOf(Day);
+            expect(result2!.toString()).toBe('2024-01-01');
 
-        //
-        // - Type: `date` / Mode: Période.
-        //
+            //
+            // - Type: `date` / Mode: Période.
+            //
 
-        // -- Avec un tableau ...
-        const result3 = normalizeCoreValue(['2024-01-01', '2025-01-01'], Type.DATE, true);
-        expect(result3).toBeInstanceOf(Period);
-        expect(result3!.toSerialized()).toStrictEqual({
-            start: '2024-01-01',
-            end: '2025-01-01',
-            isFullDays: true,
-        });
+            // -- Avec un tableau ...
+            const result3 = normalizeCoreValue(['2024-01-01', '2025-01-01'], Type.DATE, true);
+            expect(result3).toBeInstanceOf(Period);
+            expect(result3!.toSerialized()).toStrictEqual({
+                start: '2024-01-01',
+                end: '2025-01-01',
+                isFullDays: true,
+            });
 
-        // -- Avec une valeur simple ...
-        const result4 = normalizeCoreValue('2024-01-01', Type.DATE, true);
-        expect(result4).toBeInstanceOf(Period);
-        expect(result4!.toSerialized()).toStrictEqual({
-            start: '2024-01-01',
-            end: '2024-01-01',
-            isFullDays: true,
-        });
+            // -- Avec une valeur simple ...
+            const result4 = normalizeCoreValue('2024-01-01', Type.DATE, true);
+            expect(result4).toBeInstanceOf(Period);
+            expect(result4!.toSerialized()).toStrictEqual({
+                start: '2024-01-01',
+                end: '2024-01-01',
+                isFullDays: true,
+            });
 
-        //
-        // - Type: `datetime` / Mode: Valeur seule.
-        //
+            //
+            // - Type: `datetime` / Mode: Valeur seule.
+            //
 
-        // -- Avec une valeur simple ...
-        const result5 = normalizeCoreValue('2024-01-01 14:30:00', Type.DATETIME, false);
-        expect(result5).toBeInstanceOf(DateTime);
-        expect(result5!.toString()).toBe('2024-01-01 14:30:00');
+            // -- Avec une valeur simple ...
+            const result5 = normalizeCoreValue('2024-01-01 14:30:00', Type.DATETIME, false);
+            expect(result5).toBeInstanceOf(DateTime);
+            expect(result5!.toString()).toBe('2024-01-01 14:30:00');
 
-        // -- Avec un tableau ...
-        const result6 = normalizeCoreValue(['2024-01-01 14:30:00', '2024-02-12 15:15:00'], Type.DATETIME, false);
-        expect(result6).toBeInstanceOf(DateTime);
-        expect(result6!.toString()).toBe('2024-01-01 14:30:00');
+            // -- Avec un tableau ...
+            const result6 = normalizeCoreValue(['2024-01-01 14:30:00', '2024-02-12 15:15:00'], Type.DATETIME, false);
+            expect(result6).toBeInstanceOf(DateTime);
+            expect(result6!.toString()).toBe('2024-01-01 14:30:00');
 
-        //
-        // - Type: `datetime` / Mode: Période.
-        //
+            //
+            // - Type: `datetime` / Mode: Période.
+            //
 
-        // -- Avec un tableau ...
-        const result7 = normalizeCoreValue(['2024-01-01 14:30:00', '2024-02-12 15:15:00'], Type.DATETIME, true);
-        expect(result7).toBeInstanceOf(Period);
-        expect(result7!.toSerialized()).toStrictEqual({
-            start: '2024-01-01 14:30:00',
-            end: '2024-02-12 15:15:00',
-            isFullDays: false,
-        });
+            // -- Avec un tableau ...
+            const result7 = normalizeCoreValue(['2024-01-01 14:30:00', '2024-02-12 15:15:00'], Type.DATETIME, true);
+            expect(result7).toBeInstanceOf(Period);
+            expect(result7!.toSerialized()).toStrictEqual({
+                start: '2024-01-01 14:30:00',
+                end: '2024-02-12 15:15:00',
+                isFullDays: false,
+            });
 
-        // -- Avec une valeur simple ...
-        const result8 = normalizeCoreValue('2024-01-01 14:30:00', Type.DATETIME, true);
-        expect(result8).toBeInstanceOf(Period);
-        expect(result8!.toSerialized()).toStrictEqual({
-            start: '2024-01-01 14:30:00',
-            end: '2024-01-01 14:30:00',
-            isFullDays: false,
+            // -- Avec une valeur simple ...
+            const result8 = normalizeCoreValue('2024-01-01 14:30:00', Type.DATETIME, true);
+            expect(result8).toBeInstanceOf(Period);
+            expect(result8!.toSerialized()).toStrictEqual({
+                start: '2024-01-01 14:30:00',
+                end: '2024-01-01 14:30:00',
+                isFullDays: false,
+            });
         });
     });
 
     describe('convertValueType()', () => {
-        // - Valeur nulle.
-        expect(convertValueType(null, Type.DATE, false, false)).toBeNull();
-        expect(convertValueType(null, Type.DATETIME, false, false)).toBeNull();
+        it('works as expected', () => {
+            // - Valeur nulle.
+            expect(convertValueType(null, Type.DATE, false, false)).toBeNull();
+            expect(convertValueType(null, Type.DATETIME, false, false)).toBeNull();
 
-        //
-        // - Type: `date` / Mode: Valeur seule.
-        //
+            //
+            // - Type: `date` / Mode: Valeur seule.
+            //
 
-        const dateTime = new DateTime('2024-01-01 14:38:24');
+            const dateTime = new DateTime('2024-01-01 14:38:24');
 
-        // -- ... Avec les minutes.
-        const result1 = convertValueType(dateTime, Type.DATE, false, false);
-        expect(result1).toBeInstanceOf(Day);
-        expect(result1!.toString()).toBe('2024-01-01');
+            // -- ... Avec les minutes.
+            const result1 = convertValueType(dateTime, Type.DATE, false, false);
+            expect(result1).toBeInstanceOf(Day);
+            expect(result1!.toString()).toBe('2024-01-01');
 
-        // -- ... Sans les minutes.
-        const result2 = convertValueType(dateTime, Type.DATE, false, true);
-        expect(result2).toBeInstanceOf(Day);
-        expect(result2!.toString()).toBe('2024-01-01');
+            // -- ... Sans les minutes.
+            const result2 = convertValueType(dateTime, Type.DATE, false, true);
+            expect(result2).toBeInstanceOf(Day);
+            expect(result2!.toString()).toBe('2024-01-01');
 
-        //
-        // - Type: `date` / Mode: Période.
-        //
+            //
+            // - Type: `date` / Mode: Période.
+            //
 
-        const period = new Period('2024-01-01 14:38:24', '2024-01-01 14:38:24');
+            const period = new Period('2024-01-01 14:38:24', '2024-01-01 14:38:24');
 
-        // -- ... Avec les minutes.
-        const result3 = convertValueType(period, Type.DATE, true, false);
-        expect(result3).toBeInstanceOf(Period);
-        expect(result3!.toSerialized()).toStrictEqual({
-            start: '2024-01-01',
-            end: '2024-01-01',
-            isFullDays: true,
-        });
+            // -- ... Avec les minutes.
+            const result3 = convertValueType(period, Type.DATE, true, false);
+            expect(result3).toBeInstanceOf(Period);
+            expect(result3!.toSerialized()).toStrictEqual({
+                start: '2024-01-01',
+                end: '2024-01-01',
+                isFullDays: true,
+            });
 
-        // -- ... Sans les minutes.
-        const result4 = convertValueType(period, Type.DATE, true, true);
-        expect(result4).toBeInstanceOf(Period);
-        expect(result4!.toSerialized()).toStrictEqual({
-            start: '2024-01-01',
-            end: '2024-01-01',
-            isFullDays: true,
-        });
+            // -- ... Sans les minutes.
+            const result4 = convertValueType(period, Type.DATE, true, true);
+            expect(result4).toBeInstanceOf(Period);
+            expect(result4!.toSerialized()).toStrictEqual({
+                start: '2024-01-01',
+                end: '2024-01-01',
+                isFullDays: true,
+            });
 
-        //
-        // - Type: `datetime` / Mode: Valeur seule.
-        //
+            //
+            // - Type: `datetime` / Mode: Valeur seule.
+            //
 
-        const day = new Day('2024-01-01');
+            const day = new Day('2024-01-01');
 
-        // -- ... Avec les minutes.
-        const result5 = convertValueType(day, Type.DATETIME, false, false);
-        expect(result5).toBeInstanceOf(DateTime);
-        expect(result5!.toString()).toBe('2024-01-01 12:00:00');
+            // -- ... Avec les minutes.
+            const result5 = convertValueType(day, Type.DATETIME, false, false);
+            expect(result5).toBeInstanceOf(DateTime);
+            expect(result5!.toString()).toBe('2024-01-01 12:00:00');
 
-        // -- ... Sans les minutes.
-        const result6 = convertValueType(day, Type.DATETIME, false, true);
-        expect(result6).toBeInstanceOf(DateTime);
-        expect(result6!.toString()).toBe('2024-01-01 12:00:00');
+            // -- ... Sans les minutes.
+            const result6 = convertValueType(day, Type.DATETIME, false, true);
+            expect(result6).toBeInstanceOf(DateTime);
+            expect(result6!.toString()).toBe('2024-01-01 12:00:00');
 
-        //
-        // - Type: `datetime` / Mode: Période.
-        //
+            //
+            // - Type: `datetime` / Mode: Période.
+            //
 
-        const fullDayPeriod = new Period('2024-01-01', '2025-01-01', true);
+            const fullDayPeriod = new Period('2024-01-01', '2025-01-01', true);
 
-        // -- ... Avec les minutes.
-        const result7 = convertValueType(fullDayPeriod, Type.DATETIME, true, false);
-        expect(result7).toBeInstanceOf(Period);
-        expect(result7!.toSerialized()).toStrictEqual({
-            start: '2024-01-01 12:00:00',
-            end: '2025-01-01 12:00:00',
-            isFullDays: false,
-        });
+            // -- ... Avec les minutes.
+            const result7 = convertValueType(fullDayPeriod, Type.DATETIME, true, false);
+            expect(result7).toBeInstanceOf(Period);
+            expect(result7!.toSerialized()).toStrictEqual({
+                start: '2024-01-01 12:00:00',
+                end: '2025-01-01 12:00:00',
+                isFullDays: false,
+            });
 
-        // -- ... Sans les minutes.
-        const result8 = convertValueType(fullDayPeriod, Type.DATETIME, true, true);
-        expect(result8).toBeInstanceOf(Period);
-        expect(result8!.toSerialized()).toStrictEqual({
-            start: '2024-01-01 12:00:00',
-            end: '2025-01-01 12:00:00',
-            isFullDays: false,
+            // -- ... Sans les minutes.
+            const result8 = convertValueType(fullDayPeriod, Type.DATETIME, true, true);
+            expect(result8).toBeInstanceOf(Period);
+            expect(result8!.toSerialized()).toStrictEqual({
+                start: '2024-01-01 12:00:00',
+                end: '2025-01-01 12:00:00',
+                isFullDays: false,
+            });
         });
     });
 });

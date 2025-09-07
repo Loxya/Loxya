@@ -45,5 +45,5 @@ trait GetAll
     // -
     // ------------------------------------------------------
 
-    abstract protected function paginate(Request $request, $query, int|null $limit = null): array;
+    abstract protected function paginate(Request $request, $query, ?int $limit = null): array;
 }

@@ -1,10 +1,10 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError } from '@/globals/requester';
 import omit from 'lodash/omit';
 import uniqueId from 'lodash/uniqueId';
 import apiDegressiveRates from '@/stores/api/degressive-rates';
 import { ApiErrorCode } from '@/stores/api/@codes';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import FormField from '@/themes/default/components/FormField';
 import Input from '@/themes/default/components/Input';
@@ -14,9 +14,8 @@ import SwitchToggle from '@/themes/default/components/SwitchToggle';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
-import type { CreateElement } from 'vue';
+import type { ComponentRef, CreateElement, PropType } from 'vue';
 import type { Simplify } from 'type-fest';
-import type { PropType } from '@vue/composition-api';
 import type { Columns } from '@/themes/default/components/Table/Client';
 import type {
     DegressiveRate,
@@ -79,11 +78,15 @@ const ModalDegressiveRateEdition = defineComponent({
         };
     },
     computed: {
-        title(): string {
-            const { __, degressiveRate } = this;
+        isNew(): boolean {
+            return this.degressiveRate === undefined;
+        },
 
-            return degressiveRate !== undefined
-                ? __('modal-title.edit', { name: degressiveRate.name })
+        title(): string {
+            const { __, isNew, degressiveRate } = this;
+
+            return !isNew
+                ? __('modal-title.edit', { name: degressiveRate!.name })
                 : __('modal-title.new');
         },
 
@@ -110,6 +113,7 @@ const ModalDegressiveRateEdition = defineComponent({
                             <Input
                                 min={0}
                                 type="number"
+                                addon={__('fields.tiers.fields.days')}
                                 v-model={tier.from_day}
                                 invalid={!!validationErrors?.[index]?.from_day}
                             />
@@ -127,16 +131,17 @@ const ModalDegressiveRateEdition = defineComponent({
                         if (!tier) {
                             return null;
                         }
-                        const index = data.tiers.indexOf(tier);
 
                         return (
                             <SwitchToggle
-                                v-model={tier.is_rate}
+                                value={tier.is_rate ?? false}
                                 options={[
                                     { label: __('fields.tiers.fields.is-rate.options.rate'), value: true },
                                     { label: __('fields.tiers.fields.is-rate.options.fixed'), value: false },
                                 ]}
-                                invalid={!!validationErrors?.[index]?.is_rate}
+                                onInput={(value: boolean) => {
+                                    tier.is_rate = value;
+                                }}
                             />
                         );
                     },
@@ -185,6 +190,14 @@ const ModalDegressiveRateEdition = defineComponent({
             ];
         },
     },
+    mounted() {
+        if (this.isNew) {
+            this.$nextTick(() => {
+                const $inputName = this.$refs.inputName as ComponentRef<typeof FormField>;
+                $inputName?.focus();
+            });
+        }
+    },
     methods: {
         // ------------------------------------------------------
         // -
@@ -192,7 +205,7 @@ const ModalDegressiveRateEdition = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();
@@ -236,8 +249,7 @@ const ModalDegressiveRateEdition = defineComponent({
                 return;
             }
 
-            const { __, degressiveRate, data } = this;
-            const isNew = degressiveRate === undefined;
+            const { __, isNew, degressiveRate, data } = this;
             this.isSaving = true;
 
             const postData: DegressiveRateEditCore = {
@@ -252,7 +264,7 @@ const ModalDegressiveRateEdition = defineComponent({
             const doRequest = (): Promise<DegressiveRate> => (
                 isNew
                     ? apiDegressiveRates.create(postData)
-                    : apiDegressiveRates.update(degressiveRate.id, postData)
+                    : apiDegressiveRates.update(degressiveRate!.id, postData)
             );
 
             try {
@@ -266,12 +278,9 @@ const ModalDegressiveRateEdition = defineComponent({
             } catch (error) {
                 this.isSaving = false;
 
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
                 this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
@@ -315,10 +324,16 @@ const ModalDegressiveRateEdition = defineComponent({
                         <Fieldset class="ModalDegressiveRateEdition__commons">
                             <FormField
                                 type="text"
+                                ref="inputName"
                                 label={__('fields.name.label')}
+                                value={data.name}
                                 placeholder={__('fields.name.placeholder')}
+                                autocomplete="off"
                                 error={validationErrors?.name}
-                                v-model={data.name}
+                                onInput={(value: string) => {
+                                    data.name = value;
+                                }}
+                                required
                             />
                         </Fieldset>
                         <Fieldset

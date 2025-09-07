@@ -1,6 +1,6 @@
 import './index.scss';
 import warning from 'warning';
-import { computed, defineComponent } from '@vue/composition-api';
+import { computed, defineComponent } from 'vue';
 import Select from '@/themes/default/components/Select';
 import Radio from '@/themes/default/components/Radio';
 import DatePicker, { Type as DatePickerType } from '@/themes/default/components/DatePicker';
@@ -9,15 +9,16 @@ import Input, { InputType } from '@/themes/default/components/Input';
 import Textarea from '@/themes/default/components/Textarea';
 import InputCopy from '@/themes/default/components/InputCopy';
 import InputColor from '@/themes/default/components/InputColor';
+import InputMultiple from '@/themes/default/components/InputMultiple';
 import DateTime from '@/utils/datetime';
 import Period from '@/utils/period';
 import Color from '@/utils/color';
 import Day from '@/utils/day';
 
 import type { RawColor } from '@/utils/color';
-import type { PropType } from '@vue/composition-api';
-import type { ComponentRef } from 'vue';
+import type { PropType, ComponentRef } from 'vue';
 import type { Option } from '@/themes/default/components/Select';
+import type { SwitchOptions } from '@/themes/default/components/SwitchToggle';
 import type { DisableDateFunction } from '@/themes/default/components/DatePicker';
 
 enum OtherType {
@@ -29,6 +30,7 @@ enum OtherType {
     TEXTAREA = 'textarea',
     SWITCH = 'switch',
     CUSTOM = 'custom',
+    MULTIPLE = 'multiple',
 }
 
 type FieldType = DatePickerType | InputType | OtherType;
@@ -58,7 +60,7 @@ type Props = {
      *
      * @default {@link InputType.TEXT}
      */
-    type?: FieldType,
+    type?: FieldType | `${FieldType}`,
 
     /**
      * Le champ est-il requis pour soumettre le formulaire ?
@@ -70,16 +72,23 @@ type Props = {
     /**
      * Le champ est-il désactivé ?
      *
+     * Dans le cas d'un champ de type {@link OtherType.SWITCH},
+     * cette prop. peut contenir une chaîne pour indiquer la raison.
+     *
      * @default false
      */
-    disabled?: boolean,
+    disabled?: boolean | string,
 
     /**
      * Le champ doit-il être en lecture seule ?
      *
+     * Dans le cas d'un champ de type {@link DatePickerType} avec `range`,
+     * cette prop. peut contenir une chaîne pour spécifié quelle partie de
+     * la période est en lecture seule.
+     *
      * @default false
      */
-    readonly?: boolean,
+    readonly?: boolean | string,
 
     /**
      * Un petit texte d'aide à afficher sous le champ.
@@ -111,6 +120,14 @@ type Props = {
      */
     placeholder?: string | boolean | Color | RawColor | null,
 
+    /**
+     * Permet de spécifier le type d'assistance automatisée
+     * attendue par le navigateur.
+     *
+     * @see https://developer.mozilla.org/fr/docs/Web/HTML/Attributes/autocomplete
+     */
+    autocomplete?: AutoFill,
+
     /** La valeur actuelle du champ. */
     value?: (
         | string
@@ -118,6 +135,7 @@ type Props = {
         | boolean
         | Option['value']
         | Array<Option['value']>
+        | Array<string | number>
         | null
         | Color
         | Period
@@ -159,14 +177,15 @@ type Props = {
     addon?: string,
 
     /**
-     * Les options du champ lorsqu'il est de type `OtherType.SELECT`.
+     * Les options du champ lorsqu'il est de type
+     * {@link OtherType.SELECT} ou {@link OtherType.SWITCH}.
      *
-     * @see {@link Select} pour plus de détails.
+     * @see {@link Select} ou {@link SwitchToggle} pour plus de détails.
      */
-    options?: string[] | Option[],
+    options?: string[] | Option[] | SwitchOptions,
 
     /**
-     * Lorsque le champ est de type `OtherType.SELECT`,
+     * Lorsque le champ est de type {@link OtherType.SELECT},
      * s'agit-il d'un sélecteur à choix multiple ?
      *
      * @see {@link Select} pour plus de détails.
@@ -175,7 +194,7 @@ type Props = {
     multiple?: boolean,
 
     /**
-     * Lorsque le champ est de type `OtherType.SELECT`,
+     * Lorsque le champ est de type {@link OtherType.SELECT},
      * peut-on créer une nouvelle valeur en l'écrivant dans le champ ?
      *
      * @see {@link Select} pour plus de détails.
@@ -196,13 +215,13 @@ type Props = {
      * Date minimum sélectionnable lorsqu'il s'agit d'un champ
      * de type {@link DatePickerType}.
      */
-    minDate?: string | DateTime,
+    minDate?: 'now' | DateTime | Day,
 
     /**
      * Date maximum sélectionnable lorsqu'il s'agit d'un champ
      * de type {@link DatePickerType}.
      */
-    maxDate?: string | DateTime,
+    maxDate?: 'now' | DateTime | Day,
 
     /**
      * Une éventuelle fonction permettant de désactiver certaines
@@ -210,7 +229,7 @@ type Props = {
      *
      * @see {@link DatePicker} pour plus de détails.
      */
-    disabledDate: DisableDateFunction,
+    disabledDate?: DisableDateFunction,
 
     /**
      * Active la permutation des "Jours entiers", lorsqu'il s'agit
@@ -219,7 +238,7 @@ type Props = {
      * @see {@link DatePicker} pour plus de détails.
      * @default false
      */
-    withFullDaysToggle: boolean,
+    withFullDaysToggle?: boolean,
 
     /**
      * Lorsqu'il s'agit d'un champ de type {@link DatePickerType.DATETIME},
@@ -227,16 +246,43 @@ type Props = {
      *
      * @default false
      */
-    withoutMinutes: boolean,
+    withoutMinutes?: boolean,
+
+    /**
+     * Fonction appelée immédiatement lorsque la valeur du
+     * champ change suite à une action utilisateur.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onInput?(...newValue: any[]): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ a changé,
+     * lorsque le champ perd le focus.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onChange?(...newValue: any[]): void,
+
+    /**
+     * Fonction appelée lorsqu'une option est crée pour le champ.
+     *
+     * Uniquement supportée pour les champs de type{@link OtherType.SELECT}.
+     *
+     * @see {@link Select} pour plus de détails.
+     *
+     * @param newValue - La nouvelle valeur créée.
+     */
+    onCreate?(...newValue: any[]): void,
 };
 
-/** Champ de formulaire (de n'importe quel type). */
+/** Un champ de formulaire (de n'importe quel type). */
 const FormField = defineComponent({
     name: 'FormField',
     inject: {
         verticalForm: { default: false },
     },
-    provide() {
+    provide(this: any) {
         return {
             'input.disabled': computed(() => this.disabled),
             'input.invalid': computed(() => this.invalid),
@@ -261,11 +307,11 @@ const FormField = defineComponent({
             default: false,
         },
         disabled: {
-            type: [Boolean, String] as PropType<Props['disabled']>,
+            type: [String, Boolean] as PropType<Props['disabled']>,
             default: false,
         },
         readonly: {
-            type: [Boolean, String] as PropType<Props['readonly']>,
+            type: [String, Boolean] as PropType<Props['readonly']>,
             default: false,
         },
         help: {
@@ -280,6 +326,10 @@ const FormField = defineComponent({
             // NOTE: Attention à ne pas mettre `Boolean` en premier, sans quoi
             //       passer `placeholder=""` donnera `placeholder={true}`.
             type: [String, Boolean, Object] as PropType<Props['placeholder']>,
+            default: undefined,
+        },
+        autocomplete: {
+            type: String as PropType<Props['autocomplete']>,
             default: undefined,
         },
         value: {
@@ -356,9 +406,27 @@ const FormField = defineComponent({
             type: Boolean as PropType<Props['withoutMinutes']>,
             default: false,
         },
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        onCreate: {
+            type: Function as PropType<Props['onCreate']>,
+            default: undefined,
+        },
     },
     emits: ['change', 'input', 'create'],
     computed: {
+        inheritedVerticalForm(): boolean {
+            // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
+            // @see https://github.com/vuejs/core/pull/6804
+            return this.verticalForm;
+        },
+
         invalid(): boolean {
             return (this.error ?? null) !== null;
         },
@@ -385,14 +453,12 @@ const FormField = defineComponent({
         $slots: {
             immediate: true,
             handler() {
-                // @ts-expect-error -- `this` fait bien référence au component.
                 this.validateProps();
             },
         },
         $props: {
             immediate: true,
             handler() {
-                // @ts-expect-error -- `this` fait bien référence au component.
                 this.validateProps();
             },
         },
@@ -477,6 +543,7 @@ const FormField = defineComponent({
         const {
             $t: __,
             $scopedSlots: slots,
+            inheritedVerticalForm: vertical,
             type,
             label,
             name,
@@ -484,12 +551,12 @@ const FormField = defineComponent({
             addon,
             error,
             placeholder,
+            autocomplete,
             normalizedPlaceholder,
             required,
             invalid,
             disabled,
             readonly,
-            verticalForm: vertical,
             options,
             multiple,
             canCreate,
@@ -527,16 +594,20 @@ const FormField = defineComponent({
                             <Input
                                 ref="input"
                                 class="FormField__input"
-                                type={type}
+                                type={type as any}
                                 step={step}
                                 min={min}
                                 max={max}
                                 name={name}
-                                autocomplete={type === InputType.PASSWORD ? 'new-password' : 'off'}
+                                autocomplete={(
+                                    autocomplete === undefined
+                                        ? (type === InputType.PASSWORD ? 'new-password' : 'off')
+                                        : autocomplete
+                                )}
                                 disabled={!!(disabled || readonly)}
                                 invalid={invalid}
-                                placeholder={normalizedPlaceholder}
-                                value={value}
+                                placeholder={normalizedPlaceholder as any}
+                                value={value as any}
                                 addon={addon}
                                 onInput={handleInput}
                                 onChange={handleChange}
@@ -546,11 +617,12 @@ const FormField = defineComponent({
                             <Select
                                 class="FormField__input"
                                 name={name}
-                                options={options}
+                                options={options as any}
+                                autocomplete={autocomplete}
                                 placeholder={normalizedPlaceholder}
                                 disabled={!!(disabled || readonly)}
                                 invalid={invalid}
-                                value={value}
+                                value={value as any}
                                 multiple={multiple}
                                 canCreate={canCreate}
                                 onInput={handleInput}
@@ -562,10 +634,10 @@ const FormField = defineComponent({
                             <Radio
                                 class="FormField__input"
                                 name={name}
-                                options={options}
+                                options={options as any}
                                 disabled={!!(disabled || readonly)}
                                 invalid={invalid}
-                                value={value}
+                                value={value as any}
                                 onInput={handleInput}
                                 onChange={handleChange}
                             />
@@ -575,11 +647,11 @@ const FormField = defineComponent({
                                 ref="input"
                                 class="FormField__input"
                                 name={name}
-                                value={value}
+                                value={value as any}
                                 rows={rows}
                                 disabled={!!(disabled || readonly)}
                                 invalid={invalid}
-                                placeholder={normalizedPlaceholder}
+                                placeholder={normalizedPlaceholder as any}
                                 onInput={handleInput}
                                 onChange={handleChange}
                             />
@@ -588,13 +660,13 @@ const FormField = defineComponent({
                             <DatePicker
                                 class="FormField__input"
                                 name={name}
-                                type={type}
-                                value={value}
+                                type={type as any}
+                                value={value as any}
                                 range={range}
                                 invalid={invalid}
                                 disabled={!!disabled}
-                                readonly={readonly}
-                                placeholder={normalizedPlaceholder}
+                                readonly={readonly as boolean}
+                                placeholder={normalizedPlaceholder as any}
                                 minDate={minDate}
                                 maxDate={maxDate}
                                 disabledDate={disabledDate}
@@ -610,8 +682,8 @@ const FormField = defineComponent({
                                 name={name}
                                 disabled={!!(disabled || readonly)}
                                 invalid={invalid}
-                                value={value}
-                                placeholder={placeholder}
+                                value={value as any}
+                                placeholder={placeholder as any}
                                 onInput={handleInput}
                                 onChange={handleChange}
                             />
@@ -620,8 +692,8 @@ const FormField = defineComponent({
                             <SwitchToggle
                                 class="FormField__input"
                                 name={name}
-                                options={options}
-                                value={value ?? false}
+                                options={options as any}
+                                value={(value as any) ?? false}
                                 disabled={(
                                     typeof disabled !== 'string'
                                         ? !!(disabled || readonly)
@@ -631,8 +703,17 @@ const FormField = defineComponent({
                                 onChange={handleChange}
                             />
                         )}
+                        {type === OtherType.MULTIPLE && (
+                            <InputMultiple
+                                class="FormField__input"
+                                name={name}
+                                value={value as any}
+                                onInput={handleInput}
+                                onChange={handleChange}
+                            />
+                        )}
                         {type === OtherType.COPY && (
-                            <InputCopy class="FormField__input" value={value} />
+                            <InputCopy class="FormField__input" value={value as any} />
                         )}
                         {type === OtherType.CUSTOM && (
                             <div class="FormField__input">

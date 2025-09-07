@@ -1,6 +1,6 @@
 import './index.scss';
 import invariant from 'invariant';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { Group } from '@/stores/api/groups';
 import apiEvents from '@/stores/api/events';
 import Fragment from '@/components/Fragment';
@@ -8,13 +8,27 @@ import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 import Estimate from './components/Estimate';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Estimate as EstimateType } from '@/stores/api/estimates';
 
 type Props = {
     /** L'événement dont on souhaite gérer les devis. */
     event: EventDetails<true>,
+
+    /**
+     * Fonction appelée lorsqu'un devis a été créé.
+     *
+     * @param estimate - Le devis nouvellement créé.
+     */
+    onCreated?(estimate: EstimateType): void,
+
+    /**
+     * Fonction appelée lorsqu'un devis a été supprimé.
+     *
+     * @param id - Identifiant du devis supprimé.
+     */
+    onDeleted?(id: EstimateType['id']): void,
 };
 
 type Data = {
@@ -32,6 +46,16 @@ const EventDetailsEstimates = defineComponent({
                 event.is_billable &&
                 event.materials.length > 0
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCreated: {
+            type: Function as PropType<Props['onCreated']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDeleted: {
+            type: Function as PropType<Props['onDeleted']>,
+            default: undefined,
         },
     },
     emits: ['created', 'deleted'],
@@ -57,7 +81,8 @@ const EventDetailsEstimates = defineComponent({
         userCanEdit(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
     },

@@ -1,5 +1,5 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError } from '@/globals/requester';
 import config from '@/globals/config';
 import apiEvents from '@/stores/api/events';
 import FormField from '@/themes/default/components/FormField';
@@ -7,25 +7,33 @@ import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 import Alert from '@/themes/default/components/Alert';
 import { ApiErrorCode } from '@/stores/api/@codes';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 
 import type Period from '@/utils/period';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { EventDetails, EventMaterial } from '@/stores/api/events';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 
 type Props = {
     /** L'événement à dupliquer. */
     event: EventDetails,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param newEvent - Le nouvel événement créé si la duplication a
+     *                   été menée à son terme.
+     */
+    onClose?(newEvent?: EventDetails): void,
 };
 
 type Data = {
     isSaving: boolean,
-    operationPeriod: Period | null,
+    operationPeriod: Raw<Period> | null,
     operationPeriodIsFullDays: boolean,
     shouldKeepBillingData: boolean,
     shouldSyncPeriods: boolean,
-    mobilizationPeriod: Period | null,
+    mobilizationPeriod: Raw<Period> | null,
     validationErrors: Record<string, string> | null,
 };
 
@@ -44,6 +52,11 @@ const DuplicateEvent = defineComponent({
         event: {
             type: Object as PropType<Props['event']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
         },
     },
     emits: ['close'],
@@ -104,7 +117,9 @@ const DuplicateEvent = defineComponent({
             this.operationPeriodIsFullDays = isFullDays;
 
             if (this.shouldSyncPeriods) {
-                this.mobilizationPeriod = operationPeriod?.setFullDays(false) ?? null;
+                this.mobilizationPeriod = operationPeriod !== null
+                    ? markRaw(operationPeriod.setFullDays(false))
+                    : null;
             }
         },
 
@@ -116,12 +131,13 @@ const DuplicateEvent = defineComponent({
             this.shouldSyncPeriods = shouldSync;
 
             if (shouldSync) {
-                this.mobilizationPeriod = this.operationPeriod
-                    ?.setFullDays(false) ?? null;
+                this.mobilizationPeriod = this.operationPeriod !== null
+                    ? markRaw(this.operationPeriod.setFullDays(false))
+                    : null;
             }
         },
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();
@@ -178,13 +194,13 @@ const DuplicateEvent = defineComponent({
             } catch (error) {
                 this.isSaving = false;
 
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while duplicating the event`, error);
                 this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
         },

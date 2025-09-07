@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Decimal from 'decimal.js';
 import formatAmount from '@/utils/formatAmount';
 import { DateTimeReadableFormat } from '@/utils/datetime';
@@ -8,9 +8,8 @@ import { ClientTable } from '@/themes/default/components/Table';
 import Button from '@/themes/default/components/Button';
 import Fragment from '@/components/Fragment';
 
-import type { CreateElement } from 'vue';
+import type { CreateElement, PropType } from 'vue';
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
 import type { Invoice } from '@/stores/api/invoices';
 import type { Columns } from '@/themes/default/components/Table/Client';
 

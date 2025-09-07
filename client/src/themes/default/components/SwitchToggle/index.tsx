@@ -1,11 +1,11 @@
 import './index.scss';
 import invariant from 'invariant';
 import { z } from '@/utils/validation';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 
 import type { SchemaInfer } from '@/utils/validation';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 const SwitchOptionSchema = z.strictObject({
     /** Le libellé lié à l'option. */
@@ -16,8 +16,7 @@ const SwitchOptionSchema = z.strictObject({
 });
 
 export type SwitchOption = SchemaInfer<typeof SwitchOptionSchema>;
-
-type SwitchOptions = [left: SwitchOption, right: SwitchOption];
+export type SwitchOptions = [left: SwitchOption, right: SwitchOption];
 
 type Props<T extends SwitchOptions = SwitchOptions> = {
     /**
@@ -63,13 +62,27 @@ type Props<T extends SwitchOptions = SwitchOptions> = {
      * @default false
      */
     hideLabels?: boolean | string,
+
+    /**
+     * Fonction appelée lorsque la valeur du switch change.
+     *
+     * @param newValue - La nouvelle valeur du switch.
+     */
+    onInput?(newValue: T[number]['value']): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du switch change.
+     *
+     * @param newValue - La nouvelle valeur du switch.
+     */
+    onChange?(newValue: T[number]['value']): void,
 };
 
 /** Un sélecteur entre deux options exclusives. */
 const SwitchToggle = defineComponent({
     name: 'SwitchToggle',
     inject: {
-        'input.disabled': { default: { value: false } },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -96,8 +109,33 @@ const SwitchToggle = defineComponent({
             type: Boolean as PropType<Required<Props>['disabled']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change'],
+    setup(props) {
+        const { options, value } = props;
+
+        invariant(
+            options === undefined || options[0].value !== options[1].value,
+            `All switch values must be unique, identical values passed.`,
+        );
+
+        invariant(
+            value === (options?.[0].value ?? false) || value === (options?.[1].value ?? true),
+            `The provided value should match one of the options value, received \`${value.toString()}\` instead.`,
+        );
+
+        return {};
+    },
     computed: {
         inheritedDisabled(): boolean | string {
             if (this.disabled !== undefined) {
@@ -106,7 +144,7 @@ const SwitchToggle = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
 
         disabledReason(): string | null {
@@ -121,19 +159,6 @@ const SwitchToggle = defineComponent({
         isToggled(): boolean {
             return this.value === (this.options?.[1].value ?? true);
         },
-    },
-    mounted() {
-        const { options, value } = this;
-
-        invariant(
-            options === undefined || options[0].value !== options[1].value,
-            `All switch values must be unique, identical values passed.`,
-        );
-
-        invariant(
-            value === (options?.[0].value ?? false) || value === (options?.[1].value ?? true),
-            `The provided value should match one of the options value, received \`${value.toString()}\` instead.`,
-        );
     },
     methods: {
         handleSwitch() {
@@ -267,7 +292,7 @@ const SwitchToggle = defineComponent({
                 class={classNames}
                 onClick={handleSwitch}
                 onKeydown={handleKeydown}
-                tabIndex={!disabled ? 0 : -1}
+                tabindex={!disabled ? 0 : -1}
                 aria-checked={isToggled}
             >
                 <div class="SwitchToggle__field">

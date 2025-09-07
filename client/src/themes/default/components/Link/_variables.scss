@@ -1,17 +1,30 @@
 @use '~@/themes/default/style/globals';
-
-/// Couleur des liens.
-/// @type Color
-$color: globals.$link-base-color !default;
+@use 'sass:color';
 
 /// Marge entre les éléments internes du lien (texte, icône(s)).
 /// @type Number
 $internal-spacing: globals.$spacing-small !default;
 
 //
-// - Hover
+// - Default variant
 //
 
-/// Couleur des liens survolés.
-/// @type Color
-$hover-color: globals.$link-hover-color !default;
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
+$default-variant: (
+    color: globals.$link-base-color,
+
+    // - Hover
+    hover-color: globals.$link-hover-color,
+) !default;
+
+//
+// - Primary variant
+//
+
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
+$primary-variant: (
+    color: color.adjust(globals.$primary-color, $lightness: 10%),
+
+    // - Hover
+    hover-color: color.adjust(globals.$primary-color, $lightness: 20%),
+) !default;

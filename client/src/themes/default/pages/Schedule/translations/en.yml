@@ -59,3 +59,6 @@ listing:
         parks: Park(s)
 
     same-as-operation: Same as operation.
+    overdue-since: Overdue since {duration}
+    initially-planned-period: Initially {period}
+    late-return-on: Returned on {date} ({duration} late)

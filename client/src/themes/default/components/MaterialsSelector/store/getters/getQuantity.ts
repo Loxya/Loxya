@@ -9,7 +9,6 @@ import type { State } from '../_types';
  *
  * @returns Une fonction permettant de récupérer la quantité d'un matériel en particulier dans le store.
  */
-/* eslint-disable @stylistic/ts/lines-around-comment */
 const getQuantity = (state: State) => (
     /**
      * Permet de récupérer la quantité sélectionnée pour un matériel en particulier dans le store.
@@ -27,6 +26,5 @@ const getQuantity = (state: State) => (
         return Math.max(materialState.quantity, 0);
     }
 );
-/* eslint-enable @stylistic/ts/lines-around-comment */
 
 export default getQuantity;

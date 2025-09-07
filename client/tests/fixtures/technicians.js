@@ -13,7 +13,7 @@ const data = [
         last_name: 'Rabbit',
         full_name: 'Roger Rabbit',
         nickname: 'Riri',
-        email: 'tester2@robertmanager.net',
+        email: 'tester2@loxya.com',
         phone: null,
         street: null,
         postal_code: null,

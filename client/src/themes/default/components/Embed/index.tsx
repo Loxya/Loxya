@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import getCSSProperty from '@/utils/getCSSProperty';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 
 type Props = {
     /** Une chaîne de caractères contenant le HTML à afficher. */
@@ -10,7 +10,7 @@ type Props = {
 };
 
 type Data = {
-    container: Element | undefined,
+    container: Raw<Element> | undefined,
 };
 
 /** Affiche un contenu HTML dans une iframe en y injectant le style du thème actuel. */
@@ -46,7 +46,7 @@ const Embed = defineComponent({
         },
     },
     mounted() {
-        this.container = this.$el;
+        this.container = markRaw(this.$el);
     },
     render() {
         const { styledContent } = this;
@@ -54,7 +54,7 @@ const Embed = defineComponent({
         return (
             <iframe
                 class="Embed"
-                srcDoc={styledContent}
+                srcdoc={styledContent}
                 sandbox="allow-same-origin"
             />
         );

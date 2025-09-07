@@ -1,4 +1,6 @@
 @use '../variables' as globals;
+@use 'sass:meta';
+@use 'sass:map';
 
 //
 // - Placeholders
@@ -9,15 +11,16 @@
     display: inline-block;
     // stylelint-disable-next-line font-family-no-missing-generic-family-keyword
     font-family: 'Font Awesome 5 Free';
+    font-variant: normal;
     font-style: normal;
     line-height: 1;
     letter-spacing: normal;
-    font-variant: normal;
     text-rendering: auto;
-    word-wrap: normal;
+    overflow-wrap: normal;
     white-space: nowrap;
     text-transform: none;
 
+    // stylelint-disable-next-line order/properties-order
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -36,8 +39,8 @@
 ///
 /// @return {String} Le code de l'icône s'il a été trouvé, le nom textuel tel quel si non.
 @function icon-code($icon-name) {
-    @if map-has-key(globals.$icons-list, $icon-name) {
-        @return map-get(globals.$icons-list, $icon-name);
+    @if map.has-key(globals.$icons-list, $icon-name) {
+        @return map.get(globals.$icons-list, $icon-name);
     }
     @return $icon-name;
 }
@@ -56,8 +59,8 @@
         light: 300,
     );
 
-    @if (map-has-key($variant-map, $variant)) {
-        @return map-get($variant-map, $variant);
+    @if (map.has-key($variant-map, $variant)) {
+        @return map.get($variant-map, $variant);
     }
     @return 400;
 }
@@ -78,7 +81,7 @@
     $weight: 400;
     $pseudo-element: 'before';
 
-    @if (type-of($variant) == bool) {
+    @if (meta.type-of($variant) == bool) {
         $after: $variant;
         $variant: 'solid';
     }
@@ -91,7 +94,6 @@
         @extend %icon-font;
 
         content: icon-code($icon);
-        // stylelint-disable-next-line font-weight-notation
         font-weight: icon-weight($variant);
         @content;
     }

@@ -1,8 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { VNode } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 export type Props = {
     /** Le nom unique de la page. */
@@ -42,7 +41,7 @@ export type Props = {
      * Les éventuelles actions contextuelles de la page.
      * (sous forme de nœuds vue dans un tableau)
      */
-    actions?: VNode[],
+    actions?: JSX.Element[],
 };
 
 /** Une page. */
@@ -88,7 +87,6 @@ const Page = defineComponent({
 
         loading: {
             handler(isLoading: boolean) {
-                // @ts-expect-error -- `this` fait bien référence au component.
                 this.setLoading(isLoading);
             },
             immediate: true,

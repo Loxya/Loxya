@@ -24,22 +24,22 @@ const router = new Router({
 router.beforeEach((to, from, next) => {
     let restrictAccess = false;
 
-    const requiresAuth = to.matched.reduce(
+    const requiresLogin = to.matched.reduce(
         (currentState, { meta }) => {
             // - Non indiqué explicitement => Route publique.
-            if ([undefined, null].includes(meta.requiresAuth)) {
+            if ([undefined, null].includes(meta.requiresLogin)) {
                 return currentState;
             }
 
             // - Marqué à `true` (ou valeur truthy) => Authentification requise.
-            if (meta.requiresAuth) {
+            if (meta.requiresLogin) {
                 return true;
             }
 
             // - Marqué à `false` (ou valeur falsy) => Route pour visiteurs.
             //   (uniquement si l'état courant n'est pas déjà marqué comme "authentification requise")
             //   (= l'authentification requise l'emporte sur la route visiteur)
-            if (currentState === null && !meta.requiresAuth) {
+            if (currentState === null && !meta.requiresLogin) {
                 return false;
             }
 
@@ -49,16 +49,16 @@ router.beforeEach((to, from, next) => {
     );
 
     const isLogged = store.getters['auth/isLogged'];
-    if (requiresAuth && !isLogged) {
+    if (requiresLogin && !isLogged) {
         next({ name: 'login' });
         return;
     }
 
-    if (!requiresAuth) {
+    if (!requiresLogin) {
         // - Si l'authentification est marquée explicitement comme non requise (= `false`).
         //   => Redirige vers l'accueil si authentifié car la route ne peut être accédée que
         //      par les utilisateurs non connectés.
-        if (requiresAuth === false && isLogged) {
+        if (requiresLogin === false && isLogged) {
             next('/');
             return;
         }
