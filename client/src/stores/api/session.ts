@@ -19,12 +19,37 @@ export enum AppContext {
     INTERNAL = 'internal',
 }
 
-const SessionSchema = UserDetailsSchema
+/** Représente le type d'authentification associé à une session. */
+export enum AuthType {
+    /** Utilisateur disposant d'un compte enregistré dans le système. */
+    USER = 'user',
+
+    /** Utilisateur temporaire, ne disposant pas encore d'un compte enregistré. */
+    GUEST = 'guest',
+}
+
+const PendingUserSessionSchema = z
+    .strictObject({
+        type: z.literal(AuthType.GUEST),
+    });
+
+export const UserSessionSchema = z
+    .strictObject({
+        type: z.literal(AuthType.USER),
+    })
+    .merge(UserDetailsSchema)
     .merge(UserSettingsSchema);
 
-const NewSessionSchema = SessionSchema.extend({
-    token: z.string(),
-});
+const SessionSchema = z.union([
+    PendingUserSessionSchema,
+    UserSessionSchema,
+]);
+
+export const NewUserSessionSchema = z
+    .strictObject({
+        token: z.string(),
+    })
+    .merge(UserSessionSchema);
 
 // ------------------------------------------------------
 // -
@@ -32,9 +57,12 @@ const NewSessionSchema = SessionSchema.extend({
 // -
 // ------------------------------------------------------
 
-export type Session = SchemaInfer<typeof SessionSchema>;
+export type Session<WithPending extends boolean = false> =
+    WithPending extends false
+        ? SchemaInfer<typeof UserSessionSchema>
+        : SchemaInfer<typeof SessionSchema>;
 
-type NewSession = SchemaInfer<typeof NewSessionSchema>;
+export type NewUserSession = SchemaInfer<typeof NewUserSessionSchema>;
 
 //
 // - Edition
@@ -52,14 +80,21 @@ export type Credentials = {
 // -
 // ------------------------------------------------------
 
-const get = async (): Promise<Session> => {
-    const response = await requester.get('/session');
-    return SessionSchema.parse(response.data);
-};
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-arguments
+async function get(withPending?: false): Promise<Session<false>>;
+async function get(withPending: true): Promise<Session<true>>;
+async function get(withPending: boolean = false): Promise<Session<boolean>> {
+    const params = withPending ? { withPending: true } : {};
+    const response = await requester.get('/session', { params });
 
-const create = async (credentials: Credentials): Promise<NewSession> => {
+    return withPending
+        ? SessionSchema.parse(response)
+        : UserSessionSchema.parse(response);
+}
+
+const create = async (credentials: Credentials): Promise<NewUserSession> => {
     const response = await requester.post('/session', credentials);
-    return NewSessionSchema.parse(response.data);
+    return NewUserSessionSchema.parse(response);
 };
 
 export default { get, create };

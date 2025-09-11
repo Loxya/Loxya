@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\InsertQuery;
 use Loxya\Config\Config;
 use Phinx\Db\Adapter\MysqlAdapter;
 use Phinx\Migration\AbstractMigration;
@@ -25,8 +23,7 @@ final class CreateOpeningHourTable extends AbstractMigration
             ->create();
 
         for ($weekday = 0; $weekday <= 6; $weekday += 1) {
-            /** @var InsertQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_INSERT);
+            $qb = $this->getInsertBuilder();
             $qb
                 ->insert(['weekday', 'start_time', 'end_time'])
                 ->into(sprintf('%sopening_hours', $prefix))

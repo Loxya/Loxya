@@ -2,6 +2,7 @@ import DateTime from '@/utils/datetime';
 import Day from '@/utils/day';
 import Period, { PeriodPartReadableFormat, PeriodReadableFormat } from '@/utils/period';
 import Decimal from 'decimal.js';
+
 import type { I18nTranslate } from 'vuex-i18n';
 
 describe('Utils / Period', () => {
@@ -15,8 +16,9 @@ describe('Utils / Period', () => {
         expect(() => new Period('2024-01-01 14:12:10', '2024-01-02 12:45:00', true)).toThrow();
     });
 
-    it('Support JSON stringification', () => {
+    it('support JSON stringification', () => {
         const data = { period: new Period('2024-01-01 10:12:10', '2024-01-01 12:45:00') };
+        // eslint-disable-next-line unicorn/prefer-structured-clone
         expect(JSON.parse(JSON.stringify(data))).toStrictEqual({
             period: {
                 start: '2024-01-01 10:12:10',
@@ -80,13 +82,13 @@ describe('Utils / Period', () => {
     });
 
     describe('setFullDays()', () => {
-        const doTest = (result: Period, expected: [string, string, boolean]): void => {
-            expect(result.start.toString()).toBe(expected[0]);
-            expect(result.end.toString()).toBe(expected[1]);
-            expect(result.isFullDays).toBe(expected[2]);
-        };
-
         it('should handle same mode change', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec une période à l'heure près vers une période à l'heure près.
             doTest(
                 new Period('2024-01-01 14:30:00', '2024-01-02 10:20:00').setFullDays(false),
@@ -101,6 +103,12 @@ describe('Utils / Period', () => {
         });
 
         it('should allow to convert hourly period to full-day', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec une heure de fin en milieu de journée.
             doTest(
                 new Period('2024-01-01 14:30:00', '2024-01-02 10:20:00').setFullDays(true),
@@ -115,6 +123,12 @@ describe('Utils / Period', () => {
         });
 
         it('should allow to convert full-day period to hourly', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec une période plusieurs jours.
             doTest(
                 new Period('2024-01-01', '2024-01-02', true).setFullDays(false),
@@ -129,6 +143,12 @@ describe('Utils / Period', () => {
         });
 
         it('should allow to convert full-day period to hourly / midday', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec une période plusieurs jours.
             doTest(
                 new Period('2024-01-01', '2024-01-02', true).setFullDays(false, true),
@@ -199,14 +219,60 @@ describe('Utils / Period', () => {
         });
     });
 
-    describe('merge()', () => {
-        const doTest = (result: Period, expected: [string, string, boolean]): void => {
-            expect(result.start.toString()).toBe(expected[0]);
-            expect(result.end.toString()).toBe(expected[1]);
-            expect(result.isFullDays).toBe(expected[2]);
-        };
+    describe('asDuration()', () => {
+        it('should handle full days periods correctly', () => {
+            // - Avec des journées entières (1).
+            const period1 = new Period('2024-01-01', '2024-01-02', true);
+            expect(DateTime.isDuration(period1.asDuration())).toBeTruthy();
+            expect(period1.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 2d 0h 0m 0s');
 
+            // - Avec des journées entières (2).
+            const period2 = new Period('2024-01-01', '2024-01-01', true);
+            expect(DateTime.isDuration(period1.asDuration())).toBeTruthy();
+            expect(period2.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 1d 0h 0m 0s');
+        });
+
+        it('should handle hourly periods correctly', () => {
+            // - Avec une période à l'heure près (1).
+            const period1 = new Period('2024-01-01 14:30:00', '2024-01-02 10:20:00');
+            expect(DateTime.isDuration(period1.asDuration())).toBeTruthy();
+            expect(period1.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 0d 19h 50m 0s');
+
+            // - Avec une période à l'heure près (2).
+            const period2 = new Period('2024-01-01 14:30:00', '2024-01-01 15:30:00');
+            expect(DateTime.isDuration(period1.asDuration())).toBeTruthy();
+            expect(period2.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 0d 1h 0m 0s');
+
+            // - Avec une période à l'heure près (3).
+            const period3 = new Period('2024-01-01 14:30:00', '2024-01-01 14:35:00');
+            expect(DateTime.isDuration(period1.asDuration())).toBeTruthy();
+            expect(period3.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 0d 0h 5m 0s');
+
+            // - Avec une période à l'heure près (4).
+            const period4 = new Period('2020-01-01 14:30:00', '2024-01-02 10:20:00');
+            expect(DateTime.isDuration(period4.asDuration())).toBeTruthy();
+            expect(period4.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('4y 0mo 1d 19h 50m 0s');
+
+            // - Avec une période à l'heure près (5).
+            const period5 = new Period('2024-01-02 14:30:00.250', '2024-01-02 14:30:00.950');
+            expect(DateTime.isDuration(period5.asDuration())).toBeTruthy();
+            expect(period5.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 0d 0h 0m 1s');
+
+            // - Avec une période à l'heure près (6).
+            const period6 = new Period('2024-01-02 14:30:01', '2024-01-02 14:30:45');
+            expect(DateTime.isDuration(period6.asDuration())).toBeTruthy();
+            expect(period6.asDuration().format('Y[y] M[mo] D[d] H[h] m[m] s[s]')).toBe('0y 0mo 0d 0h 0m 44s');
+        });
+    });
+
+    describe('merge()', () => {
         it('should allow to merge the duration of two periods', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec des périodes identiques.
             const period1 = new Period('2024-01-01 00:00:00', '2024-01-02 00:00:00');
             const period2 = new Period('2024-01-01 00:00:00', '2024-01-02 00:00:00');
@@ -226,6 +292,12 @@ describe('Utils / Period', () => {
         });
 
         it('should correctly handle full days periods', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec des périodes identiques.
             const period1 = new Period('2024-01-01', '2024-01-03', true);
             const period2 = new Period('2024-01-01', '2024-01-03', true);
@@ -332,13 +404,13 @@ describe('Utils / Period', () => {
     });
 
     describe('offset()', () => {
-        const doTest = (result: Period, expected: [string, string, boolean]): void => {
-            expect(result.start.toString()).toBe(expected[0]);
-            expect(result.end.toString()).toBe(expected[1]);
-            expect(result.isFullDays).toBe(expected[2]);
-        };
-
         it('should allow to add a duration before and after a period', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec une période à l'heure près.
             const period1 = new Period('2024-01-15 15:22:10', '2024-02-16 16:38:45');
             doTest(period1.offset(1, 'day'), ['2024-01-14 15:22:10', '2024-02-17 16:38:45', false]);
@@ -356,6 +428,12 @@ describe('Utils / Period', () => {
         });
 
         it('should allow to used an instance of `Duration` for specifying the duration', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
             // - Avec une période à l'heure près.
             const period1 = new Period('2024-01-15 15:22:10', '2024-02-16 16:38:45');
             doTest(period1.offset(DateTime.duration(1, 'day')), ['2024-01-14 15:22:10', '2024-02-17 16:38:45', false]);
@@ -370,6 +448,38 @@ describe('Utils / Period', () => {
             doTest(period2.offset(DateTime.duration(1, 'day')), ['2024-01-14', '2024-02-17', true]);
             doTest(period2.offset(DateTime.duration(1, 'year')), ['2023-01-15', '2025-02-16', true]);
             doTest(period2.offset(DateTime.duration(1, 'month')), ['2023-12-15', '2024-03-16', true]);
+        });
+    });
+
+    describe('tail()', () => {
+        it('should allow to retrieve a tail period', () => {
+            const doTest = (result: Period, expected: [string, string, boolean]): void => {
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
+            // - Avec une période à l'heure près.
+            const period1 = new Period('2024-01-15 15:22:10', '2024-02-16 16:38:45');
+            doTest(
+                period1.tail(new DateTime('2024-02-22 12:12:00')),
+                ['2024-02-16 16:38:45', '2024-02-22 12:12:00', false],
+            );
+            doTest(
+                period1.tail(new Day('2024-02-22')),
+                ['2024-02-16 16:38:45', '2024-02-23 00:00:00', false],
+            );
+
+            // - Avec une période aux jours entiers.
+            const period2 = new Period('2024-01-15', '2024-02-16', true);
+            doTest(
+                period2.tail(new Day('2024-02-22')),
+                ['2024-02-16', '2024-02-22', true],
+            );
+            doTest(
+                period2.tail(new DateTime('2024-02-22 12:12:00')),
+                ['2024-02-17 00:00:00', '2024-02-22 12:12:00', false],
+            );
         });
     });
 
@@ -694,6 +804,88 @@ describe('Utils / Period', () => {
         });
     });
 
+    describe('toReadableDuration()', () => {
+        const fakeTranslateFn: I18nTranslate = (key: string, params?: Record<string, number | string>, count?: number) => (
+            JSON.stringify({ key, params, count })
+        );
+
+        it('should handle full days periods correctly', () => {
+            const doTest = (period: Period, expectedResult: Record<string, any>): void => {
+                expect(period.toReadableDuration(fakeTranslateFn)).toStrictEqual(JSON.stringify(expectedResult));
+            };
+
+            // - Avec des journées entières (1).
+            const period1 = new Period('2024-01-01', '2024-01-02', true);
+            doTest(period1, {
+                key: 'durations.days',
+                params: { count: 2 },
+                count: 2,
+            });
+
+            // - Avec des journées entières (2).
+            const period2 = new Period('2024-01-01', '2024-01-01', true);
+            doTest(period2, {
+                key: 'durations.hours',
+                params: { count: 24 },
+                count: 24,
+            });
+        });
+
+        it('should handle hourly periods correctly', () => {
+            const doTest = (period: Period, expectedResult: Record<string, any>): void => {
+                expect(period.toReadableDuration(fakeTranslateFn)).toStrictEqual(JSON.stringify(expectedResult));
+            };
+
+            // - Avec une période à l'heure près (1).
+            const period1 = new Period('2024-01-01 14:30:00', '2024-01-02 10:20:00');
+            doTest(period1, {
+                key: 'durations.hours',
+                params: { count: 20 },
+                count: 20,
+            });
+
+            // - Avec une période à l'heure près (2).
+            const period2 = new Period('2024-01-01 14:30:00', '2024-01-01 15:30:00');
+            doTest(period2, {
+                key: 'durations.hours',
+                params: { count: 1 },
+                count: 1,
+            });
+
+            // - Avec une période à l'heure près (3).
+            const period3 = new Period('2024-01-01 14:30:00', '2024-01-01 14:35:00');
+            doTest(period3, {
+                key: 'durations.minutes',
+                params: { count: 5 },
+                count: 5,
+            });
+
+            // - Avec une période à l'heure près (4).
+            const period4 = new Period('2020-01-01 14:30:00', '2024-01-02 10:20:00');
+            doTest(period4, {
+                key: 'durations.days',
+                params: { count: 1462 },
+                count: 1462,
+            });
+
+            // - Avec une période à l'heure près (5).
+            const period5 = new Period('2024-01-02 14:30:00.250', '2024-01-02 14:30:00.950');
+            doTest(period5, {
+                key: 'durations.seconds',
+                params: { count: 1 },
+                count: 1,
+            });
+
+            // - Avec une période à l'heure près (6).
+            const period6 = new Period('2024-01-02 14:30:01', '2024-01-02 14:30:45');
+            doTest(period6, {
+                key: 'durations.seconds',
+                params: { count: 44 },
+                count: 44,
+            });
+        });
+    });
+
     describe('toSerialized()', () => {
         it('should serialize period', () => {
             // - Période simple.
@@ -752,139 +944,145 @@ describe('Utils / Period', () => {
     });
 
     describe('fromSerialized()', () => {
-        // - Format de données invalide.
-        const invalidData = [
-            {},
-            { start: '2019-01-01', end: '[Invalid]' },
-            { start: '[Invalid]', end: '2019-01-01' },
-            { start: '[Invalid]', end: '[Invalid]', isFullDays: 'ok' },
-        ];
-        invalidData.forEach((invalidDatum: any) => {
-            expect(() => Period.fromSerialized(invalidDatum)).toThrow();
+        it('should work as expected', () => {
+            // - Format de données invalide.
+            const invalidData = [
+                {},
+                { start: '2019-01-01', end: '[Invalid]' },
+                { start: '[Invalid]', end: '2019-01-01' },
+                { start: '[Invalid]', end: '[Invalid]', isFullDays: 'ok' },
+            ];
+            invalidData.forEach((invalidDatum: any) => {
+                expect(() => Period.fromSerialized(invalidDatum)).toThrow();
+            });
+
+            const doTest = (data: any, expected: [string, string, boolean]): void => {
+                const result = Period.fromSerialized(data);
+
+                expect(result).toBeInstanceOf(Period);
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
+            doTest(
+                { start: '2019-01-01', end: '2019-02-01', isFullDays: false },
+                ['2019-01-01 00:00:00', '2019-02-01 00:00:00', false],
+            );
+
+            // - Format complexe: Journée entière.
+            doTest(
+                { start: '2019-01-01', end: '2019-02-01', isFullDays: true },
+                ['2019-01-01', '2019-02-01', true],
+            );
+
+            doTest(
+                {
+                    start: '2019-01-01 10:28:14',
+                    end: '2019-01-01 11:42:32',
+                    isFullDays: false,
+                },
+                ['2019-01-01 10:28:14', '2019-01-01 11:42:32', false],
+            );
+
+            // - Format complexe avec journées entières déduite.
+            doTest(
+                { start: '2019-01-01', end: '2019-02-01', isFullDays: true },
+                ['2019-01-01', '2019-02-01', true],
+            );
         });
-
-        const doTest = (data: any, expected: [string, string, boolean]): void => {
-            const result = Period.fromSerialized(data);
-
-            expect(result).toBeInstanceOf(Period);
-            expect(result.start.toString()).toBe(expected[0]);
-            expect(result.end.toString()).toBe(expected[1]);
-            expect(result.isFullDays).toBe(expected[2]);
-        };
-
-        doTest(
-            { start: '2019-01-01', end: '2019-02-01', isFullDays: false },
-            ['2019-01-01 00:00:00', '2019-02-01 00:00:00', false],
-        );
-
-        // - Format complexe: Journée entière.
-        doTest(
-            { start: '2019-01-01', end: '2019-02-01', isFullDays: true },
-            ['2019-01-01', '2019-02-01', true],
-        );
-
-        doTest(
-            {
-                start: '2019-01-01 10:28:14',
-                end: '2019-01-01 11:42:32',
-                isFullDays: false,
-            },
-            ['2019-01-01 10:28:14', '2019-01-01 11:42:32', false],
-        );
-
-        // - Format complexe avec journées entières déduite.
-        doTest(
-            { start: '2019-01-01', end: '2019-02-01', isFullDays: true },
-            ['2019-01-01', '2019-02-01', true],
-        );
     });
 
     describe('from()', () => {
-        // // - Avec des valeurs invalides.
-        const invalidData = [
-            '',
-            {},
-            [],
-            null,
-            ['[Invalid]', '[Invalid]'],
-            { start: '2019-01-01', end: '[Invalid]' },
-            { start: '[Invalid]', end: '2019-01-01' },
-            { start: '[Invalid]', end: '[Invalid]', isFullDays: 'ok' },
-        ];
-        invalidData.forEach((invalidDatum: any) => {
-            expect(() => { Period.from(invalidDatum); }).toThrow();
+        it('should work as expected', () => {
+            // - Avec des valeurs invalides.
+            const invalidData = [
+                '',
+                {},
+                [],
+                null,
+                ['[Invalid]', '[Invalid]'],
+                { start: '2019-01-01', end: '[Invalid]' },
+                { start: '[Invalid]', end: '2019-01-01' },
+                { start: '[Invalid]', end: '[Invalid]', isFullDays: 'ok' },
+            ];
+            invalidData.forEach((invalidDatum: any) => {
+                expect(() => { Period.from(invalidDatum); }).toThrow();
+            });
+
+            const doTest = (data: any, expected: [string, string, boolean]): void => {
+                const result = Period.from(data);
+
+                expect(result).toBeInstanceOf(Period);
+                expect(result.start.toString()).toBe(expected[0]);
+                expect(result.end.toString()).toBe(expected[1]);
+                expect(result.isFullDays).toBe(expected[2]);
+            };
+
+            // - Avec une période.
+            doTest(
+                new Period('2024-01-01 14:42:21', '2024-12-01 10:02:20'),
+                ['2024-01-01 14:42:21', '2024-12-01 10:02:20', false],
+            );
+
+            // - Avec une période en journées entières.
+            doTest(
+                new Period('2024-01-01', '2024-12-02', true),
+                ['2024-01-01', '2024-12-02', true],
+            );
+
+            // - Avec un objet.
+            doTest(
+                { start: '2019-01-01', end: '2019-01-01 23:59:59' },
+                ['2019-01-01 00:00:00', '2019-01-01 23:59:59', false],
+            );
         });
-
-        const doTest = (data: any, expected: [string, string, boolean]): void => {
-            const result = Period.from(data);
-
-            expect(result).toBeInstanceOf(Period);
-            expect(result.start.toString()).toBe(expected[0]);
-            expect(result.end.toString()).toBe(expected[1]);
-            expect(result.isFullDays).toBe(expected[2]);
-        };
-
-        // - Avec une période.
-        doTest(
-            new Period('2024-01-01 14:42:21', '2024-12-01 10:02:20'),
-            ['2024-01-01 14:42:21', '2024-12-01 10:02:20', false],
-        );
-
-        // - Avec une période en journées entières.
-        doTest(
-            new Period('2024-01-01', '2024-12-02', true),
-            ['2024-01-01', '2024-12-02', true],
-        );
-
-        // - Avec un objet.
-        doTest(
-            { start: '2019-01-01', end: '2019-01-01 23:59:59' },
-            ['2019-01-01 00:00:00', '2019-01-01 23:59:59', false],
-        );
     });
 
     describe('tryFrom()', () => {
-        // - Format de données invalide.
-        const invalidData = [
-            '',
-            {},
-            [],
-            null,
-            ['[Invalid]', '[Invalid]'],
-            { start: '2019-01-01', end: '[Invalid]' },
-            { start: '[Invalid]', end: '2019-01-01' },
-            { start: '[Invalid]', end: '[Invalid]', isFullDays: 'ok' },
-        ];
-        invalidData.forEach((invalidDatum: any) => {
-            expect(Period.tryFrom(invalidDatum)).toBeNull();
+        it('should work as expected', () => {
+            // - Format de données invalide.
+            const invalidData = [
+                '',
+                {},
+                [],
+                null,
+                ['[Invalid]', '[Invalid]'],
+                { start: '2019-01-01', end: '[Invalid]' },
+                { start: '[Invalid]', end: '2019-01-01' },
+                { start: '[Invalid]', end: '[Invalid]', isFullDays: 'ok' },
+            ];
+            invalidData.forEach((invalidDatum: any) => {
+                expect(Period.tryFrom(invalidDatum)).toBeNull();
+            });
+
+            const doTest = (data: any, expected: [string, string, boolean]): void => {
+                const result = Period.tryFrom(data);
+
+                expect(result).not.toBeNull();
+                expect(result).toBeInstanceOf(Period);
+                expect(result!.start.toString()).toBe(expected[0]);
+                expect(result!.end.toString()).toBe(expected[1]);
+                expect(result!.isFullDays).toBe(expected[2]);
+            };
+
+            // - Avec une période.
+            doTest(
+                new Period('2024-01-01 14:42:21', '2024-12-01 10:02:20'),
+                ['2024-01-01 14:42:21', '2024-12-01 10:02:20', false],
+            );
+
+            // - Avec une période en journées entières.
+            doTest(
+                new Period('2024-01-01', '2024-12-02', true),
+                ['2024-01-01', '2024-12-02', true],
+            );
+
+            // - Avec un objet.
+            doTest(
+                { start: '2019-01-01', end: '2019-01-01 23:59:59' },
+                ['2019-01-01 00:00:00', '2019-01-01 23:59:59', false],
+            );
         });
-
-        const doTest = (data: any, expected: [string, string, boolean]): void => {
-            const result = Period.tryFrom(data);
-
-            expect(result).not.toBeNull();
-            expect(result).toBeInstanceOf(Period);
-            expect(result!.start.toString()).toBe(expected[0]);
-            expect(result!.end.toString()).toBe(expected[1]);
-            expect(result!.isFullDays).toBe(expected[2]);
-        };
-
-        // - Avec une période.
-        doTest(
-            new Period('2024-01-01 14:42:21', '2024-12-01 10:02:20'),
-            ['2024-01-01 14:42:21', '2024-12-01 10:02:20', false],
-        );
-
-        // - Avec une période en journées entières.
-        doTest(
-            new Period('2024-01-01', '2024-12-02', true),
-            ['2024-01-01', '2024-12-02', true],
-        );
-
-        // - Avec un objet.
-        doTest(
-            { start: '2019-01-01', end: '2019-01-01 23:59:59' },
-            ['2019-01-01 00:00:00', '2019-01-01 23:59:59', false],
-        );
     });
 });

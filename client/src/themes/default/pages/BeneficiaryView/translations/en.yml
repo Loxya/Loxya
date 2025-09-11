@@ -28,4 +28,7 @@ borrowings:
     nothing-to-show: This beneficiary has not taken out any borrowings.
     done: Done
     currently-mobilized: In progress
+    overdue-since: Overdue since {duration}
     mobilized-starting-from: Scheduled for {date}
+    initially-planned-period: Initially {period}
+    late-return-on: Returned on {date} ({duration} late)

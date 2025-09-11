@@ -18,7 +18,7 @@ abstract class BaseController
         $this->container = $container;
     }
 
-    protected function paginate(Request $request, $query, int|null $limit = null): array
+    protected function paginate(Request $request, $query, ?int $limit = null): array
     {
         $maxItemsPerPage = Config::get('maxItemsPerPage', 100);
         $limit = min($limit ? (int) $limit : $maxItemsPerPage, $maxItemsPerPage);

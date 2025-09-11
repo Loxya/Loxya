@@ -5,4 +5,8 @@ help:
         is used in another event, the number needed is
         too high, or there are some out of order.
 
+    general: >-
+        The equipment listed below is unavailable because it is used elsewhere, the
+        number needed is too high, or there are some out of order.
+
 missing--count: "Need {quantity}, missing\u00A0{missing}"

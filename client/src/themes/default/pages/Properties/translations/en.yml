@@ -1,0 +1,50 @@
+title: Material properties
+
+no-limit: No limit
+add-properties: Add properties
+add-btn: Add a property
+all-categories-not-limited: All categories (not limited)
+deleted: Property deleted.
+
+confirm-permanently-delete:
+    '1': |-
+        Do you really want to permanently delete this property?
+        WARNING: All data related to this property will be deleted DEFINITIVELY!!
+    '2': |-
+        Sorry to insist, but this operation is IRREVERSIBLE.
+        Do you REALLY want to remove this property?
+
+config:
+    unit: "Unit:"
+    list-choices: "Choices\_:"
+    period-precision:
+        label: "Precision:"
+        value:
+            free: Free
+            daily: Full days
+            hourly: Hourly
+    max-length:
+        label: "Max. length:"
+        value:
+            - "{count} char."
+            - "{count} chars."
+
+columns:
+    name: Name of the property
+    entities: "Used for"
+    type: Data type
+    is-totalisable: "Totalisable\_?"
+    limited-to-categories: Limited to categories
+
+types:
+    string: Text
+    text: Multi-line text
+    integer: Integer number
+    float: Decimal number
+    boolean: Boolean (Yes/No)
+    list: List of choices
+    period: Period
+    date: Date
+
+entities:
+    material: Material

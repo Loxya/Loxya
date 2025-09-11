@@ -7,8 +7,7 @@
     left: -(globals.$sidebar-full-width);
     display: flex;
     flex-flow: column nowrap;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden auto;
     width: globals.$sidebar-full-width;
     height: calc(100% - #{globals.$main-header-height});
     background-color: globals.$bg-color-emphasis;

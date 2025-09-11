@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import store from '../../../store';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { SourceMaterial } from '../../../_types';
 
 type Props = {
@@ -23,16 +23,8 @@ const MaterialsSelectorListAvailability = defineComponent({
             const { material } = this;
 
             const quantityUsed: number = store.getters.getQuantity(material.id);
-
-            // - Calcule la quantité disponible en prenant en compte la quantité utilisée par toutes les listes.
-            //   (et pas seulement celle dans laquelle on est actuellement)
             const availableQuantity = (material.available_quantity ?? 0) - quantityUsed;
-
-            // - Pour le calcul du surplus, on récupère le surplus en prenant en compte toutes les listes
-            //   puis on fait en sorte que ça ne dépasse pas la quantité utilisée dans la liste courante.
-            //   (car le surplus de la liste courante est au maximum la quantité utilisée dans cette même liste)
             const surplus = Math.min(Math.abs(Math.min(0, availableQuantity)), quantityUsed);
-            // ça bug
 
             return { stock: Math.max(availableQuantity, 0), surplus };
         },

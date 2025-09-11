@@ -1,12 +1,12 @@
 import './index.scss';
 import config from '@/globals/config';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiEvents from '@/stores/api/events';
 import BeneficiariesSelect from './BeneficiariesSelect';
 import Button from '@/themes/default/components/Button';
 import IconMessage from '@/themes/default/components/IconMessage';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 
@@ -33,6 +33,8 @@ const EventEditStepBeneficiaries = defineComponent({
         'stopLoading',
         'goToStep',
         'updateEvent',
+        'dataChange', // eslint-disable-line vue/no-unused-emit-declarations
+        'dataReset', // eslint-disable-line vue/no-unused-emit-declarations
     ],
     data(): Data {
         const { event } = this;

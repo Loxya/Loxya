@@ -1,5 +1,7 @@
 on-date: "le %s"
 from-date-to-date: "du %s au %s"
+from-date-to-unknown: "à partir du %s"
 
 date-in-sentence: "le %s"
 period-in-sentence: "la période du %s au %s"
+period-in-sentence-no-end: "la période débutant le %s"

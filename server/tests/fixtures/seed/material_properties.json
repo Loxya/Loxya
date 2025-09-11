@@ -1,0 +1,92 @@
+[
+    {
+        "id": 1,
+        "material_id": 1,
+        "property_id": 1,
+        "value": "36.5"
+    },
+    {
+        "id": 2,
+        "material_id": 1,
+        "property_id": 2,
+        "value": "\"Grise\""
+    },
+    {
+        "id": 3,
+        "material_id": 1,
+        "property_id": 3,
+        "value": "850"
+    },
+    {
+        "id": 4,
+        "material_id": 2,
+        "property_id": 1,
+        "value": "2.2"
+    },
+    {
+        "id": 5,
+        "material_id": 2,
+        "property_id": 3,
+        "value": "35"
+    },
+    {
+        "id": 6,
+        "material_id": 3,
+        "property_id": 1,
+        "value": "0.85"
+    },
+    {
+        "id": 7,
+        "material_id": 3,
+        "property_id": 3,
+        "value": "150"
+    },
+    {
+        "id": 8,
+        "material_id": 4,
+        "property_id": 1,
+        "value": "3.15"
+    },
+    {
+        "id": 9,
+        "material_id": 4,
+        "property_id": 3,
+        "value": "60"
+    },
+    {
+        "id": 10,
+        "material_id": 4,
+        "property_id": 4,
+        "value": "true"
+    },
+    {
+        "id": 11,
+        "material_id": 6,
+        "property_id": 5,
+        "value": "\"2021-01-28\""
+    },
+    {
+        "id": 12,
+        "material_id": 6,
+        "property_id": 6,
+        "value": "250"
+    },
+    {
+        "id": 13,
+        "material_id": 6,
+        "property_id": 7,
+        "value": "\"Polyvalent\""
+    },
+    {
+        "id": 14,
+        "material_id": 7,
+        "property_id": 7,
+        "value": "\"Extérieur\""
+    },
+    {
+        "id": 15,
+        "material_id": 8,
+        "property_id": 7,
+        "value": "\"Intérieur\""
+    }
+]

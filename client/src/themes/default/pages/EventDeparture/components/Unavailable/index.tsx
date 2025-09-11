@@ -1,9 +1,9 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { DateTimeReadableFormat } from '@/utils/datetime';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 
 import type DateTime from '@/utils/datetime';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Action } from '@/themes/default/components/StateMessage';
 
@@ -39,6 +39,12 @@ type Props = {
      * utiliser dans le message lié à la raison.
      */
     variables?: AnyLiteralObject,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande
+     * à acceder à l'édition du matériel de l'événement.
+     */
+    onUpdateMaterialClick?(): void,
 };
 
 const EventDepartureUnavailable = defineComponent({
@@ -55,6 +61,11 @@ const EventDepartureUnavailable = defineComponent({
         variables: {
             type: Object as PropType<Required<Props>['variables']>,
             default: () => ({}),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpdateMaterialClick: {
+            type: Function as PropType<Props['onUpdateMaterialClick']>,
+            default: undefined,
         },
     },
     emits: ['updateMaterialClick'],

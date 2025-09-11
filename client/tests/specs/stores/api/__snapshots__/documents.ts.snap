@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`Documents Api Schema 1`] = `
+exports[`Documents Api has a valid schema 1`] = `
 {
   "created_at": /* DateTime Instance => */ "2021-02-12 13:23:02",
   "id": 1,
@@ -11,7 +11,7 @@ exports[`Documents Api Schema 1`] = `
 }
 `;
 
-exports[`Documents Api Schema 2`] = `
+exports[`Documents Api has a valid schema 2`] = `
 {
   "created_at": /* DateTime Instance => */ "2021-02-12 13:25:02",
   "id": 2,
@@ -22,7 +22,7 @@ exports[`Documents Api Schema 2`] = `
 }
 `;
 
-exports[`Documents Api Schema 3`] = `
+exports[`Documents Api has a valid schema 3`] = `
 {
   "created_at": /* DateTime Instance => */ "2023-05-01 15:15:20",
   "id": 3,
@@ -33,7 +33,7 @@ exports[`Documents Api Schema 3`] = `
 }
 `;
 
-exports[`Documents Api Schema 4`] = `
+exports[`Documents Api has a valid schema 4`] = `
 {
   "created_at": /* DateTime Instance => */ "2023-05-02 17:32:05",
   "id": 4,
@@ -44,7 +44,7 @@ exports[`Documents Api Schema 4`] = `
 }
 `;
 
-exports[`Documents Api Schema 5`] = `
+exports[`Documents Api has a valid schema 5`] = `
 {
   "created_at": /* DateTime Instance => */ "2023-05-01 15:15:20",
   "id": 5,
@@ -55,7 +55,7 @@ exports[`Documents Api Schema 5`] = `
 }
 `;
 
-exports[`Documents Api Schema 6`] = `
+exports[`Documents Api has a valid schema 6`] = `
 {
   "created_at": /* DateTime Instance => */ "2023-05-01 15:15:20",
   "id": 6,

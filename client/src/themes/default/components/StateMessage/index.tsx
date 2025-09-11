@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Button from '@/themes/default/components/Button';
 
 // - Illustrations
@@ -9,8 +9,9 @@ import TimeIllustration from './illustrations/time.svg?inline';
 import EmptyIllustration from './illustrations/empty.svg?inline';
 import LockedIllustration from './illustrations/locked.svg?inline';
 
+import type { PropType } from 'vue';
 import type { Location } from 'vue-router';
-import type { PropType } from '@vue/composition-api';
+import type { Type as ButtonType } from '@/themes/default/components/Button';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
 export enum State {
@@ -72,7 +73,7 @@ export type Action = {
     label: string,
 
     /** Le type de bouton d'action à utiliser. */
-    type?: string,
+    type?: ButtonType,
 
     /**
      * L'éventuel icône à utiliser avant le texte de l'action.
@@ -108,9 +109,11 @@ export type Action = {
     external?: boolean,
 
     /**
-     * Fonction à utiliser lors d'un clic sur le bouton d'action.
+     * Fonction appelée lorsque le bouton d'action est cliqué.
      *
      * N'est utile que quand l'action n'est pas un lien.
+     *
+     * @param event - L'événement d'origine.
      */
     onClick?(e: MouseEvent): void,
 };
@@ -121,7 +124,7 @@ type Props = {
      *
      * Si cette prop. n'est pas définie, une illustration généraliste sera utilisée.
      */
-    type: State,
+    type: State | `${State}`,
 
     /** Le message d'état à afficher. */
     message: string,
@@ -145,7 +148,7 @@ type Props = {
 };
 
 /**
- * Un élément d’interface permettant d'indiquer un état.
+ * Un élément d'interface permettant d'indiquer un état.
  * (que ce soit dans une liste, une page, ou autre)
  */
 const StateMessage = defineComponent({

@@ -293,7 +293,7 @@ degressive-rates:
                 new: Nouveau tarif dégressif
                 edit: "Modification du tarif dégressif «\_{name}\_»"
             save: Enregistrer le tarif dégressif
-            saved: Le tarif dégressif a bien été sauvegardée.
+            saved: Le tarif dégressif a bien été sauvegardé.
             fields:
                 name:
                     label: Nom
@@ -305,7 +305,8 @@ degressive-rates:
                         Actuellement, ce groupe n'applique aucune dégressivité.
                     add: Ajouter un palier
                     fields:
-                        from_day: À partir du jour
+                        from_day: À partir d'une durée de
+                        days: jour(s)
                         is-rate:
                             options:
                                 rate: Taux
@@ -315,3 +316,23 @@ degressive-rates:
                             addons:
                                 rate: "%"
                                 fixed: ""
+
+estimates-invoices:
+    title: Contenu des devis et factures
+    help: Ici, vous pouvez personnaliser le contenu des devis et des factures.
+
+    details: Détails
+    display-booking-description: "Afficher la description de l'événement\_?"
+    display-mobilization-period: "Afficher les dates d'enlèvement et retour\_?"
+    display-total-replacement-price: "Afficher le total des valeurs de remplacement\_?"
+    display-totalisable-attributes: "Afficher les totaux des caractéristiques spéciales\_? (sous la liste du matériel)"
+    material-list: Liste du matériel
+    display-pictures: "Afficher les photos (miniatures)\_?"
+    display-descriptions: "Afficher les descriptions\_?"
+    display-replacement-prices: "Afficher les valeurs de remplacement\_?"
+    display-unit-prices: "Afficher les prix unitaires et sous-totaux\_?"
+    estimates-custom-text: Texte personnalisé des devis (au-dessus de la signature)
+    invoices-custom-text: Texte personnalisé des factures (en-dessous des totaux)
+    custom-text-title: Titre du texte
+    custom-text-content: Contenu du texte
+    saved: Les paramètres des devis et factures ont bien été sauvegardés.

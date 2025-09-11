@@ -1,9 +1,10 @@
 {%- set showPark = withoutPark == false and material.material.park.name is not empty -%}
+{%- set showLocation = material.material.parkLocation.label is not empty -%}
 <tr>
     {% if showPictures -%}
     <td class="picture-cell">
         <img
-            src="{{ material.material.picture ?: baseUrl ~ '/img/material-picture-placeholder.png' }}"
+            src="{{ material.material.picture ?: asset('/img/material-picture-placeholder.png', true) }}"
             class="material-picture"
         />
     </td>
@@ -15,10 +16,10 @@
             {{- ' ' -}}
             <em class="lighter">({{ material.material.park.name }})</em>
         {%- endif -%}
-        {%- if material.material.attributes is not empty -%}
+        {%- if material.material.properties is not empty -%}
             <br />
-            {%- for attribute in material.material.attributes -%}
-                {{ include('blocks/materials/attribute.twig', { attribute }) -}}
+            {%- for property in material.material.properties -%}
+                {{ include('blocks/materials/property.twig', { property }) -}}
             {%- endfor -%}
         {%- endif -%}
     </td>

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static firstOrNew(array $attributes = [], array $values = [])
  * @method static firstOrFail($columns = ['*'])
  * @method static firstOrCreate(array $attributes, array $values = [])
- * @method static firstOr($columns = ['*'], \Closure $callback = null)
+ * @method static firstOr($columns = ['*'], ?\Closure $callback = null)
  * @method static firstWhere($column, $operator = null, $value = null, $boolean = 'and')
  * @method static updateOrCreate(array $attributes, array $values = [])
  *

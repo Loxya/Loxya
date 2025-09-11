@@ -1,28 +1,33 @@
-{%- if beneficiary['company'] is not empty -%}
-    <strong>{{ beneficiary['company']['legal_name'] }}</strong><br />
-{%- endif -%}
-
-{%- if beneficiary['company'] is not empty -%}
-    {{- __('contact') -}}&#32;
+{% set company = beneficiary.company %}
+{%- if company is not empty ~%}
+<strong>{{ company.legal_name }}</strong><br />
+{% if company.registration_id is not empty %}
+{% set registrationNumberTranslationKey = (
+    company.country.code == 'FR'
+        ? 'company-registration-number.fr'
+        : 'company-registration-number.global'
+) %}
+{{ __(registrationNumberTranslationKey, company.registration_id) }}<br />
+{% endif %}
+{{ __('contact') }}&#32;
 {%- endif -%}
 {{ beneficiary.full_name }}<br />
+{% if company.full_address is not empty ~%}
+    {{- company.full_address|nl2br }}<br />
+{% elseif beneficiary.full_address is not empty ~%}
+    {{- beneficiary.full_address|nl2br }}<br />
+{% endif -%}
 
-{%- if beneficiary['company']['full_address'] is not empty -%}
-    {{ beneficiary['company']['full_address']|nl2br }}<br />
-{%- elseif beneficiary['full_address'] is not empty -%}
-    {{ beneficiary['full_address']|nl2br }}<br />
-{%- endif -%}
-
-{%- if beneficiary.reference is not empty -%}
+{% if beneficiary.reference is not empty -%}
     <small>({{ __('beneficiary-reference', beneficiary.reference) }})</small><br />
-{%- endif -%}
+{% endif -%}
 
-{%- if beneficiary['company']['phone'] is not empty -%}
-    <small>{{ __('phone', beneficiary['company']['phone']) }}</small><br />
-{%- elseif beneficiary.phone is not empty -%}
+{% if company.phone is not empty -%}
+    <small>{{ __('phone', company.phone) }}</small><br />
+{% elseif beneficiary.phone is not empty -%}
     <small>{{ __('phone', beneficiary.phone) }}</small><br />
-{%- endif -%}
+{% endif -%}
 
-{%- if beneficiary.email is not empty -%}
+{% if beneficiary.email is not empty -%}
     <small>{{ __('email', beneficiary.email) }}</small><br />
 {%- endif -%}

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+define('TEST', true);
+
 //
 // - Chemins spécifiques aux tests.
 //

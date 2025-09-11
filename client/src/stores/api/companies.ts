@@ -16,6 +16,7 @@ import type { PaginatedData, ListingParams } from './@types';
 export const CompanySchema = z.strictObject({
     id: z.number(),
     legal_name: z.string(),
+    registration_id: z.string().nullable(),
     phone: z.string().nullable(),
     street: z.string().nullable(),
     postal_code: z.string().nullable(),
@@ -40,6 +41,7 @@ export type Company = SchemaInfer<typeof CompanySchema>;
 
 export type CompanyEdit = {
     legal_name: string,
+    registration_id: string | null,
     phone: string | null,
     street: string | null,
     postal_code: string | null,
@@ -62,22 +64,22 @@ type GetAllParams = ListingParams & { deleted?: boolean };
 
 const all = async (params: GetAllParams = {}): Promise<PaginatedData<Company[]>> => {
     const response = await requester.get('/companies', { params });
-    return withPaginationEnvelope(CompanySchema).parse(response.data);
+    return withPaginationEnvelope(CompanySchema).parse(response);
 };
 
 const one = async (id: Company['id']): Promise<Company> => {
     const response = await requester.get(`/companies/${id}`);
-    return CompanySchema.parse(response.data);
+    return CompanySchema.parse(response);
 };
 
 const create = async (data: CompanyEdit): Promise<Company> => {
     const response = await requester.post('/companies', data);
-    return CompanySchema.parse(response.data);
+    return CompanySchema.parse(response);
 };
 
 const update = async (id: Company['id'], data: CompanyEdit): Promise<Company> => {
     const response = await requester.put(`/companies/${id}`, data);
-    return CompanySchema.parse(response.data);
+    return CompanySchema.parse(response);
 };
 
 export default { all, one, create, update };

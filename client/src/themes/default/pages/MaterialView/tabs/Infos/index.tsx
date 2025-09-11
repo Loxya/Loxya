@@ -1,16 +1,16 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import config, { BillingMode } from '@/globals/config';
 import formatAmount from '@/utils/formatAmount';
 import TagsList from '@/themes/default/components/TagsList';
 import Link from '@/themes/default/components/Link';
-import formatAttributeValue from '@/utils/formatAttributeValue';
+import formatCustomFieldValue from '@/utils/formatCustomFieldValue';
 import { UNCATEGORIZED } from '@/stores/api/materials';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { MaterialDetails } from '@/stores/api/materials';
-import type { AttributeWithValue } from '@/stores/api/attributes';
+import type { PropertyWithValue } from '@/stores/api/properties';
 
 type Props = {
     /** Le matériel dont on veut afficher les informations. */
@@ -114,7 +114,7 @@ const MaterialViewInfos = defineComponent({
             available_quantity: availableQuantity,
             is_hidden_on_bill: isHiddenOnBill,
             is_discountable: isDiscountable,
-            attributes,
+            properties,
             picture,
             note,
             tags,
@@ -131,7 +131,7 @@ const MaterialViewInfos = defineComponent({
                             to={{
                                 name: 'materials',
                                 query: {
-                                    category: material.category_id ?? UNCATEGORIZED,
+                                    category: material.category_id?.toString() ?? UNCATEGORIZED,
                                 },
                             }}
                         >
@@ -144,8 +144,8 @@ const MaterialViewInfos = defineComponent({
                                     to={{
                                         name: 'materials',
                                         query: {
-                                            category: material.category_id ?? UNCATEGORIZED,
-                                            subCategory: material.sub_category_id,
+                                            category: material.category_id?.toString() ?? UNCATEGORIZED,
+                                            subCategory: material.sub_category_id?.toString(),
                                         },
                                     }}
                                 >
@@ -229,19 +229,21 @@ const MaterialViewInfos = defineComponent({
                             )}
                         </div>
                     )}
-                    {attributes.length > 0 && (
-                        <div class="MaterialViewInfos__attributes">
-                            <h3>{__('special-attributes')}</h3>
-                            {attributes.map((attribute: AttributeWithValue) => (
-                                <dl key={attribute.id} class="MaterialViewInfos__attribute">
-                                    <dt class="MaterialViewInfos__attribute__name">
-                                        {__('label-colon', { label: attribute.name })}
-                                    </dt>
-                                    <dd class="MaterialViewInfos__attribute__value">
-                                        {formatAttributeValue(__, attribute)}
-                                    </dd>
-                                </dl>
-                            ))}
+                    {properties.length > 0 && (
+                        <div class="MaterialViewInfos__properties">
+                            <h3>{__('properties')}</h3>
+                            <dl class="MaterialViewInfos__properties__list">
+                                {properties.map((property: PropertyWithValue) => (
+                                    <div key={property.id} class="MaterialViewInfos__properties__item">
+                                        <dt class="MaterialViewInfos__properties__item__name">
+                                            {__('label-colon', { label: property.name })}
+                                        </dt>
+                                        <dd class="MaterialViewInfos__properties__item__value">
+                                            {formatCustomFieldValue(__, property)}
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
                         </div>
                     )}
                     {!!note && (

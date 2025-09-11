@@ -1,11 +1,11 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError } from '@/globals/requester';
 import omit from 'lodash/omit';
 import config from '@/globals/config';
 import uniqueId from 'lodash/uniqueId';
 import apiTaxes from '@/stores/api/taxes';
 import { ApiErrorCode } from '@/stores/api/@codes';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import FormField from '@/themes/default/components/FormField';
 import Input from '@/themes/default/components/Input';
@@ -15,9 +15,8 @@ import SwitchToggle from '@/themes/default/components/SwitchToggle';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
-import type { CreateElement } from 'vue';
+import type { ComponentRef, CreateElement, PropType } from 'vue';
 import type { Simplify } from 'type-fest';
-import type { PropType } from '@vue/composition-api';
 import type { Columns } from '@/themes/default/components/Table/Client';
 import type {
     Tax,
@@ -85,11 +84,15 @@ const ModalTaxEdition = defineComponent({
         };
     },
     computed: {
-        title(): string {
-            const { __, tax } = this;
+        isNew(): boolean {
+            return this.tax === undefined;
+        },
 
-            return tax !== undefined
-                ? __('modal-title.edit', { name: tax.name })
+        title(): string {
+            const { __, isNew, tax } = this;
+
+            return !isNew
+                ? __('modal-title.edit', { name: tax!.name })
                 : __('modal-title.new');
         },
 
@@ -133,16 +136,17 @@ const ModalTaxEdition = defineComponent({
                         if (!component) {
                             return null;
                         }
-                        const index = data.components.indexOf(component);
 
                         return (
                             <SwitchToggle
-                                v-model={component.is_rate}
+                                value={component.is_rate ?? false}
                                 options={[
                                     { label: __('fields.components.fields.is-rate.options.rate'), value: true },
                                     { label: __('fields.components.fields.is-rate.options.fixed-price'), value: false },
                                 ]}
-                                invalid={!!validationErrors?.[index]?.is_rate}
+                                onInput={(value: boolean) => {
+                                    component.is_rate = value;
+                                }}
                             />
                         );
                     },
@@ -187,6 +191,14 @@ const ModalTaxEdition = defineComponent({
             ];
         },
     },
+    mounted() {
+        if (this.isNew) {
+            this.$nextTick(() => {
+                const $inputName = this.$refs.inputName as ComponentRef<typeof FormField>;
+                $inputName?.focus();
+            });
+        }
+    },
     methods: {
         // ------------------------------------------------------
         // -
@@ -194,7 +206,7 @@ const ModalTaxEdition = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();
@@ -259,8 +271,7 @@ const ModalTaxEdition = defineComponent({
                 return;
             }
 
-            const { __, tax, data } = this;
-            const isNew = tax === undefined;
+            const { __, isNew, tax, data } = this;
             this.isSaving = true;
 
             const postData: TaxEditCore = (
@@ -281,7 +292,7 @@ const ModalTaxEdition = defineComponent({
             const doRequest = (): Promise<Tax> => (
                 isNew
                     ? apiTaxes.create(postData)
-                    : apiTaxes.update(tax.id, postData)
+                    : apiTaxes.update(tax!.id, postData)
             );
 
             try {
@@ -295,12 +306,9 @@ const ModalTaxEdition = defineComponent({
             } catch (error) {
                 this.isSaving = false;
 
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
                 this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
@@ -344,10 +352,13 @@ const ModalTaxEdition = defineComponent({
                     <form class="ModalTaxEdition__form" onSubmit={handleSubmit}>
                         <FormField
                             type="text"
+                            ref="inputName"
                             label={__('fields.name.label')}
                             placeholder={__('fields.name.placeholder')}
+                            autocomplete="off"
                             error={validationErrors?.name}
                             v-model={data.name}
+                            required
                         />
                         <FormField
                             type="switch"
@@ -356,6 +367,7 @@ const ModalTaxEdition = defineComponent({
                             error={validationErrors?.is_group}
                             onChange={handleIsGroupChange}
                             value={data.is_group}
+                            required
                         />
                         {!data.is_group && (
                             <FormField
@@ -367,6 +379,7 @@ const ModalTaxEdition = defineComponent({
                                     { label: __('fields.is-rate.options.rate'), value: true },
                                     { label: __('fields.is-rate.options.fixed-price'), value: false },
                                 ]}
+                                required
                             />
                         )}
                         {!data.is_group && (
@@ -382,6 +395,7 @@ const ModalTaxEdition = defineComponent({
                                 min={0}
                                 max={data.is_rate ? 100 : undefined}
                                 addon={data.is_rate ? '%' : config.currency.symbol}
+                                required
                             />
                         )}
                         {!!data.is_group && (

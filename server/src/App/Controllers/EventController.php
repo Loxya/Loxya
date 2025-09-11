@@ -5,6 +5,7 @@ namespace Loxya\Controllers;
 
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Carbon\Exceptions\InvalidFormatException;
 use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
@@ -319,7 +320,7 @@ final class EventController extends BaseController
         $id = $request->getIntegerAttribute('id');
         $event = Event::findOrFail($id);
 
-        if (!Auth::is([Group::ADMINISTRATION, Group::MANAGEMENT])) {
+        if (!Auth::is([Group::ADMINISTRATION, Group::SUPERVISION, Group::OPERATION])) {
             throw new HttpForbiddenException($request);
         }
 
@@ -376,7 +377,7 @@ final class EventController extends BaseController
             ));
         }
 
-        // -  Si l'inventaire de retour ne peut plus être effectué.
+        // -  Si l'inventaire de départ ne peut plus être effectué.
         if ($event->is_departure_inventory_period_closed) {
             throw new HttpUnprocessableEntityException($request, (
                 "This event's departure inventory can no longer be done."
@@ -504,7 +505,7 @@ final class EventController extends BaseController
         }
 
         // - Si le début de l'événement est dans le passé, on ne peut plus annuler l'inventaire de départ.
-        if ($event->operation_period->getStartDate()->isPast()) {
+        if ($event->operation_period->isPastOrOngoing()) {
             throw new HttpUnprocessableEntityException($request, (
                 "This event has already started, the departure inventory can no longer be cancelled."
             ));
@@ -604,7 +605,18 @@ final class EventController extends BaseController
             ));
         }
 
-        $rawInventory = $request->getParsedBody();
+        // - Date d'inventaire personnalisée.
+        $date = null;
+        $rawInventoryDate = $request->getParsedBodyParam('date');
+        if ($rawInventoryDate !== null) {
+            try {
+                $date = Carbon::parse($rawInventoryDate);
+            } catch (InvalidFormatException) {
+                throw new HttpBadRequestException($request, "Invalid data format.");
+            }
+        }
+
+        $rawInventory = $request->getParsedBodyParam('inventory', []);
         if (!empty($rawInventory)) {
             if (!is_array($rawInventory)) {
                 throw new HttpBadRequestException($request, "Invalid data format.");
@@ -622,7 +634,7 @@ final class EventController extends BaseController
                 "This event's return inventory cannot be marked as finished."
             ));
         }
-        $event->finishReturnInventory(Auth::user());
+        $event->finishReturnInventory(Auth::user(), $date);
 
         return $response->withJson(static::_formatOne($event), StatusCode::STATUS_OK);
     }

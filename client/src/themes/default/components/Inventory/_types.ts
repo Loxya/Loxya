@@ -42,7 +42,7 @@ export type AwaitedMaterial<
         /* eslint-enable @typescript-eslint/naming-convention */
     }
     & (
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         WithComments extends true ? { comment?: string | null } : {}
     )
 );
@@ -64,7 +64,7 @@ export type AwaitedMaterialGroup<Group extends Category | Park = Category | Park
  * - `broken`: La quantité inventoriée cassée pour le matériel.
  *             (Si l'inventaire permet d'inventorier les quantités cassés)
  * - `comment`: Un commentaire éventuel au sujet du matériel.
- *              (Si l'inventaire permet d’éditer des commentaires d'inventaire)
+ *              (Si l'inventaire permet d'éditer des commentaires d'inventaire)
  */
 export type InventoryMaterial<
     WithBrokenCount extends boolean = boolean,
@@ -75,11 +75,11 @@ export type InventoryMaterial<
         actual: number,
     }
     & (
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         WithBrokenCount extends true ? { broken: number } : {}
     )
     & (
-        // eslint-disable-next-line @typescript-eslint/ban-types
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         WithComments extends true ? { comment?: string | null } : {}
     )
 );

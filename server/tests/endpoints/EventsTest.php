@@ -11,7 +11,7 @@ use Loxya\Models\Material;
 use Loxya\Models\Setting;
 use Loxya\Models\User;
 use Loxya\Support\Arr;
-use Loxya\Support\Filesystem\UploadedFile;
+use Loxya\Support\File\UploadedFile;
 use Loxya\Support\Period;
 
 final class EventsTest extends ApiTestCase
@@ -63,6 +63,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => true,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
+                'has_materials' => true,
                 'has_missing_materials' => null,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => false,
@@ -272,6 +273,7 @@ final class EventsTest extends ApiTestCase
                 'is_archived' => false,
                 'is_billable' => true,
                 'is_confirmed' => false,
+                'has_materials' => true,
                 'has_missing_materials' => null,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => true,
@@ -421,6 +423,7 @@ final class EventsTest extends ApiTestCase
                 'materials_count' => 23,
                 'currency' => 'EUR',
                 'total_replacement' => '1210.99',
+                'has_materials' => true,
                 'has_missing_materials' => null,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => null,
@@ -538,6 +541,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
+                'has_materials' => true,
                 'has_missing_materials' => true,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => null,
@@ -645,6 +649,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
+                'has_materials' => true,
                 'has_missing_materials' => false,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => null,
@@ -714,6 +719,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
+                'has_materials' => false,
                 'has_missing_materials' => false,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => null,
@@ -773,6 +779,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
+                'has_materials' => true,
                 'has_missing_materials' => false,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => null,
@@ -979,6 +986,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
+                'has_materials' => true,
                 'has_missing_materials' => false,
                 'has_deleted_materials' => false,
                 'has_not_returned_materials' => null,
@@ -1035,6 +1043,8 @@ final class EventsTest extends ApiTestCase
                     'is_archived',
                     'is_departure_inventory_done',
                     'is_return_inventory_done',
+                    'return_inventory_datetime',
+                    'has_materials',
                     'note',
                     'created_at',
                     'updated_at',
@@ -1078,9 +1088,11 @@ final class EventsTest extends ApiTestCase
                         'is_archived',
                         'is_departure_inventory_done',
                         'is_return_inventory_done',
+                        'return_inventory_datetime',
+                        'has_materials',
+                        'has_missing_materials',
                         'has_not_returned_materials',
                         'has_unassigned_mandatory_positions',
-                        'has_missing_materials',
                         'categories',
                         'parks',
                         'author',
@@ -1105,6 +1117,8 @@ final class EventsTest extends ApiTestCase
                         'is_archived',
                         'is_departure_inventory_done',
                         'is_return_inventory_done',
+                        'return_inventory_datetime',
+                        'has_materials',
                         'has_not_returned_materials',
                         'has_unassigned_mandatory_positions',
                         'categories',
@@ -1138,7 +1152,7 @@ final class EventsTest extends ApiTestCase
 
     public function testCreateEvent(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 8, 20, 17, 20, 11));
+        static::setNow(Carbon::create(2019, 8, 20, 17, 20, 11));
 
         // - Test avec des données simples
         $data = [
@@ -1195,6 +1209,7 @@ final class EventsTest extends ApiTestCase
             'is_return_inventory_started' => false,
             'return_inventory_author' => null,
             'return_inventory_datetime' => null,
+            'has_materials' => false,
             'has_missing_materials' => false,
             'has_deleted_materials' => false,
             'has_not_returned_materials' => null,
@@ -1392,6 +1407,7 @@ final class EventsTest extends ApiTestCase
                 ],
             ],
             'materials_count' => 4,
+            'has_materials' => true,
             'total_without_global_discount' => '306.26',
             'total_global_discount' => '0.00',
             'total_without_taxes' => '306.26',
@@ -1410,7 +1426,7 @@ final class EventsTest extends ApiTestCase
 
     public function testUpdate(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 3, 15, 18, 42, 36));
+        static::setNow(Carbon::create(2019, 3, 15, 18, 42, 36));
 
         tap(Event::findOrFail(1), static function (Event $event) {
             $event->is_return_inventory_done = false;
@@ -1748,7 +1764,7 @@ final class EventsTest extends ApiTestCase
 
     public function testUpdateNote(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 5, 25, 12, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 25, 12, 0, 0));
 
         $this->client->put('/api/events/7/note', [
             'note' => "Une nouvelle note",
@@ -1782,9 +1798,9 @@ final class EventsTest extends ApiTestCase
 
     public function testDuplicateEvent(): void
     {
-        Carbon::setTestNow(Carbon::create(2021, 06, 22, 12, 11, 02));
+        static::setNow(Carbon::create(2021, 06, 22, 12, 11, 02));
 
-        // - Duplication de l'événement n°1
+        // - Duplication de l'événement #1
         $this->client->post('/api/events/1/duplicate', [
             'operation_period' => [
                 'start' => '2021-07-01',
@@ -1901,7 +1917,7 @@ final class EventsTest extends ApiTestCase
             ],
         ));
 
-        // - Duplication de l'événement n°3
+        // - Duplication de l'événement #3
         $this->client->post('/api/events/3/duplicate', [
             'operation_period' => [
                 'start' => '2021-07-04',
@@ -1980,7 +1996,7 @@ final class EventsTest extends ApiTestCase
             ],
         ));
 
-        // - Duplication de l'événement n°4 (avec unités)
+        // - Duplication de l'événement #4 (avec unités)
         $this->client->post('/api/events/4/duplicate', [
             'operation_period' => [
                 'start' => '2021-07-04',
@@ -2054,113 +2070,6 @@ final class EventsTest extends ApiTestCase
             ],
         ));
 
-        // - Duplication de l'événement 7 (avec multi-listes + unités)
-        $this->client->post('/api/events/7/duplicate', [
-            'operation_period' => [
-                'start' => '2024-02-01',
-                'end' => '2024-02-04',
-                'isFullDays' => true,
-            ],
-            'mobilization_period' => [
-                'start' => '2024-02-01 00:00:00',
-                'end' => '2024-03-10 00:00:00',
-                'isFullDays' => true,
-            ],
-        ]);
-        $this->assertStatusCode(StatusCode::STATUS_CREATED);
-        $this->assertResponseData(array_replace(
-            self::data(7, Event::SERIALIZE_DETAILS),
-            [
-                'id' => 12,
-                'mobilization_period' => [
-                    'start' => '2024-02-01 00:00:00',
-                    'end' => '2024-03-10 00:00:00',
-                    'isFullDays' => false,
-                ],
-                'operation_period' => [
-                    'start' => '2024-02-01',
-                    'end' => '2024-02-04',
-                    'isFullDays' => true,
-                ],
-                'has_missing_materials' => false,
-                'is_departure_inventory_done' => false,
-                'departure_inventory_datetime' => null,
-                'departure_inventory_author' => null,
-                'is_return_inventory_started' => false,
-                'is_return_inventory_done' => false,
-                'return_inventory_datetime' => null,
-                'return_inventory_author' => null,
-                'is_confirmed' => false,
-                'technicians' => [],
-                'positions' => array_replace_recursive(
-                    self::data(7, Event::SERIALIZE_DETAILS)['positions'],
-                    [
-                        ['is_assigned' => false],
-                    ],
-                ),
-                'materials' => [
-                    array_replace_recursive(
-                        self::data(7, Event::SERIALIZE_DETAILS)['materials'][0],
-                        [
-                            'departure_comment' => null,
-                            'quantity_returned' => null,
-                            'quantity_returned_broken' => null,
-                            'unit_replacement_price' => '419.00',
-                            'total_replacement_price' => '838.00',
-                        ],
-                    ),
-                    array_replace_recursive(
-                        self::data(7, Event::SERIALIZE_DETAILS)['materials'][1],
-                        [
-                            'degressive_rate' => '1.00',
-                            'unit_price_period' => '300.00',
-                            'total_without_discount' => '600.00',
-                            'total_without_taxes' => '600.00',
-                            'departure_comment' => null,
-                            'quantity_returned' => null,
-                            'quantity_returned_broken' => null,
-                        ],
-                    ),
-                    array_replace_recursive(
-                        self::data(7, Event::SERIALIZE_DETAILS)['materials'][2],
-                        [
-                            'departure_comment' => null,
-                            'quantity_returned' => null,
-                            'quantity_returned_broken' => null,
-                            'unit_replacement_price' => '59.00',
-                            'total_replacement_price' => '118.00',
-                        ],
-                    ),
-                    array_replace(
-                        self::data(7, Event::SERIALIZE_DETAILS)['materials'][3],
-                        [
-                            'degressive_rate' => '3.00',
-                            'unit_price_period' => '900.00',
-                            'total_without_discount' => '900.00',
-                            'total_without_taxes' => '900.00',
-                            'taxes' => [],
-                            'unit_replacement_price' => '32000.00',
-                            'total_replacement_price' => '32000.00',
-                        ],
-                    ),
-                ],
-                'total_without_global_discount' => '1928.62',
-                'total_without_taxes' => '1928.62',
-                'total_taxes' => [
-                    [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
-                        'value' => '20.000',
-                        'total' => '205.72',
-                    ],
-                ],
-                'total_with_taxes' => '2134.34',
-                'total_replacement' => '71756.00',
-                'created_at' => '2021-06-22 12:11:02',
-                'updated_at' => '2021-06-22 12:11:02',
-            ],
-        ));
-
         // - Duplication de l'événement 7.
         $this->client->post('/api/events/7/duplicate', [
             'operation_period' => [
@@ -2178,7 +2087,7 @@ final class EventsTest extends ApiTestCase
         $this->assertResponseData(array_replace(
             self::data(7, Event::SERIALIZE_DETAILS),
             [
-                'id' => 13,
+                'id' => 12,
                 'mobilization_period' => [
                     'start' => '2023-05-26 00:00:00',
                     'end' => '2023-05-30 00:00:00',
@@ -2290,7 +2199,7 @@ final class EventsTest extends ApiTestCase
 
     public function testUpdateDepartureInventory(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 3, 15, 10, 00, 00));
+        static::setNow(Carbon::create(2019, 3, 15, 10, 00, 00));
 
         // - On crée une pénurie dans l'événement #3 en modifiant l'événement #1.
         $event1 = Event::findOrFail(1);
@@ -2357,7 +2266,7 @@ final class EventsTest extends ApiTestCase
         $event3->is_archived = false;
         $event3->save();
 
-        Carbon::setTestNow(Carbon::create(2018, 12, 18, 10, 00, 00));
+        static::setNow(Carbon::create(2018, 12, 18, 10, 00, 00));
 
         // - Avec un événement dont l'inventaire de départ est déjà terminé.
         $this->client->put('/api/events/3/departure', $validInventories[3]);
@@ -2389,7 +2298,7 @@ final class EventsTest extends ApiTestCase
         $this->assertApiErrorMessage("This event's departure inventory can no longer be done.");
 
         // - On met la date courante à la date de début de l'événement.
-        Carbon::setTestNow(Carbon::create(2018, 12, 15, 10, 00, 00));
+        static::setNow(Carbon::create(2018, 12, 15, 10, 00, 00));
 
         // - Avec un événement qui contient des pénuries.
         $this->client->put('/api/events/3/departure', $validInventories[3]);
@@ -2426,11 +2335,8 @@ final class EventsTest extends ApiTestCase
             ['id' => 2, 'message' => "Please specify outgoing quantity."],
         ]);
 
-        // - On met la date courante à la date de début de l'événement #5.
-        Carbon::setTestNow(Carbon::create(2020, 1, 1, 10, 00, 00));
-
         // - On met la date courante à la date de début de l'événement #3.
-        Carbon::setTestNow(Carbon::create(2018, 12, 15, 10, 00, 00));
+        static::setNow(Carbon::create(2018, 12, 15, 10, 00, 00));
 
         $initialData = array_replace(
             self::data(3, Event::SERIALIZE_DETAILS),
@@ -2472,7 +2378,7 @@ final class EventsTest extends ApiTestCase
         ));
 
         // - On met la date courante à la date de début de l'événement #7.
-        Carbon::setTestNow(Carbon::create(2023, 5, 25, 10, 00, 00));
+        static::setNow(Carbon::create(2023, 5, 25, 10, 00, 00));
 
         // - Avec des données valides avec listes...
         $this->client->put('/api/events/7/departure', $validInventories[7]);
@@ -2504,7 +2410,7 @@ final class EventsTest extends ApiTestCase
 
     public function testFinishDepartureInventory(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 3, 15, 10, 00, 00));
+        static::setNow(Carbon::create(2019, 3, 15, 10, 00, 00));
 
         // - On crée une pénurie dans l'événement #3 en modifiant l'événement #1.
         $event1 = Event::findOrFail(1);
@@ -2571,7 +2477,7 @@ final class EventsTest extends ApiTestCase
         $event3->is_archived = false;
         $event3->save();
 
-        Carbon::setTestNow(Carbon::create(2018, 12, 18, 10, 00, 00));
+        static::setNow(Carbon::create(2018, 12, 18, 10, 00, 00));
 
         // - Avec un événement dont l'inventaire de départ est déjà terminé.
         $this->client->put('/api/events/3/departure/finish', $validInventories[3]);
@@ -2603,7 +2509,7 @@ final class EventsTest extends ApiTestCase
         $this->assertApiErrorMessage("This event's departure inventory can no longer be done.");
 
         // - On met la date courante à la date de début de l'événement.
-        Carbon::setTestNow(Carbon::create(2018, 12, 15, 10, 00, 00));
+        static::setNow(Carbon::create(2018, 12, 15, 10, 00, 00));
 
         // - Avec un événement qui contient des pénuries.
         $this->client->put('/api/events/3/departure/finish', $validInventories[3]);
@@ -2635,11 +2541,8 @@ final class EventsTest extends ApiTestCase
             ['id' => 2, 'message' => "Please specify outgoing quantity."],
         ]);
 
-        // - On met la date courante à la date de début de l'événement #5.
-        Carbon::setTestNow(Carbon::create(2020, 1, 1, 10, 00, 00));
-
         // - On met la date courante à la date de début de l'événement #3.
-        Carbon::setTestNow(Carbon::create(2018, 12, 15, 10, 00, 00));
+        static::setNow(Carbon::create(2018, 12, 15, 10, 00, 00));
 
         $initialData = array_replace(
             self::data(3, Event::SERIALIZE_DETAILS),
@@ -2699,7 +2602,7 @@ final class EventsTest extends ApiTestCase
         ));
 
         // - On met la date courante à la date de début de l'événement #7.
-        Carbon::setTestNow(Carbon::create(2023, 5, 25, 10, 00, 00));
+        static::setNow(Carbon::create(2023, 5, 25, 10, 00, 00));
 
         // - Avec un inventaire incomplet.
         $this->client->put('/api/events/7/departure/finish', [
@@ -2757,7 +2660,7 @@ final class EventsTest extends ApiTestCase
 
     public function testCancelDepartureInventory(): void
     {
-        Carbon::setTestNow(Carbon::create(2018, 12, 15, 11, 0, 0));
+        static::setNow(Carbon::create(2018, 12, 15, 11, 0, 0));
 
         // - Impossible d'annuler un inventaire de départ non effectué.
         $this->client->delete('/api/events/2/departure');
@@ -2793,7 +2696,7 @@ final class EventsTest extends ApiTestCase
             "longer be cancelled.",
         );
 
-        Carbon::setTestNow(Carbon::create(2018, 12, 15, 8, 20, 0));
+        static::setNow(Carbon::create(2018, 12, 15, 8, 20, 0));
 
         $initialData = array_replace(
             self::data(3, Event::SERIALIZE_DETAILS),
@@ -2823,7 +2726,7 @@ final class EventsTest extends ApiTestCase
 
     public function testUpdateReturnInventory(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 2, 1, 10, 00, 00));
+        static::setNow(Carbon::create(2023, 2, 1, 10, 00, 00));
 
         $validInventories = [
             2 => [
@@ -2957,7 +2860,7 @@ final class EventsTest extends ApiTestCase
             ['id' => 2, 'message' => "Please specify the returned quantity."],
         ]);
 
-        Carbon::setTestNow(Carbon::create(2023, 6, 2, 12, 30, 00));
+        static::setNow(Carbon::create(2023, 6, 2, 12, 30, 00));
 
         // - Avec des données valides simples...
         $this->client->put('/api/events/2/return', $validInventories[2]);
@@ -2983,7 +2886,7 @@ final class EventsTest extends ApiTestCase
 
     public function testFinishReturnInventory(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 2, 1, 10, 00, 00));
+        static::setNow(Carbon::create(2023, 2, 1, 10, 00, 00));
 
         // - Avec un événement dont l'inventaire de retour est déjà terminé.
         $this->client->put('/api/events/2/return/finish');
@@ -3051,16 +2954,25 @@ final class EventsTest extends ApiTestCase
         );
 
         // - Avec un payload invalide.
-        foreach ([[['foo' => 'bar']], [1], [true]] as $invalidInventory) {
-            $this->client->put('/api/events/2/return/finish', $invalidInventory);
+        $invalidData = [
+            ['date' => 'ok'],
+            ['inventory' => ['foo' => 'bar']],
+            ['inventory' => true],
+            ['inventory' => 1],
+        ];
+        foreach ($invalidData as $invalidDatum) {
+            $this->client->put('/api/events/2/return/finish', $invalidDatum);
             $this->assertStatusCode(StatusCode::STATUS_BAD_REQUEST);
             $this->assertApiErrorMessage("Invalid data format.");
         }
 
         // - Test avec du matériel non-unitaire.
         $this->client->put('/api/events/2/return/finish', [
-            ['id' => 1, 'actual' => 3, 'broken' => 0],
-            ['id' => 2, 'actual' => 2, 'broken' => 1],
+            'inventory' => [
+                ['id' => 1, 'actual' => 3, 'broken' => 0],
+                ['id' => 2, 'actual' => 2, 'broken' => 1],
+            ],
+            'date' => '2022-12-21 09:00:00',
         ]);
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData(array_replace_recursive(
@@ -3068,7 +2980,7 @@ final class EventsTest extends ApiTestCase
             [
                 'is_return_inventory_done' => true,
                 'return_inventory_author' => UsersTest::data(1),
-                'return_inventory_datetime' => '2023-02-01 10:00:00',
+                'return_inventory_datetime' => '2022-12-21 09:00:00',
                 'has_not_returned_materials' => false,
                 'materials' => [
                     [
@@ -3098,7 +3010,7 @@ final class EventsTest extends ApiTestCase
         $this->assertStatusCode(StatusCode::STATUS_UNPROCESSABLE_ENTITY);
         $this->assertApiErrorMessage("This event is archived.");
 
-        Carbon::setTestNow(Carbon::create(2024, 5, 5, 23, 43, 15));
+        static::setNow(Carbon::create(2024, 5, 5, 23, 43, 15));
 
         $event7 = Event::findOrFail(7);
         $event7->updateReturnInventory([
@@ -3119,7 +3031,7 @@ final class EventsTest extends ApiTestCase
                 'broken' => 1,
             ],
         ]);
-        $event7->finishReturnInventory(User::findOrFail(1));
+        $event7->finishReturnInventory(User::findOrFail(1), Carbon::create(2023, 5, 30, 19, 15, 00));
         $this->assertSame(Material::findOrFail(1)->out_of_order_quantity, 2);
 
         $initialData = array_replace_recursive(
@@ -3129,7 +3041,7 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_started' => true,
                 'is_return_inventory_done' => true,
                 'return_inventory_author' => 1,
-                'return_inventory_datetime' => '2024-05-05 23:43:15',
+                'return_inventory_datetime' => '2023-05-30 19:15:00',
                 'updated_at' => '2024-05-05 23:43:15',
                 'materials' => [
                     [
@@ -3158,7 +3070,7 @@ final class EventsTest extends ApiTestCase
             ],
         );
 
-        Carbon::setTestNow(Carbon::create(2024, 5, 15, 12, 12, 34));
+        static::setNow(Carbon::create(2024, 5, 15, 12, 12, 34));
 
         // - Impossible d'annuler l'inventaire de retour d'un événement
         //   avec du matériel retourné cassé passé 1 semaine après
@@ -3167,7 +3079,7 @@ final class EventsTest extends ApiTestCase
         $this->assertStatusCode(StatusCode::STATUS_UNPROCESSABLE_ENTITY);
         $this->assertApiErrorMessage("This event's return inventory can no longer been cancelled.");
 
-        Carbon::setTestNow(Carbon::create(2024, 5, 10, 12, 12, 34));
+        static::setNow(Carbon::create(2023, 6, 2, 12, 12, 34));
 
         // - Test valide.
         $this->client->delete('/api/events/7/return');
@@ -3177,21 +3089,21 @@ final class EventsTest extends ApiTestCase
             'is_return_inventory_done' => false,
             'return_inventory_author' => null,
             'return_inventory_datetime' => null,
-            'updated_at' => '2024-05-10 12:12:34',
+            'updated_at' => '2023-06-02 12:12:34',
             'materials' => [
                 0 => [
                     'material' => [
-                        'updated_at' => '2024-05-10 12:12:34',
+                        'updated_at' => '2023-06-02 12:12:34',
                     ],
                 ],
                 1 => [
                     'material' => [
-                        'updated_at' => '2024-05-10 12:12:34',
+                        'updated_at' => '2023-06-02 12:12:34',
                     ],
                 ],
                 2 => [
                     'material' => [
-                        'updated_at' => '2024-05-10 12:12:34',
+                        'updated_at' => '2023-06-02 12:12:34',
                     ],
                 ],
             ],
@@ -3354,37 +3266,37 @@ final class EventsTest extends ApiTestCase
 
     public function testDownloadPdf(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 9, 23, 12, 0, 0));
+        static::setNow(Carbon::create(2022, 9, 23, 12, 0, 0));
 
         // - Événement inexistant
         $this->client->get('/events/999/pdf');
         $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
 
-        // - Téléchargement du fichier PDF de l'événement n°1
+        // - Téléchargement du fichier PDF de l'événement #1
         $responseStream = $this->client->get('/events/1/pdf');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertTrue($responseStream->isReadable());
         $this->assertMatchesHtmlSnapshot((string) $responseStream);
 
-        // - Téléchargement du fichier PDF de l'événement n°2
+        // - Téléchargement du fichier PDF de l'événement #2
         $responseStream = $this->client->get('/events/2/pdf');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertTrue($responseStream->isReadable());
         $this->assertMatchesHtmlSnapshot((string) $responseStream);
 
-        // - Téléchargement du fichier PDF de l'événement n°7 (classé par listes)
+        // - Téléchargement du fichier PDF de l'événement #7 (classé par listes)
         $responseStream = $this->client->get('/events/7/pdf');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertTrue($responseStream->isReadable());
         $this->assertMatchesHtmlSnapshot((string) $responseStream);
 
-        // - Téléchargement du fichier PDF de l'événement n°7 (classé par parcs)
+        // - Téléchargement du fichier PDF de l'événement #7 (classé par parcs)
         $responseStream = $this->client->get('/events/7/pdf?sortedBy=parks');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertTrue($responseStream->isReadable());
         $this->assertMatchesHtmlSnapshot((string) $responseStream);
 
-        // - Téléchargement du fichier PDF de l'événement n°1 avec un paramétrage
+        // - Téléchargement du fichier PDF de l'événement #1 avec un paramétrage
         //   différent des colonnes à afficher.
         Setting::bulkEdit([
             'eventSummary.showReplacementPrices' => false,
@@ -3418,7 +3330,7 @@ final class EventsTest extends ApiTestCase
             ],
         ]);
 
-        // - Pareil, mais en excluant l'événement n°3
+        // - Pareil, mais en excluant l'événement #3
         $this->client->get('/api/events?search=premier&exclude=3');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
@@ -3431,7 +3343,7 @@ final class EventsTest extends ApiTestCase
 
     public function testCreateInvoice(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         $this->client->post('/api/events/2/invoices');
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
@@ -3462,7 +3374,7 @@ final class EventsTest extends ApiTestCase
 
     public function testCreateEstimate(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         $this->client->post('/api/events/2/estimates');
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
@@ -3615,7 +3527,7 @@ final class EventsTest extends ApiTestCase
 
     public function testAttachDocument(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         $createUploadedFile = static function (string $from) {
             $tmpFile = tmpfile();

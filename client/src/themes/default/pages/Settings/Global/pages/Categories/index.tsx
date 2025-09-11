@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { confirm, prompt } from '@/utils/alert';
 import apiCategories from '@/stores/api/categories';
 import CriticalError from '@/themes/default/components/CriticalError';

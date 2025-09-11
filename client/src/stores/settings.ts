@@ -17,10 +17,6 @@ const getDefaults = (): Settings => ({
         openingHours: [],
     },
     eventSummary: {
-        customText: {
-            title: null,
-            content: null,
-        },
         materialDisplayMode: MaterialDisplayMode.SUB_CATEGORIES,
         showLegalNumbers: true,
         showReplacementPrices: true,
@@ -43,6 +39,26 @@ const getDefaults = (): Settings => ({
     billing: {
         defaultDegressiveRate: null,
         defaultTax: null,
+    },
+    estimates: {
+        showBookingDescription: false,
+        showMobilizationPeriod: false,
+        showTotalReplacementPrice: false,
+        showTotalisableProperties: false,
+        showPictures: false,
+        showDescriptions: false,
+        showReplacementPrices: true,
+        showUnitPrices: true,
+    },
+    invoices: {
+        showBookingDescription: false,
+        showMobilizationPeriod: false,
+        showTotalReplacementPrice: false,
+        showTotalisableProperties: false,
+        showPictures: false,
+        showDescriptions: false,
+        showReplacementPrices: true,
+        showUnitPrices: true,
     },
 });
 
@@ -77,29 +93,27 @@ const store: Module<State, RootState> = {
         ),
     },
     mutations: {
-        reset(state: State) {
-            Object.assign(state, getDefaults());
-        },
         set(state: State, data: State) {
             Object.assign(state, data);
         },
     },
     actions: {
-        async boot({ dispatch }: ActionContext<State, RootState>) {
-            await dispatch('fetch');
+        async boot({ dispatch }: ActionContext<State, RootState>): Promise<Settings> {
+            const settings = await dispatch('fetch');
 
             const refresh = async (): Promise<void> => {
                 await dispatch('fetch');
             };
             setInterval(refresh, 30_000); // - 30 secondes.
+
+            return settings;
         },
 
-        async fetch({ commit }: ActionContext<State, RootState>) {
-            commit('set', await apiSettings.all());
-        },
+        async fetch({ commit }: ActionContext<State, RootState>): Promise<Settings> {
+            const settings = await apiSettings.all();
+            commit('set', settings);
 
-        reset({ commit }: ActionContext<State, RootState>) {
-            commit('reset');
+            return settings;
         },
     },
 };

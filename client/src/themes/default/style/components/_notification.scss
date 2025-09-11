@@ -28,15 +28,16 @@
         padding: 8px 10px;
         border-radius: $border-radius-normal;
         font-size: 1rem;
+        white-space: pre-line;
 
         &.error {
             // TODO: Revenir à des variables globales.
-            background-color: rgba(#911d0a, 0.7);
+            background-color: rgb(145 29 10 / 70%);
         }
 
         &.success {
             // TODO: Revenir à des variables globales.
-            background-color: rgba(#477000, 0.7);
+            background-color: rgb(71 112 0 / 70%);
         }
 
         .action {

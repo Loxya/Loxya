@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -19,8 +17,7 @@ final class ImprovesSettings extends AbstractMigration
         $prefix = Config::get('db.prefix');
 
         foreach (static::MIGRATION_MAP as $from => $to) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%ssettings', $prefix))
                 ->set('key', $to)
@@ -34,8 +31,7 @@ final class ImprovesSettings extends AbstractMigration
         $prefix = Config::get('db.prefix');
 
         foreach (array_flip(static::MIGRATION_MAP) as $from => $to) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%ssettings', $prefix))
                 ->set('key', $to)

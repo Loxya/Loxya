@@ -1,3 +1,4 @@
+import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
 
 import type { Duration } from '@/utils/datetime';
@@ -20,7 +21,7 @@ export const MIN_ZOOM: Duration = DateTime.duration(1, 'hour');
  * Interval de temps maximum affiché dans le calendrier.
  * (Il ne sera pas possible de dé-zoomer au delà de cette limite)
  */
-export const MAX_ZOOM: Duration = DateTime.duration(30 * 3, 'days');
+export const MAX_ZOOM: Duration = DateTime.duration(config.maxFetchPeriod, 'days');
 
 /**
  * Nom de la clé de local storage dans laquelle sera

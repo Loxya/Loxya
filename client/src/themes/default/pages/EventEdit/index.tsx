@@ -1,10 +1,9 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError, HttpCode } from '@/globals/requester';
 import config, { BillingMode } from '@/globals/config';
-import HttpCode from 'status-code-enum';
 import parseInteger from '@/utils/parseInteger';
 import isTruthy from '@/utils/isTruthy';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
 import apiEvents from '@/stores/api/events';
 import Page from '@/themes/default/components/Page';
@@ -269,16 +268,14 @@ const EventEdit = defineComponent({
                 this.isDirty = false;
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving event #${this.id!} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving event #${this.id!} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             } finally {
                 this.isLoading = false;
             }

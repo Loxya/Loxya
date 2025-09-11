@@ -2,10 +2,10 @@
     <td>{{ material.reference }}</td>
     <td>
         {{ material.name }}
-        {% if material.attributes is not empty %}
+        {% if material.properties is not empty %}
             <br />
-            {% for attribute in material.attributes %}
-                {{ include('blocks/materials/attribute.twig', { attribute }) }}
+            {% for property in material.properties %}
+                {{ include('blocks/materials/property.twig', { property }) }}
             {% endfor %}
         {% endif %}
     </td>

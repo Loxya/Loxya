@@ -5,11 +5,19 @@ namespace Loxya\Tests;
 
 use Adbar\Dot as DotArray;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Carbon;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\BillingMode;
+use Loxya\Config\Enums\ReturnPolicy;
 use Loxya\Contracts\Serializable;
 use Loxya\Errors\Exception\ValidationException;
+use Loxya\Kernel;
+use Loxya\Models\User;
+use Loxya\Services\Auth;
+use Loxya\Services\Cache;
+use Loxya\Support\JWT\JWT;
+use Loxya\Support\Str;
 use Loxya\Tests\Fixtures\Fixtures;
 use PHPUnit\Framework\TestCase as CoreTestCase;
 use Spatie\Snapshots\MatchesSnapshots;
@@ -29,15 +37,40 @@ abstract class TestCase extends CoreTestCase
         } catch (\Throwable $e) {
             $this->fail(sprintf("Unable to reset fixtures: %s", $e->getMessage()));
         }
+
+        Auth\Test::$user = User::findOrFail(1);
     }
 
     protected function tearDown(): void
     {
+        $container = Kernel::get()->getContainer();
+
+        // - Reset des transactions.
+        /** @var Connection $dbConnection */
+        $dbConnection = container('database')->getConnection();
+        $dbDispatcher = $dbConnection->getEventDispatcher();
+        $dbConnection->unsetEventDispatcher();
+        $dbConnection->rollBack();
+        $dbConnection->setEventDispatcher($dbDispatcher);
+        $dbConnection->disconnect();
+
+        // - Reset du cache.
+        $container->get('cache')->clear();
+
+        // - Reset de l'authentification.
+        Auth::reset();
+
+        // - Reset du Kernel.
+        Kernel::reset();
+
+        // - Reset de la configuration.
         Config::deleteCustomConfig();
 
-        if (Carbon::hasTestNow()) {
-            Carbon::setTestNow(null);
-        }
+        // - Reset des helpers.
+        Str::reset();
+
+        // - Reset des dates.
+        static::setNow(null);
 
         parent::tearDown();
     }
@@ -53,6 +86,26 @@ abstract class TestCase extends CoreTestCase
     // -
     // ------------------------------------------------------
 
+    protected static function setNow(\DateTimeInterface|null $now = null): void
+    {
+        if ($now === null) {
+            if (Carbon::hasTestNow()) {
+                Carbon::setTestNow(null);
+            }
+            if (Cache::hasTestNow()) {
+                Cache::setTestNow(null);
+            }
+            if (JWT::hasTestNow()) {
+                JWT::setTestNow(null);
+            }
+            return;
+        }
+
+        Carbon::setTestNow($now);
+        Cache::setTestNow($now);
+        JWT::setTestNow($now);
+    }
+
     protected static function setCustomConfig(array $customValues = []): void
     {
         $config = new DotArray([
@@ -66,6 +119,7 @@ abstract class TestCase extends CoreTestCase
             'httpAuthHeader' => 'Authorization',
             'defaultLang' => 'fr',
             'currency' => 'EUR',
+            'returnPolicy' => ReturnPolicy::AUTO,
             'billingMode' => BillingMode::PARTIAL,
             'maxItemsPerPage' => 100,
             'maxConcurrentFetches' => 2,

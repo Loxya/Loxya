@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Choice } from '..';
 
 /** Taille des choix du switch. */
@@ -35,6 +35,13 @@ type Props = {
 
     /** La taille du choix ({@see {@link SwitchHeroSize}}). */
     size: SwitchHeroSize,
+
+    /**
+     * Fonction appelée lorsqu'un l'élément est sélectionné.
+     *
+     * @param value - La valeur de l'élément.
+     */
+    onSelect?(value: Choice['value']): void,
 };
 
 /** Choix pour le champ de formulaire de type "radio", visuellement amélioré. */
@@ -68,6 +75,11 @@ const SwitchHeroItem = defineComponent({
         selected: {
             type: Boolean as PropType<Props['selected']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSelect: {
+            type: Function as PropType<Props['onSelect']>,
+            default: undefined,
         },
     },
     emits: ['select'],

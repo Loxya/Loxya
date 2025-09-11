@@ -22,7 +22,7 @@ describe('formatBytes', () => {
         expect(formatBytes(1_073_741_823)).toBe('1024 MB');
     });
 
-    it('returns the size in megabytes', () => {
+    it('returns the size in gigabytes', () => {
         expect(formatBytes(1_073_741_824)).toBe('1 GB');
         expect(formatBytes(1_099_511_627_770)).toBe('1024 GB');
     });

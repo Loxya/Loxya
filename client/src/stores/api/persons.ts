@@ -45,7 +45,7 @@ export type Person = SchemaInfer<typeof PersonSchema>;
 
 const all = async (params: ListingParams = {}): Promise<PaginatedData<Person[]>> => {
     const response = await requester.get('/persons', { params });
-    return withPaginationEnvelope(PersonSchema).parse(response.data);
+    return withPaginationEnvelope(PersonSchema).parse(response);
 };
 
 export default { all };

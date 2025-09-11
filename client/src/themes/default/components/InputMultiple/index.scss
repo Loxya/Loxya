@@ -1,0 +1,43 @@
+@use '~@/themes/default/style/globals';
+
+.InputMultiple {
+    $block: &;
+
+    $drag-handle-width: 30px;
+
+    &__list {
+        @extend %reset-list;
+
+        display: flex;
+        flex-direction: column;
+        margin-bottom: globals.$spacing-small;
+        gap: globals.$spacing-small;
+    }
+
+    &__item {
+        display: inline-flex;
+        align-items: center;
+        width: 100%;
+        gap: globals.$spacing-small;
+
+        &__drag-handle {
+            width: $drag-handle-width;
+            text-align: center;
+            cursor: move;
+        }
+
+        &__input {
+            flex: 1;
+        }
+    }
+
+    //
+    // - État: avec drag'n'drop activé.
+    //
+
+    &--with-dragging {
+        #{$block}__add {
+            margin-left: calc(#{$drag-handle-width} + #{globals.$spacing-small});
+        }
+    }
+}

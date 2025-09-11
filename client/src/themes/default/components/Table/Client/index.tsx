@@ -1,7 +1,8 @@
 import '../index.scss';
 import clsx from 'clsx';
+import warning from 'warning';
 import showModal from '@/utils/showModal';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import generateUniqueId from 'lodash/uniqueId';
 import { initColumnsDisplay } from '../@utils';
 import { Variant } from '../@constants';
@@ -10,8 +11,7 @@ import { Variant } from '../@constants';
 import ColumnsSelector from '@/themes/default/modals/ColumnsSelector';
 
 import type { ClassValue } from 'clsx';
-import type { CreateElement } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { CreateElement, PropType } from 'vue';
 import type { Column, Columns } from './_types';
 import type { ColumnsDisplay } from '../@utils';
 import type { OrderBy, RenderFunction } from '../@types';
@@ -20,6 +20,7 @@ import type {
     ClientTableOptions,
     ClientTableInstance,
     RowClickEventPayload,
+    RowDragEventPayload,
 } from 'vue-tables-2-premium';
 
 export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>> = {
@@ -63,11 +64,26 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      */
     variant?: Variant,
 
-    /** Permet d'activer ou de désactiver la pagination. */
+    /**
+     * Permet d'activer ou de désactiver la pagination.
+     *
+     * @default true
+     */
     paginated?: boolean,
 
-    /** Permet d'activer ou de désactiver le redimensionnement du tableau. */
+    /**
+     * Permet d'activer ou de désactiver le redimensionnement du tableau.
+     *
+     * @default true
+     */
     resizable?: boolean,
+
+    /**
+     * Permet d'activer ou de désactiver le réordonnancement des lignes du tableau.
+     *
+     * @default false
+     */
+    orderable?: boolean,
 
     /**
      * L'ordre dans lequel le tableau doit être triée initialement.
@@ -92,6 +108,21 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      *   Vue (cf. ci-dessus).
      */
     rowClass?: ClassValue | ((row: Datum) => ClassValue),
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a cliqué sur une ligne.
+     *
+     * @param row - Données de la ligne cliquée.
+     */
+    onRowClick?(row: Datum): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a réordonné une ligne.
+     *
+     * @param row - Données de la ligne déplacée.
+     * @param newIndex - Nouvel index de la ligne.
+     */
+    onRowDrag?(row: Datum, newIndex: number): void,
 };
 
 type InstanceProperties = {
@@ -139,6 +170,10 @@ const ClientTable = defineComponent({
             type: Boolean as PropType<Required<Props>['resizable']>,
             default: true,
         },
+        orderable: {
+            type: Boolean as PropType<Required<Props>['orderable']>,
+            default: false,
+        },
         defaultOrderBy: {
             type: [Object, String] as PropType<Props['defaultOrderBy']>,
             default: undefined,
@@ -154,8 +189,18 @@ const ClientTable = defineComponent({
             ] as PropType<Props['rowClass']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRowClick: {
+            type: Function as PropType<Props['onRowClick']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRowDrag: {
+            type: Function as PropType<Props['onRowDrag']>,
+            default: undefined,
+        },
     },
-    emits: ['rowClick'],
+    emits: ['rowClick', 'rowDrag'],
     setup: (): InstanceProperties => ({
         uniqueId: undefined,
     }),
@@ -252,6 +297,7 @@ const ClientTable = defineComponent({
                 rowClass,
                 paginated,
                 resizable,
+                orderable,
                 defaultOrderBy,
                 columnsHeadings,
                 columnsClasses,
@@ -264,6 +310,7 @@ const ClientTable = defineComponent({
 
             const options: ClientTableOptions = {
                 uniqueKey,
+                orderable,
                 preserveState: shouldPersistState,
                 saveState: shouldPersistState,
                 sortable: columnsSortable,
@@ -303,6 +350,13 @@ const ClientTable = defineComponent({
         const { $options } = this;
 
         this.uniqueId = generateUniqueId(`${$options.name!}-`);
+
+        warning(
+            !this.orderable || !this.paginated,
+            `Enabling both the \`orderable\` and \`paginated\` props at the same
+            time will cause issues, as the user won't be able to reorder lines
+            beyond the current paginated page.`,
+        );
     },
     methods: {
         // ------------------------------------------------------
@@ -326,6 +380,13 @@ const ClientTable = defineComponent({
             }
 
             this.$emit('rowClick', row);
+        },
+
+        handleRowDrag({ row, newIndex }: RowDragEventPayload) {
+            if (!this.orderable) {
+                return;
+            }
+            this.$emit('rowDrag', row, newIndex);
         },
 
         handleChangeVisibleColumns(newVisibleColumns: string[]) {
@@ -377,6 +438,7 @@ const ClientTable = defineComponent({
             variant,
             columnsKeys,
             options,
+            handleRowDrag,
             handleRowClick,
         } = this;
 
@@ -389,7 +451,8 @@ const ClientTable = defineComponent({
                 columns={columnsKeys}
                 options={options}
                 data={data}
-                onRow-click={handleRowClick}
+                onRowClick={handleRowClick}
+                onRowDrag={handleRowDrag}
             />
         );
     },

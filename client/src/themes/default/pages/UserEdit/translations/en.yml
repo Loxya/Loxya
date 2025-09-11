@@ -4,7 +4,8 @@ title-edit: 'Modify user "{name}"'
 
 help-group: |-
     - "Administration" access gives all rights, including the right to create other users.
-    - "Management" access allows the user to carry out most common operations.
+    - "Supervision" access allows the user to do everything except manage parks, users and software settings.
+    - "Operation" access allows the user to carry out most common operations.
     - "General schedule consultation" access allows the user to consult the schedule.
 
 saved: User saved.

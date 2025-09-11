@@ -1,18 +1,12 @@
 {% extends 'base.twig' %}
 
 {% block head %}
-    {% if env is not same as('development') -%}
-    <link href="{{ client_asset('/css/chunk-vendors.css') }}" rel="preload" as="style">
-    <link href="{{ client_asset('/css/default.css') }}" rel="preload" as="style">
-    {% endif -%}
+    <link href="{{ client_asset('/css/default.css') }}" rel="preload" as="style" />
 
-    <link href="{{ client_asset('/js/chunk-vendors.js') }}" rel="preload" as="script">
-    <link href="{{ client_asset('/js/default.js') }}" rel="preload" as="script">
+    <link href="{{ client_asset('/js/@commons.js') }}" rel="preload" as="script" />
+    <link href="{{ client_asset('/js/default.js') }}" rel="preload" as="script" />
 
-    {% if env is not same as('development') -%}
-    <link href="{{ client_asset('/css/chunk-vendors.css') }}" rel="stylesheet">
-    <link href="{{ client_asset('/css/default.css') }}" rel="stylesheet">
-    {% endif -%}
+    <link href="{{ client_asset('/css/default.css') }}" rel="stylesheet" />
 {% endblock %}
 
 {% block body %}
@@ -36,6 +30,6 @@
         }};
         //]]>
     </script>
-    <script src="{{ client_asset('/js/chunk-vendors.js') }}"></script>
+    <script src="{{ client_asset('/js/@commons.js') }}"></script>
     <script src="{{ client_asset('/js/default.js') }}"></script>
 {% endblock %}

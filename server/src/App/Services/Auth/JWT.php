@@ -4,39 +4,43 @@ declare(strict_types=1);
 namespace Loxya\Services\Auth;
 
 use Carbon\CarbonImmutable;
-use Firebase\JWT\JWT as JWTCore;
-use Firebase\JWT\Key as JWTKey;
-use Illuminate\Support\Str;
 use Loxya\Config\Config;
 use Loxya\Http\Request;
 use Loxya\Models\User;
 use Loxya\Services\Auth\Contracts\AuthenticatorInterface;
+use Loxya\Support\JWT\Token;
+use Loxya\Support\JWT\TokenScope;
+use Loxya\Support\Validation\Validator as V;
+use Respect\Validation\Rules as Rule;
+use Respect\Validation\Rules\KeySet;
 
 final class JWT implements AuthenticatorInterface
 {
+    private const TOKEN_TYPE_USER = 'user';
+
     public function isEnabled(): bool
     {
         return true;
     }
 
-    public function getUser(Request $request): ?User
+    public function getUser(Request $request): User|null
     {
         try {
             $token = $this->fetchToken($request);
-            $decoded = $this->decodeToken($token);
+            $decoded = $this->decodeToken($request, $token);
         } catch (\RuntimeException | \DomainException) {
             return null;
         }
 
-        if (empty($decoded['user']) || !property_exists($decoded['user'], 'id')) {
-            return null;
-        }
-
-        return User::find($decoded['user']->id);
+        return User::find($decoded['sub']);
     }
 
     public function clearPersistentData(): void
     {
+        if (Config::getEnv() === 'test') {
+            return;
+        }
+
         $cookieName = Config::get('auth.cookie');
         $shouldSecureCookie = Config::isSslEnabled();
 
@@ -61,8 +65,7 @@ final class JWT implements AuthenticatorInterface
     private function fetchToken(Request $request): string
     {
         // - Tente de récupérer le token dans les headers HTTP.
-        $headerName = Config::get('httpAuthHeader');
-        $header = $request->getHeaderLine(sprintf('HTTP_%s', strtoupper(Str::snake($headerName))));
+        $header = $request->getNormalizedHeaderLine(Config::get('httpAuthHeader'));
         if (!empty($header)) {
             if (preg_match('/Bearer\s+(.*)$/i', $header, $matches)) {
                 return $matches[1];
@@ -81,14 +84,18 @@ final class JWT implements AuthenticatorInterface
             }
         }
 
-        throw new \RuntimeException("Token introuvable.");
+        throw new \RuntimeException('Token not found.');
     }
 
-    private function decodeToken(string $token): array
+    private function decodeToken(Request $request, string $token): array
     {
-        $key = new JWTKey(Config::get('JWTSecret'), 'HS256');
-        $decoded = JWTCore::decode($token, $key);
-        return (array) $decoded;
+        $schema = V::arrayType()->oneOf(
+            new KeySet(
+                new Rule\Key('type', V::equals(self::TOKEN_TYPE_USER)),
+                new Rule\Key('sub', V::intType()),
+            ),
+        );
+        return Token::decode($request, TokenScope::AUTH, $token, $schema);
     }
 
     // ------------------------------------------------------
@@ -97,24 +104,39 @@ final class JWT implements AuthenticatorInterface
     // -
     // ------------------------------------------------------
 
-    public static function generateToken(User $user): string
+    /**
+     * Génère un JWT signé pour l'utilisateur fourni.
+     *
+     * @param Request  $request La requête HTTP courante.
+     * @param User     $user    L'utilisateur pour lequel générer le token.
+     *
+     * @return string Le token JWT généré.
+     */
+    public static function generateToken(Request $request, User $user): string
     {
-        $now = CarbonImmutable::now();
-        $expires = $now->addHours(Config::get('sessionExpireHours'));
+        $expires = CarbonImmutable::now()->addHours(Config::get('sessionExpireHours'));
 
-        $payload = [
-            'iat' => $now->getTimeStamp(),
-            'exp' => $expires->getTimeStamp(),
-            'user' => $user->toArray(),
-        ];
-
-        $secret = Config::get('JWTSecret');
-        return JWTCore::encode($payload, $secret, 'HS256');
+        return Token::generate($request, TokenScope::AUTH, $expires, [
+            'type' => self::TOKEN_TYPE_USER,
+            'sub' => $user->id,
+        ]);
     }
 
-    public static function registerSessionToken(User $user): string
+    /**
+     * Génère un token JWT et l'enregistre dans un cookie de session.
+     *
+     * @param Request  $request La requête HTTP courante.
+     * @param User     $user    L'utilisateur pour lequel générer et enregistrer le token.
+     *
+     * @return string Le token JWT généré.
+     */
+    public static function registerSessionToken(Request $request, User $user): string
     {
-        $token = static::generateToken($user);
+        $token = static::generateToken($request, $user);
+
+        if (Config::getEnv() === 'test') {
+            return $token;
+        }
 
         $cookieName = Config::get('auth.cookie');
         $shouldSecureCookie = Config::isSslEnabled();

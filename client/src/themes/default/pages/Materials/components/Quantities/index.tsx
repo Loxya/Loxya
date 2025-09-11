@@ -1,7 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { MaterialWithAvailability as Material } from '@/stores/api/materials';
 
 type Props = {

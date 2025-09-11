@@ -14,8 +14,9 @@ use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 
 /**
  * Tarif dégressif.
@@ -39,7 +40,7 @@ final class DegressiveRate extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
         ];
     }
@@ -161,7 +162,7 @@ final class DegressiveRate extends BaseModel implements Serializable
     {
         Assert::boolean($this->exists, "Unable to sync tiers for a non-persisted degressive-rate.");
 
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('from_day'),
             new Rule\Key('is_rate'),
             new Rule\Key('value'),

@@ -46,10 +46,13 @@ actions:
     update-materials: Modifier le matériel de l'événement
 
 confirm-terminate-title: "Voulez-vous vraiment terminer cet inventaire de retour\_?"
-confirm-terminate-text: Veuillez noter qu'il ne sera plus possible de le modifier.
+advanced-options: Options avancées
+specify-return-date-time: Si l'inventaire a déjà été effectué à une date antérieure, vous pouvez la spécifier ci-dessous.
+right-now: Maintenant
+confirm-terminate-text: Veuillez noter qu'il ne sera plus possible de modifier l'inventaire de retour une fois qu'il sera terminé.
 confirm-terminate-text-with-broken:
-    "Ceci aura pour effet de mettre à jour toutes les quantités «\_en panne\_» du
-    matériel concerné, et il ne sera plus possible de modifier cet inventaire."
+    "Veuillez noter que toutes les quantités «\_en panne\_» du matériel concerné seront mises à jour,
+    et qu'il ne sera plus possible de modifier cet inventaire une fois terminé."
 
 put-back-on-hold: Remettre l'inventaire en attente
 put-back-on-hold-and-restore-stock: Remettre l'inventaire en attente et rétablir le stock

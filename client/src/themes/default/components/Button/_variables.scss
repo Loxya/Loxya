@@ -2,14 +2,6 @@
 @use 'sass:color';
 @use 'sass:map';
 
-/// Padding vertical des boutons.
-/// @type Number
-$padding-y: 7px !default;
-
-/// Padding horizontal des boutons.
-/// @type Number
-$padding-x: 10px !default;
-
 /// Marge entre les éléments internes du bouton (texte, icône(s)).
 /// @type Number
 $internal-spacing: globals.$spacing-thin !default;
@@ -26,48 +18,48 @@ $border-radius: globals.$border-radius-normal !default;
 // - Tailles
 //
 
-/// Padding vertical des boutons en version "small".
-/// @type Number
-$small-padding-y: 0.3rem;
+$default-size: (
+    min-height: 34px,
+    padding: 7px 10px,
+    font-size: 1.05rem,
+) !default;
 
-/// Padding horizontal des boutons en version "small".
-/// @type Number
-$small-padding-x: 0.45rem;
+$small-size: (
+    min-height: 26px,
+    padding: 0.35rem 0.45rem,
+    font-size: 0.96rem,
+) !default;
 
-/// Taille de la police des boutons en version "small".
-/// @type Number
-$small-font-size: 0.95rem;
+$large-size: (
+    min-height: 37px,
+    padding: 0.56rem 1.35rem,
+    font-size: 1.2rem,
+) !default;
 
-/// Padding vertical des boutons en version "large".
-/// @type Number
-$large-padding-y: 0.56rem;
-
-/// Padding horizontal des boutons en version "large".
-/// @type Number
-$large-padding-x: 1.35rem;
-
-/// Taille de la police des boutons en version "large".
-/// @type Number
-$large-font-size: 1.2rem;
+$full-width-size: (
+    min-height: 46px,
+    padding: 0.9rem 2rem,
+    font-size: 1.2rem,
+) !default;
 
 //
 // - Default variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $default-variant: (
     color: globals.$color-base-button,
-    background: rgba(255, 255, 255, 0.06),
+    background: rgb(255 255 255 / 6%),
     border-color: transparent,
 
     // - Focused
     focused-color: globals.$color-hover-button,
-    focused-background: rgba(255, 255, 255, 0.15),
+    focused-background: rgb(255 255 255 / 15%),
     focused-border-color: transparent,
 
     // - Active
     active-color: color.adjust(globals.$color-base-button, $lightness: -8%),
-    active-background: rgba(255, 255, 255, 0.03),
+    active-background: rgb(255 255 255 / 3%),
     active-border-color: transparent,
 ) !default;
 
@@ -75,7 +67,7 @@ $default-variant: (
 // - Primary variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $primary-variant: (
     color: #fff,
     background: globals.$primary-color,
@@ -96,7 +88,7 @@ $primary-variant: (
 // - Secondary variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $secondary-variant: (
     color: color.adjust(globals.$primary-color, $saturation: -30%, $lightness: 60%),
     background: color.adjust(globals.$primary-color, $alpha: -0.7),
@@ -117,7 +109,7 @@ $secondary-variant: (
 // - Transparent variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $transparent-variant: (
     color: globals.$color-base-button,
     background: transparent,
@@ -125,7 +117,7 @@ $transparent-variant: (
 
     // - Focused
     focused-color: globals.$color-hover-button,
-    focused-background: rgba(255, 255, 255, 0.06),
+    focused-background: rgb(255 255 255 / 6%),
     focused-border-color: transparent,
 
     // - Active
@@ -138,61 +130,61 @@ $transparent-variant: (
 // - Success variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $success-variant: (
     color: #fff,
-    background: globals.$bg-color-button-success,
-    border-color: globals.$bg-color-button-success,
+    background: globals.$interactive-element-success-background-color,
+    border-color: globals.$interactive-element-success-background-color,
 
     // - Focused
     focused-color: #fff,
-    focused-background: color.adjust(globals.$bg-color-button-success, $lightness: 5%),
-    focused-border-color: color.adjust(globals.$bg-color-button-success, $lightness: 5%),
+    focused-background: color.adjust(globals.$interactive-element-success-background-color, $lightness: 5%),
+    focused-border-color: color.adjust(globals.$interactive-element-success-background-color, $lightness: 5%),
 
     // - Active
     active-color: #fff,
-    active-background: color.adjust(globals.$bg-color-button-success, $lightness: -5%),
-    active-border-color: color.adjust(globals.$bg-color-button-success, $lightness: -5%),
+    active-background: color.adjust(globals.$interactive-element-success-background-color, $lightness: -5%),
+    active-border-color: color.adjust(globals.$interactive-element-success-background-color, $lightness: -5%),
 ) !default;
 
 //
 // - Warning variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $warning-variant: (
     color: #fff,
-    background: #be692d,
-    border-color: #be692d,
+    background: globals.$interactive-element-warning-background-color,
+    border-color: globals.$interactive-element-warning-background-color,
 
     // - Focused
     focused-color: #fff,
-    focused-background: color.adjust(#be692d, $lightness: 8%),
-    focused-border-color: color.adjust(#be692d, $lightness: 8%),
+    focused-background: color.adjust(globals.$interactive-element-warning-background-color, $lightness: 8%),
+    focused-border-color: color.adjust(globals.$interactive-element-warning-background-color, $lightness: 8%),
 
     // - Active
     active-color: #fff,
-    active-background: color.adjust(#be692d, $lightness: 8%),
-    active-border-color: color.adjust(#be692d, $lightness: 8%),
+    active-background: color.adjust(globals.$interactive-element-warning-background-color, $lightness: 8%),
+    active-border-color: color.adjust(globals.$interactive-element-warning-background-color, $lightness: 8%),
 ) !default;
 
 //
 // - Danger variant
 //
 
-// stylelint-disable-next-line value-list-max-empty-lines
+// stylelint-disable-next-line @stylistic/value-list-max-empty-lines
 $danger-variant: (
     color: #fff,
-    background: globals.$bg-color-button-danger,
-    border-color: globals.$bg-color-button-danger,
+    background: globals.$interactive-element-danger-background-color,
+    border-color: globals.$interactive-element-danger-background-color,
 
     // - Focused
     focused-color: #fff,
-    focused-background: color.adjust(globals.$bg-color-button-danger, $lightness: 8%),
-    focused-border-color: color.adjust(globals.$bg-color-button-danger, $lightness: 8%),
+    focused-background: color.adjust(globals.$interactive-element-danger-background-color, $lightness: 8%),
+    focused-border-color: color.adjust(globals.$interactive-element-danger-background-color, $lightness: 8%),
 
     // - Active
     active-color: #fff,
-    active-background: color.adjust(globals.$bg-color-button-danger, $lightness: -8%),
-    active-border-color: color.adjust(globals.$bg-color-button-danger, $lightness: -8%),
+    active-background: color.adjust(globals.$interactive-element-danger-background-color, $lightness: -8%),
+    active-border-color: color.adjust(globals.$interactive-element-danger-background-color, $lightness: -8%),
 ) !default;

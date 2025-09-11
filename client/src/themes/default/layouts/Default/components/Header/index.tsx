@@ -1,9 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Loading from '@/themes/default/components/Loading';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -12,6 +12,17 @@ type Props = {
      * @default false
      */
     showLoading?: boolean,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande
+     * à afficher / cacher le menu.
+     *
+     * @param isOpen - Peut contenir deux types de valeur:
+     *                 - Un booléen indiquant si le menu doit être ouvert ou fermé.
+     *                 - La chaîne `toggle` pour indiquer que l'inverse de l'état actuel
+     *                   doit être activé (e.g. Si actuellement fermé, doit être ouvert).
+     */
+    onToggleMenu?(isOpen: boolean | 'toggle'): void,
 };
 
 /** Header du layout par défaut de l'application. */
@@ -21,6 +32,11 @@ const DefaultLayoutHeader = defineComponent({
         showLoading: {
             type: Boolean as PropType<Props['showLoading']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onToggleMenu: {
+            type: Function as PropType<Props['onToggleMenu']>,
+            default: undefined,
         },
     },
     emits: ['toggleMenu'],

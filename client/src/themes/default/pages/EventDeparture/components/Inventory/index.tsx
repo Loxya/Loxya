@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import DateTime from '@/utils/datetime';
 import Button from '@/themes/default/components/Button';
 import Inventory, {
@@ -8,7 +8,7 @@ import Inventory, {
     InventoryErrorsSchema,
 } from '@/themes/default/components/Inventory';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type {
     EventDetails,
     EventMaterial,
@@ -39,12 +39,18 @@ type Props = {
     errors?: InventoryMaterialError[] | null,
 
     /**
-     * Quand l'inventaire est en "pause", c'est à dire quand il est affiché
-     * mais qu'il ne devrait pas pouvoir être modifié.
+     * Fonction appelée lorsque l'inventaire d'un des matériels a changé.
      *
-     * @default false
+     * @param id - Identifiant du matériel concerné.
+     * @param inventory - Données d'inventaire mises à jour pour ce matériel.
      */
-    paused?: boolean,
+    onChange?(id: AwaitedMaterial['id'], inventory: InventoryMaterialData): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande la
+     * remise en brouillon de l'inventaire.
+     */
+    onRequestCancel?(): void,
 };
 
 type InstanceProperties = {
@@ -52,7 +58,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** L'inventaire de matériel de la page d'inventaire de départ d'événement. */
@@ -79,9 +85,15 @@ const EventDepartureInventory = defineComponent({
             type: Array as PropType<Required<Props>['errors']>,
             default: null,
         },
-        paused: {
-            type: Boolean as PropType<Required<Props>['paused']>,
-            default: false,
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRequestCancel: {
+            type: Function as PropType<Props['onRequestCancel']>,
+            default: undefined,
         },
     },
     emits: ['change', 'requestCancel'],
@@ -89,7 +101,7 @@ const EventDepartureInventory = defineComponent({
         nowTimer: undefined,
     }),
     data: (): Data => ({
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         awaitedMaterials(): Array<AwaitedMaterial<false>> {
@@ -185,7 +197,7 @@ const EventDepartureInventory = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les 10 secondes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 10_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -233,7 +245,6 @@ const EventDepartureInventory = defineComponent({
             awaitedMaterials,
             errors,
             isDone,
-            paused,
             isComplete,
             isCancellable,
             handleChange,
@@ -260,10 +271,9 @@ const EventDepartureInventory = defineComponent({
                     inventory={inventory}
                     materials={awaitedMaterials}
                     displayGroup={displayGroup}
-                    errors={errors}
+                    errors={errors ?? undefined}
                     onChange={handleChange}
                     locked={isDone || [InventoryLock.STATE]}
-                    paused={paused}
                     withComments
                     strict
                 />

@@ -319,6 +319,21 @@ class Period<IsFullDays extends boolean = boolean> {
     }
 
     /**
+     * Retourne l'instance sous forme d'instance de `Duration`
+     *
+     * @returns Une instance de `Duration` équivalente à la durée de la période.
+     */
+    public asDuration(): Duration {
+        const start = this._start.startOfSecond();
+        const end = this._end.format('SSS') !== '000'
+            ? this._end.endOf('millisecond')
+            : this._end;
+
+        const seconds = Math.max(end.diff(start, 'seconds'), 1);
+        return DateTime.duration(seconds, 'seconds');
+    }
+
+    /**
      * Vérifie si la période courante "chevauche" une autre période.
      *
      * @param otherPeriod - L'autre période à comparer.
@@ -471,6 +486,36 @@ class Period<IsFullDays extends boolean = boolean> {
     }
 
     /**
+     * Renvoie une nouvelle période qui commence à la fin de la
+     * période actuelle et se termine à la date donnée.
+     *
+     * @param end - La date de fin de la nouvelle période.
+     *
+     * @returns Une nouvelle période débutant à la fin de celle-ci, jusqu'à `end`.
+     */
+    public tail(end: DateTime | Day): Period {
+        if (this.isFullDays && end instanceof Day) {
+            invariant(
+                (this.end as Day).isBefore(end),
+                'End date must be after the current period end.',
+            );
+            return new Period(this.end as Day, end, true);
+        }
+
+        const normalizedStart = this._end;
+        const normalizedEnd = end instanceof Day
+            ? end.toDateTime().endOfDay(true)
+            : end;
+
+        invariant(
+            normalizedStart.isBefore(normalizedEnd),
+            'End date must be after the current period end.',
+        );
+
+        return new Period(normalizedStart, normalizedEnd, false);
+    }
+
+    /**
      * Permet de récupérer la période sous forme sérialisée.
      *
      * @returns La période sous forme sérialisée.
@@ -581,6 +626,39 @@ class Period<IsFullDays extends boolean = boolean> {
                 return __('from-date-to-date', { from: formattedStart, to: formattedEnd });
             }
         }
+    }
+
+    /**
+     * Retourne une durée lisible en fonction de la période.
+     *
+     * @param translateFn - La fonction de traduction à utiliser pour générer les messages.
+     *
+     * @returns Une chaîne lisible représentant la durée.
+     */
+    public toReadableDuration(translateFn: I18nTranslate): string {
+        const __ = translateFn;
+        const duration = this.asDuration();
+
+        let asDays = duration.asDays();
+        if (asDays >= 2) {
+            asDays = Math.round(asDays);
+            return __('durations.days', { count: asDays }, asDays);
+        }
+
+        let asHours = duration.asHours();
+        if (asHours >= 1) {
+            asHours = Math.round(asHours);
+            return __('durations.hours', { count: asHours }, asHours);
+        }
+
+        let asMinutes = duration.asMinutes();
+        if (asMinutes >= 1) {
+            asMinutes = Math.round(asMinutes);
+            return __('durations.minutes', { count: asMinutes }, asMinutes);
+        }
+
+        const asSeconds = Math.round(Math.max(duration.asSeconds(), 1));
+        return __('durations.seconds', { count: asSeconds }, asSeconds);
     }
 
     /**

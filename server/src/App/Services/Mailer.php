@@ -5,6 +5,7 @@ namespace Loxya\Services;
 
 use GuzzleHttp\Client;
 use Loxya\Config\Config;
+use Loxya\Contracts\Mailable;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
 use Mailjet\Client as MailjetClient;
@@ -16,7 +17,7 @@ use Soundasleep\Html2Text;
 
 final class Mailer
 {
-    private array $mails = [];
+    private array $sent = [];
 
     private ?string $fromEmail;
 
@@ -60,7 +61,7 @@ final class Mailer
         Assert::notEmpty($subject, "The mail subject cannot be empty.");
         Assert::notEmpty($message, "The mail content (message) cannot be empty.");
 
-        $this->mails[] = compact('recipients', 'subject', 'message', 'attachments');
+        $this->sent[] = compact('recipients', 'subject', 'message', 'attachments');
         if (Config::getEnv() === 'test') {
             return;
         }
@@ -78,9 +79,33 @@ final class Mailer
         $this->{$transportMap[$driver]}($recipients, $subject, $message, $attachments);
     }
 
-    public function getSent(): array
+    public function sendMailable(string|array $recipients, Mailable $mailable)
     {
-        return $this->mails;
+        $subject = $mailable->getSubject();
+        $content = $mailable->getContent();
+        $attachments = $mailable->getAttachments();
+
+        $this->send($recipients, $subject, $content, $attachments);
+    }
+
+    /**
+     * @return list<array{ recipients: string[], subject: string, message: string, attachments: array }>
+     */
+    public function getSent(?int $count = null): array
+    {
+        return $this->sent;
+    }
+
+    /**
+     * @return array{ recipients: string[], subject: string, message: string, attachments: array }|null
+     */
+    public function getLastSent(): array|null
+    {
+        $lastSentEmailKey = array_key_last($this->sent);
+        if ($lastSentEmailKey === null) {
+            return null;
+        }
+        return $this->sent[$lastSentEmailKey];
     }
 
     // ------------------------------------------------------
@@ -242,7 +267,7 @@ final class Mailer
 
             if (!empty($attachments)) {
                 foreach ($attachments as $attachment) {
-                    $mail->AddStringAttachment(
+                    $mail->addStringAttachment(
                         $attachment['content'],
                         $attachment['filename'],
                         PHPMailer::ENCODING_BASE64,
@@ -282,7 +307,7 @@ final class Mailer
 
             if (!empty($attachments)) {
                 foreach ($attachments as $attachment) {
-                    $mail->AddStringAttachment(
+                    $mail->addStringAttachment(
                         $attachment['content'],
                         $attachment['filename'],
                         PHPMailer::ENCODING_BASE64,

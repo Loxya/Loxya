@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Color from '@/utils/color';
 import DateTime from '@/utils/datetime';
 import { getLocale } from '@/globals/lang';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import styleObjectToString from 'style-object-to-css-string';
 import { CalendarView } from 'vue-simple-calendar';
 import Button from '../Button';
@@ -11,7 +11,7 @@ import Button from '../Button';
 import type Period from '@/utils/period';
 import type { ClassValue } from 'clsx';
 import type { RawColor } from '@/utils/color';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { CalendarItem as CalendarItemCore } from 'vue-simple-calendar';
 
 export type CalendarItem = {
@@ -26,6 +26,20 @@ export type CalendarItem = {
 type Props = {
     /** Les événements à afficher sur le calendrier. */
     items: CalendarItem[],
+
+    /**
+     * Fonction appelée lorsque l'élément du calendrier a été cliqué.
+     *
+     * @param id - Identifiant de l'élément cliqué.
+     */
+    onClickItem?(id: CalendarItem['id']): void,
+
+    /**
+     * Fonction appelée lorsque l'élément du calendrier a été double-cliqué.
+     *
+     * @param id - Identifiant de l'élément double-cliqué.
+     */
+    onDoubleClickItem?(id: CalendarItem['id']): void,
 };
 
 type InstanceProperties = {
@@ -34,7 +48,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    displayedDate: DateTime,
+    displayedDate: Raw<DateTime>,
 };
 
 /** Un calendrier mensuel. */
@@ -45,6 +59,16 @@ const MonthCalendar = defineComponent({
             type: Array as PropType<Props['items']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClickItem: {
+            type: Function as PropType<Props['onClickItem']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDoubleClickItem: {
+            type: Function as PropType<Props['onDoubleClickItem']>,
+            default: undefined,
+        },
     },
     emits: ['clickItem', 'doubleClickItem'],
     setup: (): InstanceProperties => ({
@@ -52,7 +76,7 @@ const MonthCalendar = defineComponent({
         previouslyClickedItemId: undefined,
     }),
     data: (): Data => ({
-        displayedDate: DateTime.now(),
+        displayedDate: markRaw(DateTime.now()),
     }),
     computed: {
         firstDayOfWeek(): number {
@@ -106,11 +130,11 @@ const MonthCalendar = defineComponent({
     },
     methods: {
         handlePrevMonthClick() {
-            this.displayedDate = this.displayedDate.sub(1, 'month');
+            this.displayedDate = markRaw(this.displayedDate.sub(1, 'month'));
         },
 
         handleNextMonthClick() {
-            this.displayedDate = this.displayedDate.add(1, 'month');
+            this.displayedDate = markRaw(this.displayedDate.add(1, 'month'));
         },
 
         handleClickItem({ originalItem: { id } }: { originalItem: CalendarItemCore }) {

@@ -16,7 +16,7 @@ use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Bénéficiaire / emprunteur.
@@ -68,7 +68,7 @@ final class Beneficiary extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'person_id' => V::custom([$this, 'checkPersonId']),
             'reference' => V::custom([$this, 'checkReference']),
             'company_id' => V::custom([$this, 'checkCompanyId']),
@@ -478,12 +478,6 @@ final class Beneficiary extends BaseModel implements Serializable
     {
         return $this->events->contains($event->id);
     }
-
-    // ------------------------------------------------------
-    // -
-    // -    Méthodes liées à une "entity"
-    // -
-    // ------------------------------------------------------
 
     public function edit(array $data): static
     {

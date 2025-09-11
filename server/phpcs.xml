@@ -3,6 +3,8 @@
     <file>./src</file>
     <file>./tests</file>
 
+    <config name="testVersion" value="8.1-" />
+
     <arg name="basepath" value="." />
     <arg name="extensions" value="php" />
     <arg name="colors" />
@@ -14,6 +16,14 @@
 
         <exclude name="PSR12.Files.FileHeader.SpacingAfterBlock" />
         <exclude name="PSR12.Classes.ClassInstantiation.MissingParentheses" />
+
+        <!-- https://github.com/squizlabs/PHP_CodeSniffer/issues/3291 -->
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine" />
+        <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore" />
+    </rule>
+
+    <rule ref="PHPCompatibility">
+        <exclude name="PHPCompatibility.FunctionUse.ArgumentFunctionsReportCurrentValue" />
     </rule>
 
     <!-- Arrays -->
@@ -37,7 +47,7 @@
     <rule ref="SlevomatCodingStandard.Attributes.AttributeAndTargetSpacing">
         <properties>
             <property name="linesCount" value="0" />
-            <property name="allowOnSameLine" type="boolean" value="false" />
+            <property name="allowOnSameLine" type="boolean" value="true" />
         </properties>
     </rule>
 
@@ -46,7 +56,6 @@
     <rule ref="SlevomatCodingStandard.Classes.TraitUseDeclaration" />
     <rule ref="SlevomatCodingStandard.Classes.DisallowMultiConstantDefinition" />
     <rule ref="SlevomatCodingStandard.Classes.DisallowMultiPropertyDefinition" />
-    <rule ref="SlevomatCodingStandard.Classes.DisallowConstructorPropertyPromotion" />
     <rule ref="SlevomatCodingStandard.Classes.DisallowStringExpressionPropertyFetch" />
     <rule ref="SlevomatCodingStandard.Classes.ClassConstantVisibility">
         <properties>
@@ -239,11 +248,11 @@
             <property name="disallowSimpleSyntax" type="boolean" value="true" />
         </properties>
     </rule>
+    <rule ref="Generic.Strings.UnnecessaryHeredoc" />
 
     <!-- Operators -->
     <rule ref="SlevomatCodingStandard.Operators.DisallowEqualOperators" />
     <rule ref="SlevomatCodingStandard.Operators.RequireCombinedAssignmentOperator" />
-    <rule ref="SlevomatCodingStandard.Operators.DisallowIncrementAndDecrementOperators" />
     <rule ref="SlevomatCodingStandard.Operators.NegationOperatorSpacing">
         <properties>
             <property name="spacesCount" value="0" />
@@ -281,21 +290,24 @@
 
     <!-- TypeHints -->
     <rule ref="SlevomatCodingStandard.TypeHints.LongTypeHints" />
+    <rule ref="SlevomatCodingStandard.TypeHints.ClassConstantTypeHint" />
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHintSpacing" />
     <rule ref="SlevomatCodingStandard.TypeHints.UselessConstantTypeHint" />
     <rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue" />
     <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHintSpacing" />
+    <rule ref="SlevomatCodingStandard.TypeHints.DNFTypeHintFormat">
+        <properties>
+            <property name="withSpacesAroundOperators" type="boolean" value="false" />
+            <property name="withSpacesInsideParentheses" type="boolean" value="false" />
+            <property name="shortNullable" type="boolean" value="true" />
+            <property name="nullPosition" value="last" />
+        </properties>
+    </rule>
     <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
         <properties>
             <property name="linesCountBeforeDeclare" value="0" />
             <property name="linesCountAfterDeclare" value="1" />
             <property name="spacesCountAroundEqualsSign" value="0" />
-        </properties>
-    </rule>
-    <rule ref="SlevomatCodingStandard.TypeHints.UnionTypeHintFormat">
-        <properties>
-            <property name="withSpaces" value="no" />
-            <property name="nullPosition" value="last" />
         </properties>
     </rule>
 
@@ -309,6 +321,7 @@
             <property name="ignoreSpacesInComment" type="boolean" value="true" />
         </properties>
     </rule>
+    <rule ref="Generic.WhiteSpace.HereNowdocIdentifierSpacing" />
 
     <!-- Files -->
     <rule ref="Generic.Files.LineLength">

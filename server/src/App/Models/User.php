@@ -21,7 +21,8 @@ use Loxya\Models\Enums\TechniciansViewMode;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Hash;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Utilisateur de l'application.
@@ -70,6 +71,9 @@ final class User extends BaseModel implements Serializable
     public const SERIALIZE_SETTINGS = 'settings';
     public const SERIALIZE_SESSION = 'session';
 
+    /** Type de session utilisateur lié. */
+    public const SESSION_TYPE = 'user';
+
     // - Champs spécifiques aux settings utilisateur.
     public const SETTINGS_ATTRIBUTES = [
         'language',
@@ -79,27 +83,26 @@ final class User extends BaseModel implements Serializable
         'disable_search_persistence',
     ];
 
+    /**
+     * Indique si certaines validations strictes peuvent être contournées,
+     * notamment pour autoriser des données considérées comme "finales" même
+     * si elles ne respectent pas complètement les contraintes habituelles
+     * (e.g. Mots de passe déjà hashés).
+     */
+    private static bool $allowFinalData = false;
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'pseudo' => V::custom([$this, 'checkPseudo']),
             'email' => V::custom([$this, 'checkEmail']),
             'group' => V::custom([$this, 'checkGroup']),
-            'password' => V::notEmpty()->length(4, 191),
-            'language' => V::nullable(V::anyOf(
-                V::equals('en'),
-                V::equals('fr'),
-            )),
-            'default_bookings_view' => V::nullable(V::anyOf(
-                V::equals(BookingViewMode::CALENDAR->value),
-                V::equals(BookingViewMode::LISTING->value),
-            )),
-            'default_technicians_view' => V::nullable(V::anyOf(
-                V::equals(TechniciansViewMode::LISTING->value),
-                V::equals(TechniciansViewMode::TIMELINE->value),
-            )),
+            'password' => V::custom([$this, 'checkPassword']),
+            'language' => V::nullable(V::in(['en', 'fr'])),
+            'default_bookings_view' => V::nullable(V::enumValue(BookingViewMode::class)),
+            'default_technicians_view' => V::nullable(V::enumValue(TechniciansViewMode::class)),
             'disable_contextual_popovers' => V::nullable(V::boolType()),
             'disable_search_persistence' => V::nullable(V::boolType()),
         ];
@@ -129,15 +132,32 @@ final class User extends BaseModel implements Serializable
         return !$alreadyExists ?: 'user-pseudo-already-in-use';
     }
 
+    public function checkPassword($value)
+    {
+        V::notEmpty()->stringType()->check($value);
+
+        if ($this->exists && !$this->isDirty('password')) {
+            return V::hashed();
+        }
+
+        $rawPasswordRule = V::not(V::hashed())->length(4, 191);
+        if (!static::$allowFinalData) {
+            return $rawPasswordRule;
+        }
+
+        return V::oneOf($rawPasswordRule, V::hashed());
+    }
+
     public function checkGroup($value)
     {
         return V::create()
             ->notEmpty()
-            ->anyOf(
-                V::equals(Group::ADMINISTRATION),
-                V::equals(Group::MANAGEMENT),
-                V::equals(Group::READONLY_PLANNING_GENERAL),
-            )
+            ->in([
+                Group::ADMINISTRATION,
+                Group::SUPERVISION,
+                Group::OPERATION,
+                Group::READONLY_PLANNING_GENERAL,
+            ])
             ->validate($value);
     }
 
@@ -156,7 +176,7 @@ final class User extends BaseModel implements Serializable
             ->withTrashed()
             ->exists();
 
-        return !$alreadyExists ?: 'user-email-already-in-use';
+        return !$alreadyExists ?: 'email-already-in-use';
     }
 
     // ------------------------------------------------------
@@ -364,6 +384,27 @@ final class User extends BaseModel implements Serializable
 
     // ------------------------------------------------------
     // -
+    // -    Overwritten methods
+    // -
+    // ------------------------------------------------------
+
+    public function save(array $options = [])
+    {
+        if ($options['validate'] ?? true) {
+            $this->validate();
+        }
+
+        if (!Hash::isHashed($this->password)) {
+            $this->password = Hash::make($this->password);
+        }
+
+        return parent::save(array_replace($options, [
+            'validate' => false,
+        ]));
+    }
+
+    // ------------------------------------------------------
+    // -
     // -    Query Scopes
     // -
     // ------------------------------------------------------
@@ -414,9 +455,7 @@ final class User extends BaseModel implements Serializable
 
     public function edit(array $data): static
     {
-        if (isset($data['password']) && !empty($data['password'])) {
-            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-        } else {
+        if (empty($data['password'])) {
             unset($data['password']);
         }
 
@@ -463,22 +502,32 @@ final class User extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public static function fromLogin(string $identifier, string $password): User
+    public static function fromLogin(string $identifier, string $password): static
     {
         $user = static::where('email', $identifier)
             ->orWhere('pseudo', $identifier)
             ->firstOrFail();
 
-        if (!password_verify($password, $user->password)) {
+        if (!Hash::check($password, $user->password)) {
             throw new ModelNotFoundException(static::class);
         }
 
         return $user;
     }
 
-    public static function fromEmail(string $email): ?User
+    public static function fromEmail(string $email): ?static
     {
         return static::where('email', $email)->first();
+    }
+
+    public static function newWithFinalData(array $data): static
+    {
+        static::$allowFinalData = true;
+        try {
+            return static::new($data);
+        } finally {
+            static::$allowFinalData = false;
+        }
     }
 
     // ------------------------------------------------------
@@ -512,11 +561,13 @@ final class User extends BaseModel implements Serializable
             'deleted_at',
         ]);
 
-        $data = $data->all();
-
         if ($format === self::SERIALIZE_SESSION) {
-            return $data;
+            return $data
+                ->set('type', self::SESSION_TYPE)
+                ->all();
         }
+
+        $data = $data->all();
 
         if ($format === self::SERIALIZE_SUMMARY) {
             return Arr::only($data, ['id', 'full_name', 'email']);

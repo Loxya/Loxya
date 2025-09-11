@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 use Brick\Math\BigDecimal as Decimal;
 use Brick\Math\RoundingMode;
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Loxya\Services\I18n;
 use Loxya\Support\Period;
@@ -113,8 +111,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
                 ]);
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sreservation_materials', $prefix))
                 ->set('name', $datum['name'])
@@ -151,8 +148,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
             ->removeColumn('vat_rate')
             ->update();
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sreservations', $prefix))
             ->set('global_discount_rate', 0)
@@ -226,15 +222,13 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
             ])
             ->update();
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevents', $prefix))
             ->set('currency', Config::get('currency'))
             ->execute();
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevents', $prefix))
             ->set('global_discount_rate', 0)
@@ -341,13 +335,13 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
                     $function = preg_replace('/daysCount/', (string) $durationDays, $existingDegressiveRateFunction);
                     eval(sprintf('$result = %s;', $function)); // phpcs:ignore Squiz.PHP.Eval
                 }
+                /** @var mixed $result */
 
-                $degressiveRate = (string) Decimal::of($result && is_numeric($result) ? $result : $durationDays)
+                $degressiveRate = (string) Decimal::of(is_numeric($result) && $result > 0 ? $result : $durationDays)
                     ->toScale(2, RoundingMode::UNNECESSARY);
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_materials', $prefix))
                 ->set('name', $datum['name'])
@@ -481,8 +475,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
                 ]);
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sinvoices', $prefix))
                 ->set('is_legacy', true)
@@ -572,8 +565,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
                     ->toScale(2, RoundingMode::UNNECESSARY);
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sinvoice_materials', $prefix))
                 ->set('discount_rate', 0)
@@ -703,8 +695,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
                 ]);
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimates', $prefix))
                 ->set('is_legacy', true)
@@ -794,8 +785,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
                     ->toScale(2, RoundingMode::UNNECESSARY);
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimate_materials', $prefix))
                 ->set('discount_rate', 0)
@@ -1066,8 +1056,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
             ->update();
 
         foreach ($reservationsData as $id => $datum) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sreservations', $prefix))
                 ->set('degressive_rate', $datum['degressive_rate'])
@@ -1162,8 +1151,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
             ->update();
 
         foreach ($invoicesData as $id => $datum) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sinvoices', $prefix))
                 ->set('vat_rate', $datum['vat_rate'])
@@ -1257,8 +1245,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
             ->update();
 
         foreach ($estimatesData as $id => $datum) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimates', $prefix))
                 ->set('vat_rate', $datum['vat_rate'])

@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\BillingMode;
 use Phinx\Migration\AbstractMigration;
@@ -18,8 +16,7 @@ final class ResetEventsIsBillableWhenNoBilling extends AbstractMigration
 
         $prefix = Config::get('db.prefix');
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevents', $prefix))
             ->set(['is_billable' => '0'])

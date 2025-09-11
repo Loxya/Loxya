@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Page from '@/themes/default/components/Page';
 import Sidebar from './components/Sidebar';
 

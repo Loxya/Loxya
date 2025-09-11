@@ -17,7 +17,7 @@ use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Parc de matériel.
@@ -57,7 +57,7 @@ final class Park extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
             'street' => V::optional(V::length(null, 191)),
             'postal_code' => V::optional(V::length(null, 10)),
@@ -181,7 +181,7 @@ final class Park extends BaseModel implements Serializable
             $ongoingBooking->materials->some(
                 fn (EventMaterial $bookingMaterial) => (
                     $bookingMaterial->material->park_id === $this->id
-                )
+                ),
             )
         ));
     }

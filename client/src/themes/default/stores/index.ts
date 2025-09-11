@@ -1,7 +1,6 @@
 import globalStores from '@/stores';
 import parksStore from './parks';
 import categoriesStore from './categories';
-import countriesStore from './countries';
 import tagsStore from './tags';
 import degressiveRatesStore from './degressive-rates';
 import taxesStore from './taxes';
@@ -12,7 +11,6 @@ export default {
     ...globalStores,
     parks: parksStore,
     categories: categoriesStore,
-    countries: countriesStore,
     tags: tagsStore,
     degressiveRates: degressiveRatesStore,
     taxes: taxesStore,

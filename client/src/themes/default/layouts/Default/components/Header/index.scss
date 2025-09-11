@@ -11,10 +11,10 @@
     &__menu-toggle {
         flex: 0 0 auto;
         display: flex;
+        align-self: stretch;
         align-items: center;
         padding: 0 1.5rem;
         cursor: pointer;
-        align-self: stretch;
 
         > .Icon {
             font-size: 1.5rem;

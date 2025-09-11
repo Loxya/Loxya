@@ -92,7 +92,7 @@
     // - Responsive
     //
 
-    @media (min-width: 1600px) {
+    @media (width >= 1600px) {
         &__item {
             &__cell {
                 &--unit-price {

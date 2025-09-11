@@ -1,5 +1,4 @@
 import './index.scss';
-import axios from 'axios';
 import isEqual from 'lodash/isEqual';
 import Period, { PeriodReadableFormat } from '@/utils/period';
 import DateTime from '@/utils/datetime';
@@ -8,9 +7,10 @@ import showModal from '@/utils/showModal';
 import apiEvents from '@/stores/api/events';
 import mergeDifference from '@/utils/mergeDifference';
 import apiTechnicians from '@/stores/api/technicians';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import stringIncludes from '@/utils/stringIncludes';
 import { ApiErrorCode } from '@/stores/api/@codes';
+import { RequestError } from '@/globals/requester';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import Timeline from '@/themes/default/components/Timeline';
@@ -25,7 +25,7 @@ import AssignmentEdition from './modals/AssignmentEdition';
 
 import type { Role } from '@/stores/api/roles';
 import type { Filters } from './components/Filters';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { TechnicianWithEvents, TechnicianEvent } from '@/stores/api/technicians';
 import type {
     EventDetails,
@@ -321,20 +321,18 @@ const EventEditStepTechnicians = defineComponent({
                 this.isLoading = false;
                 finish(false);
 
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the company`, error);
-                    this.$toasted.error(__('errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        if (details.period !== undefined) {
-                            this.$toasted.error(details.period);
-                        }
-                    } else {
-                        this.$toasted.error(__('errors.unexpected-while-saving'));
-                    }
+                if (
+                    error instanceof RequestError &&
+                    error.code === ApiErrorCode.VALIDATION_FAILED &&
+                    error.details?.period !== undefined
+                ) {
+                    this.$toasted.error(error.details.period);
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the company`, error);
+                this.$toasted.error(__('errors.unexpected-while-saving'));
             }
         },
 

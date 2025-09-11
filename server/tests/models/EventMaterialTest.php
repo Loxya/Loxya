@@ -11,7 +11,7 @@ final class EventMaterialTest extends TestCase
 {
     public function testQuantityDeparted(): void
     {
-        Carbon::setTestNow(Carbon::create(2018, 12, 17, 12, 40, 0));
+        static::setNow(Carbon::create(2018, 12, 17, 12, 40, 0));
 
         // - Quantité: 15 / Quantité partie: 10
         /** @var EventMaterial $eventMaterial */

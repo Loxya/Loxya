@@ -1,37 +1,50 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import TabButton from './TabButton';
 import Tab from './Tab';
 
-import type { VNode } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 export type TabChangeEvent = {
-    /** L'index du tab qui est sur le point d'être sélectionné. */
+    /** L'index de l'onglet qui est sur le point d'être sélectionné. */
     index: number,
 
-    /** L'index du tab précédemment sélectionné. */
+    /** L'index de l'onglet précédemment sélectionné. */
     prevIndex: number,
 
     /** Permet d'annuler le comportement par défaut: Le changement de tab. */
     preventDefault(): void,
 
     /**
-     * Permet d’exécuter le changement de tab manuellement si le
+     * Permet d'exécuter le changement de tab manuellement si le
      * comportement automatique a été précédemment annulé.
      */
     executeDefault(): void,
 };
 
 type Props = {
-    /** L'index du tab sélectionné par défaut. */
+    /** L'index de l'onglet sélectionné par défaut. */
     defaultIndex?: number,
 
     /**
      * Les actions contextuelles à afficher, sous la forme d'un tableau d'éléments. *
      * (e.g. `[<a>1</a>, <a>2</a>]`)
      */
-    actions?: VNode[],
+    actions?: JSX.Element[],
+
+    /**
+     * Fonction appelée lorsque l'onglet est sur le point de changer.
+     *
+     * @param event - L'événement lié, voir {@link TabChangeEvent}.
+     */
+    onChange?(event: TabChangeEvent): void,
+
+    /**
+     * Fonction appelée lorsque l'onglet sélectionné a changé.
+     *
+     * @param index - L'index du nouvel onglet sélectionné.
+     */
+    onChanged?(index: number): void,
 };
 
 type Data = {
@@ -48,6 +61,16 @@ const Tabs = defineComponent({
         },
         actions: {
             type: Array as PropType<Props['actions']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChanged: {
+            type: Function as PropType<Props['onChanged']>,
             default: undefined,
         },
     },
@@ -98,14 +121,15 @@ const Tabs = defineComponent({
 
         // - Ceci ne peut pas être placé dans un computed, car sinon
         // on perd la réactivité du contenu du panel.
-        const tabs = this.$slots.default!.filter((tab: VNode) => (
+        const tabs = this.$slots.default!.filter((tab: JSX.Element) => (
             (tab.componentOptions!.Ctor as any).extendOptions.name === 'Tab'
         ));
 
         return (
             <div class="Tabs">
                 <ul class="Tabs__header" role="tablist">
-                    {tabs.map((tab: VNode, index: number) => (
+                    {tabs.map((tab: JSX.Element, index: number) => (
+                        // @ts-expect-error Le prop spreading n'est pas correctement typé par Vue.
                         <TabButton
                             {...{ props: tab.componentOptions!.propsData }}
                             active={selectedIndex === index}

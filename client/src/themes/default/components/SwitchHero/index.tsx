@@ -1,10 +1,10 @@
 import './index.scss';
 import { z } from '@/utils/validation';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import SwitchHeroItem, { SwitchHeroSize } from './Item';
 
 import type { SchemaInfer } from '@/utils/validation';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 const ChoiceSchema = z.strictObject({
     /** La valeur de l'option du switch. */
@@ -40,6 +40,20 @@ type Props<T extends Choices = Choices> = {
      * @default SwitchHeroSize.DEFAULT
      */
     size?: SwitchHeroSize,
+
+    /**
+     * Fonction appelée lorsque la valeur du switch change.
+     *
+     * @param newValue - La nouvelle valeur du switch.
+     */
+    onInput?(newValue: T[number]['value']): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du switch change.
+     *
+     * @param newValue - La nouvelle valeur du switch.
+     */
+    onChange?(newValue: T[number]['value']): void,
 };
 
 /** Un champ de formulaire de type "radiogroup" visuellement amélioré. */
@@ -61,6 +75,16 @@ const SwitchHero = defineComponent({
         size: {
             type: String as PropType<Required<Props>['size']>,
             default: SwitchHeroSize.DEFAULT,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['input', 'change'],

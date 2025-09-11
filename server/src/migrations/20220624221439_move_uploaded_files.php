@@ -1,12 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
-use Cake\Database\Query\SelectQuery;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
-use Loxya\Support\Filesystem\FilesystemFactory;
+use Loxya\Support\Storage\StorageFactory;
 use Loxya\Support\Str;
 use Phinx\Migration\AbstractMigration;
 
@@ -20,23 +16,22 @@ final class MoveUploadedFiles extends AbstractMigration
 
         $prefix = Config::get('db.prefix');
         $rootOldDirectory = sprintf('_old-%s', date('YmdHis'));
-        $fs = FilesystemFactory::createLocalDriver([
+        $storage = StorageFactory::createLocalDriver([
             'root' => DATA_FOLDER . DS . 'materials',
         ]);
 
         // - Déplace les anciens dossiers vers un dossier `_old`.
-        $oldDirectories = $fs->directories();
+        $oldDirectories = $storage->directories();
         foreach ($oldDirectories as $oldDirectory) {
-            $fs->move($oldDirectory, $rootOldDirectory . DS . $oldDirectory);
+            $storage->move($oldDirectory, $rootOldDirectory . DS . $oldDirectory);
         }
 
         // - Crée les nouveaux dossiers pour les images et documents du matériel.
-        $fs->createDirectory('picture');
-        $fs->createDirectory('documents');
+        $storage->createDirectory('picture');
+        $storage->createDirectory('documents');
 
         // - Récupère les images utilisées et les transferts dans le bon dossier.
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $materials = $qb
             ->select(['id', 'picture'])
             ->from(sprintf('%smaterials', $prefix))
@@ -45,17 +40,16 @@ final class MoveUploadedFiles extends AbstractMigration
 
         if (!empty($materials)) {
             foreach ($materials as $material) {
-                /** @var UpdateQuery $qb */
-                $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+                $qb = $this->getUpdateBuilder();
                 $qb
                     ->update(sprintf('%smaterials', $prefix))
                     ->where(['id' => $material['id']]);
 
                 $oldPath = $rootOldDirectory . DS . $material['id'] . DS . $material['picture'];
-                if ($fs->fileExists($oldPath)) {
+                if ($storage->fileExists($oldPath)) {
                     $extension = pathinfo($material['picture'], PATHINFO_EXTENSION);
                     $filename = sprintf('%s.%s', (string) Str::uuid(), $extension);
-                    $fs->copy($oldPath, 'picture' . DS . $filename);
+                    $storage->copy($oldPath, 'picture' . DS . $filename);
                     $qb->set('picture', $filename);
                 } else {
                     $qb->set('picture', null);
@@ -66,8 +60,7 @@ final class MoveUploadedFiles extends AbstractMigration
         }
 
         // - Récupère les documents utilisés et les transferts dans le bon dossier.
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $documents = $qb
             ->select(['id', 'material_id', 'name'])
             ->from(sprintf('%sdocuments', $prefix))
@@ -76,11 +69,10 @@ final class MoveUploadedFiles extends AbstractMigration
         if (!empty($documents)) {
             foreach ($documents as $document) {
                 $oldPath = $rootOldDirectory . DS . $document['material_id'] . DS . $document['name'];
-                if ($fs->fileExists($oldPath)) {
-                    $fs->copy($oldPath, 'documents' . DS . $document['material_id'] . DS . $document['name']);
+                if ($storage->fileExists($oldPath)) {
+                    $storage->copy($oldPath, 'documents' . DS . $document['material_id'] . DS . $document['name']);
                 } else {
-                    /** @var DeleteQuery $qb */
-                    $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+                    $qb = $this->getDeleteBuilder();
                     $qb
                         ->delete(sprintf('%sdocuments', $prefix))
                         ->where(['id' => $document['id']])
@@ -98,19 +90,18 @@ final class MoveUploadedFiles extends AbstractMigration
 
         $prefix = Config::get('db.prefix');
         $rootOldDirectory = sprintf('_old-%s', date('YmdHis'));
-        $fs = FilesystemFactory::createLocalDriver([
+        $storage = StorageFactory::createLocalDriver([
             'root' => DATA_FOLDER . DS . 'materials',
         ]);
 
         // - Déplace les anciens dossiers vers un dossier `_old`.
-        $oldDirectories = $fs->directories();
+        $oldDirectories = $storage->directories();
         foreach ($oldDirectories as $oldDirectory) {
-            $fs->move($oldDirectory, $rootOldDirectory . DS . $oldDirectory);
+            $storage->move($oldDirectory, $rootOldDirectory . DS . $oldDirectory);
         }
 
         // - Récupère les images utilisées et les transferts dans le bon dossier.
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $materials = $qb
             ->select(['id', 'picture'])
             ->from(sprintf('%smaterials', $prefix))
@@ -120,11 +111,10 @@ final class MoveUploadedFiles extends AbstractMigration
         if (!empty($materials)) {
             foreach ($materials as $material) {
                 $oldPath = $rootOldDirectory . DS . 'picture' . DS . $material['picture'];
-                if ($fs->fileExists($oldPath)) {
-                    $fs->copy($oldPath, $material['id'] . DS . $material['picture']);
+                if ($storage->fileExists($oldPath)) {
+                    $storage->copy($oldPath, $material['id'] . DS . $material['picture']);
                 } else {
-                    /** @var UpdateQuery $qb */
-                    $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+                    $qb = $this->getUpdateBuilder();
                     $qb
                         ->update(sprintf('%smaterials', $prefix))
                         ->set('picture', null)
@@ -135,8 +125,7 @@ final class MoveUploadedFiles extends AbstractMigration
         }
 
         // - Récupère les documents utilisés et les transferts dans le bon dossier.
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $documents = $qb
             ->select(['id', 'material_id', 'name'])
             ->from(sprintf('%sdocuments', $prefix))
@@ -146,11 +135,10 @@ final class MoveUploadedFiles extends AbstractMigration
             foreach ($documents as $document) {
                 // phpcs:ignore Generic.Files.LineLength
                 $oldPath = $rootOldDirectory . DS . 'documents' . DS . $document['material_id'] . DS . $document['name'];
-                if ($fs->fileExists($oldPath)) {
-                    $fs->copy($oldPath, $document['material_id'] . DS . $document['name']);
+                if ($storage->fileExists($oldPath)) {
+                    $storage->copy($oldPath, $document['material_id'] . DS . $document['name']);
                 } else {
-                    /** @var DeleteQuery $qb */
-                    $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+                    $qb = $this->getDeleteBuilder();
                     $qb
                         ->delete(sprintf('%sdocuments', $prefix))
                         ->where(['id' => $document['id']])

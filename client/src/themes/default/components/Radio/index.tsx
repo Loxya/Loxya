@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import generateUniqueId from 'lodash/uniqueId';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Option = {
     /** Le libellé qui sera affiché pour cette option. */
@@ -33,7 +33,7 @@ type Props = {
     /**
      * Valeur actuellement sélectionnée.
      *
-     * Si `null` est passé, aucun valeur ne sera sélectionnée.
+     * Si `null` est passé, aucune valeur ne sera sélectionnée.
      */
     value: string | null,
 
@@ -42,6 +42,20 @@ type Props = {
 
     /** Le champ doit-il être marqué comme invalide ? */
     invalid?: boolean,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onInput?(newValue: string): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onChange?(newValue: string): void,
 };
 
 type InstanceProperties = {
@@ -56,8 +70,8 @@ type Data = {
 const Radio = defineComponent({
     name: 'Radio',
     inject: {
-        'input.invalid': { default: { value: false } },
-        'input.disabled': { default: { value: false } },
+        'input.invalid': { default: false },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -95,6 +109,16 @@ const Radio = defineComponent({
             type: Boolean as PropType<Props['invalid']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change'],
     setup: (): InstanceProperties => ({
@@ -111,7 +135,7 @@ const Radio = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'].value;
+            return this['input.invalid'];
         },
 
         inheritedDisabled(): boolean {
@@ -121,7 +145,7 @@ const Radio = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
     },
     created() {
@@ -130,7 +154,7 @@ const Radio = defineComponent({
         this.uniqueId = generateUniqueId(`${$options.name!}-`);
     },
     methods: {
-        handleSelect(event: PointerEvent) {
+        handleSelect(event: MouseEvent) {
             this.$forceRerender();
 
             if (this.inheritedDisabled) {

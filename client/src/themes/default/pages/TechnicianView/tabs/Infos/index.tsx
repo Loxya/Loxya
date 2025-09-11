@@ -1,9 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import { Group } from '@/stores/api/groups';
-import Button from '@/themes/default/components/Button';
+import { defineComponent } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { GroupDetails } from '@/stores/api/groups';
 import type { TechnicianDetails } from '@/stores/api/technicians';
 import type { Role } from '@/stores/api/roles';
@@ -40,10 +38,6 @@ const TechnicianViewInfos = defineComponent({
             }
             return this.$store.getters['groups/get'](user.group);
         },
-
-        isAdmin(): boolean {
-            return this.$store.getters['auth/is'](Group.ADMINISTRATION);
-        },
     },
     mounted() {
         this.$store.dispatch('groups/fetch');
@@ -58,7 +52,7 @@ const TechnicianViewInfos = defineComponent({
         },
     },
     render() {
-        const { __, completeName, email, userGroup, isAdmin } = this;
+        const { __, completeName, email, userGroup } = this;
         const {
             phone,
             country,
@@ -137,15 +131,6 @@ const TechnicianViewInfos = defineComponent({
                                     </span>
                                     {userGroup !== null && (
                                         <span class="TechnicianViewInfos__user-group">({userGroup.name})</span>
-                                    )}
-                                    {isAdmin && (
-                                        <Button
-                                            type="transparent"
-                                            icon="edit"
-                                            to={{ name: 'edit-user', params: { id: user.id } }}
-                                            tooltip={__('modify-associated-user')}
-                                            class="TechnicianViewInfos__user-edit-button"
-                                        />
                                     )}
                                 </dd>
                             </dl>

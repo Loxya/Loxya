@@ -1,25 +1,28 @@
 import './index.scss';
+import pick from 'lodash/pick';
 import Period from '@/utils/period';
 import upperFirst from 'lodash/upperFirst';
-import { defineComponent } from '@vue/composition-api';
-import axios from 'axios';
-import HttpCode from 'status-code-enum';
-import pick from 'lodash/pick';
+import { defineComponent, markRaw } from 'vue';
+import { RequestError, HttpCode } from '@/globals/requester';
 import config, { BillingMode } from '@/globals/config';
+import { BookingEntity } from '@/stores/api/bookings';
 import { ApiErrorCode } from '@/stores/api/@codes';
+import { Group } from '@/stores/api/groups';
 import apiEvents from '@/stores/api/events';
 import Alert from '@/themes/default/components/Alert';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
 import Fieldset from '@/themes/default/components/Fieldset';
-import Color from '@/utils/color';
-import getCSSProperty from '@/utils/getCSSProperty';
 import ManagerSelect from './ManagerSelect';
+import getBookingColor, {
+    BookingColorReason,
+    getDefaultBookingColor,
+} from '@/utils/getBookingColor';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type { User } from '@/stores/api/users';
 import type { EventDetails, EventEdit, EventTechnician } from '@/stores/api/events';
+import type { BookingColorWithDefault } from '@/utils/getBookingColor';
 
 type Props = {
     /**
@@ -30,7 +33,7 @@ type Props = {
     event: EventDetails | null,
 };
 
-type Edited = Pick<EventEdit, (
+type EditedData = Pick<EventEdit, (
     | 'title'
     | 'operation_period'
     | 'mobilization_period'
@@ -43,13 +46,13 @@ type Edited = Pick<EventEdit, (
 )>;
 
 type Data = {
-    data: Edited,
+    data: EditedData,
     shouldSyncPeriods: boolean,
     validationErrors: Record<string, string> | null,
     operationPeriodIsFullDays: boolean,
 };
 
-const DEFAULT_VALUES: Edited = Object.freeze({
+const DEFAULT_VALUES: EditedData = Object.freeze({
     title: '',
     operation_period: null,
     mobilization_period: null,
@@ -61,7 +64,7 @@ const DEFAULT_VALUES: Edited = Object.freeze({
     is_confirmed: false,
 });
 
-const hasDirtyData = (savedData: EventDetails | null, pendingData: Edited): boolean => (
+const hasDirtyData = (savedData: EventDetails | null, pendingData: EditedData): boolean => (
     savedData === null ||
     pendingData.title !== savedData.title ||
     pendingData.is_confirmed !== savedData.is_confirmed ||
@@ -104,7 +107,7 @@ const EventEditStepInfos = defineComponent({
         } catch {
             // -
         }
-        const data: Edited = {
+        const data: EditedData = {
             ...DEFAULT_VALUES,
             operation_period: defaultOperationPeriod,
             ...pick(this.event ?? {}, Object.keys(DEFAULT_VALUES)),
@@ -124,8 +127,9 @@ const EventEditStepInfos = defineComponent({
             )
         );
         if (canSyncPeriods && shouldSyncPeriods) {
-            data.mobilization_period = data.operation_period
-                ?.setFullDays(false) ?? null;
+            data.mobilization_period = data.operation_period !== null
+                ? markRaw(data.operation_period.setFullDays(false))
+                : null;
         }
 
         return {
@@ -142,6 +146,13 @@ const EventEditStepInfos = defineComponent({
             return this.event === null;
         },
 
+        canAssignManager(): boolean {
+            return this.$store.getters['auth/is']([
+                Group.ADMINISTRATION,
+                Group.SUPERVISION,
+            ]);
+        },
+
         isTechniciansEnabled(): boolean {
             return config.features.technicians;
         },
@@ -154,11 +165,12 @@ const EventEditStepInfos = defineComponent({
             return this.data.operation_period?.asDays();
         },
 
-        defaultColor(): Color | null {
-            const defaultRawColor = getCSSProperty('calendar-event-default-color');
-            return defaultRawColor && Color.isValid(defaultRawColor)
-                ? new Color(defaultRawColor)
-                : null;
+        colorDetails(): BookingColorWithDefault {
+            const { event, data: { color: forcedColor } } = this;
+
+            return event !== null
+                ? getBookingColor({ ...event, entity: BookingEntity.EVENT, color: forcedColor }, true)
+                : { reason: BookingColorReason.DEFAULT, value: getDefaultBookingColor() };
         },
 
         hasTechnicians(): boolean {
@@ -327,11 +339,13 @@ const EventEditStepInfos = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleOperationPeriodChange(operationPeriod: Period | null, isFullDays: boolean) {
+        handleOperationPeriodChange(operationPeriod: Raw<Period> | null, isFullDays: boolean) {
             this.operationPeriodIsFullDays = isFullDays;
 
             if (this.canSyncPeriods && this.shouldSyncPeriods) {
-                this.data.mobilization_period = operationPeriod?.setFullDays(false) ?? null;
+                this.data.mobilization_period = operationPeriod !== null
+                    ? markRaw(operationPeriod.setFullDays(false))
+                    : null;
             }
 
             const hasChanges = hasDirtyData(this.event, this.data);
@@ -346,8 +360,9 @@ const EventEditStepInfos = defineComponent({
             this.shouldSyncPeriods = shouldSync;
 
             if (shouldSync) {
-                this.data.mobilization_period = this.data.operation_period
-                    ?.setFullDays(false) ?? null;
+                this.data.mobilization_period = this.data.operation_period !== null
+                    ? markRaw(this.data.operation_period.setFullDays(false))
+                    : null;
             }
         },
 
@@ -410,26 +425,16 @@ const EventEditStepInfos = defineComponent({
                 const { __ } = this;
 
                 let errorMessage = __('global.errors.unexpected-while-saving');
-                if (axios.isAxiosError(error)) {
-                    const { status, data } = error.response! || {
-                        status: HttpCode.ServerErrorInternal,
-                        data: undefined,
-                    };
-                    const { code, details } = data?.error || {
-                        code: ApiErrorCode.UNKNOWN,
-                        details: {},
-                    };
-
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
+                if (error instanceof RequestError) {
+                    if (error.code === ApiErrorCode.VALIDATION_FAILED) {
+                        this.validationErrors = { ...error.details };
                         errorMessage = __('global.errors.validation');
-                    } else if (status === HttpCode.ClientErrorNotFound) {
+                    } else if (error.httpCode === HttpCode.NotFound) {
                         errorMessage = __('global.errors.record-not-found');
-                    } else if (status === HttpCode.ClientErrorConflict) {
+                    } else if (error.httpCode === HttpCode.Conflict) {
                         errorMessage = __('global.errors.already-exists');
                     }
                 }
-
                 this.$toasted.error(errorMessage);
             } finally {
                 this.$emit('stopLoading');
@@ -454,10 +459,11 @@ const EventEditStepInfos = defineComponent({
             event,
             duration,
             data,
-            defaultColor,
+            colorDetails,
             canSyncPeriods,
             shouldSyncPeriods,
             allowBillingToggling,
+            canAssignManager,
             isReturnInventoryDone,
             isDepartureInventoryDone,
             operationPeriodIsFullDays,
@@ -586,18 +592,20 @@ const EventEditStepInfos = defineComponent({
                         error={validationErrors?.description}
                     />
                     <div class="EventEditStepInfos__roles">
-                        <FormField
-                            type="custom"
-                            label={__('project-manager.label')}
-                            help={__('project-manager.help')}
-                            class="EventEditStepInfos__roles__item"
-                            error={validationErrors?.manager_id}
-                        >
-                            <ManagerSelect
-                                defaultValue={event?.manager ?? null}
-                                onChange={handleChangeManager}
-                            />
-                        </FormField>
+                        {canAssignManager && (
+                            <FormField
+                                type="custom"
+                                label={__('project-manager.label')}
+                                help={__('project-manager.help')}
+                                class="EventEditStepInfos__roles__item"
+                                error={validationErrors?.manager_id}
+                            >
+                                <ManagerSelect
+                                    defaultValue={event?.manager ?? null}
+                                    onChange={handleChangeManager}
+                                />
+                            </FormField>
+                        )}
                     </div>
                     {allowBillingToggling && (
                         <div class="EventEditStepInfos__is-billable">
@@ -623,7 +631,25 @@ const EventEditStepInfos = defineComponent({
                         type="color"
                         v-model={data.color}
                         class="EventEditStepInfos__color"
-                        placeholder={defaultColor?.toHexString()}
+                        help={((): string | undefined => {
+                            // - Dans le cas ou c'est défini au niveau du booking (= ici donc), on ne met
+                            //   pas de placeholder + aide avec cette couleur vu que c'est censé être la
+                            //   valeur du champ.
+                            if (data.color !== null || colorDetails.reason === BookingColorReason.BOOKING_DEFINED) {
+                                return undefined;
+                            }
+
+                            return __('color-on-calendar.help.default');
+                        })()}
+                        placeholder={((): string | undefined => {
+                            // - Dans le cas ou c'est défini au niveau du booking (= ici donc), on ne met
+                            //   pas de placeholder + aide avec cette couleur vu que c'est censé être la
+                            //   valeur du champ.
+                            if (data.color !== null || colorDetails.reason === BookingColorReason.BOOKING_DEFINED) {
+                                return undefined;
+                            }
+                            return colorDetails.value?.toHexString();
+                        })()}
                         onChange={handleChange}
                         error={validationErrors?.color}
                     />

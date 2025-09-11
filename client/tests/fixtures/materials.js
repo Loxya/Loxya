@@ -1,7 +1,7 @@
 import { dataFactory } from './@utils';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
-import attributes from './attributes';
+import properties from './properties';
 import tags from './tags';
 
 const data = [
@@ -29,10 +29,10 @@ const data = [
         is_deleted: false,
         picture: 'http://loxya.test/materials/1/picture',
         note: null,
-        attributes: [
-            { ...attributes.default(1), value: 36.5 },
-            { ...attributes.default(2), value: 'Grise' },
-            { ...attributes.default(3), value: 850 },
+        properties: [
+            { ...properties.default(2), value: 'Grise' },
+            { ...properties.default(1), value: 36.5 },
+            { ...properties.default(3), value: 850 },
         ],
         tags: [
             tags.default(1),
@@ -64,9 +64,9 @@ const data = [
         is_deleted: false,
         picture: null,
         note: null,
-        attributes: [
-            { ...attributes.default(1), value: 2.2 },
-            { ...attributes.default(3), value: 35 },
+        properties: [
+            { ...properties.default(1), value: 2.2 },
+            { ...properties.default(3), value: 35 },
         ],
         tags: [
             tags.default(1),
@@ -98,9 +98,9 @@ const data = [
         is_deleted: false,
         picture: null,
         note: 'Soyez délicats avec ces projos !',
-        attributes: [
-            { ...attributes.default(1), value: 0.85 },
-            { ...attributes.default(3), value: 150 },
+        properties: [
+            { ...properties.default(1), value: 0.85 },
+            { ...properties.default(3), value: 150 },
         ],
         tags: [
             tags.default(1),
@@ -132,10 +132,10 @@ const data = [
         is_deleted: false,
         picture: null,
         note: null,
-        attributes: [
-            { ...attributes.default(1), value: 3.15 },
-            { ...attributes.default(3), value: 60 },
-            { ...attributes.default(4), value: true },
+        properties: [
+            { ...properties.default(4), value: true },
+            { ...properties.default(1), value: 3.15 },
+            { ...properties.default(3), value: 60 },
         ],
         tags: [],
         created_at: '2021-02-12 23:03:00',
@@ -165,7 +165,7 @@ const data = [
         is_deleted: false,
         picture: null,
         note: null,
-        attributes: [],
+        properties: [],
         tags: [],
         created_at: '2021-02-12 23:14:00',
         updated_at: '2021-02-12 23:14:00',
@@ -195,8 +195,10 @@ const data = [
         picture: null,
         note: null,
         tags: [],
-        attributes: [
-            { ...attributes.default(5), value: '2021-01-28' },
+        properties: [
+            { ...properties.default(5), value: '2021-01-28' },
+            { ...properties.default(7), value: `Polyvalent` },
+            { ...properties.default(6), value: 250 },
         ],
         created_at: '2021-02-12 23:15:00',
         updated_at: '2021-02-12 23:15:00',
@@ -226,7 +228,9 @@ const data = [
         picture: null,
         note: null,
         tags: [],
-        attributes: [],
+        properties: [
+            { ...properties.default(7), value: `Extérieur` },
+        ],
         created_at: '2021-02-12 23:16:00',
         updated_at: '2021-02-12 23:16:00',
     },
@@ -255,7 +259,9 @@ const data = [
         picture: null,
         note: null,
         tags: [],
-        attributes: [],
+        properties: [
+            { ...properties.default(7), value: `Intérieur` },
+        ],
         created_at: '2021-02-12 23:18:00',
         updated_at: '2021-02-12 23:18:00',
     },
@@ -322,9 +328,9 @@ const withContextExcerpt = dataFactory(data, (material) => {
 /** @type {import('./@utils').FactoryReturnType} */
 const asDetails = dataFactory(data, (material) => {
     if (material.is_unitary) {
-        material.units = material.units.map((lazyUnit) => (
-            units.withStats(lazyUnit().id)
-        ));
+        material.units = material.units.map(
+            (lazyUnit) => lazyUnit(),
+        );
     }
     return omit(material, [
         'degressive_rate',

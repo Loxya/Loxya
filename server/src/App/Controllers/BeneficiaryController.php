@@ -63,7 +63,7 @@ final class BeneficiaryController extends BaseController
             }]);
 
         if ($after !== null) {
-            $eventsQuery->where('mobilization_end_date', '>=', $after);
+            $eventsQuery->closureSameOrAfter($after);
         }
 
         $query = (new QueryAggregator())

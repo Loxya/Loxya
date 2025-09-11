@@ -53,6 +53,34 @@ final class SettingsTest extends ApiTestCase
                 'defaultDegressiveRate' => 1,
                 'defaultTax' => 1,
             ],
+            'estimates' => [
+                'customText' => [
+                    'title' => "Modalité de paiement",
+                    'content' => "Paiement par virement ou chèque.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
+            ],
+            'invoices' => [
+                'customText' => [
+                    'title' => null,
+                    'content' => "Paiement attendu sous 30 jours.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
+            ],
         ]);
     }
 
@@ -81,7 +109,7 @@ final class SettingsTest extends ApiTestCase
         $this->assertApiValidationError([
             'calendar.event.showBorrower' => "This field should be a boolean.",
             'eventSummary.materialDisplayMode' => "This field is invalid.",
-            'eventSummary.customText.title' => "191 max. characters.",
+            'eventSummary.customText.title' => "Max. 191 characters.",
             'calendar.public.uuid' => "This unique identifier (UUID) is invalid.",
             'calendar.public.displayedPeriod' => "This field is invalid.",
             'billing.defaultTax' => "This field is invalid.",
@@ -120,6 +148,34 @@ final class SettingsTest extends ApiTestCase
             'billing' => [
                 'defaultDegressiveRate' => 3,
                 'defaultTax' => 5,
+            ],
+            'estimates' => [
+                'customText' => [
+                    'title' => "Modalité de paiement",
+                    'content' => "Paiement par virement ou chèque.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => true,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => false,
+            ],
+            'invoices' => [
+                'customText' => [
+                    'title' => null,
+                    'content' => "Paiement attendu sous 30 jours.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
             ],
         ]);
         $this->assertStatusCode(StatusCode::STATUS_OK);
@@ -163,6 +219,34 @@ final class SettingsTest extends ApiTestCase
                 'defaultDegressiveRate' => 3,
                 'defaultTax' => 5,
             ],
+            'estimates' => [
+                'customText' => [
+                    'title' => "Modalité de paiement",
+                    'content' => "Paiement par virement ou chèque.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => true,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => false,
+            ],
+            'invoices' => [
+                'customText' => [
+                    'title' => null,
+                    'content' => "Paiement attendu sous 30 jours.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
+            ],
         ]);
 
         // - Syntaxe alternative
@@ -180,6 +264,8 @@ final class SettingsTest extends ApiTestCase
             'calendar.public.displayedPeriod' => 'mobilization',
             'billing.defaultDegressiveRate' => null,
             'billing.defaultTax' => null,
+            'estimates.showTotalisableProperties' => true,
+            'estimates.showUnitPrices' => false,
         ]);
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
@@ -223,6 +309,34 @@ final class SettingsTest extends ApiTestCase
             'billing' => [
                 'defaultDegressiveRate' => null,
                 'defaultTax' => null,
+            ],
+            'estimates' => [
+                'customText' => [
+                    'title' => "Modalité de paiement",
+                    'content' => "Paiement par virement ou chèque.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => true,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => false,
+            ],
+            'invoices' => [
+                'customText' => [
+                    'title' => null,
+                    'content' => "Paiement attendu sous 30 jours.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
             ],
         ]);
     }

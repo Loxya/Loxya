@@ -14,13 +14,14 @@ use Illuminate\Support\Str;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Société.
  *
  * @property-read ?int $id
  * @property string $legal_name
+ * @property string $registration_id
  * @property string|null $phone
  * @property string|null $street
  * @property string|null $postal_code
@@ -46,8 +47,9 @@ final class Company extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
-            'legal_name' => V::custom([$this, 'checkLegalName']),
+        $this->validation = fn () => [
+            'legal_name' => V::notEmpty()->length(2, 191),
+            'registration_id' => V::nullable(V::alnum()->length(null, 50)),
             'street' => V::optional(V::length(null, 191)),
             'postal_code' => V::optional(V::length(null, 10)),
             'locality' => V::optional(V::length(null, 191)),
@@ -61,23 +63,6 @@ final class Company extends BaseModel implements Serializable
     // -    Validation
     // -
     // ------------------------------------------------------
-
-    public function checkLegalName($value)
-    {
-        V::notEmpty()
-            ->length(2, 191)
-            ->check($value);
-
-        $alreadyExists = static::query()
-            ->where('legal_name', $value)
-            ->when($this->exists, fn (Builder $subQuery) => (
-                $subQuery->where('id', '!=', $this->id)
-            ))
-            ->withTrashed()
-            ->exists();
-
-        return !$alreadyExists ?: 'company-legal-name-already-in-use';
-    }
 
     public function checkCountryId($value)
     {
@@ -117,6 +102,7 @@ final class Company extends BaseModel implements Serializable
 
     protected $casts = [
         'legal_name' => 'string',
+        'registration_id' => 'string',
         'street' => 'string',
         'postal_code' => 'string',
         'locality' => 'string',
@@ -155,6 +141,7 @@ final class Company extends BaseModel implements Serializable
 
     protected $fillable = [
         'legal_name',
+        'registration_id',
         'street',
         'postal_code',
         'locality',
@@ -163,9 +150,21 @@ final class Company extends BaseModel implements Serializable
         'note',
     ];
 
+    public function setRegistrationIdAttribute(mixed $value): void
+    {
+        $value = !empty($value) && is_string($value)
+            ? Str::remove([' ', '-', '.', '/'], trim($value))
+            : $value;
+
+        $this->attributes['registration_id'] = $value === '' ? null : $value;
+    }
+
     public function setPhoneAttribute(mixed $value): void
     {
-        $value = !empty($value) ? Str::remove(' ', $value) : $value;
+        $value = !empty($value) && is_string($value)
+            ? Str::remove(' ', trim($value))
+            : $value;
+
         $this->attributes['phone'] = $value === '' ? null : $value;
     }
 
@@ -193,8 +192,14 @@ final class Company extends BaseModel implements Serializable
         }
         Assert::minLength($term, 2, "The term must contain more than two characters.");
 
-        $term = sprintf('%%%s%%', addcslashes($term, '%_'));
-        return $query->where('legal_name', 'LIKE', $term);
+        $safeTerm = addcslashes($term, '%_');
+        return $query->where(static fn (Builder $subQuery) => (
+            $subQuery
+                ->orWhere('legal_name', 'LIKE', sprintf('%%%s%%', $safeTerm))
+                ->orWhere('registration_id', 'LIKE', vsprintf('%s%%', [
+                    Str::remove([' ', '-', '.', '/'], $safeTerm),
+                ]))
+        ));
     }
 
     // ------------------------------------------------------

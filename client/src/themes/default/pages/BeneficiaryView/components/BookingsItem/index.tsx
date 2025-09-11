@@ -1,13 +1,15 @@
 import './index.scss';
 import DateTime from '@/utils/datetime';
 import upperFirst from 'lodash/upperFirst';
-import { defineComponent } from '@vue/composition-api';
+import config, { ReturnPolicy } from '@/globals/config';
+import { defineComponent, markRaw } from 'vue';
 import { BookingEntity } from '@/stores/api/bookings';
 import getBookingIcon from '@/utils/getBookingIcon';
 import Button from '@/themes/default/components/Button';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type Period from '@/utils/period';
+import type { PropType, Raw } from 'vue';
 import type { LazyBooking } from '../../_types';
 
 type Props = {
@@ -16,6 +18,23 @@ type Props = {
      * de savoir si on a affaire à un extrait ou à un résumé de l'emprunt.
      */
     lazyBooking: LazyBooking,
+
+    /**
+     * Fonction appelée lorsque l'élément a été cliqué.
+     *
+     * @param entity - Type d'entité du booking.
+     * @param id - Identifiant du booking cliqué.
+     */
+    onClick?(entity: BookingEntity, id: LazyBooking['booking']['id']): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur clique sur le
+     * bouton d'ouverture du booking.
+     *
+     * @param entity - Type d'entité du booking.
+     * @param id - Identifiant du booking à ouvrir.
+     */
+    onOpenClick?(entity: BookingEntity, id: LazyBooking['booking']['id']): void,
 };
 
 type InstanceProperties = {
@@ -23,7 +42,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Un emprunt (booking) sous forme d'une cellule "inline". */
@@ -34,13 +53,23 @@ const BeneficiaryViewBookingsItem = defineComponent({
             type: Object as PropType<Props['lazyBooking']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onOpenClick: {
+            type: Function as PropType<Props['onOpenClick']>,
+            default: undefined,
+        },
     },
     emits: ['click', 'openClick'],
     setup: (): InstanceProperties => ({
         nowTimer: undefined,
     }),
     data: (): Data => ({
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         icon(): string | null {
@@ -111,8 +140,57 @@ const BeneficiaryViewBookingsItem = defineComponent({
             }
         },
 
+        isOverdue(): boolean {
+            const { booking } = this.lazyBooking;
+            const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+            if (!this.isPast || !useManualReturn) {
+                return false;
+            }
+
+            return (
+                !booking.is_archived &&
+                !booking.is_return_inventory_done &&
+                booking.has_materials
+            );
+        },
+
+        wasOverdue(): boolean {
+            const { booking } = this.lazyBooking;
+            const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+            if (!this.isPast || !useManualReturn) {
+                return false;
+            }
+
+            return (
+                booking.is_return_inventory_done &&
+                booking.return_inventory_datetime !== null &&
+                booking.mobilization_period.end.isBefore(
+                    booking.return_inventory_datetime,
+                )
+            );
+        },
+
+        hasOverdue(): boolean {
+            return this.isOverdue || this.wasOverdue;
+        },
+
+        overduePeriod(): Period<false> | null {
+            const { booking } = this.lazyBooking;
+            if (!this.hasOverdue) {
+                return null;
+            }
+
+            return (
+                this.isOverdue
+                    ? booking.mobilization_period.tail(this.now)
+                    : booking.mobilization_period.tail(
+                        booking.return_inventory_datetime!,
+                    )
+            ) as Period<false>;
+        },
+
         hasWarnings(): boolean {
-            const { isPast, isFuture, lazyBooking } = this;
+            const { isPast, isOverdue, lazyBooking } = this;
             const {
                 is_archived: isArchived,
                 has_not_returned_materials: hasNotReturnedMaterials,
@@ -120,19 +198,26 @@ const BeneficiaryViewBookingsItem = defineComponent({
 
             return (
                 // - Si le booking est en cours ou à venir et qu'il manque du matériel.
-                (isFuture && lazyBooking.isComplete && lazyBooking.booking.has_missing_materials === true) ||
+                (!isPast && lazyBooking.isComplete && lazyBooking.booking.has_missing_materials === true) ||
 
                 // - Si le booking est passé et qu'il a du matériel non retourné.
-                (isPast && !isArchived && hasNotReturnedMaterials === true)
+                (isPast && !isArchived && hasNotReturnedMaterials === true) ||
+
+                // - S'il y a un retard.
+                isOverdue
             );
         },
 
         readableState(): string {
-            const { $t: __, isOngoing, isPast, lazyBooking: { booking } } = this;
+            const { $t: __, isOngoing, isOverdue, isPast, lazyBooking: { booking } } = this;
             const { mobilization_period: mobilizationPeriod } = booking;
 
             if (isPast) {
-                return __('page.beneficiary-view.borrowings.done');
+                return !isOverdue
+                    ? __('page.beneficiary-view.borrowings.done')
+                    : __('page.beneficiary-view.borrowings.overdue-since', {
+                        duration: this.overduePeriod!.toReadableDuration(__),
+                    });
             }
 
             if (isOngoing) {
@@ -147,7 +232,7 @@ const BeneficiaryViewBookingsItem = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -200,11 +285,15 @@ const BeneficiaryViewBookingsItem = defineComponent({
             title,
             duration,
             isFuture,
+            isOverdue,
             isOneDay,
             isOngoing,
             isConfirmed,
+            hasOverdue,
+            wasOverdue,
             hasWarnings,
             arePeriodsUnified,
+            overduePeriod,
             readableState,
             handleClick,
             handleOpenClick,
@@ -213,6 +302,7 @@ const BeneficiaryViewBookingsItem = defineComponent({
         const className = ['BeneficiaryViewBookingsItem', {
             'BeneficiaryViewBookingsItem--future': isFuture,
             'BeneficiaryViewBookingsItem--current': isOngoing,
+            'BeneficiaryViewBookingsItem--overdue': isOverdue,
             'BeneficiaryViewBookingsItem--confirmed': isConfirmed,
             'BeneficiaryViewBookingsItem--warning': hasWarnings,
         }];
@@ -234,7 +324,13 @@ const BeneficiaryViewBookingsItem = defineComponent({
                                     'BeneficiaryViewBookingsItem__booking__periods__item--operation',
                                 ]}
                             >
-                                {upperFirst(booking.operation_period.toReadable(__))}
+                                {(
+                                    !hasOverdue || !arePeriodsUnified
+                                        ? upperFirst(booking.operation_period.toReadable(__))
+                                        : __('page.beneficiary-view.borrowings.initially-planned-period', {
+                                            period: booking.operation_period.toReadable(__),
+                                        })
+                                )}
                                 {!isOneDay && (
                                     <span class="BeneficiaryViewBookingsItem__booking__periods__item__duration">
                                         ({__('days-count', { duration }, duration)})
@@ -248,10 +344,24 @@ const BeneficiaryViewBookingsItem = defineComponent({
                                         'BeneficiaryViewBookingsItem__booking__periods__item--mobilization',
                                     ]}
                                 >
-                                    {upperFirst(booking.mobilization_period.toReadable(__))}
+                                    {(
+                                        !isOverdue && !wasOverdue
+                                            ? upperFirst(booking.mobilization_period.toReadable(__))
+                                            : __('page.beneficiary-view.borrowings.initially-planned-period', {
+                                                period: booking.mobilization_period.toReadable(__),
+                                            })
+                                    )}
                                 </span>
                             )}
                         </div>
+                        {wasOverdue && (
+                            <div class="BeneficiaryViewBookingsItem__booking__overdue-summary">
+                                {__('page.beneficiary-view.borrowings.late-return-on', {
+                                    date: booking.return_inventory_datetime!.toReadable(),
+                                    duration: overduePeriod!.toReadableDuration(__),
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div class="BeneficiaryViewBookingsItem__readable-state">

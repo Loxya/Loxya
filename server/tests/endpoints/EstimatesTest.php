@@ -73,7 +73,7 @@ final class EstimatesTest extends ApiTestCase
         $this->client->get('/estimates/999/pdf');
         $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
 
-        // - Télécharge le PDF du devis n°1.
+        // - Télécharge le PDF du devis #1.
         $responseStream = $this->client->get('/estimates/1/pdf');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertTrue($responseStream->isReadable());

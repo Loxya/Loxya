@@ -6,6 +6,7 @@ namespace Loxya\Errors\Renderer;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Loxya\Errors\Enums\ApiErrorCode;
 use Loxya\Errors\Exception\ApiException;
+use Loxya\Errors\Exception\HttpSpecializedException;
 use Loxya\Errors\Exception\ValidationException;
 use Slim\Exception\HttpException;
 use Slim\Exception\HttpMethodNotAllowedException;
@@ -50,7 +51,10 @@ final class JsonErrorRenderer implements ErrorRendererInterface
                 $output['message'] = $exception->getMessage();
                 $output['debug'] = ['requested' => $requestDetail];
             }
-            return $output;
+
+            return $exception instanceof HttpSpecializedException
+                ? array_replace($output, $exception->getMetadata())
+                : $output;
         }
 
         if ($exception instanceof ValidationException) {
@@ -65,7 +69,7 @@ final class JsonErrorRenderer implements ErrorRendererInterface
             if (!empty($exception->getMessage())) {
                 $output['message'] = $exception->getMessage();
             }
-            return $output;
+            return array_replace($output, $exception->getMetadata());
         }
 
         if ($displayErrorDetails) {

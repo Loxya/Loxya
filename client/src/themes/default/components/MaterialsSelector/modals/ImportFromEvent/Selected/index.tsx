@@ -1,10 +1,10 @@
 import './index.scss';
 import Fragment from '@/components/Fragment';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Alert from '@/themes/default/components/Alert';
 import Summary from './Summary';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { SourceMaterial } from '../../../_types';
 import type { EventDetails, EventMaterial } from '@/stores/api/events';
 

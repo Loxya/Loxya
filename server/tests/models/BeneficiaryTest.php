@@ -28,7 +28,7 @@ final class BeneficiaryTest extends TestCase
         $this->assertEquals(['Jean Fountain'], $results->pluck('full_name')->all());
 
         // - Email
-        $results = Beneficiary::search('@robertmanager.net')->get();
+        $results = Beneficiary::search('@loxya.com')->get();
         $this->assertCount(2, $results);
         $this->assertEquals(['Jean Fountain', 'Roger Rabbit'], $results->pluck('full_name')->all());
 
@@ -49,7 +49,7 @@ final class BeneficiaryTest extends TestCase
             'first_name' => 'Roger',
             'last_name' => 'Rabbit',
             'reference' => '0004',
-            'email' => 'tester2@robertmanager.net',
+            'email' => 'tester2@loxya.com',
             'phone' => null,
             'street' => null,
             'postal_code' => null,
@@ -63,7 +63,7 @@ final class BeneficiaryTest extends TestCase
             'person' => [
                 'first_name' => 'Roger',
                 'last_name' => 'Rabbit',
-                'email' => 'tester2@robertmanager.net',
+                'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
                 'postal_code' => null,
@@ -71,7 +71,7 @@ final class BeneficiaryTest extends TestCase
                 'country_id' => null,
             ],
             'user' => [
-                'email' => 'tester2@robertmanager.net',
+                'email' => 'tester2@loxya.com',
             ],
         ];
         $this->assertEquals($expected, $result);
@@ -138,7 +138,7 @@ final class BeneficiaryTest extends TestCase
 
     public function testCreate(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 2, 10, 15, 00, 00));
+        static::setNow(Carbon::create(2023, 2, 10, 15, 00, 00));
 
         $data = [
             'note' => null,

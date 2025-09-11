@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Link from '@/themes/default/components/Link';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Park } from '@/stores/api/parks';
 
 type Props = {
@@ -34,7 +34,10 @@ const ParksItemsCount = defineComponent({
         return (
             <div class="ParksItemsCount">
                 <Link
-                    to={{ name: 'materials', query: { park: id } }}
+                    to={{
+                        name: 'materials',
+                        query: { park: id.toString() },
+                    }}
                     tooltip={__('page.parks.display-materials-of-this-park')}
                     class="ParksItemsCount__link"
                 >

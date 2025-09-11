@@ -1,7 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { Tabs, Tab } from '@/themes/default/components/Tabs';
 import Page from '@/themes/default/components/Page';
+
+// - Tabs
 import ProfileSettings from './tabs/Profile';
 import InterfaceSettings from './tabs/Interface';
 

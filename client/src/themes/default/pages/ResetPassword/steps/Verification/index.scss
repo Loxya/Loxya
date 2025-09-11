@@ -1,0 +1,115 @@
+@use '~@/themes/default/style/globals';
+@use 'sass:color';
+
+.ResetPasswordPageVerificationStep {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+
+    &__text {
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        text-align: center;
+        white-space: pre-line;
+    }
+
+    &__code {
+        $sub-block: &;
+
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+
+        &__digit {
+            --digit-size: 35px;
+
+            width: var(--digit-size);
+            min-height: calc(var(--digit-size) * 1.33);
+            padding: calc(var(--digit-size) * 0.28);
+            font-size: calc(var(--digit-size) * 0.55);
+            text-align: center;
+
+            &::placeholder {
+                color: color.adjust(globals.$input-text-color, $lightness: -30%);
+            }
+
+            &:disabled {
+                border-color: globals.$input-border-color;
+                background-color: globals.$input-background-color;
+                color: globals.$input-text-color;
+            }
+        }
+
+        //
+        // - State: Mauvais code.
+        //
+
+        &--invalid {
+            #{$sub-block}__digit {
+                transition: border-color ease 300ms;
+
+                &,
+                &:focus {
+                    outline: 0;
+                    border-width: 2px;
+                    border-color: #d7383b;
+                }
+            }
+        }
+    }
+
+    &__resend-text {
+        @extend %reset-button;
+
+        max-width: 300px;
+        margin-top: 15px;
+        color: globals.$text-soft-color;
+        font-size: 1rem;
+        font-style: italic;
+        text-align: center;
+        line-height: 1.2;
+
+        // - On ne le met pas en `display: none` pour conserver sa place
+        //  et éviter les déplacements de l'interface.
+        &--hidden {
+            visibility: hidden;
+        }
+
+        &:hover {
+            color: color.adjust(globals.$text-soft-color, $lightness: 15%);
+        }
+
+        &:disabled {
+            &,
+            &:hover {
+                color: globals.$text-soft-color;
+            }
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        &__code {
+            gap: 10px;
+
+            &__digit {
+                --digit-size: 40px;
+            }
+        }
+    }
+
+    @media (min-width: globals.$screen-desktop) {
+        &__code {
+            gap: 10px;
+
+            &__digit {
+                --digit-size: 50px;
+            }
+        }
+    }
+}

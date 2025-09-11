@@ -1,4 +1,4 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { Group } from '@/stores/api/groups';
 import apiEvents from '@/stores/api/events';
 import apiDocuments from '@/stores/api/documents';
@@ -7,9 +7,8 @@ import FileManager, { FileManagerLayout } from '@/themes/default/components/File
 import Loading from '@/themes/default/components/Loading';
 import { confirm } from '@/utils/alert';
 
-import type { ComponentRef } from 'vue';
-import type { ProgressCallback } from 'axios';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
+import type { ProgressCallback } from '@/globals/requester';
 import type { Document } from '@/stores/api/documents';
 import type { EventDetails } from '@/stores/api/events';
 
@@ -42,7 +41,8 @@ const EventDetailsDocuments = defineComponent({
         isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
     },

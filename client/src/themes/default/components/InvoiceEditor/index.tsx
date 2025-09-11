@@ -2,7 +2,7 @@ import './index.scss';
 import Decimal from 'decimal.js';
 import uniqueId from 'lodash/uniqueId';
 import showModal from '@/utils/showModal';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import hasBillingChanged from './utils/hasBillingChanged';
 import getEmbeddedBilling, { getEmbeddedExtraBilling, getEmbeddedMaterialBilling } from './utils/getEmbeddedBilling';
 import formatAmount from '@/utils/formatAmount';
@@ -23,7 +23,7 @@ import ResyncExtraData from './modals/ResyncExtraData';
 import ResyncMaterialData from './modals/ResyncMaterialData';
 
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Tax as CoreTax } from '@/stores/api/taxes';
 import type {
     BillingData,
@@ -59,6 +59,27 @@ type Props = {
      * les erreurs ne soient transmises à une future ligne portant le même indexe.
      */
     errors?: Record<string, any>,
+
+    /**
+     * Fonction appelée lorsque les données de facturation changent.
+     *
+     * @param values - Les nouvelles données de facturation.
+     */
+    onChange?(values: BillingData): void,
+
+    /**
+     * Fonction appelée lorsque les données d'un matériel ont été resynchronisées.
+     *
+     * @param updatedMaterial - Le matériel dont les données ont été resynchronisées.
+     */
+    onMaterialResynced?(updatedMaterial: BookingMaterial<true>): void,
+
+    /**
+     * Fonction appelée lorsque les données d'une ligne extra ont été resynchronisées.
+     *
+     * @param updatedExtra - La ligne extra dont les données ont été resynchronisées.
+     */
+    onExtraResynced?(updatedExtra: BookingExtra): void,
 };
 
 type Data = {
@@ -75,6 +96,7 @@ const getExtraDefaults = (): RawExtraBillingData => ({
     tax_id: null,
 });
 
+/** Éditeur de facture d'un booking. */
 const InvoiceEditor = defineComponent({
     name: 'InvoiceEditor',
     props: {
@@ -87,6 +109,21 @@ const InvoiceEditor = defineComponent({
         },
         errors: {
             type: Object as PropType<Props['errors']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onMaterialResynced: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onExtraResynced: {
+            type: Function as PropType<Props['onChange']>,
             default: undefined,
         },
     },
@@ -401,7 +438,7 @@ const InvoiceEditor = defineComponent({
             if (!/^\d+(?:\.\d+)?$/.test(rawValue)) {
                 return;
             }
-            const value = Decimal.max(Decimal.min(rawValue, 100), 0);
+            const value = markRaw(Decimal.max(Decimal.min(rawValue, 100), 0));
 
             this.data.global_discount_rate = value;
             this.$emit('change', this.values);
@@ -413,7 +450,7 @@ const InvoiceEditor = defineComponent({
             if (!/^\d+(?:\.\d+)?$/.test(rawValue)) {
                 rawValue = '0';
             }
-            const value = Decimal.max(Decimal.min(rawValue, 100), 0);
+            const value = markRaw(Decimal.max(Decimal.min(rawValue, 100), 0));
 
             this.data.global_discount_rate = value;
             this.$emit('change', this.values);
@@ -433,7 +470,7 @@ const InvoiceEditor = defineComponent({
                 .dividedBy(this.totalWithoutGlobalDiscount)
                 .toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
 
-            this.data.global_discount_rate = Decimal.max(Decimal.min(discountRate, 100), 0);
+            this.data.global_discount_rate = markRaw(Decimal.max(Decimal.min(discountRate, 100), 0));
             this.$emit('change', this.values);
         },
 
@@ -450,7 +487,7 @@ const InvoiceEditor = defineComponent({
                 .dividedBy(this.totalWithoutGlobalDiscount)
                 .toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
 
-            this.data.global_discount_rate = Decimal.max(Decimal.min(discountRate, 100), 0);
+            this.data.global_discount_rate = markRaw(Decimal.max(Decimal.min(discountRate, 100), 0));
             this.$emit('change', this.values);
         },
 

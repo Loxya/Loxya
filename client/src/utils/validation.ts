@@ -1,4 +1,5 @@
 import core from 'zod';
+import { markRaw } from 'vue';
 import Decimal from 'decimal.js';
 import Color from '@/utils/color';
 import Period, { SerializedPeriodSchema } from '@/utils/period';
@@ -6,6 +7,7 @@ import DateTime from '@/utils/datetime';
 import Currency from '@/utils/currency';
 import Day from '@/utils/day';
 
+import type { Raw } from 'vue';
 import type { RefinementCtx } from 'zod';
 import type { SerializedPeriod } from '@/utils/period';
 
@@ -28,9 +30,9 @@ const serializedPeriod = () => SerializedPeriodSchema;
 const period = () => (
     core
         .union([serializedPeriod(), core.instanceof(Period)])
-        .transform((value: Period | SerializedPeriod, ctx: RefinementCtx): Period => {
+        .transform((value: Period | SerializedPeriod, ctx: RefinementCtx): Raw<Period> => {
             try {
-                return Period.from(value);
+                return markRaw(Period.from(value));
             } catch (error) {
                 ctx.addIssue({
                     code: core.ZodIssueCode.custom,
@@ -55,9 +57,9 @@ const period = () => (
 const datetime = () => (
     core
         .union([core.string(), core.instanceof(DateTime)])
-        .transform((value: string | DateTime, ctx: RefinementCtx): DateTime => {
+        .transform((value: string | DateTime, ctx: RefinementCtx): Raw<DateTime> => {
             try {
-                return new DateTime(value);
+                return markRaw(new DateTime(value));
             } catch (error) {
                 ctx.addIssue({
                     code: core.ZodIssueCode.custom,
@@ -82,9 +84,9 @@ const datetime = () => (
 const day = () => (
     core
         .union([core.string(), core.instanceof(Day)])
-        .transform((value: string | Day, ctx: RefinementCtx): Day => {
+        .transform((value: string | Day, ctx: RefinementCtx): Raw<Day> => {
             try {
-                return new Day(value);
+                return markRaw(new Day(value));
             } catch (error) {
                 ctx.addIssue({
                     code: core.ZodIssueCode.custom,
@@ -114,9 +116,9 @@ const decimal = () => (
             core.number(),
             core.instanceof(Decimal),
         ])
-        .transform((value: string | number | Decimal, ctx: RefinementCtx): Decimal => {
+        .transform((value: string | number | Decimal, ctx: RefinementCtx): Raw<Decimal> => {
             try {
-                return new Decimal(value);
+                return markRaw(new Decimal(value));
             } catch (error) {
                 ctx.addIssue({
                     code: core.ZodIssueCode.custom,
@@ -141,9 +143,9 @@ const decimal = () => (
 const currency = () => (
     core
         .union([core.string(), core.instanceof(Currency)])
-        .transform((value: string | Currency, ctx: RefinementCtx): Currency => {
+        .transform((value: string | Currency, ctx: RefinementCtx): Raw<Currency> => {
             try {
-                return new Currency(value);
+                return markRaw(new Currency(value));
             } catch (error) {
                 ctx.addIssue({
                     code: core.ZodIssueCode.custom,
@@ -168,11 +170,11 @@ const currency = () => (
 const color = () => (
     core
         .union([core.string(), core.instanceof(Color)])
-        .transform((value: string | Color, ctx: RefinementCtx): Color => {
+        .transform((value: string | Color, ctx: RefinementCtx): Raw<Color> => {
             let error: unknown | undefined;
             try {
                 if (Color.isValid(value)) {
-                    return new Color(value);
+                    return markRaw(new Color(value));
                 }
             } catch (_error) {
                 error = _error;

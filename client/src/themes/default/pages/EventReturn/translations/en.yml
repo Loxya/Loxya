@@ -46,10 +46,13 @@ actions:
     update-materials: Update event material
 
 confirm-terminate-title: Do you really want to terminate this return inventory?
-confirm-terminate-text: Please note that it will no longer be possible to modify it.
+advanced-options: Advanced options
+specify-return-date-time: If the inventory has already been done on a previous date, you can specify it below.
+right-now: Right now
+confirm-terminate-text: Please note that it will no longer be possible to modify the return inventory once it is finalized.
 confirm-terminate-text-with-broken: >-
-    This will update all the "out of order" quantities for the concerned
-    materials, and it will no longer be possible to modify this inventory.
+    Please note that all "out of order" quantities for the affected materials will be updated,
+    and it will no longer be possible to modify this inventory once it is finalized.
 
 put-back-on-hold: Put inventory back on hold
 put-back-on-hold-and-restore-stock: Put inventory back on hold and restore stock

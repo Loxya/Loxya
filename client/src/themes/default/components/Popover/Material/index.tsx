@@ -1,9 +1,9 @@
 import './index.scss';
+import { defineComponent } from 'vue';
 import DateTime from '@/utils/datetime';
 import ClickOutside from 'vue-click-outside';
 import Fragment from '@/components/Fragment';
 import { MountingPortal as Portal } from 'portal-vue';
-import { defineComponent } from '@vue/composition-api';
 import Transition from './components/Transition';
 import Popup from './components/Popup';
 import {
@@ -13,7 +13,7 @@ import {
     flip,
 } from '@floating-ui/dom';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Material } from '@/stores/api/materials';
 import type { Session } from '@/stores/api/session';
 
@@ -228,7 +228,11 @@ const MaterialPopover = defineComponent({
         } = this;
 
         if (disabled) {
-            return children;
+            return (
+                <Fragment>
+                    {children}
+                </Fragment>
+            );
         }
 
         return (

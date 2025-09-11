@@ -12,7 +12,7 @@ final class CalendarTest extends ApiTestCase
 {
     public function testPublic(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 02, 01, 12, 00, 00));
+        static::setNow(Carbon::create(2019, 02, 01, 12, 00, 00));
 
         //
         // - Doit renvoyer une 404 si l'UUID n'est pas le bon.
@@ -33,7 +33,7 @@ final class CalendarTest extends ApiTestCase
 
         // - Avec présentation par périodes de mobilisation.
         Setting::findOrFail('calendar.public.displayedPeriod')->update([
-            'value' => PublicCalendarPeriodDisplay::MOBILIZATION,
+            'value' => PublicCalendarPeriodDisplay::MOBILIZATION->value,
         ]);
         $responseStream = $this->client->get('/calendar/public/dfe7cd82-52b9-4c9b-aaed-033df210f23b.ics');
         $this->assertStatusCode(StatusCode::STATUS_OK);
@@ -42,7 +42,7 @@ final class CalendarTest extends ApiTestCase
 
         // - Avec présentation par périodes de mobilisation ET opérations.
         Setting::findOrFail('calendar.public.displayedPeriod')->update([
-            'value' => PublicCalendarPeriodDisplay::BOTH,
+            'value' => PublicCalendarPeriodDisplay::BOTH->value,
         ]);
         $responseStream = $this->client->get('/calendar/public/dfe7cd82-52b9-4c9b-aaed-033df210f23b.ics');
         $this->assertStatusCode(StatusCode::STATUS_OK);

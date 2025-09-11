@@ -1,5 +1,4 @@
 import './index.scss';
-import axios from 'axios';
 import Period from '@/utils/period';
 import DateTime from '@/utils/datetime';
 import apiEvents from '@/stores/api/events';
@@ -7,12 +6,13 @@ import apiRoles from '@/stores/api/roles';
 import stringCompare from '@/utils/stringCompare';
 import formatOptions from '@/utils/formatOptions';
 import { ApiErrorCode } from '@/stores/api/@codes';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError } from '@/globals/requester';
+import { defineComponent, markRaw } from 'vue';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
 import { MIN_TECHNICIAN_ASSIGNMENT_DURATION } from '@/globals/constants';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { TechnicianWithEvents } from '@/stores/api/technicians';
 import type { Options } from '@/utils/formatOptions';
 import type { DisableDateFunction } from '@/themes/default/components/DatePicker';
@@ -72,10 +72,10 @@ const EventEditStepTechniciansAssignmentCreation = defineComponent({
         const data: EditData = {
             role_id: null,
             period: this.defaultStartDate !== undefined
-                ? new Period(
+                ? markRaw(new Period(
                     this.defaultStartDate,
                     this.defaultStartDate.add(MIN_TECHNICIAN_ASSIGNMENT_DURATION),
-                )
+                ))
                 : null,
         };
 
@@ -154,7 +154,7 @@ const EventEditStepTechniciansAssignmentCreation = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();
@@ -221,19 +221,16 @@ const EventEditStepTechniciansAssignmentCreation = defineComponent({
                 this.$toasted.success(__('assignation-saved'));
                 this.$emit('close', assignment);
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the assignment`, error);
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                    } else {
-                        this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                    }
-                }
                 this.isSaving = false;
+
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the assignment`, error);
+                this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
         },
 

@@ -1,7 +1,6 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import axios from 'axios';
-import HttpCode from 'status-code-enum';
+import { defineComponent } from 'vue';
+import { RequestError, HttpCode } from '@/globals/requester';
 import parseInteger from '@/utils/parseInteger';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import Page from '@/themes/default/components/Page';
@@ -20,7 +19,7 @@ const UserEdit = defineComponent({
             isSaving: false,
             user: null,
             criticalError: null,
-            validationErrors: null,
+            validationErrors: undefined,
         };
     },
     computed: {
@@ -77,16 +76,14 @@ const UserEdit = defineComponent({
                 this.user = await apiUsers.one(this.id);
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving user #${this.id} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving user #${this.id} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
 
@@ -110,20 +107,23 @@ const UserEdit = defineComponent({
                     this.user = user;
                 }
 
-                this.validationErrors = null;
+                this.validationErrors = undefined;
 
                 // - Redirection...
                 this.$toasted.success(__('page.user.saved'));
                 this.$router.push({ name: 'users' });
             } catch (error) {
-                const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                if (code === ApiErrorCode.VALIDATION_FAILED) {
-                    this.validationErrors = { ...details };
-                    this.$refs.page.scrollToTop();
-                } else {
-                    this.$toasted.error(__('errors.unexpected-while-saving'));
-                }
                 this.isSaving = false;
+
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    this.$refs.page.scrollToTop();
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the user`, error);
+                this.$toasted.error(__('errors.unexpected-while-saving'));
             }
         },
     },

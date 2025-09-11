@@ -18,6 +18,7 @@ exports[`Companies Api all() parse the returned data correctly 1`] = `
       "note": "Just for tests",
       "phone": "+4123456789",
       "postal_code": "1234",
+      "registration_id": null,
       "street": "1, company st.",
     },
     {
@@ -30,6 +31,7 @@ exports[`Companies Api all() parse the returned data correctly 1`] = `
       "note": null,
       "phone": null,
       "postal_code": null,
+      "registration_id": "123456789",
       "street": null,
     },
   ],
@@ -60,6 +62,7 @@ exports[`Companies Api create() parse the returned data correctly (with #1) 1`] 
   "note": "Just for tests",
   "phone": "+4123456789",
   "postal_code": "1234",
+  "registration_id": null,
   "street": "1, company st.",
 }
 `;
@@ -75,6 +78,7 @@ exports[`Companies Api create() parse the returned data correctly (with #2) 1`] 
   "note": null,
   "phone": null,
   "postal_code": null,
+  "registration_id": "123456789",
   "street": null,
 }
 `;
@@ -95,6 +99,7 @@ exports[`Companies Api one() parse the returned data correctly (with #1) 1`] = `
   "note": "Just for tests",
   "phone": "+4123456789",
   "postal_code": "1234",
+  "registration_id": null,
   "street": "1, company st.",
 }
 `;
@@ -110,6 +115,7 @@ exports[`Companies Api one() parse the returned data correctly (with #2) 1`] = `
   "note": null,
   "phone": null,
   "postal_code": null,
+  "registration_id": "123456789",
   "street": null,
 }
 `;
@@ -130,6 +136,7 @@ exports[`Companies Api update() parse the returned data correctly (with #1) 1`] 
   "note": "Just for tests",
   "phone": "+4123456789",
   "postal_code": "1234",
+  "registration_id": null,
   "street": "1, company st.",
 }
 `;
@@ -145,6 +152,7 @@ exports[`Companies Api update() parse the returned data correctly (with #2) 1`] 
   "note": null,
   "phone": null,
   "postal_code": null,
+  "registration_id": "123456789",
   "street": null,
 }
 `;

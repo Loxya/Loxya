@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
 use Loxya\Config\Config;
 use Loxya\Support\Str;
 use Phinx\Migration\AbstractMigration;
@@ -28,8 +26,7 @@ final class AddPublicCalendarSettings extends AbstractMigration
     {
         $prefix = Config::get('db.prefix');
 
-        /** @var DeleteQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+        $qb = $this->getDeleteBuilder();
         $qb
             ->delete(sprintf('%ssettings', $prefix))
             ->where(static fn ($exp) => (

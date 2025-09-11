@@ -44,22 +44,22 @@ type GetAllParams = { deleted?: boolean };
 
 const all = async (params: GetAllParams = {}): Promise<Tag[]> => {
     const response = await requester.get('/tags', { params });
-    return TagSchema.array().parse(response.data);
+    return TagSchema.array().parse(response);
 };
 
 const create = async (data: TagEdit): Promise<Tag> => {
     const response = await requester.post('/tags', data);
-    return TagSchema.parse(response.data);
+    return TagSchema.parse(response);
 };
 
 const update = async (id: Tag['id'], data: TagEdit): Promise<Tag> => {
     const response = await requester.put(`/tags/${id}`, data);
-    return TagSchema.parse(response.data);
+    return TagSchema.parse(response);
 };
 
 const restore = async (id: Tag['id']): Promise<Tag> => {
     const response = await requester.put(`/tags/restore/${id}`);
-    return TagSchema.parse(response.data);
+    return TagSchema.parse(response);
 };
 
 const remove = async (id: Tag['id']): Promise<void> => {

@@ -14,11 +14,11 @@ use Loxya\Services\I18n;
 use Loxya\Services\View;
 use Loxya\Support\Install;
 use Loxya\Support\Str;
+use Loxya\Support\Validation\Validator as V;
 use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException as RespectValidationException;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 use Slim\Http\Response;
 
 final class SetupController extends BaseController
@@ -112,6 +112,12 @@ final class SetupController extends BaseController
                 $installData['skipped'] = true;
             }
 
+            if ($currentStep === 'settings') {
+                // - Pré-remplissage de la config de l'envoi des e-mails, vu qu'elle
+                //   est absente du wizard d'installation.
+                $installData['email'] = Config::getDefault('email');
+            }
+
             if ($currentStep === 'company') {
                 $installData['logo'] = null;
                 ksort($installData);
@@ -136,7 +142,7 @@ final class SetupController extends BaseController
                 if ($currentStep === 'adminUser') {
                     if ($stepSkipped && !User::where('group', Group::ADMINISTRATION)->exists()) {
                         throw new \InvalidArgumentException(
-                            "At least one user must exists. Please create an administrator.",
+                            "At least one user must exist. Please create an administrator.",
                         );
                     }
 
@@ -208,7 +214,7 @@ final class SetupController extends BaseController
         return $this->view->render($response, 'install.twig', [
             'lang' => $lang,
             'step' => $currentStep,
-            'stepNumber' => array_search($currentStep, Install::INSTALL_STEPS),
+            'stepNumber' => array_search($currentStep, Install::INSTALL_STEPS, true),
             'error' => $error,
             'validationErrors' => $validationErrors,
             'stepData' => $stepData,

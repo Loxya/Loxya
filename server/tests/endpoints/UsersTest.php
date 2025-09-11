@@ -29,7 +29,7 @@ final class UsersTest extends ApiTestCase
                 'country_id' => 1,
                 'country' => CountriesTest::data(1),
                 'full_address' => "1, somewhere av.\n1234 Megacity",
-                'email' => 'tester@robertmanager.net',
+                'email' => 'tester@loxya.com',
                 'group' => Group::ADMINISTRATION,
                 'language' => 'en',
                 'default_bookings_view' => BookingViewMode::CALENDAR->value,
@@ -50,8 +50,8 @@ final class UsersTest extends ApiTestCase
                 'country_id' => null,
                 'country' => null,
                 'full_address' => null,
-                'email' => 'tester2@robertmanager.net',
-                'group' => Group::MANAGEMENT,
+                'email' => 'tester2@loxya.com',
+                'group' => Group::OPERATION,
                 'language' => 'fr',
                 'default_bookings_view' => BookingViewMode::CALENDAR->value,
                 'default_technicians_view' => TechniciansViewMode::LISTING->value,
@@ -60,7 +60,7 @@ final class UsersTest extends ApiTestCase
             ],
             [
                 'id' => 3,
-                'pseudo' => 'aldup',
+                'pseudo' => 'a.dupont',
                 'first_name' => 'Alexandre',
                 'last_name' => 'Dupont',
                 'full_name' => 'Alexandre Dupont',
@@ -71,8 +71,8 @@ final class UsersTest extends ApiTestCase
                 'country_id' => 1,
                 'country' => CountriesTest::data(1),
                 'full_address' => "15 Rue de l'Église\n75001 Paris",
-                'email' => 'alex.dupont@example.com',
-                'group' => Group::MANAGEMENT,
+                'email' => 'alex.dupont@loxya.com',
+                'group' => Group::OPERATION,
                 'language' => 'fr',
                 'default_bookings_view' => BookingViewMode::LISTING->value,
                 'default_technicians_view' => TechniciansViewMode::LISTING->value,
@@ -92,7 +92,7 @@ final class UsersTest extends ApiTestCase
                 'country_id' => 2,
                 'country' => CountriesTest::data(2),
                 'full_address' => null,
-                'email' => 'visitor@robertmanager.net',
+                'email' => 'visitor@loxya.com',
                 'group' => Group::READONLY_PLANNING_GENERAL,
                 'language' => 'fr',
                 'default_bookings_view' => BookingViewMode::CALENDAR->value,
@@ -113,11 +113,11 @@ final class UsersTest extends ApiTestCase
                 'country_id' => null,
                 'country' => null,
                 'full_address' => null,
-                'email' => 'external@robertmanager.net',
+                'email' => 'external@loxya.com',
                 'group' => Group::READONLY_PLANNING_GENERAL,
                 'language' => 'en',
                 'default_bookings_view' => BookingViewMode::CALENDAR->value,
-                'default_technicians_view' => TechniciansViewMode::TIMELINE->value,
+                'default_technicians_view' => TechniciansViewMode::LISTING->value,
                 'disable_contextual_popovers' => false,
                 'disable_search_persistence' => false,
             ],
@@ -144,7 +144,9 @@ final class UsersTest extends ApiTestCase
             User::SERIALIZE_DETAILS => $users->map(static fn ($user) => (
                 Arr::except($user, User::SETTINGS_ATTRIBUTES)
             )),
-            User::SERIALIZE_SESSION => $users,
+            User::SERIALIZE_SESSION => $users->map(static fn ($user) => (
+                array_replace($user, ['type' => 'user'])
+            )),
             default => throw new \InvalidArgumentException(sprintf("Unknown format \"%s\"", $format)),
         };
 
@@ -187,7 +189,7 @@ final class UsersTest extends ApiTestCase
         ]);
 
         // - Test de récupération des membres d'un groupe en particulier.
-        $this->client->get(sprintf('/api/users?group=%s', Group::MANAGEMENT));
+        $this->client->get(sprintf('/api/users?group=%s', Group::OPERATION));
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(2, [
             self::data(3),
@@ -306,13 +308,13 @@ final class UsersTest extends ApiTestCase
             'pseudo' => 'test1',
             'first_name' => 'Nouveau',
             'last_name' => 'Testeur',
-            'email' => 'tester@robertmanager.net',
+            'email' => 'tester@loxya.com',
             'password' => 'test-dupe',
-            'group' => Group::MANAGEMENT,
+            'group' => Group::OPERATION,
         ]);
         $this->assertApiValidationError([
             'pseudo' => "This pseudo is already in use.",
-            'email' => "This email is already in use.",
+            'email' => "This email address is already in use.",
         ]);
     }
 
@@ -324,7 +326,7 @@ final class UsersTest extends ApiTestCase
             'first_name' => 'Jeanne',
             'last_name' => 'Testeur',
             'password' => 'my-ultim4te-paßwor!',
-            'group' => Group::MANAGEMENT,
+            'group' => Group::OPERATION,
         ]);
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
         $this->assertResponseData([
@@ -341,7 +343,7 @@ final class UsersTest extends ApiTestCase
             'country' => null,
             'country_id' => null,
             'full_address' => null,
-            'group' => Group::MANAGEMENT,
+            'group' => Group::OPERATION,
         ]);
     }
 

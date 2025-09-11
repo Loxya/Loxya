@@ -22,7 +22,7 @@ final class BeneficiariesTest extends ApiTestCase
                 'last_name' => 'Fountain',
                 'full_name' => 'Jean Fountain',
                 'reference' => '0001',
-                'email' => 'tester@robertmanager.net',
+                'email' => 'tester@loxya.com',
                 'phone' => null,
                 'street' => "1, somewhere av.",
                 'postal_code' => '1234',
@@ -45,7 +45,7 @@ final class BeneficiariesTest extends ApiTestCase
                 'last_name' => 'Rabbit',
                 'full_name' => 'Roger Rabbit',
                 'reference' => '0002',
-                'email' => 'tester2@robertmanager.net',
+                'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
                 'postal_code' => null,
@@ -155,11 +155,11 @@ final class BeneficiariesTest extends ApiTestCase
         ]);
 
         // - Email
-        $this->client->get('/api/beneficiaries?search=@robertmanager.net');
+        $this->client->get('/api/beneficiaries?search=@loxya.com');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(2, [
-            self::data(1), // - Jean Fountain (tester@robertmanager.net)
-            self::data(2), // - Roger Rabbit (tester2@robertmanager.net)
+            self::data(1), // - Jean Fountain (tester@loxya.com)
+            self::data(2), // - Roger Rabbit (tester2@loxya.com)
         ]);
 
         // - Référence
@@ -310,9 +310,7 @@ final class BeneficiariesTest extends ApiTestCase
         $this->client->post('/api/beneficiaries', [
             'first_name' => 'Tester',
             'last_name' => 'Leblanc',
-            'pseudo' => 'new-test',
-            'email' => 'tester@robertmanager.net',
-            'password' => '0123456',
+            'email' => 'tester@loxya.com',
         ]);
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
     }

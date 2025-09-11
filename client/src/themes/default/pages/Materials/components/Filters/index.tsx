@@ -1,10 +1,10 @@
 import './index.scss';
 import Period from '@/utils/period';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import SearchPanel, { FiltersSchema } from '@/themes/default/components/MaterialsFilters';
 import DatePicker from '@/themes/default/components/DatePicker';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { Filters } from '@/themes/default/components/MaterialsFilters';
 
 type Props = {
@@ -16,6 +16,27 @@ type Props = {
      * calcul des quantités disponibles.
      */
     quantitiesPeriodValue: Period | null,
+
+    /**
+     * Fonction appelée lorsque les filtres ont changés.
+     *
+     * @param newFilters - Les nouveaux filtres.
+     */
+    onFiltersChange?(newFilters: Filters): void,
+
+    /**
+     * Fonction appelée lorsque la valeur de la période à
+     * utiliser pour le calcul des quantités disponibles change.
+     *
+     * @param newPeriod - Les nouveaux filtres.
+     */
+    onQuantitiesPeriodChange?(newPeriod: Raw<Period> | null): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a soumis
+     * les changements dans les filtres.
+     */
+    onSubmit?(): void,
 };
 
 type Data = {
@@ -34,13 +55,28 @@ const MaterialsPageFilters = defineComponent({
             ),
         },
         quantitiesPeriodValue: {
-            // TODO [vue@>2.7]: Mettre `[Period, null] as PropType<Props['quantitiesPeriodValue']>,` en Vue 2.7.
+            // TODO [vue@>3]: Mettre `[Period, null]` en Vue 3.
             // @see https://github.com/vuejs/core/issues/3948#issuecomment-860466204
             type: null as unknown as PropType<Props['quantitiesPeriodValue']>,
             required: true,
             validator: (value: unknown): boolean => (
                 value === null || value instanceof Period
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onFiltersChange: {
+            type: Function as PropType<Props['onFiltersChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onQuantitiesPeriodChange: {
+            type: Function as PropType<Props['onQuantitiesPeriodChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
         },
     },
     emits: [
@@ -61,7 +97,7 @@ const MaterialsPageFilters = defineComponent({
             this.$emit('filtersChange', newFilters);
         },
 
-        handleChangeQuantitiesPeriod(newPeriod: Period<true> | null, isFullDays: boolean) {
+        handleChangeQuantitiesPeriod(newPeriod: Raw<Period> | null, isFullDays: boolean) {
             this.quantitiesPeriodIsFullDays = isFullDays;
             this.$emit('quantitiesPeriodChange', newPeriod);
         },

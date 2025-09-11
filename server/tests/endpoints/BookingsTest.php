@@ -13,7 +13,7 @@ final class BookingsTest extends ApiTestCase
 {
     public function testGetAll(): void
     {
-        Carbon::setTestNow(Carbon::create(2024, 6, 15, 12, 30, 30));
+        static::setNow(Carbon::create(2024, 6, 15, 12, 30, 30));
 
         static::setCustomConfig(['maxItemsPerPage' => 5]);
 
@@ -131,7 +131,7 @@ final class BookingsTest extends ApiTestCase
         ]);
 
         // - Test avec un filtre sur les bookings se terminant aujourd'hui.
-        Carbon::setTestNow(Carbon::create(2023, 5, 28, 18, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 28, 18, 0, 0));
 
         $this->client->get('/api/bookings?paginated=1&endingToday=1');
         $this->assertStatusCode(StatusCode::STATUS_OK);
@@ -162,7 +162,7 @@ final class BookingsTest extends ApiTestCase
 
     public function testUpdateEventMaterialsInvalid(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 5, 3, 18, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 3, 18, 0, 0));
 
         // - Confirmation de l'événement #1 avant le test.
         $event = Event::findOrFail(1);
@@ -180,7 +180,7 @@ final class BookingsTest extends ApiTestCase
 
     public function testUpdateEventMaterials(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 3, 15, 18, 0, 0));
+        static::setNow(Carbon::create(2019, 3, 15, 18, 0, 0));
 
         // - Modification d'un événement qui n'est pas encore passé.
         $this->client->put(sprintf('/api/bookings/%s/4/materials', Event::TYPE), [
@@ -211,7 +211,7 @@ final class BookingsTest extends ApiTestCase
             ),
         ]));
 
-        Carbon::setTestNow(Carbon::create(2023, 5, 26, 18, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 26, 18, 0, 0));
 
         // - Modification avec réduction des quantités => Les quantités retournées doit être adapté.
         $this->client->put(sprintf('/api/bookings/%s/7/materials', Event::TYPE), [
@@ -277,7 +277,7 @@ final class BookingsTest extends ApiTestCase
 
     public function testUpdateBillingData(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 5, 25, 12, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 25, 12, 0, 0));
 
         // - Test avec des données incomplètes.
         $billingData = [

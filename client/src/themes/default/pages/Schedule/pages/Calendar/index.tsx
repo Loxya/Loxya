@@ -5,14 +5,13 @@ import isEqual from 'lodash/isEqual';
 import config from '@/globals/config';
 import debounce from 'lodash/debounce';
 import DateTime from '@/utils/datetime';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import showModal from '@/utils/showModal';
 import { Group } from '@/stores/api/groups';
 import parseInteger from '@/utils/parseInteger';
 import stringIncludes from '@/utils/stringIncludes';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
-import { isRequestErrorStatusCode } from '@/utils/errors';
+import { defineComponent, markRaw } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import bookingFormatterFactory from '@/utils/formatTimelineBooking';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
@@ -49,7 +48,7 @@ import type { User } from '@/stores/api/users';
 import type { EventDetails as EventDetailsType } from '@/stores/api/events';
 import type { Session } from '@/stores/api/session';
 import type { DebouncedMethod } from 'lodash';
-import type { ComponentRef } from 'vue';
+import type { ComponentRef, Raw } from 'vue';
 import type {
     TimelineItem,
     TimelineClickEvent,
@@ -80,11 +79,11 @@ type Data = {
     isFetched: boolean,
     isSaving: boolean,
     hasCriticalError: boolean,
-    centerDate: Day | null,
-    defaultPeriod: Period,
-    fetchPeriod: Period,
+    centerDate: Raw<Day> | null,
+    defaultPeriod: Raw<Period>,
+    fetchPeriod: Raw<Period>,
     filters: Filters,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /** Page du calendrier des événements. */
@@ -121,10 +120,12 @@ const ScheduleCalendar = defineComponent({
         }
 
         // - Périodes par défaut.
-        const defaultPeriod = getDefaultPeriod();
-        const fetchPeriod = defaultPeriod
-            .setFullDays(true)
-            .offset(FETCH_DELTA);
+        const defaultPeriod = markRaw(getDefaultPeriod());
+        const fetchPeriod = markRaw(
+            defaultPeriod
+                .setFullDays(true)
+                .offset(FETCH_DELTA),
+        );
 
         return {
             bookings: [],
@@ -132,7 +133,7 @@ const ScheduleCalendar = defineComponent({
             isFetched: false,
             isSaving: false,
             hasCriticalError: false,
-            now: DateTime.now(),
+            now: markRaw(DateTime.now()),
             centerDate: null,
             defaultPeriod,
             fetchPeriod,
@@ -151,7 +152,11 @@ const ScheduleCalendar = defineComponent({
         },
 
         isTeamMember(): boolean {
-            return this.$store.getters['auth/is']([Group.ADMINISTRATION, Group.MANAGEMENT]);
+            return this.$store.getters['auth/is']([
+                Group.ADMINISTRATION,
+                Group.SUPERVISION,
+                Group.OPERATION,
+            ]);
         },
 
         filteredBookings(): LazyBooking[] {
@@ -279,17 +284,14 @@ const ScheduleCalendar = defineComponent({
         filters: {
             handler(newFilters: Filters) {
                 // - Persistance dans le local storage.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
                     persistFilters(newFilters);
                 }
 
                 // - Mise à jour de l'URL.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 const prevRouteQuery = this.$route?.query ?? {};
                 const newRouteQuery = convertFiltersToRouteQuery(newFilters);
                 if (!isEqual(prevRouteQuery, newRouteQuery)) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     this.$router.replace({ query: newRouteQuery });
                 }
             },
@@ -313,7 +315,7 @@ const ScheduleCalendar = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
         this.handleRangeChangedDebounced?.cancel();
@@ -335,7 +337,7 @@ const ScheduleCalendar = defineComponent({
         },
 
         handleChangeCenterDate(day: Day) {
-            this.centerDate = day;
+            this.centerDate = markRaw(day);
 
             const $timeline = this.$refs.timeline as ComponentRef<typeof Timeline>;
             $timeline?.moveTo(day.toDateTime().set('hour', 12));
@@ -343,7 +345,7 @@ const ScheduleCalendar = defineComponent({
 
         handleRangeChanged(newPeriod: Period) {
             localStorage.setItem(CALENDAR_PERIOD_STORAGE_KEY, JSON.stringify(newPeriod));
-            this.centerDate = getCenterDateFromPeriod(newPeriod);
+            this.centerDate = markRaw(getCenterDateFromPeriod(newPeriod));
 
             const newFetchPeriod = newPeriod
                 .setFullDays(true)
@@ -355,7 +357,7 @@ const ScheduleCalendar = defineComponent({
                 newFetchPeriod.end.isAfter(this.fetchPeriod.end)
             );
             if (needFetch) {
-                this.fetchPeriod = newFetchPeriod;
+                this.fetchPeriod = markRaw(newFetchPeriod);
                 this.fetchData();
             }
         },
@@ -527,6 +529,8 @@ const ScheduleCalendar = defineComponent({
                     (booking: BookingExcerpt) => {
                         const prevEntityBookings = prevCompleteBookings.get(booking.entity);
                         return prevEntityBookings?.has(booking.id)
+                            // TODO: Si quelque chose a changé notamment au niveau du retour,
+                            //       invalider le cache `isComplete: true` du booking ?
                             ? { isComplete: true, booking: prevEntityBookings.get(booking.id)! }
                             : { isComplete: false, booking };
                     },
@@ -534,7 +538,7 @@ const ScheduleCalendar = defineComponent({
 
                 this.isFetched = true;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     const $timeline = this.$refs.timeline as ComponentRef<typeof Timeline>;
                     $timeline?.zoomIn(1, false);
                     return;
@@ -549,7 +553,7 @@ const ScheduleCalendar = defineComponent({
                 const promises = this.bookings
                     .filter((lazy: LazyBooking): lazy is LazyBooking<false> => (
                         !lazy.isComplete &&
-                        lazy.booking.mobilization_period.start.isAfter(this.now)
+                        lazy.booking.mobilization_period.end.isAfter(this.now)
                     ))
                     .map(({ booking }: LazyBooking<false>) => async () => {
                         const finalBooking = await apiBookings.oneSummary(booking.entity, booking.id);

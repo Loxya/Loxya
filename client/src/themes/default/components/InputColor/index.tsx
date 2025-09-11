@@ -4,11 +4,11 @@ import ClickOutside from 'vue-click-outside';
 import generateUniqueId from 'lodash/uniqueId';
 import { computePosition, autoUpdate, flip, shift, offset } from '@floating-ui/dom';
 import { MountingPortal as Portal } from 'portal-vue';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 import ColorPicker from '@/themes/default/components/ColorPicker';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { RawColor } from '@/utils/color';
 
 type Props = {
@@ -55,6 +55,20 @@ type Props = {
 
     /** Le champ peut-il être vidé ? */
     clearable?: boolean,
+
+    /**
+     * Fonction appelée lorsque la couleur a changé.
+     *
+     * @param newValue - La nouvelle couleur ou `null` si deselection.
+     */
+    onInput?(newValue: Raw<Color> | null): void,
+
+    /**
+     * Fonction appelée lorsque la couleur a changé.
+     *
+     * @param newValue - La nouvelle couleur ou `null` si deselection.
+     */
+    onChange?(newValue: Raw<Color> | null): void,
 };
 
 type InstanceProperties = {
@@ -63,7 +77,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    currentColor: Color | null,
+    currentColor: Raw<Color> | null,
     showPicker: boolean,
     pickerPosition: Position,
 };
@@ -73,8 +87,8 @@ const InputColor = defineComponent({
     name: 'InputColor',
     directives: { ClickOutside },
     inject: {
-        'input.invalid': { default: { value: false } },
-        'input.disabled': { default: { value: false } },
+        'input.invalid': { default: false },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -107,6 +121,16 @@ const InputColor = defineComponent({
             type: Boolean as PropType<Props['clearable']>,
             default: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change'],
     setup: (): InstanceProperties => ({
@@ -126,7 +150,7 @@ const InputColor = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'].value;
+            return this['input.invalid'];
         },
 
         inheritedDisabled(): boolean {
@@ -136,7 +160,7 @@ const InputColor = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
 
         color(): Color | null {
@@ -255,7 +279,7 @@ const InputColor = defineComponent({
                 return;
             }
 
-            this.currentColor = color;
+            this.currentColor = markRaw(color);
 
             if (this.currentColor !== null) {
                 this.$emit('input', this.currentColor);
@@ -376,7 +400,7 @@ const InputColor = defineComponent({
                     onClick={handleFieldClick}
                     onFocus={handleFieldFocus}
                     onKeydown={handleKeydown}
-                    tabIndex={!disabled ? 0 : -1}
+                    tabindex={!disabled ? 0 : -1}
                 >
                     <div class="InputColor__field__preview" />
                     {(clearable && !disabled && color !== null) && (

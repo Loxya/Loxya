@@ -1,16 +1,30 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
-import pages from '../../pages';
+import allPages from '../../pages';
 
-import type { CustomRouterLinkProps } from 'vue-router';
+import type { CustomRouterLinkProps, RouteConfig } from 'vue-router';
 import type { Page } from '../../pages';
 
 /** Sidebar de la page des paramètres globaux. */
 const GlobalSettingsSidebar = defineComponent({
     name: 'GlobalSettingsSidebar',
+    computed: {
+        pages(): Page[] {
+            return allPages
+                .filter((page: Page | RouteConfig): page is Page => (
+                    'meta' in page &&
+                    !!page.meta &&
+                    Array.isArray(page.meta.requiresGroups)
+                ))
+                .filter(({ meta }: Page) => {
+                    const { requiresGroups } = meta;
+                    return this.$store.getters['auth/is'](requiresGroups);
+                });
+        },
+    },
     render() {
-        const { $t: __ } = this;
+        const { $t: __, pages } = this;
 
         return (
             <ul class="GlobalSettingsSidebar">

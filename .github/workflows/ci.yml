@@ -12,9 +12,9 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '18' }
-            - run: yarn install --non-interactive --pure-lockfile
-            - run: yarn lint:js --max-warnings 0 --color
+              with: { node-version: '22' }
+            - run: npm ci
+            - run: npm run lint:js -- --max-warnings 0 --color
 
     client-linting-scss:
         name     : "Client: Linting (SCSS)"
@@ -23,9 +23,9 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '18' }
-            - run: yarn install --non-interactive --pure-lockfile
-            - run: yarn lint:scss --max-warnings 0 --color
+              with: { node-version: '22' }
+            - run: npm ci
+            - run: npm run lint:scss -- --max-warnings 0 --color
 
     client-type-checking:
         name     : "Client: Type checking"
@@ -34,9 +34,9 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '18' }
-            - run: yarn install --non-interactive --pure-lockfile
-            - run: yarn check-types
+              with: { node-version: '22' }
+            - run: npm ci
+            - run: npm run check-types
 
     client-unit-tests:
         name     : "Client: Tests unitaires"
@@ -45,9 +45,9 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '18' }
-            - run: yarn install --non-interactive --pure-lockfile
-            - run: yarn test --colors --coverage --passWithNoTests
+              with: { node-version: '22' }
+            - run: npm ci
+            - run: npm test -- --color --coverage --ci --passWithNoTests
 
     server-linting:
         name     : "Serveur: Linting"
@@ -104,7 +104,7 @@ jobs:
             - uses: shivammathur/setup-php@v2
               with:
                   php-version : ${{ matrix.php }}
-                  extensions  : dom, mbstring, pdo, intl-74.2, simplexml
+                  extensions  : dom, mbstring, pdo, intl-76.1, simplexml
                   coverage    : xdebug
             - run: composer install --no-interaction --no-progress
             - run: ./vendors/bin/phpunit -d --without-creating-snapshots

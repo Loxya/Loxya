@@ -1,10 +1,10 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import formatAmount from '@/utils/formatAmount';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Invoice } from '@/stores/api/invoices';
 
 export enum InvoiceLayout {
@@ -53,6 +53,11 @@ const EventDetailsInvoice = defineComponent({
         },
     },
     computed: {
+        isCreditNote(): boolean {
+            const { total_with_taxes: totalWithTaxes } = this.invoice;
+            return totalWithTaxes.isNegative();
+        },
+
         hasTaxes(): boolean {
             const { total_taxes: totalTaxes } = this.invoice;
             return totalTaxes.length > 0;
@@ -74,7 +79,7 @@ const EventDetailsInvoice = defineComponent({
         },
     },
     render() {
-        const { __, layout, outdated, invoice, hasTaxes } = this;
+        const { __, layout, isCreditNote, outdated, invoice, hasTaxes } = this;
         const isVerticalLayout = layout === InvoiceLayout.VERTICAL;
         const {
             url,
@@ -90,6 +95,11 @@ const EventDetailsInvoice = defineComponent({
             { 'EventDetailsInvoice--outdated': outdated },
         ];
 
+        const title = __(
+            `title.${isCreditNote ? 'credit-note' : 'invoice'}`,
+            { number, date: date.toReadable() },
+        );
+
         return (
             <div class={className}>
                 <div class="EventDetailsInvoice__main">
@@ -97,7 +107,7 @@ const EventDetailsInvoice = defineComponent({
                         <Icon name="file-invoice-dollar" />
                     </div>
                     <div class="EventDetailsInvoice__text">
-                        {__('title', { number, date: date.toReadable() })}<br />
+                        {title}<br />
                         {
                             hasTaxes
                                 ? __('global.with-amount-of-excl-tax', { amount: formatAmount(totalWithoutTaxes, currency) })
@@ -113,7 +123,11 @@ const EventDetailsInvoice = defineComponent({
                         to={url}
                         download
                     >
-                        {isVerticalLayout ? __('download') : __('global.download')}
+                        {(
+                            isVerticalLayout
+                                ? __(`download.${isCreditNote ? 'credit-note' : 'invoice'}`)
+                                : __('global.download')
+                        )}
                     </Button>
                 </div>
             </div>

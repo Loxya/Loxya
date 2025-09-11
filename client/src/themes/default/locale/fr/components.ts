@@ -9,6 +9,7 @@ export default {
     'DatePicker': require('@/themes/default/components/DatePicker/translations/fr.yml'),
     'Select': require('@/themes/default/components/Select/translations/fr.yml'),
     'Search': require('@/themes/default/components/Search/translations/fr.yml'),
+    'InputMultiple': require('@/themes/default/components/InputMultiple/translations/fr.yml'),
     'Popover': {
         'Material': require('@/themes/default/components/Popover/Material/translations/fr.yml'),
     },

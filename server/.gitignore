@@ -1,6 +1,6 @@
 .env
 .env.*
-!.env.example
+!.env.dist
 
 src/App/Config/certs
 src/App/Config/*.json

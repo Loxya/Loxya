@@ -1,11 +1,11 @@
 import './index.scss';
 import Decimal from 'decimal.js';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import formatAmount from '@/utils/formatAmount';
 import Item from './Item';
 
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EmbeddedMaterial } from '../../_types';
 import type { EmbeddedMaterialsByCategory } from '../../utils/groupByCategories';
 

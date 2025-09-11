@@ -1,8 +1,8 @@
 import './index.scss';
-import axios from 'axios';
 import debounce from 'lodash/debounce';
 import { ApiErrorCode } from '@/stores/api/@codes';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import apiEvents from '@/stores/api/events';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
@@ -12,10 +12,9 @@ import InvoiceEditor, {
     getEmbeddedBilling,
 } from '@/themes/default/components/InvoiceEditor';
 
-import type { ComponentRef } from 'vue';
+import type { ComponentRef, PropType } from 'vue';
 import type { DebouncedMethod } from 'lodash';
 import type { Booking } from '@/stores/api/bookings';
-import type { PropType } from '@vue/composition-api';
 import type { EventDetails } from '@/stores/api/events';
 import type { BillingData } from '@/themes/default/components/InvoiceEditor';
 
@@ -50,6 +49,8 @@ const EventEditStepBilling = defineComponent({
         'stopLoading',
         'goToStep',
         'updateEvent',
+        'dataChange', // eslint-disable-line vue/no-unused-emit-declarations
+        'dataReset', // eslint-disable-line vue/no-unused-emit-declarations
     ],
     setup: (): InstanceProperties => ({
         debouncedSave: undefined,
@@ -147,16 +148,9 @@ const EventEditStepBilling = defineComponent({
 
                 this.$emit('updateEvent', updatedEvent);
             } catch (error) {
-                let isAnUnexpectedError: boolean = true;
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        isAnUnexpectedError = false;
-                    }
-                }
-
-                if (isAnUnexpectedError) {
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                } else {
                     this.$toasted.error(__('global.errors.unexpected-while-saving'));
                 }
 

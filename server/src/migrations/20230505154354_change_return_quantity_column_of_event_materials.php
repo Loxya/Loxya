@@ -2,9 +2,6 @@
 declare(strict_types=1);
 
 use Cake\Database\Expression\QueryExpression;
-use Cake\Database\Query;
-use Cake\Database\Query\SelectQuery;
-use Cake\Database\Query\UpdateQuery;
 use Illuminate\Support\Carbon;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
@@ -35,8 +32,7 @@ final class ChangeReturnQuantityColumnOfEventMaterials extends AbstractMigration
 
         $prefix = Config::get('db.prefix');
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevent_materials', $prefix))
             ->set([
@@ -44,8 +40,7 @@ final class ChangeReturnQuantityColumnOfEventMaterials extends AbstractMigration
                 'quantity_returned_broken' => null,
             ])
             ->where(function (QueryExpression $expression) use ($prefix) {
-                /** @var SelectQuery $qb */
-                $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+                $qb = $this->getSelectBuilder();
                 $eventsIds = $qb
                     ->select('id')
                     ->from(sprintf('%sevents', $prefix))
@@ -62,16 +57,14 @@ final class ChangeReturnQuantityColumnOfEventMaterials extends AbstractMigration
     {
         $prefix = Config::get('db.prefix');
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevent_materials', $prefix))
             ->set(['quantity_returned' => '0'])
             ->where(['quantity_returned IS' => null])
             ->execute();
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevent_materials', $prefix))
             ->set(['quantity_returned_broken' => '0'])

@@ -1,12 +1,11 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import config from '@/globals/config';
-import { Group } from '@/stores/api/groups';
 import Header from './Header';
 import MainMenu from './MainMenu';
 import UserMenu from './UserMenu';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /** Est-ce que la sidebar est ouverte ? */
@@ -23,13 +22,6 @@ const DefaultLayoutSidebar = defineComponent({
         },
     },
     computed: {
-        canUseQuickScan() {
-            return (
-                this.$store.getters['auth/is'](Group.ADMINISTRATION) ||
-                this.$store.getters['auth/is'](Group.MANAGEMENT)
-            );
-        },
-
         year(): number {
             return (new Date()).getFullYear();
         },

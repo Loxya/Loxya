@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
-use Cake\Database\Query\InsertQuery;
-use Cake\Database\Query\SelectQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -14,8 +10,7 @@ final class RemovesTagsFromCompanies extends AbstractMigration
     {
         $prefix = Config::get('db.prefix');
 
-        /** @var DeleteQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+        $qb = $this->getDeleteBuilder();
         $qb
             ->delete(sprintf('%staggables', $prefix))
             ->where(['taggable_type' => 'Loxya\Models\Company'])
@@ -28,8 +23,7 @@ final class RemovesTagsFromCompanies extends AbstractMigration
         $defaultTags = Config::get('legacy.defaultTags', []);
 
         // - Récupère toutes les sociétés déjà en base.
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $companies = $qb
             ->select(['id'])
             ->from(sprintf('%scompanies', $prefix))
@@ -40,8 +34,7 @@ final class RemovesTagsFromCompanies extends AbstractMigration
         }
 
         // - Id du tag "Bénéficiaire".
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $beneficiaryTag = $qb
             ->select(['id'])
             ->from(sprintf('%stags', $prefix))
@@ -52,8 +45,7 @@ final class RemovesTagsFromCompanies extends AbstractMigration
             return;
         }
 
-        /** @var InsertQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_INSERT);
+        $qb = $this->getInsertBuilder();
         $qb
             ->insert(['tag_id', 'taggable_type', 'taggable_id'])
             ->into(sprintf('%staggables', $prefix));

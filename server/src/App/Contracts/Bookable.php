@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Loxya\Contracts;
 
-use DateTimeInterface;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Loxya\Models\User;
 
-interface Bookable
+interface Bookable extends PeriodInterface
 {
     /**
      * Permet de sauvegarder une nouvelle liste de matériel pour le bookable
@@ -49,19 +49,17 @@ interface Bookable
     /**
      * Permet de terminer l'inventaire de retour.
      *
-     * @param User $author L'auteur de l'inventaire de retour.
+     * @param User             $author L'auteur de l'inventaire de retour.
+     * @param ?CarbonInterface $date   L'éventuelle date personnalisée à utiliser
+     *                                 pour l'inventaire de retour.
      *
      * @return static L'instance du bookable actualisée.
      */
-    public function finishReturnInventory(User $author): static;
+    public function finishReturnInventory(User $author, ?CarbonInterface $date): static;
 
     /**
      * Permet de définir une période pendant laquelle on veut limiter
      * la recherche des bookables.
-     *
-     * @param Builder $query
-     * @param string|DateTimeInterface|PeriodInterface $start
-     * @param string|DateTimeInterface|null $end (optionnel)
      */
-    public function scopeInPeriod(Builder $query, $start, $end = null): Builder;
+    public function scopeInPeriod(Builder $query, PeriodInterface $period): Builder;
 }

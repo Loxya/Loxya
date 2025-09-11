@@ -1,7 +1,7 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import generateUniqueId from 'lodash/uniqueId';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 /** Variante de couleur du logo. */
 enum Variant {
@@ -25,7 +25,7 @@ type Props = {
      *
      * @default Variant.LIGHT
      */
-    variant?: Variant,
+    variant?: Variant | `${Variant}`,
 };
 
 type InstanceProperties = {

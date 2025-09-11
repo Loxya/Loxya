@@ -1,7 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -18,7 +18,7 @@ type Props = {
      *
      * Si cette prop. est omise, le component ne sera pas "contrôlé".
      */
-    value?: string | number,
+    value?: string | number | null,
 
     /**
      * Le nombre de lignes qui doivent être affichées dans la zone de rédaction.
@@ -38,14 +38,28 @@ type Props = {
 
     /** Le champ doit-il être marqué comme invalide ? */
     invalid?: boolean,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onInput?(newValue: string): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du bloc-note.
+     */
+    onChange?(newValue: string): void,
 };
 
 /** Un champ permettant d'éditer du texte sur plusieurs lignes (= `<textarea>`). */
 const Textarea = defineComponent({
     name: 'Textarea',
     inject: {
-        'input.invalid': { default: { value: false } },
-        'input.disabled': { default: { value: false } },
+        'input.invalid': { default: false },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -72,6 +86,16 @@ const Textarea = defineComponent({
             type: Boolean as PropType<Props['invalid']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change'],
     computed: {
@@ -82,7 +106,7 @@ const Textarea = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'].value;
+            return this['input.invalid'];
         },
 
         inheritedDisabled(): boolean {
@@ -92,7 +116,7 @@ const Textarea = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
     },
     methods: {
@@ -102,7 +126,7 @@ const Textarea = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleInput(e: InputEvent) {
+        handleInput(e: Event) {
             const { value } = e.target as HTMLTextAreaElement;
             if (this.inheritedDisabled) {
                 return;
@@ -153,7 +177,7 @@ const Textarea = defineComponent({
                 ref="textarea"
                 class={className}
                 name={name}
-                value={value}
+                value={value ?? undefined}
                 rows={rows}
                 disabled={disabled}
                 placeholder={placeholder}

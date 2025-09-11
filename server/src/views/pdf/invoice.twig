@@ -1,6 +1,14 @@
 {% extends 'pdf/base.twig' %}
 
-{% block title %}{{ __('invoice-number', number) }}{% endblock %}
+{% set isCreditNote = totalWithTaxes.isNegative() %}
+
+{% block title %}
+    {%- if not isCreditNote -%}
+        {{ __('invoice-number', number) }}
+    {%- else -%}
+        {{ __('credit-note-number', number) }}
+    {%- endif -%}
+{% endblock %}
 
 {% block content %}
 <table class="layout-table">
@@ -12,33 +20,49 @@
                     showLegalNumbers: true,
                     showLogo: true,
                 })
-            -}}
+            ~}}
         </td>
         <td class="half">
             {% set currencyName = currency|currency_name(locale)|ucfirst -%}
-            <h2 class="box center">{{ __('invoice-title', currencyName, number) }}</h2>
-            <table class="layout-table">
+            <h2 class="box center">
+                {%- if not isCreditNote -%}
+                    {{ __('invoice-title', currencyName, number) }}
+                {%- else -%}
+                    {{ __('credit-note-title', currencyName, number) }}
+                {%- endif -%}
+            </h2>
+            <table class="layout-table spaceBottom5">
                 <tr>
                     <td class="size12">{{ __('on-date', date|format_date('short', locale=locale))|ucfirst }}</td>
                     <td class="size12 right">{{ __('page', 1) }}</td>
                 </tr>
             </table>
             <p>{{ __('beneficiary') }}</p>
-            <h2 class="vspace10 indent5">
-                {{ include('blocks/beneficiary.twig', { beneficiary }) }}
+            <h2>
+                {{- include('blocks/beneficiary.twig', { beneficiary }) ~}}
             </h2>
         </td>
     </tr>
 </table>
 
-<div class="vspace5">
-    {% if booking.title is not empty -%}
-    <p>{{ __('event', booking.title) }}</p>
-    {% endif -%}
+<div class="{{ showMobilizationPeriod or showBookingDescription ? 'spaceBottom5' : 'vspace5' }}">
+    <p class="strong">{{ __('event', booking.title) }}</p>
     <p class="strong">
         {{ booking.period|format_period('full', locale=locale)|ucfirst -}}
         {% if booking.location %}, {{ __('in-location', booking.location) }}{% endif ~%}
     </p>
+    {%- if showMobilizationPeriod ~%}
+    <p class="lighter">
+        {{ __('pickup-date', [booking.mobilizationPeriod|format_period_start('short', locale=locale)]) }}<br />
+        {{ __('return-date', [booking.mobilizationPeriod|format_period_end('short', locale=locale)]) }}
+    </p>
+    {% endif -%}
+    {%- if showBookingDescription and booking.description is not empty -%}
+    <p>{{ booking.description|nl2br }}</p>
+    {% endif -%}
+    {%- if showTotalReplacementPrice -%}
+    <p>{{ __('total-replacement-amount', [totalReplacement|format_currency(currency, locale=locale)]) }}</p>
+    {% endif -%}
     <table>
         <thead>
             <tr>
@@ -71,7 +95,7 @@
             {%- endfor ~%}
         </tbody>
     </table>
-    <p class="size8 lighter">{{ __('invoice-note-detail-next-page') }}</p>
+    <p class="size8 lighter">{{ __('note-detail-next-page') }}</p>
 </div>
 
 {% if isLegacy %}
@@ -243,8 +267,14 @@
         <tr>
             <td>
                 {% if hasTaxes -%}{{ __('total-incl-taxes') }}{% endif -%}
-                <div class="strong size12">{{ __('total-due') }}</div>
-                {% if not hasTaxes -%}{{ __('tax-not-applicable') }}{% endif -%}
+                <div class="strong size12">
+                    {%- if not isCreditNote -%}
+                        {{ __('total-due') }}
+                    {%- else -%}
+                        {{ __('total-credit') }}
+                    {%- endif -%}
+                </div>
+                {%- if not hasTaxes -%}{{ __('tax-not-applicable') }}{% endif ~%}
             </td>
             <td class="size12 strong">
                 {{ totalWithTaxes|format_currency(currency, locale=locale) }}
@@ -252,6 +282,16 @@
         </tr>
     </tbody>
 </table>
+{% if customText and customText.content is not empty %}
+<div class="vspace2">
+    {% if customText.title is not empty -%}
+    <h2>{{ customText.title }}</h2>
+    {% endif -%}
+    <p class="size10">
+        {{~ customText.content|nl2br }}
+    </p>
+</div>
+{% endif %}
 {% endif %}
 <div class="changePage vspace5">
     <table class="layout-table">
@@ -263,10 +303,16 @@
                         showLegalNumbers: false,
                         showLogo: true,
                     })
-                -}}
+                ~}}
             </td>
             <td class="half">
-                <h2 class="box center">{{ __('invoice-details-title', number) }}</h2>
+                <h2 class="box center">
+                    {%- if not isCreditNote -%}
+                        {{ __('invoice-details-title', number) }}
+                    {%- else -%}
+                        {{ __('credit-note-details-title', number) }}
+                    {%- endif -%}
+                </h2>
                 <table class="layout-table">
                     <tr>
                         <td class="size12">{{ __('on-date', date|format_date('short', locale=locale))|ucfirst }}</td>
@@ -281,47 +327,76 @@
 {% if extras|length > 0 %}
 <h2>{{ __('materials') }}</h2>
 {% endif %}
+{%
+    set categoryColspan = (isLegacy or not hasMaterialDiscount ? 2 : 3)
+        + (showPictures ? 1 : 0)
+        + (showDescriptions ? 1 : 0)
+        + (showUnitPrices ? 2 : 0)
+%}
 <table class="listing-table">
     <thead>
         <tr>
+            {%- if showPictures ~%}
+            <th>{{ __('picture') }}</th>
+            {%- endif ~%}
             <th>{{ __('designation') }}</th>
+            {%- if showDescriptions ~%}
+            <th>{{ __('description') }}</th>
+            {%- endif ~%}
             <th class="center">{{ __('qty') }}</th>
+            {%- if showUnitPrices ~%}
             <th class="center">{{ __(hasTaxes ? 'unit-price-excl-tax' : 'unit-price') }}</th>
+            {%- endif -%}
             {%- if not isLegacy and hasMaterialDiscount ~%}
             <th class="center">{{ __('discount') }}</th>
-            {%- endif ~%}
+            {%- endif -%}
+            {%- if showUnitPrices ~%}
             <th class="right">{{ __(hasTaxes ? 'total-excl-tax' : 'total') }}</th>
+            {%- endif ~%}
         </tr>
     </thead>
     <tbody>
-        {%~ for subCategory, materialsList in materials %}
+        {%- for subCategory, materialsList in materials ~%}
             <tr>
-                <td class="section-title" colspan="{{ isLegacy or not hasMaterialDiscount ? 4 : 5 }}">
-                    {%- if subCategory == '--' -%}                        {{ __('not-categorized') }}
+                <td class="section-title" colspan="{{ categoryColspan }}">
+                    {%- if subCategory == '--' -%}
+                        {{ __('not-categorized') }}
                     {%- else -%}
                         {{ subCategory|replace({ '__other': __('other-materials') }) }}
                     {%- endif -%}
                 </td>
             </tr>
-            {%~ for material in materialsList %}
+            {%- for material in materialsList ~%}
             <tr>
+                {% if showPictures -%}
+                <td class="picture-cell">
+                    <img
+                        src="{{ material.material.picture ?: asset('/img/material-picture-placeholder.png', true) }}"
+                        class="material-picture"
+                    />
+                </td>
+                {% endif -%}
                 <td>
                     <span class="listing-table__item__name">{{ material.name }}</span>
                     <span class="listing-table__item__sub-name">
-                        {%- apply spaceless -%}
-                        {{ __('reference-value', material.reference ) }}
-                        {%- if material.unit_replacement_price is not null -%}
+                        {{- __('reference-value', material.reference ) -}}
+                        {%- if showReplacementPrices and material.unit_replacement_price is not null -%}
                         {{- ' ' }}&bull;{{ ' ' -}}
-                        {{
+                        {{-
                             __('unit-replacement-value', (
                                 (material.unit_replacement_price ?? 0)|format_currency(currency, locale=locale))
                             )
-                        }}
+                        -}}
                         {%- endif -%}
-                        {%- endapply -%}
                     </span>
                 </td>
+                {% if showDescriptions -%}
+                <td class="max50mm">
+                    {{- material.material.description|nl2br -}}
+                </td>
+                {% endif -%}
                 <td class="center">{{ material.quantity }}</td>
+                {% if showUnitPrices -%}
                 <td class="center">
                     {% if isLegacy -%}
                     {{ material.unit_price|format_currency(currency, locale=locale) }}
@@ -329,6 +404,7 @@
                     {{ material.unit_price_period|format_currency(currency, locale=locale) }}
                     {%- endif ~%}
                 </td>
+                {%- endif ~%}
                 {%- if not isLegacy and hasMaterialDiscount ~%}
                 <td class="center">
                     {{-
@@ -338,11 +414,13 @@
                     -}}
                 </td>
                 {%- endif ~%}
+                {% if showUnitPrices -%}
                 <td class="right">
                     {{ material.total_without_taxes|format_currency(currency, locale=locale) }}
                 </td>
+                {%- endif ~%}
             </tr>
-            {%~ endfor -%}
+            {%- endfor %}
         {%- endfor ~%}
     </tbody>
 </table>
@@ -373,4 +451,17 @@
     </tbody>
 </table>
 {%- endif ~%}
+{% if showTotalisableProperties and totalisableProperties is not empty %}
+<h2>{{ __('properties-totals') }}</h2>
+<table class="half spaceBottom5 size8">
+    <tbody>
+        {%- for attribute in totalisableProperties ~%}
+        <tr>
+            <td>{{ attribute.name }}</td>
+            <td>{{ attribute.value|format_number(locale=locale) }}&nbsp;{{ attribute.unit }}</td>
+        </tr>
+        {%- endfor ~%}
+    </tbody>
+</table>
+{% endif %}
 {% endblock %}

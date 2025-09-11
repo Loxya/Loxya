@@ -1,29 +1,23 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { VNode } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 export type Props = {
-    /**
-     * L'éventuel titre de la page.
-     *
-     * Celui-ci sera utilisé dans le header de l'application
-     * ainsi que dans le `<title></title>` du document.
-     */
+    /** Le titre du groupe de champs. */
     title?: string,
 
-    /** Un éventuel message d'aide global à la page. */
+    /** Un éventuel message d'aide pour le groupe de champs. */
     help?: string,
 
     /**
-     * Les éventuelles actions contextuelles de la page.
+     * Les éventuelles actions contextuelles du groupe de champs.
      * (sous forme de nœuds vue dans un tableau)
      */
-    actions?: VNode[],
+    actions?: JSX.Element[],
 };
 
-/** Un groupe de champ ou une section de formulaire. */
+/** Un groupe de champs ou une section de formulaire. */
 const Fieldset = defineComponent({
     name: 'Fieldset',
     props: {

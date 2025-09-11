@@ -1,13 +1,12 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import pick from 'lodash/pick';
 import cloneDeep from 'lodash/cloneDeep';
 import FormField from '@/themes/default/components/FormField';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 import type { Country } from '@/stores/api/countries';
 import type { Park, ParkEdit } from '@/stores/api/parks';
@@ -20,7 +19,20 @@ type Props = {
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Record<keyof ParkEdit, string>,
+    errors?: Partial<Record<keyof ParkEdit, string>>,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur soumet les changements.
+     *
+     * @param data - Les données soumises.
+     */
+    onSubmit?(data: ParkEdit): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur manifeste
+     * son souhait d'annuler l'edition.
+     */
+    onCancel?(): void,
 };
 
 type Data = {
@@ -55,6 +67,16 @@ const ParkEditForm = defineComponent({
         errors: {
             type: Object as PropType<Required<Props>['errors']>,
             default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
+            default: undefined,
         },
     },
     emits: ['submit', 'cancel'],

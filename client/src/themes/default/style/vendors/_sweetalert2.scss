@@ -1,6 +1,8 @@
-/* stylelint-disable declaration-no-important, scss/no-global-function-names */
+/* stylelint-disable declaration-no-important */
 
-@import 'sweetalert2/src/sweetalert2';
+@use 'sass:color';
+
+@import '~sweetalert2/src/sweetalert2';
 
 .swal2-container {
     font-family: $base-font-family;
@@ -8,7 +10,7 @@
 
 .swal2-popup {
     background: $bg-color-emphasis;
-    box-shadow: 1px 1px 20px hsla(0deg, 0%, 0%, 0.5);
+    box-shadow: 1px 1px 20px hsl(0deg 0% 0% / 50%);
 }
 
 .swal2-title {
@@ -46,7 +48,7 @@
     &:-webkit-autofill:focus {
         -webkit-text-fill-color: $input-autofill-text-color;
         box-shadow: 0 0 0 1000px $input-autofill-background-color inset;
-        transition: background-color 50000ms ease-in-out 0;
+        transition: background-color 50000ms ease-in-out 0ms;
     }
 
     &:focus {
@@ -72,73 +74,73 @@
 }
 
 .swal2-icon.swal2-warning {
-    border-color: $bg-color-button-warning;
-    color: adjust-color($bg-color-button-warning, $lightness: 8%);
+    border-color: $interactive-element-warning-background-color;
+    color: color.adjust($interactive-element-warning-background-color, $lightness: 8%);
 }
 
 .swal2-confirm {
-    background-color: $bg-color-button-success !important;
+    background-color: $interactive-element-success-background-color !important;
 
     &:hover,
     &:focus {
-        background-color: adjust-color($bg-color-button-success, $lightness: 8%) !important;
+        background-color: color.adjust($interactive-element-success-background-color, $lightness: 8%) !important;
         box-shadow: none !important;
     }
 
     &:active {
-        background-color: adjust-color($bg-color-button-success, $lightness: -8%) !important;
+        background-color: color.adjust($interactive-element-success-background-color, $lightness: -8%) !important;
     }
 
     &--warning {
-        background-color: $bg-color-button-warning !important;
+        background-color: $interactive-element-warning-background-color !important;
 
         &:hover,
         &:focus {
-            background-color: adjust-color($bg-color-button-warning, $lightness: 8%) !important;
+            background-color: color.adjust($interactive-element-warning-background-color, $lightness: 8%) !important;
         }
 
         &:active {
-            background-color: adjust-color($bg-color-button-warning, $lightness: -8%) !important;
+            background-color: color.adjust($interactive-element-warning-background-color, $lightness: -8%) !important;
         }
     }
 
     &--danger {
-        background-color: $bg-color-button-danger !important;
+        background-color: $interactive-element-danger-background-color !important;
 
         &:hover,
         &:focus {
-            background-color: adjust-color($bg-color-button-danger, $lightness: 8%) !important;
+            background-color: color.adjust($interactive-element-danger-background-color, $lightness: 8%) !important;
         }
 
         &:active {
-            background-color: adjust-color($bg-color-button-danger, $lightness: -8%) !important;
+            background-color: color.adjust($interactive-element-danger-background-color, $lightness: -8%) !important;
         }
     }
 
     &--success {
-        background-color: $bg-color-button-success !important;
+        background-color: $interactive-element-success-background-color !important;
 
         &:hover,
         &:focus {
-            background-color: adjust-color($bg-color-button-success, $lightness: 8%) !important;
+            background-color: color.adjust($interactive-element-success-background-color, $lightness: 8%) !important;
         }
 
         &:active {
-            background-color: adjust-color($bg-color-button-success, $lightness: -8%) !important;
+            background-color: color.adjust($interactive-element-success-background-color, $lightness: -8%) !important;
         }
     }
 }
 
 .swal2-cancel {
-    background-color: $bg-color-button-default !important;
+    background-color: $interactive-element-default-background-color !important;
 
     &:hover,
     &:focus {
-        background-color: adjust-color($bg-color-button-default, $lightness: 8%) !important;
+        background-color: color.adjust($interactive-element-default-background-color, $lightness: 8%) !important;
         box-shadow: none !important;
     }
 
     &:active {
-        background-color: adjust-color($bg-color-button-default, $lightness: -8%) !important;
+        background-color: color.adjust($interactive-element-default-background-color, $lightness: -8%) !important;
     }
 }

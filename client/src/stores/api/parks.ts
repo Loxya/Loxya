@@ -3,6 +3,7 @@ import requester from '@/globals/requester';
 import { withPaginationEnvelope } from './@schema';
 import { MaterialSchema } from './materials';
 
+import type { Raw } from 'vue';
 import type Decimal from 'decimal.js';
 import type { Material } from './materials';
 import type { SchemaInfer } from '@/utils/validation';
@@ -76,42 +77,42 @@ type GetAllParams = ListingParams & { deleted?: boolean };
 
 const all = async (params: GetAllParams = {}): Promise<PaginatedData<Park[]>> => {
     const response = (await requester.get('/parks', { params }));
-    return withPaginationEnvelope(ParkSchema).parse(response.data);
+    return withPaginationEnvelope(ParkSchema).parse(response);
 };
 
 const list = async (): Promise<ParkSummary[]> => {
     const response = await requester.get('/parks/list');
-    return ParkSummarySchema.array().parse(response.data);
+    return ParkSummarySchema.array().parse(response);
 };
 
 const one = async (id: Park['id']): Promise<ParkDetails> => {
     const response = await requester.get(`/parks/${id}`);
-    return ParkDetailsSchema.parse(response.data);
+    return ParkDetailsSchema.parse(response);
 };
 
-const oneTotalAmount = async (id: Park['id']): Promise<Decimal> => {
+const oneTotalAmount = async (id: Park['id']): Promise<Raw<Decimal>> => {
     const response = await requester.get(`/parks/${id}/total-amount`);
-    return z.decimal().parse(response.data);
+    return z.decimal().parse(response);
 };
 
 const materials = async (id: Park['id']): Promise<Material[]> => {
     const response = await requester.get(`/parks/${id}/materials`);
-    return MaterialSchema.array().parse(response.data);
+    return MaterialSchema.array().parse(response);
 };
 
 const create = async (data: ParkEdit): Promise<ParkDetails> => {
     const response = await requester.post('/parks', data);
-    return ParkDetailsSchema.parse(response.data);
+    return ParkDetailsSchema.parse(response);
 };
 
 const update = async (id: Park['id'], data: ParkEdit): Promise<ParkDetails> => {
     const response = await requester.put(`/parks/${id}`, data);
-    return ParkDetailsSchema.parse(response.data);
+    return ParkDetailsSchema.parse(response);
 };
 
 const restore = async (id: Park['id']): Promise<ParkDetails> => {
     const response = await requester.put(`/parks/restore/${id}`);
-    return ParkDetailsSchema.parse(response.data);
+    return ParkDetailsSchema.parse(response);
 };
 
 const remove = async (id: Park['id']): Promise<void> => {

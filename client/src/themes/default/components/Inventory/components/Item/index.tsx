@@ -1,7 +1,7 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Material from './Material';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type {
     InventoryLock,
     AwaitedMaterial,
@@ -59,6 +59,14 @@ type Props = {
      * matériel dans l'inventaire.
      */
     error?: string,
+
+    /**
+     * Fonction appelée lorsque l'inventaire du matériel change.
+     *
+     * @param id - Identifiant du matériel dont l'inventaire a changé.
+     * @param newInventory - Le nouvel inventaire du matériel.
+     */
+    onChange?(id: AwaitedMaterial['id'], newInventory: InventoryMaterialData): void,
 };
 
 /** Un matériel dans l'inventaire de matériel. */
@@ -92,6 +100,11 @@ const InventoryItem = defineComponent({
         withComments: {
             type: Boolean as PropType<Required<Props>['withComments']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],

@@ -1,13 +1,13 @@
 import './index.scss';
 import DateTime from '@/utils/datetime';
 import { PeriodReadableFormat } from '@/utils/period';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import EmptyMessage from '@/themes/default/components/EmptyMessage';
 import Timeline from '@/themes/default/components/Timeline';
 import formatEventTechniciansList from '@/utils/formatEventTechniciansList';
 
 import type Period from '@/utils/period';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails, EventTechnician } from '@/stores/api/events';
 import type { TechnicianWithPeriods } from '@/utils/formatEventTechniciansList';
 import type { TimelineItem, TimelineGroup } from '@/themes/default/components/Timeline';

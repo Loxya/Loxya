@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Settings Api all() parse the returned data correctly 1`] = `
 {
@@ -16,6 +16,20 @@ exports[`Settings Api all() parse the returned data correctly 1`] = `
       "enabled": true,
       "url": "http://loxya.test/calendar/public/dfe7cd82-52b9-4c9b-aaed-033df210f23b.ics",
     },
+  },
+  "estimates": {
+    "customText": {
+      "content": "Paiement par virement ou chèque.",
+      "title": "Modalités de paiement",
+    },
+    "showBookingDescription": false,
+    "showDescriptions": false,
+    "showMobilizationPeriod": false,
+    "showPictures": false,
+    "showReplacementPrices": true,
+    "showTotalReplacementPrice": false,
+    "showTotalisableProperties": false,
+    "showUnitPrices": true,
   },
   "eventSummary": {
     "customText": {
@@ -62,6 +76,20 @@ exports[`Settings Api all() parse the returned data correctly 1`] = `
         "weekday": 6,
       },
     ],
+  },
+  "invoices": {
+    "customText": {
+      "content": "Paiement attendu sous 30 jours.",
+      "title": null,
+    },
+    "showBookingDescription": false,
+    "showDescriptions": false,
+    "showMobilizationPeriod": false,
+    "showPictures": false,
+    "showReplacementPrices": true,
+    "showTotalReplacementPrice": false,
+    "showTotalisableProperties": false,
+    "showUnitPrices": true,
   },
   "returnInventory": {
     "mode": "start-empty",
@@ -86,6 +114,20 @@ exports[`Settings Api reset() parse the returned data correctly 1`] = `
       "url": "http://loxya.test/calendar/public/dfe7cd82-52b9-4c9b-aaed-033df210f23b.ics",
     },
   },
+  "estimates": {
+    "customText": {
+      "content": "Paiement par virement ou chèque.",
+      "title": "Modalités de paiement",
+    },
+    "showBookingDescription": false,
+    "showDescriptions": false,
+    "showMobilizationPeriod": false,
+    "showPictures": false,
+    "showReplacementPrices": true,
+    "showTotalReplacementPrice": false,
+    "showTotalisableProperties": false,
+    "showUnitPrices": true,
+  },
   "eventSummary": {
     "customText": {
       "content": null,
@@ -131,6 +173,20 @@ exports[`Settings Api reset() parse the returned data correctly 1`] = `
         "weekday": 6,
       },
     ],
+  },
+  "invoices": {
+    "customText": {
+      "content": "Paiement attendu sous 30 jours.",
+      "title": null,
+    },
+    "showBookingDescription": false,
+    "showDescriptions": false,
+    "showMobilizationPeriod": false,
+    "showPictures": false,
+    "showReplacementPrices": true,
+    "showTotalReplacementPrice": false,
+    "showTotalisableProperties": false,
+    "showUnitPrices": true,
   },
   "returnInventory": {
     "mode": "start-empty",
@@ -155,6 +211,20 @@ exports[`Settings Api update() parse the returned data correctly 1`] = `
       "url": "http://loxya.test/calendar/public/dfe7cd82-52b9-4c9b-aaed-033df210f23b.ics",
     },
   },
+  "estimates": {
+    "customText": {
+      "content": "Paiement par virement ou chèque.",
+      "title": "Modalités de paiement",
+    },
+    "showBookingDescription": false,
+    "showDescriptions": false,
+    "showMobilizationPeriod": false,
+    "showPictures": false,
+    "showReplacementPrices": true,
+    "showTotalReplacementPrice": false,
+    "showTotalisableProperties": false,
+    "showUnitPrices": true,
+  },
   "eventSummary": {
     "customText": {
       "content": null,
@@ -200,6 +270,20 @@ exports[`Settings Api update() parse the returned data correctly 1`] = `
         "weekday": 6,
       },
     ],
+  },
+  "invoices": {
+    "customText": {
+      "content": "Paiement attendu sous 30 jours.",
+      "title": null,
+    },
+    "showBookingDescription": false,
+    "showDescriptions": false,
+    "showMobilizationPeriod": false,
+    "showPictures": false,
+    "showReplacementPrices": true,
+    "showTotalReplacementPrice": false,
+    "showTotalisableProperties": false,
+    "showUnitPrices": true,
   },
   "returnInventory": {
     "mode": "start-empty",

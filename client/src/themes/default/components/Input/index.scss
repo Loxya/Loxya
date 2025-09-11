@@ -43,7 +43,7 @@
         &:-webkit-autofill:focus {
             -webkit-text-fill-color: globals.$input-autofill-text-color;
             box-shadow: 0 0 0 1000px globals.$input-autofill-background-color inset;
-            transition: background-color 50000ms ease-in-out 0;
+            transition: background-color 50000ms ease-in-out 0ms;
         }
 
         &::-webkit-search-cancel-button {
@@ -61,6 +61,8 @@
         border-radius: 0 globals.$input-border-radius globals.$input-border-radius 0;
         background-color: globals.$input-background-color;
         color: globals.$input-text-color;
+        font-size: globals.$input-font-size;
+        line-height: globals.$input-line-height;
         text-align: center;
     }
 

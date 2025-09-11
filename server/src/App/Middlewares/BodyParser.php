@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Loxya\Middlewares;
 
 use Adbar\Dot as DotArray;
-use Loxya\Support\Filesystem\UploadedFile;
+use Loxya\Support\File\UploadedFile;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -211,9 +211,7 @@ final class BodyParser extends BodyParsingMiddlewareCore
         }
 
         $exponent = array_flip($units)[$suffix] ?? null;
-        if ($exponent === null) {
-            $exponent = array_flip($unitsExtended)[$suffix] ?? null;
-        }
+        $exponent ??= array_flip($unitsExtended)[$suffix] ?? null;
 
         if ($exponent === null) {
             return null;

@@ -1,10 +1,10 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import debounce from 'lodash/debounce';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import QuantityInput from '@/themes/default/components/QuantityInput';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { SourceMaterial } from '../../../_types';
 
 type Props = {
@@ -13,6 +13,14 @@ type Props = {
 
     /** La quantité actuelle. */
     quantity: number,
+
+    /**
+     * Fonction appelée lorsque la quantité change.
+     *
+     * @param material - Le matériel dont la quantité a changé.
+     * @param quantity - La nouvelle quantité.
+     */
+    onChange?(material: SourceMaterial, quantity: number): void,
 };
 
 type Data = {
@@ -31,12 +39,17 @@ const MaterialsSelectorListQuantity = defineComponent({
     name: 'MaterialsSelectorListQuantity',
     props: {
         material: {
-            type: Object as PropType<Required<Props['material']>>,
+            type: Object as PropType<Required<Props>['material']>,
             required: true,
         },
         quantity: {
-            type: Number as PropType<Required<Props['quantity']>>,
+            type: Number as PropType<Required<Props>['quantity']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],
@@ -69,8 +82,8 @@ const MaterialsSelectorListQuantity = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleChange(value: string) {
-            this.bouncedQuantity = parseInt(value, 10) || 0;
+        handleChange(value: number) {
+            this.bouncedQuantity = value;
             this.updateQuantityDebounced!();
         },
 

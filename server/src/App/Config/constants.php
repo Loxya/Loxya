@@ -10,7 +10,7 @@ if (!defined('DS')) {
 }
 
 if (!defined('ROOT_FOLDER')) {
-    define('ROOT_FOLDER', dirname(dirname(dirname(dirname(__FILE__)))));
+    define('ROOT_FOLDER', dirname(dirname(dirname(__DIR__))));
 }
 
 if (!defined('DATA_FOLDER')) {
@@ -59,4 +59,8 @@ if (!defined('APP_FOLDER')) {
 
 if (!defined('CONFIG_FOLDER')) {
     define('CONFIG_FOLDER', APP_FOLDER . DS . 'Config');
+}
+
+if (!defined('LISTENERS_FOLDER')) {
+    define('LISTENERS_FOLDER', APP_FOLDER . DS . 'Listeners');
 }

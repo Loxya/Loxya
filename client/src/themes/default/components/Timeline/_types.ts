@@ -1,3 +1,4 @@
+import type { Raw } from 'vue';
 import type DateTime from '@/utils/datetime';
 import type Period from '@/utils/period';
 import type Color from '@/utils/color';
@@ -30,9 +31,22 @@ export enum TimelineItemPeriodType {
      * - Cette période peut se terminer avant ou après la date de fin de période attendue.
      */
     ACTUAL = 'actual',
+
+    /**
+     * Correspond à une période de retard pour un élément de la timeline.
+     *
+     * - Cette période commence à la fin de la période effective.
+     * - Elle représente le temps écoulé après la fin effective si l'élément n'a pas été rendu ou clôturé.
+     * - Elle n'est visible que si l'élément est encore actif après sa période effective.
+     */
+    OVERDUE = 'overdue',
 }
 
-export type TimelineItemPeriods = Record<TimelineItemPeriodType, Period>;
+export type TimelineItemPeriods = {
+    [TimelineItemPeriodType.EXPECTED]: Period,
+    [TimelineItemPeriodType.ACTUAL]: Period,
+    [TimelineItemPeriodType.OVERDUE]?: Period | boolean | undefined,
+};
 
 export type TimelineItem = (
     & Omit<TimelineItemCore, 'content' | 'title' | 'className' | 'style' | 'start' | 'end'>
@@ -64,8 +78,12 @@ export type TimelineGroupAction = {
     /** Libellé accessible pour le bouton d'action. */
     ariaLabel?: string,
 
-    /** Fonction à utiliser lors d'un clic sur le bouton d'action. */
-    onClick(e: MouseEvent): void,
+    /**
+     * Fonction appelée lorsque le bouton d'action est cliqué.
+     *
+     * @param event - L'événement d'origine.
+     */
+    onClick?(event: PointerEvent): void,
 };
 
 export type TimelineGroup = (
@@ -93,8 +111,8 @@ export type TimelineClickEvent = Merge<
     {
         item: TimelineItemIdentifier | null,
         group: TimelineGroup['id'] | null,
-        snappedTime: DateTime,
-        time: DateTime,
+        snappedTime: Raw<DateTime>,
+        time: Raw<DateTime>,
     }
 >;
 

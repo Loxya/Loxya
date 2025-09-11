@@ -1,9 +1,9 @@
 import './index.scss';
 import Button from '@/themes/default/components/Button';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
 import type { Location } from 'vue-router';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
 export enum Type {
@@ -52,16 +52,18 @@ export type Action = {
     icon?: string | `${string}:${Required<IconProps>['variant']}`,
 
     /**
-     * Fonction à utiliser lors d'un clic sur le bouton d'action.
+     * Fonction appelée lorsque le bouton d'action est cliqué.
      *
      * N'est utile que quand l'action n'est pas un lien.
+     *
+     * @param event - L'événement d'origine.
      */
-    onClick?(e: MouseEvent): void,
+    onClick?(event: MouseEvent): void,
 };
 
 type Props = {
     /** Le type (= variante) de l'alerte. */
-    type: Type,
+    type: Type | `${Type}`,
 
     /** Une action éventuelle (= un bouton) affiché au bout de l'alerte. */
     action?: Action,

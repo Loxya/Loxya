@@ -22,14 +22,15 @@ $bg-color-list-item-emphasis: #363636;
 $bg-color-side-menu-item-hover: #262626;
 $bg-color-side-menu-item-active: #242424;
 
-$bg-color-tooltip: rgba($bg-color-emphasis, 0.9);
+$bg-color-tooltip: rgb($bg-color-emphasis, 0.9);
 
-$bg-color-button-default: #616161;
-$bg-color-button-success: #2c7d43;
-$bg-color-button-warning: #b4320e;
-$bg-color-button-danger: #911d0a;
+$interactive-element-default-background-color: #616161;
+$interactive-element-success-background-color: #2c7d43;
+$interactive-element-warning-background-color: #be692d;
+$interactive-element-danger-background-color: #911d0a;
 
 $bg-color-highlighted-item: #7a2b0d;
+$bg-color-highlighted-item-danger: #99292b;
 
 //
 // - Couleurs des textes.

@@ -1,6 +1,6 @@
 import 'lodash';
 
-module 'lodash' {
+declare module 'lodash' {
     export type DebouncedMethod<C, M> = DebouncedFunc<InstanceType<C>[M]>;
 
     interface LoDashStatic {

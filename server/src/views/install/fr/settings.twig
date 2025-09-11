@@ -38,7 +38,7 @@
                     type="radio"
                     id="billingModeAll"
                     name="billingMode"
-                    value="{{ constant('Loxya\\Config\\Enums\\BillingMode::ALL').value }}"
+                    value="{{ enum('Loxya\\Config\\Enums\\BillingMode').ALL.value }}"
                     onchange="handleBillingModeChange(this)"
                 />
                 <label for="billingModeAll">
@@ -51,7 +51,7 @@
                     type="radio"
                     id="billingModePartial"
                     name="billingMode"
-                    value="{{ constant('Loxya\\Config\\Enums\\BillingMode::PARTIAL').value }}"
+                    value="{{ enum('Loxya\\Config\\Enums\\BillingMode').PARTIAL.value }}"
                     onchange="handleBillingModeChange(this)"
                     checked
                 />
@@ -65,12 +65,45 @@
                     type="radio"
                     id="billingModeNone"
                     name="billingMode"
-                    value="{{ constant('Loxya\\Config\\Enums\\BillingMode::NONE').value }}"
+                    value="{{ enum('Loxya\\Config\\Enums\\BillingMode').NONE.value }}"
                     onchange="handleBillingModeChange(this)"
                 />
                 <label for="billingModeNone">
                     <strong>Prêt de matériel</strong>&nbsp;:
                     Pas de facturation du tout.
+                </label>
+            </div>
+        </section>
+        <section class="form__field">
+            <h3 class="form__field-title">Choix de la politique de retour du matériel</h3>
+            <p class="form__field-description">
+                Comment souhaitez-vous que le logiciel considère les événements ou réservations terminés&nbsp;?
+            </p>
+            <div class="form__radio" style="margin-top: .5rem;">
+                <input
+                    type="radio"
+                    id="returnPolicyAuto"
+                    name="returnPolicy"
+                    value="{{ enum('Loxya\\Config\\Enums\\ReturnPolicy').AUTO.value }}"
+                />
+                <label for="returnPolicyAuto">
+                    <strong>Clôture automatique</strong><br />
+                    Le matériel est considéré comme retourné dès la fin prévue de la réservation ou
+                    de l'événement, même si l'inventaire de retour n'a pas été fait.
+                </label>
+            </div>
+            <div class="form__radio">
+                <input
+                    type="radio"
+                    id="returnPolicyManual"
+                    name="returnPolicy"
+                    value="{{ enum('Loxya\\Config\\Enums\\ReturnPolicy').MANUAL.value }}"
+                    checked
+                />
+                <label for="returnPolicyManual">
+                    <strong>Clôture manuelle</strong><br />
+                    Un événement reste actif tant que le matériel n'a pas été vérifié manuellement
+                    via un inventaire de retour.
                 </label>
             </div>
         </section>

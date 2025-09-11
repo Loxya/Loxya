@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 
@@ -11,7 +11,7 @@ type Data = {
 /** Variante par défaut du layout de l'application. */
 const DefaultLayout = defineComponent({
     name: 'DefaultLayout',
-    provide() {
+    provide(this: any) {
         return {
             'setGlobalLoading': (isLoading: boolean) => {
                 this.isLoading = isLoading;

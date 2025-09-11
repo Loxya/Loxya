@@ -1,18 +1,20 @@
-import HttpCode from 'status-code-enum';
+import invariant from 'invariant';
 import config from '@/globals/config';
 import cookies from '@/utils/cookies';
-import { isRequestErrorStatusCode } from '@/utils/errors';
-import apiSession from '@/stores/api/session';
+import { HttpCode, RequestError } from '@/globals/requester';
+import apiSession, { AuthType } from '@/stores/api/session';
 
+import type { Group } from '@/stores/api/groups';
 import type { Module, ActionContext } from 'vuex';
 import type { Session, Credentials } from '@/stores/api/session';
-import type { Group } from '@/stores/api/groups';
 import type { UserSettings } from '@/stores/api/users';
 import type { RootState } from '.';
 
 export type State = {
-    user: Session | null,
+    user: Session<true> | null,
 };
+
+export type AuthenticatePayload = { token: string, user: Session<true> };
 
 const setSessionCookie = (token: string): void => {
     const { cookie, timeout } = config.auth;
@@ -40,10 +42,36 @@ const store: Module<State, RootState> = {
         user: null,
     },
     getters: {
-        isLogged: (state: State) => !!state.user,
+        /**
+         * Indique si l'utilisateur est authentifié.
+         *
+         * Attention, cela ne veut pas forcément dire que c'est une utilisateur permanent connecté.
+         * Un utilisateur temporaire ("guest") peut-être authentifié sans qu'il soit connecté.
+         *
+         * @param state - Le state actuel du store.
+         *
+         * @returns `true` si l'utilisateur est authentifié, `false` sinon.
+         */
+        isAuthenticated: (state: State): boolean => (
+            state.user !== null
+        ),
 
-        is: (state: State) => (groups: Group | Group[]) => {
-            if (!state.user) {
+        /**
+         * Indique si l'utilisateur est connecté.
+         *
+         * Ceci implique qu'il est identifié et que c'est un utilisateur permanent.
+         *
+         * @param state - Le state actuel du store.
+         *
+         * @returns `true` si l'utilisateur est connecté, `false` sinon.
+         */
+        isLogged: (state: State): boolean => (
+            state.user !== null &&
+            state.user.type === AuthType.USER
+        ),
+
+        is: (state: State) => (groups: Group | Group[]): boolean => {
+            if (state.user?.type !== AuthType.USER) {
                 return false;
             }
 
@@ -51,26 +79,36 @@ const store: Module<State, RootState> = {
             return normalizedGroups.includes(state.user.group);
         },
 
-        user: (state: State) => state.user,
+        user: (state: State): Session<true> | null => state.user,
     },
     mutations: {
-        setUser(state: State, user: Session) {
+        setUser(state: State, user: Session<true>) {
             state.user = user;
         },
 
-        updateUser(state: State, newData: Session) {
+        updateUser(state: State, newData: Session<true>) {
             state.user = { ...state.user, ...newData };
         },
 
         setLocale(state: State, language: string) {
-            state.user!.language = language;
+            invariant(
+                state.user?.type === AuthType.USER,
+                `Unable to update language of a guest user.`,
+            );
+
+            state.user.language = language;
         },
 
         setInterfaceSettings(state: State, settings: UserSettings) {
-            state.user!.default_bookings_view = settings.default_bookings_view;
-            state.user!.default_technicians_view = settings.default_technicians_view;
-            state.user!.disable_contextual_popovers = settings.disable_contextual_popovers;
-            state.user!.disable_search_persistence = settings.disable_search_persistence;
+            invariant(
+                state.user?.type === AuthType.USER,
+                `Unable to update interface settings of a guest user.`,
+            );
+
+            state.user.default_bookings_view = settings.default_bookings_view;
+            state.user.default_technicians_view = settings.default_technicians_view;
+            state.user.disable_contextual_popovers = settings.disable_contextual_popovers;
+            state.user.disable_search_persistence = settings.disable_search_persistence;
         },
     },
     actions: {
@@ -81,36 +119,51 @@ const store: Module<State, RootState> = {
             }
 
             try {
-                commit('setUser', await apiSession.get());
+                commit('setUser', await apiSession.get(true));
             } catch (error) {
                 // - Non connecté.
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorUnauthorized)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.Unauthorized) {
                     dispatch('logout', false);
-                } else {
-                    // eslint-disable-next-line no-console
-                    console.error('Unexpected error during user retrieval:', error);
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error('Unexpected error during user retrieval:', error);
             }
         },
 
-        async login({ dispatch, commit }: ActionContext<State, RootState>, credentials: Credentials) {
-            const { token, ...user } = await apiSession.create(credentials);
+        async authenticate(
+            { dispatch, commit }: ActionContext<State, RootState>,
+            { token, user }: AuthenticatePayload,
+        ) {
             commit('setUser', user);
             setSessionCookie(token);
 
-            window.localStorage.setItem('userLocale', user.language);
-            await dispatch('i18n/setLocale', { locale: user.language }, { root: true });
+            if (user.type === AuthType.USER) {
+                window.localStorage.setItem('userLocale', user.language);
+                await dispatch('i18n/setLocale', { locale: user.language }, { root: true });
+            }
             await dispatch('settings/fetch', undefined, { root: true });
         },
 
-        async logout(_: ActionContext<State, RootState>, full: boolean = true) {
+        async login({ dispatch }: ActionContext<State, RootState>, credentials: Credentials) {
+            const { token, ...user } = await apiSession.create(credentials);
+            await dispatch('authenticate', { token, user });
+        },
+
+        async logout({ state }: ActionContext<State, RootState>, full: boolean = true) {
+            const wasLogged = state.user?.type === AuthType.USER;
             const theme = '';
 
-            if (full) {
+            if (wasLogged && full) {
                 window.location.assign(`${config.baseUrl}${theme}/logout`);
             } else {
                 cookies.remove(config.auth.cookie);
-                window.location.assign(`${config.baseUrl}${theme}/login`);
+                window.location.assign(
+                    wasLogged
+                        ? `${config.baseUrl}${theme}/login`
+                        : `${config.baseUrl}${theme}/`,
+                );
             }
 
             // - Timeout de 5 secondes avant de rejeter la promise.

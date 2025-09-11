@@ -1,10 +1,16 @@
 import 'axios';
 
 declare module 'axios' {
-    export type ProgressCallback = (percent: number) => void;
-
-    // TODO: Overwriter ça uniquement dans le custom requester et non globalement.
-    interface AxiosRequestConfig {
-        onProgress?(percent: number): void;
+    interface AxiosProgressEvent {
+        loaded: number;
+        total?: number;
+        progress?: number;
+        bytes: number;
+        rate?: number;
+        estimated?: number;
+        upload?: boolean;
+        download?: boolean;
+        event?: BrowserProgressEvent;
+        lengthComputable: boolean;
     }
 }

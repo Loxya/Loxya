@@ -5,17 +5,15 @@ namespace Loxya\Models\Enums;
 
 /**
  * Période affichée dans le calendrier public.
- *
- * #TODO: Migrer vers un `enum`.
  */
-final class PublicCalendarPeriodDisplay
+enum PublicCalendarPeriodDisplay: string
 {
     /** Les périodes d'opération uniquement sont affichées. */
-    public const OPERATION = 'operation';
+    case OPERATION = 'operation';
 
     /** Les périodes de mobilisation uniquement sont affichées. */
-    public const MOBILIZATION = 'mobilization';
+    case MOBILIZATION = 'mobilization';
 
     /** Les périodes de mobilisation et d'opération sont affichées. */
-    public const BOTH = 'both';
+    case BOTH = 'both';
 }

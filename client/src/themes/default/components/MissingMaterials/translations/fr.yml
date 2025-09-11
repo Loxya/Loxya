@@ -2,7 +2,12 @@ title: Matériel manquant
 help:
     event: >-
         Il s'agit du matériel manquant pour la période de l'événement, car il
-        est utilisé dans un autre événement, le nombre
-        voulu est trop important, ou quelques uns sont en panne.
+        est utilisé dans un autre événement, que le
+        nombre voulu est trop important, ou que certains sont en panne.
+
+    general: >-
+        Le matériel ci-dessous est manquant soit parce qu'il est utilisé
+        ailleurs, que le nombre voulu est trop important, ou que certains
+        sont en panne.
 
 missing-count: "Besoin de {quantity}, il en manque\u00A0{missing}"

@@ -6,6 +6,7 @@
         "booking_type": "event",
         "booking_id": 1,
         "booking_title": "Premier événement",
+        "booking_reference": null,
         "booking_start_date": "2018-12-17 00:00:00",
         "booking_end_date": "2018-12-19 00:00:00",
         "booking_is_full_days": true,
@@ -22,13 +23,31 @@
                 "name": "T.V.A.",
                 "is_rate": true,
                 "value": "20.000",
-                "total": "108.82"
+                "total": "108.83"
             }
         ],
         "total_with_taxes": "652.96",
         "total_replacement": "19749.9",
         "currency": "EUR",
         "author_id": 1,
+        "metadata": {
+            "properties": [
+                {
+                    "id": 1,
+                    "name": "Poids",
+                    "type": "float",
+                    "unit": "kg",
+                    "value": "41.85"
+                },
+                {
+                    "id": 3,
+                    "name": "Puissance",
+                    "type": "integer",
+                    "unit": "W",
+                    "value": "945"
+                }
+            ]
+        },
         "created_at": "2020-01-30 14:00:00",
         "updated_at": "2020-01-30 14:00:00",
         "deleted_at": null

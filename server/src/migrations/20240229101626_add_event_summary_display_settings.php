@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -47,8 +45,7 @@ final class AddEventSummaryDisplaySettings extends AbstractMigration
             'eventSummary.showPictures',
         ];
         foreach ($keys as $key) {
-            /** @var DeleteQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+            $qb = $this->getDeleteBuilder();
             $qb
                 ->delete(sprintf('%ssettings', $prefix))
                 ->where(compact('key'))

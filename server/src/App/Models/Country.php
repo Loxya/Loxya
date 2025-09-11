@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Pays.
@@ -30,7 +30,7 @@ final class Country extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
             'code' => V::custom([$this, 'checkCode']),
         ];
@@ -45,7 +45,7 @@ final class Country extends BaseModel implements Serializable
     public function checkName($value)
     {
         V::notEmpty()
-            ->alpha(static::EXTRA_CHARS)
+            ->stringType()
             ->length(4, 96)
             ->check($value);
 
@@ -123,6 +123,24 @@ final class Country extends BaseModel implements Serializable
 
         $term = sprintf('%%%s%%', addcslashes($term, '%_'));
         return $query->where('name', 'LIKE', $term);
+    }
+
+    // ------------------------------------------------------
+    // -
+    // -    Méthodes de "repository"
+    // -
+    // ------------------------------------------------------
+
+    /**
+     * Tente de retrouver un pays à partir de son code.
+     *
+     * @param string $code Le code du pays à rechercher.
+     *
+     * @return static|null Le pays correspondant, ou `null` s'il n'a pas été trouvé.
+     */
+    public static function tryFromCode(string $code): static|null
+    {
+        return static::where('code', $code)->first();
     }
 
     // ------------------------------------------------------

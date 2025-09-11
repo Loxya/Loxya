@@ -5,6 +5,7 @@ namespace Loxya\Tests;
 
 use Loxya\Services\I18n;
 use Loxya\Support\Pdf\Pdf;
+use Twig\Error\LoaderError as TwigLoaderError;
 
 final class PdfTest extends TestCase
 {
@@ -16,7 +17,7 @@ final class PdfTest extends TestCase
 
     public function testCreateFromTemplateNotFoundError(): void
     {
-        $this->assertThrow(\Twig\Error\LoaderError::class, static fn () => (
+        $this->assertThrow(TwigLoaderError::class, static fn () => (
             Pdf::createFromTemplate('_inexistant-template_', new I18n('fr'), 'inexistant-template', [])
         ));
     }

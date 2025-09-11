@@ -1,11 +1,10 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Document from './components/Document';
 import UploadArea from './components/UploadArea';
 
-import type { ComponentRef } from 'vue';
-import type { ProgressCallback } from 'axios';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
+import type { ProgressCallback } from '@/globals/requester';
 import type { Document as DocumentType } from '@/stores/api/documents';
 
 export enum FileManagerLayout {
@@ -34,6 +33,21 @@ type Props = {
 
     /** Est-ce que l'upload et la suppression des fichiers doivent être désactivés ? */
     readonly?: boolean,
+
+    /**
+     * Fonction appelée lorsqu'un document a été uploadé.
+     *
+     * @param document - Le nouveau document.
+     */
+    onDocumentUploaded?(document: DocumentType): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur a demandé
+     * la suppression d'un document.
+     *
+     * @param id - Le document à supprimer.
+     */
+    onDocumentDelete?(id: DocumentType['id']): void,
 };
 
 /**
@@ -58,6 +72,16 @@ const FileManager = defineComponent({
         readonly: {
             type: Boolean as PropType<Required<Props>['readonly']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDocumentUploaded: {
+            type: Function as PropType<Props['onDocumentUploaded']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDocumentDelete: {
+            type: Function as PropType<Props['onDocumentDelete']>,
+            default: undefined,
         },
     },
     emits: ['documentUploaded', 'documentDelete'],
@@ -99,8 +123,8 @@ const FileManager = defineComponent({
          * @returns `true` si un fichier est en cours d'upload, `false` sinon.
          */
         isUploading(): boolean {
-            const $uploadAreaRef = this.$refs.uploadArea as ComponentRef<typeof UploadArea>;
-            return !!$uploadAreaRef?.isUploading();
+            const $uploadArea = this.$refs.uploadArea as ComponentRef<typeof UploadArea>;
+            return !!$uploadArea?.isUploading();
         },
 
         // ------------------------------------------------------

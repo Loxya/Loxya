@@ -10,12 +10,18 @@ use Illuminate\Database\Capsule\Manager as Database;
 use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Events\Dispatcher as EventDispatcher;
+use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Reflector;
 use Loxya\Config\Config;
+use Loxya\Services\Cache;
+use Loxya\Services\Dispatcher;
 use Loxya\Support\Paginator\CursorPaginator;
 use Loxya\Support\Paginator\LengthAwarePaginator;
 use Loxya\Support\Paginator\Paginator;
+use Loxya\Support\Str;
 use Respect\Validation\Factory as ValidatorFactory;
+use Symfony\Component\Finder\Finder;
+use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 
 final class Kernel
 {
@@ -57,6 +63,7 @@ final class Kernel
         $this->initializeContainer();
         $this->initializeValidator();
         $this->initializeDatabase();
+        $this->initializeEvents();
     }
 
     public function getContainer(): Container
@@ -84,10 +91,77 @@ final class Kernel
     {
         ValidatorFactory::setDefaultInstance(
             (new ValidatorFactory())
+                ->withRuleNamespace('Loxya\\Support\\Validation\\Rules')
+                ->withExceptionNamespace('Loxya\\Support\\Validation\\Exceptions')
                 ->withTranslator(fn ($value) => (
                     $this->container->get('i18n')->translate($value)
                 )),
         );
+    }
+
+    protected function initializeEvents(): void
+    {
+        /** @var Cache $cache */
+        $cache = $this->container->get('cache');
+
+        /** @var array<string, string[]> $events */
+        $events = $cache->get('core.events', static function (CacheItemInterface $cacheItem) {
+            $cacheItem->expiresAfter(
+                Config::getEnv() === 'production'
+                    ? new \DateInterval('P1D')
+                    : 0,
+            );
+
+            return (new LazyCollection(glob(LISTENERS_FOLDER, GLOB_ONLYDIR)))
+                ->reject(static fn ($directory) => !is_dir($directory))
+                ->pipe(static function (LazyCollection $directories) {
+                    $listenerFiles = Finder::create()
+                        ->in($directories->all())
+                        ->files();
+
+                    $discoveredEvents = [];
+                    foreach ($listenerFiles as $file) {
+                        try {
+                            $classFile = trim(Str::replaceFirst(LISTENERS_FOLDER, '', $file->getRealPath()), DS);
+                            $classFqn = sprintf('\\Loxya\\Listeners\\%s', ucfirst(Str::camel(
+                                str_replace(DS, '\\', Str::replaceLast('.php', '', $classFile)),
+                            )));
+                            $listener = new \ReflectionClass($classFqn);
+                        } catch (\ReflectionException) {
+                            continue;
+                        }
+
+                        if (!$listener->isInstantiable()) {
+                            continue;
+                        }
+
+                        foreach ($listener->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                            if (
+                                !Str::is('handle*', $method->name) && !Str::is('__invoke', $method->name) ||
+                                !isset($method->getParameters()[0])
+                            ) {
+                                continue;
+                            }
+
+                            $listener = sprintf('%s@%s', $listener->name, $method->name);
+                            $events = Reflector::getParameterClassNames($method->getParameters()[0]);
+                            foreach ($events as $event) {
+                                $discoveredEvents[$event] ??= [];
+                                $discoveredEvents[$event][] = $listener;
+                            }
+                        }
+                    }
+                    return $discoveredEvents;
+                });
+        });
+
+        foreach ($events as $event => $listeners) {
+            foreach (array_unique($listeners, SORT_REGULAR) as $listener) {
+                /** @var Dispatcher $dispatcher */
+                $dispatcher = $this->container->get('events');
+                $dispatcher->listen($event, $listener);
+            }
+        }
     }
 
     protected function initializeDatabase(): void
@@ -110,17 +184,18 @@ final class Kernel
             Paginator::class,
         );
 
+        // - Utilise l'event dispatcher de l'application et
+        //   configuration sa gestion des transactions.
+        /** @var Dispatcher $eventDispatcher */
+        $eventDispatcher = $this->container->get('events');
+        $eventDispatcher->setTransactionManagerResolver(static fn () => (
+            $illuminateContainer->get('db.transactions')
+        ));
+
         // - Database.
         $database = new Database($illuminateContainer);
         $database->addConnection(Config::getDbConfig());
-        $database->setEventDispatcher(
-            (new EventDispatcher($illuminateContainer))
-                ->setTransactionManagerResolver(static fn () => (
-                    $illuminateContainer->bound('db.transactions')
-                        ? $illuminateContainer->make('db.transactions')
-                        : null
-                )),
-        );
+        $database->setEventDispatcher($eventDispatcher);
         $database->bootEloquent();
 
         $this->container->set('database', $database);
@@ -142,8 +217,8 @@ final class Kernel
         Models\EventPosition::observe(Observers\EventPositionObserver::class);
         Models\EventMaterial::observe(Observers\EventMaterialObserver::class);
         Models\Material::observe(Observers\MaterialObserver::class);
-        Models\Attribute::observe(Observers\AttributeObserver::class);
-        Models\AttributeCategory::observe(Observers\AttributeCategoryObserver::class);
+        Models\Property::observe(Observers\PropertyObserver::class);
+        Models\PropertyCategory::observe(Observers\PropertyCategoryObserver::class);
         Models\Beneficiary::observe(Observers\BeneficiaryObserver::class);
         Models\Park::observe(Observers\ParkObserver::class);
         Models\Technician::observe(Observers\TechnicianObserver::class);

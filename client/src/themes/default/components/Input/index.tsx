@@ -1,7 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 export enum InputType {
     TEXT = 'text',
@@ -34,14 +34,14 @@ type Props = {
      *
      * @default {@link InputType.TEXT}
      */
-    type?: InputType,
+    type?: InputType | `${InputType}`,
 
     /**
      * Valeur actuelle du champ.
      *
      * Si cette prop. est omise, le component ne sera pas "contrôlé".
      */
-    value?: string | number,
+    value?: string | number | null,
 
     /**
      * Un nombre qui définit la granularité de la valeur lorsque
@@ -94,7 +94,7 @@ type Props = {
      *
      * @default {@link InputAlignment.LEFT}
      */
-    align?: InputAlignment,
+    align?: InputAlignment | `${InputAlignment}`,
 
     /**
      * L'éventuel texte affiché en filigrane dans le
@@ -107,14 +107,42 @@ type Props = {
 
     /** Le champ doit-il être marqué comme invalide ? */
     invalid?: boolean,
+
+    /**
+     * Fonction appelée immédiatement lorsque la valeur du
+     * champ change suite à une action utilisateur.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onInput?(newValue: string): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ a changé,
+     * lorsque le champ perd le focus.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onChange?(newValue: string): void,
+
+    /**
+     * Fonction appelée lorsqu'une touche du clavier
+     * qui a été pressée est relâchée dans le champ.
+     *
+     * @param event - L'événement lié.
+     */
+    onKeyup?(event: KeyboardEvent): void,
+};
+
+type Data = {
+    focused: boolean,
 };
 
 /** Un champ de formulaire textuel. */
 const Input = defineComponent({
     name: 'Input',
     inject: {
-        'input.invalid': { default: { value: false } },
-        'input.disabled': { default: { value: false } },
+        'input.invalid': { default: false },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -173,9 +201,24 @@ const Input = defineComponent({
             type: Boolean as PropType<Props['invalid']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onKeyup: {
+            type: Function as PropType<Props['onKeyup']>,
+            default: undefined,
+        },
     },
     emits: ['change', 'input', 'keyup'],
-    data: () => ({
+    data: (): Data => ({
         focused: false,
     }),
     computed: {
@@ -186,7 +229,7 @@ const Input = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'].value;
+            return this['input.invalid'];
         },
 
         inheritedDisabled(): boolean {
@@ -196,7 +239,7 @@ const Input = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
     },
     methods: {
@@ -236,7 +279,7 @@ const Input = defineComponent({
 
         // ------------------------------------------------------
         // -
-        // -    Public API
+        // -    API Publique
         // -
         // ------------------------------------------------------
 
@@ -286,9 +329,9 @@ const Input = defineComponent({
                         ref="input"
                         class="Input__input"
                         type={type}
-                        step={type === 'number' ? (step || 0.01) : null}
-                        min={type === 'number' && (min || min === 0) ? min : null}
-                        max={type === 'number' && (max || max === 0) ? max : null}
+                        step={type === InputType.NUMBER ? (step || 0.01) : undefined}
+                        min={type === InputType.NUMBER && (min || min === 0) ? min : undefined}
+                        max={type === InputType.NUMBER && (max || max === 0) ? max : undefined}
                         name={name}
                         autocomplete={autocomplete}
                         disabled={disabled}

@@ -2,7 +2,7 @@ import '../index.scss';
 import clsx from 'clsx';
 import showModal from '@/utils/showModal';
 import generateUniqueId from 'lodash/uniqueId';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import config from '@/globals/config';
 import { initColumnsDisplay } from '../@utils';
 import { Variant } from '../@constants';
@@ -11,8 +11,7 @@ import { Variant } from '../@constants';
 import ColumnsSelector from '@/themes/default/modals/ColumnsSelector';
 
 import type { ClassValue } from 'clsx';
-import type { CreateElement } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { CreateElement, PropType } from 'vue';
 import type { Column, Columns } from './_types';
 import type { ColumnsDisplay } from '../@utils';
 import type { OrderBy, RenderFunction } from '../@types';
@@ -95,6 +94,13 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      * surcharger la valeur par défaut de la configuration.
      */
     perPage?: number,
+
+    /**
+     * Fonction appelée lorsqu'une ligne du tableau est cliquée.
+     *
+     * @param row - Les données de la ligne cliquée.
+     */
+    onRowClick?(row: Datum): void,
 };
 
 type InstanceProperties = {
@@ -152,6 +158,11 @@ const ServerTable = defineComponent({
         },
         perPage: {
             type: Number as PropType<Props['perPage']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRowClick: {
+            type: Function as PropType<Props['onRowClick']>,
             default: undefined,
         },
     },
@@ -372,7 +383,7 @@ const ServerTable = defineComponent({
                 name={name ?? uniqueId}
                 columns={columnsKeys}
                 options={options}
-                onRow-click={handleRowClick}
+                onRowClick={handleRowClick}
             />
         );
     },

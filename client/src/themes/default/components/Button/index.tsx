@@ -1,50 +1,66 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import invariant from 'invariant';
 import Icon, { Variant as IconVariant } from '@/themes/default/components/Icon';
 import Fragment from '@/components/Fragment';
 
+import type { PropType } from 'vue';
 import type { Location } from 'vue-router';
 import type { TooltipOptions } from 'v-tooltip';
-import type { PropType } from '@vue/composition-api';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
-export const TYPES = [
-    'default', 'success', 'warning', 'danger',
-    'primary', 'secondary', 'transparent',
-] as const;
+enum Size {
+    SMALL = 'small',
+    NORMAL = 'normal',
+    LARGE = 'large',
+    FULL_WIDTH = 'full-width',
+}
+
+enum CoreType {
+    DEFAULT = 'default',
+    SUCCESS = 'success',
+    WARNING = 'warning',
+    DANGER = 'danger',
+    PRIMARY = 'primary',
+    SECONDARY = 'secondary',
+    TRANSPARENT = 'transparent',
+}
 
 // NOTE: L'idée ici n'est pas d'ajouter tous les types possibles mais uniquement ceux
 // qui se retrouvent à de multiples endroits (pour éviter d'avoir des soucis de cohérence)
 const PREDEFINED_TYPES = {
     add: {
-        type: 'success',
+        type: CoreType.SUCCESS,
         icon: 'plus',
     },
     edit: {
-        type: 'default',
+        type: CoreType.DEFAULT,
         icon: 'edit',
     },
     trash: {
-        type: 'danger',
+        type: CoreType.DANGER,
         icon: 'trash',
     },
     delete: {
-        type: 'danger',
+        type: CoreType.DANGER,
         icon: 'trash-alt',
     },
     restore: {
-        type: 'success',
+        type: CoreType.SUCCESS,
         icon: 'trash-restore',
     },
     close: {
-        type: 'transparent',
+        type: CoreType.TRANSPARENT,
         icon: 'times',
     },
-} as const;
+} as const satisfies Record<string, { type: CoreType, icon: string }>;
+type PredefinedType = keyof typeof PREDEFINED_TYPES;
 
-export type PredefinedType = keyof typeof PREDEFINED_TYPES;
-export type Type = (typeof TYPES)[number];
+export type Type = PredefinedType | CoreType | `${CoreType}`;
+export const TYPES = [
+    ...Object.values(CoreType),
+    ...Object.keys(PREDEFINED_TYPES),
+] as any as Type;
 
 type IconName = string | `${string}:${IconVariant}`;
 type IconPosition = 'before' | 'after';
@@ -58,14 +74,14 @@ type Props = {
      * Deux types de valeurs sont acceptés:
      * - Le nom d'un type bas niveau:
      *   => Ceci permettra de donner un aspect spécifique au bouton.
-     *      (Voir {@link TYPES})
+     *      (Voir {@link CoreType})
      * - Le nom d'un type pré-défini:
      *   => Permet de donner un style "complet" au bouton (aspect + icône)
      *      (Voir {@link PREDEFINED_TYPES})
      *
-     * @default 'default'
+     * @default CoreType.DEFAULT
      */
-    type?: PredefinedType | Type,
+    type?: Type,
 
     /**
      * L'icône à utiliser dans le bouton.
@@ -104,11 +120,11 @@ type Props = {
     htmlType?: 'button' | 'submit' | 'reset',
 
     /**
-     * La taille du bouton.
+     * La taille du bouton (voir {@link Size}).
      *
-     * @default 'normal'
+     * @default Size.NORMAL
      */
-    size?: 'small' | 'normal' | 'large',
+    size?: Size | `${Size}`,
 
     /**
      * Le contenu d'une éventuelle infobulle qui sera affichée au survol du bouton.
@@ -181,6 +197,13 @@ type Props = {
      * @default false
      */
     disabled?: boolean,
+
+    /**
+     * Fonction appelée lorsque le bouton est cliqué.
+     *
+     * @param event - L'événement d'origine.
+     */
+    onClick?(event: MouseEvent): void,
 };
 
 /** Un bouton. */
@@ -197,11 +220,10 @@ const Button = defineComponent({
         },
         type: {
             type: String as PropType<Required<Props>['type']>,
-            default: 'default',
+            default: CoreType.DEFAULT,
             validator: (value: unknown) => (
                 typeof value === 'string' &&
-                [TYPES, Object.keys(PREDEFINED_TYPES)]
-                    .flat().includes(value)
+                TYPES.includes(value as any)
             ),
         },
         tooltip: {
@@ -214,10 +236,10 @@ const Button = defineComponent({
         },
         size: {
             type: String as PropType<Required<Props>['size']>,
-            default: 'normal',
+            default: Size.NORMAL,
             validator: (value: unknown) => (
                 typeof value === 'string' &&
-                ['small', 'normal', 'large'].includes(value)
+                Object.values(Size).includes(value as any)
             ),
         },
         loading: {
@@ -244,8 +266,24 @@ const Button = defineComponent({
             type: Boolean as PropType<Required<Props>['disabled']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
+        },
     },
     emits: ['click'],
+    setup(props) {
+        invariant(
+            !props.download || !props.external,
+            'The `external` prop. must not be set when the `download` prop. is true.',
+        );
+        invariant(
+            (!props.download && !props.external) || typeof props.to === 'string',
+            'The `to` props. must be a string when the props `download` or `external` are used.',
+        );
+        return {};
+    },
     computed: {
         predefinedValue(): typeof PREDEFINED_TYPES[PredefinedType] | undefined {
             if (!Object.keys(PREDEFINED_TYPES).includes(this.type)) {
@@ -254,11 +292,11 @@ const Button = defineComponent({
             return PREDEFINED_TYPES[this.type as PredefinedType];
         },
 
-        normalizedType(): Type {
+        normalizedType(): CoreType {
             const predefinedValue = this.predefinedValue?.type;
             return predefinedValue !== undefined
-                ? (predefinedValue ?? 'default')
-                : (this.type as Type);
+                ? (predefinedValue ?? CoreType.DEFAULT)
+                : (this.type as CoreType);
         },
 
         normalizedIcon(): IconProps | undefined {
@@ -299,15 +337,8 @@ const Button = defineComponent({
             if (this.download) {
                 return true;
             }
-
             return this.external ?? false;
         },
-    },
-    created() {
-        invariant(
-            this.download !== true || this.external === undefined,
-            'The `external` prop. must not be set when the `download` prop. is true.',
-        );
     },
     methods: {
         // ------------------------------------------------------
@@ -348,7 +379,7 @@ const Button = defineComponent({
             {
                 'Button--collapsible': collapsible,
                 'Button--with-icon': icon !== undefined,
-                'Button--disabled': disabled || loading,
+                'Button--disabled': disabled,
                 'Button--loading': loading,
             },
         ];
@@ -356,22 +387,22 @@ const Button = defineComponent({
         const content = (
             <Fragment>
                 {(icon && iconPosition === 'before') && (
-                    <Icon {...{ props: icon }} class="Button__icon" />
+                    <Icon name={icon.name} variant={icon.variant} class="Button__icon" />
                 )}
                 {children && <span class="Button__content">{children}</span>}
                 {(icon && iconPosition === 'after') && (
-                    <Icon {...{ props: icon }} class="Button__icon" />
+                    <Icon name={icon.name} variant={icon.variant} class="Button__icon" />
                 )}
             </Fragment>
         );
 
         if (to && !disabled) {
             if (inheritedExternal) {
-                const isOutside = typeof to === 'string' && to.includes('://');
-
+                // Note: `to` est assuré d'être une string ici vu l'assertion dans le setup.
+                const isOutside = (to as string).includes('://');
                 return (
                     <a
-                        href={to}
+                        href={to as string}
                         v-tooltip={tooltip}
                         class={classNames}
                         target={isOutside ? '_blank' : undefined}

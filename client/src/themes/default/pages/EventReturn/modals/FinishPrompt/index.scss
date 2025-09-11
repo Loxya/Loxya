@@ -1,0 +1,50 @@
+@use '~@/themes/default/style/globals';
+
+.EventReturnFinishPromptModal {
+    $block: &;
+    padding: globals.$spacing-small globals.$spacing-large;
+    text-align: center;
+
+    &__options {
+        overflow: auto;
+        max-height: 0;
+        opacity: 0;
+        transition:
+            max-height 300ms ease,
+            opacity 300ms ease;
+    }
+
+    &__title {
+        margin: globals.$spacing-large;
+        font-size: 1.4rem;
+    }
+
+    &__warning {
+        margin: globals.$spacing-medium 0;
+        color: globals.$text-warning-color;
+        font-size: 1.1rem;
+    }
+
+    &__options-toggle {
+        color: globals.$text-soft-color;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: globals.$spacing-medium;
+        gap: globals.$spacing-small;
+    }
+
+    //
+    // - État: Options avancées visibles.
+    //
+
+    &--with-options {
+        #{$block}__options {
+            max-height: 200px;
+            opacity: 1;
+        }
+    }
+}

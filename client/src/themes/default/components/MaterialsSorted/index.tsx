@@ -1,11 +1,11 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import groupByCategories, { SortBy } from './utils/groupByCategories';
 import Category from './components/Category';
 import Extras from './components/Extras';
 
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EmbeddedMaterialsByCategory } from './utils/groupByCategories';
 import type { EmbeddedExtra, EmbeddedMaterial } from './_types';
 
@@ -84,7 +84,7 @@ const MaterialsSorted = defineComponent({
             sortedMaterials.map(
                 (category: EmbeddedMaterialsByCategory) => (
                     <Category
-                        key={category.id}
+                        key={category.id ?? undefined}
                         data={category}
                         withBilling={withBilling}
                         currency={currency}

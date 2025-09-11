@@ -34,7 +34,6 @@
     //
 
     &--highlight {
-        // stylelint-disable-next-line selector-class-pattern
         .v-select:not(.vs--open) .vs__dropdown-toggle {
             border-color: color.adjust(globals.$primary-color, $lightness: -7%);
             box-shadow: 0 0 6px color.adjust(globals.$primary-color, $alpha: -0.5);
@@ -46,7 +45,6 @@
     //
 
     &--invalid {
-        // stylelint-disable-next-line selector-class-pattern
         .v-select:not(.vs--open) .vs__dropdown-toggle {
             border-color: globals.$input-error-border-color;
             background-color: globals.$input-error-background-color;

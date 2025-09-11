@@ -2,7 +2,7 @@
     {
         "id": 1,
         "pseudo": "test1",
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "group": "administration",
         "password": "$2y$10$o7Zu3VKby5bUzGk7uzSQqeUuXo5MSg7RpXQS3U3C541hjmzHeVY0O",
         "cas_identifier": null,
@@ -20,8 +20,8 @@
     {
         "id": 2,
         "pseudo": "test2",
-        "email": "tester2@robertmanager.net",
-        "group": "management",
+        "email": "tester2@loxya.com",
+        "group": "operation",
         "password": "$2y$10$o7Zu3VKby5bUzGk7uzSQqeUuXo5MSg7RpXQS3U3C541hjmzHeVY0O",
         "cas_identifier": null,
         "saml2_identifier": null,
@@ -37,9 +37,9 @@
     },
     {
         "id": 3,
-        "pseudo": "aldup",
-        "email": "alex.dupont@example.com",
-        "group": "management",
+        "pseudo": "a.dupont",
+        "email": "alex.dupont@loxya.com",
+        "group": "operation",
         "password": "$2y$10$o7Zu3VKby5bUzGk7uzSQqeUuXo5MSg7RpXQS3U3C541hjmzHeVY0O",
         "cas_identifier": null,
         "saml2_identifier": null,
@@ -56,7 +56,7 @@
     {
         "id": 4,
         "pseudo": "TheVisitor",
-        "email": "visitor@robertmanager.net",
+        "email": "visitor@loxya.com",
         "group": "readonly-planning-general",
         "password": "$2y$10$o7Zu3VKby5bUzGk7uzSQqeUuXo5MSg7RpXQS3U3C541hjmzHeVY0O",
         "cas_identifier": null,
@@ -74,7 +74,7 @@
     {
         "id": 5,
         "pseudo": "caroline",
-        "email": "external@robertmanager.net",
+        "email": "external@loxya.com",
         "group": "readonly-planning-general",
         "password": "$2y$10$o7Zu3VKby5bUzGk7uzSQqeUuXo5MSg7RpXQS3U3C541hjmzHeVY0O",
         "cas_identifier": null,

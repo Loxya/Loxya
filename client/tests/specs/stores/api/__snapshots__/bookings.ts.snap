@@ -1,10 +1,10 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Bookings Api all() parse the returned data correctly when not paginated 1`] = `
 [
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -30,6 +30,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
           "note": "Just for tests",
           "phone": "+4123456789",
           "postal_code": "1234",
+          "registration_id": null,
           "street": "1, company st.",
         },
         "company_id": 1,
@@ -39,7 +40,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
           "name": "France",
         },
         "country_id": 1,
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_address": "1, somewhere av.
 1234 Megacity",
@@ -62,6 +63,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": null,
     "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
     "entity": "event",
+    "has_materials": true,
     "has_not_returned_materials": false,
     "has_unassigned_mandatory_positions": false,
     "id": 1,
@@ -71,10 +73,10 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "is_return_inventory_done": true,
     "location": "Gap",
     "manager": {
-      "email": "tester2@robertmanager.net",
+      "email": "tester2@loxya.com",
       "first_name": "Roger",
       "full_name": "Roger Rabbit",
-      "group": "management",
+      "group": "operation",
       "id": 2,
       "last_name": "Rabbit",
       "phone": null,
@@ -93,6 +95,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "parks": [
       1,
     ],
+    "return_inventory_datetime": null,
     "technicians": [
       {
         "event_id": 1,
@@ -110,7 +113,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
         "technician": {
           "country": null,
           "country_id": null,
-          "email": "tester2@robertmanager.net",
+          "email": "tester2@loxya.com",
           "first_name": "Roger",
           "full_address": null,
           "full_name": "Roger Rabbit",
@@ -186,7 +189,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
   },
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -223,6 +226,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": /* Color Instance => */ "#ffba49",
     "created_at": /* DateTime Instance => */ "2018-12-16 12:50:45",
     "entity": "event",
+    "has_materials": true,
     "has_not_returned_materials": true,
     "has_unassigned_mandatory_positions": true,
     "id": 2,
@@ -232,7 +236,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "is_return_inventory_done": true,
     "location": "Lyon",
     "manager": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -254,12 +258,13 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "parks": [
       1,
     ],
+    "return_inventory_datetime": /* DateTime Instance => */ "2018-12-20 14:30:00",
     "technicians": [],
     "title": "Second événement",
   },
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -276,6 +281,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": null,
     "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
     "entity": "event",
+    "has_materials": true,
     "has_not_returned_materials": null,
     "has_unassigned_mandatory_positions": null,
     "id": 3,
@@ -298,12 +304,13 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "parks": [
       1,
     ],
+    "return_inventory_datetime": /* DateTime Instance => */ "2018-12-16 15:42:00",
     "technicians": [],
     "title": "Avant-premier événement",
   },
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -320,6 +327,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": /* Color Instance => */ "#ef5b5b",
     "created_at": /* DateTime Instance => */ "2019-01-01 20:12:00",
     "entity": "event",
+    "has_materials": true,
     "has_not_returned_materials": null,
     "has_unassigned_mandatory_positions": false,
     "id": 4,
@@ -343,12 +351,13 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
       1,
       2,
     ],
+    "return_inventory_datetime": null,
     "technicians": [],
     "title": "Concert X",
   },
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -374,6 +383,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
           "note": "Just for tests",
           "phone": "+4123456789",
           "postal_code": "1234",
+          "registration_id": null,
           "street": "1, company st.",
         },
         "company_id": 1,
@@ -383,7 +393,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
           "name": "France",
         },
         "country_id": 1,
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_address": "1, somewhere av.
 1234 Megacity",
@@ -405,6 +415,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": null,
     "created_at": /* DateTime Instance => */ "2019-12-25 14:59:40",
     "entity": "event",
+    "has_materials": true,
     "has_not_returned_materials": null,
     "has_unassigned_mandatory_positions": false,
     "id": 5,
@@ -427,12 +438,13 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "parks": [
       1,
     ],
+    "return_inventory_datetime": null,
     "technicians": [],
     "title": "Kermesse de l'école des trois cailloux",
   },
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -446,6 +458,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": /* Color Instance => */ "#ef5b5b",
     "created_at": /* DateTime Instance => */ "2019-02-01 12:00:00",
     "entity": "event",
+    "has_materials": false,
     "has_not_returned_materials": null,
     "has_unassigned_mandatory_positions": false,
     "id": 6,
@@ -466,12 +479,13 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
       "start": "2019-03-15",
     },
     "parks": [],
+    "return_inventory_datetime": null,
     "technicians": [],
     "title": "Un événement sans inspiration",
   },
   {
     "author": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -489,6 +503,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "color": null,
     "created_at": /* DateTime Instance => */ "2022-05-29 18:00:00",
     "entity": "event",
+    "has_materials": true,
     "has_not_returned_materials": null,
     "has_unassigned_mandatory_positions": false,
     "id": 7,
@@ -498,7 +513,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
     "is_return_inventory_done": false,
     "location": "Machin-le-chateau",
     "manager": {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -521,6 +536,7 @@ exports[`Bookings Api all() parse the returned data correctly when not paginated
       1,
       2,
     ],
+    "return_inventory_datetime": null,
     "technicians": [
       {
         "event_id": 7,
@@ -576,7 +592,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
   "data": [
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -602,6 +618,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
             "note": "Just for tests",
             "phone": "+4123456789",
             "postal_code": "1234",
+            "registration_id": null,
             "street": "1, company st.",
           },
           "company_id": 1,
@@ -611,7 +628,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
             "name": "France",
           },
           "country_id": 1,
-          "email": "tester@robertmanager.net",
+          "email": "tester@loxya.com",
           "first_name": "Jean",
           "full_address": "1, somewhere av.
 1234 Megacity",
@@ -634,6 +651,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": null,
       "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": false,
       "has_unassigned_mandatory_positions": false,
       "id": 1,
@@ -643,10 +661,10 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "is_return_inventory_done": true,
       "location": "Gap",
       "manager": {
-        "email": "tester2@robertmanager.net",
+        "email": "tester2@loxya.com",
         "first_name": "Roger",
         "full_name": "Roger Rabbit",
-        "group": "management",
+        "group": "operation",
         "id": 2,
         "last_name": "Rabbit",
         "phone": null,
@@ -665,6 +683,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "parks": [
         1,
       ],
+      "return_inventory_datetime": null,
       "technicians": [
         {
           "event_id": 1,
@@ -682,7 +701,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
           "technician": {
             "country": null,
             "country_id": null,
-            "email": "tester2@robertmanager.net",
+            "email": "tester2@loxya.com",
             "first_name": "Roger",
             "full_address": null,
             "full_name": "Roger Rabbit",
@@ -758,7 +777,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -795,6 +814,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": /* Color Instance => */ "#ffba49",
       "created_at": /* DateTime Instance => */ "2018-12-16 12:50:45",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": true,
       "has_unassigned_mandatory_positions": true,
       "id": 2,
@@ -804,7 +824,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "is_return_inventory_done": true,
       "location": "Lyon",
       "manager": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -826,12 +846,13 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "parks": [
         1,
       ],
+      "return_inventory_datetime": /* DateTime Instance => */ "2018-12-20 14:30:00",
       "technicians": [],
       "title": "Second événement",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -848,6 +869,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": null,
       "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": null,
       "id": 3,
@@ -870,12 +892,13 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "parks": [
         1,
       ],
+      "return_inventory_datetime": /* DateTime Instance => */ "2018-12-16 15:42:00",
       "technicians": [],
       "title": "Avant-premier événement",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -892,6 +915,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": /* Color Instance => */ "#ef5b5b",
       "created_at": /* DateTime Instance => */ "2019-01-01 20:12:00",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 4,
@@ -915,12 +939,13 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
         1,
         2,
       ],
+      "return_inventory_datetime": null,
       "technicians": [],
       "title": "Concert X",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -946,6 +971,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
             "note": "Just for tests",
             "phone": "+4123456789",
             "postal_code": "1234",
+            "registration_id": null,
             "street": "1, company st.",
           },
           "company_id": 1,
@@ -955,7 +981,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
             "name": "France",
           },
           "country_id": 1,
-          "email": "tester@robertmanager.net",
+          "email": "tester@loxya.com",
           "first_name": "Jean",
           "full_address": "1, somewhere av.
 1234 Megacity",
@@ -977,6 +1003,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": null,
       "created_at": /* DateTime Instance => */ "2019-12-25 14:59:40",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 5,
@@ -999,12 +1026,13 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "parks": [
         1,
       ],
+      "return_inventory_datetime": null,
       "technicians": [],
       "title": "Kermesse de l'école des trois cailloux",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -1018,6 +1046,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": /* Color Instance => */ "#ef5b5b",
       "created_at": /* DateTime Instance => */ "2019-02-01 12:00:00",
       "entity": "event",
+      "has_materials": false,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 6,
@@ -1038,12 +1067,13 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
         "start": "2019-03-15",
       },
       "parks": [],
+      "return_inventory_datetime": null,
       "technicians": [],
       "title": "Un événement sans inspiration",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -1061,6 +1091,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "color": null,
       "created_at": /* DateTime Instance => */ "2022-05-29 18:00:00",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 7,
@@ -1070,7 +1101,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
       "is_return_inventory_done": false,
       "location": "Machin-le-chateau",
       "manager": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -1093,6 +1124,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
         1,
         2,
       ],
+      "return_inventory_datetime": null,
       "technicians": [
         {
           "event_id": 7,
@@ -1155,7 +1187,7 @@ exports[`Bookings Api all() parse the returned data correctly when paginated 1`]
 exports[`Bookings Api one() parse the returned data correctly 1`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -1181,6 +1213,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -1190,7 +1223,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -1210,7 +1243,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
   "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
   "currency": /* Currency Instance => */ "EUR",
   "departure_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -1265,6 +1298,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
   "extras": [],
   "global_discount_rate": /* Decimal Instance => */ "10",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": false,
   "has_unassigned_mandatory_positions": false,
@@ -1296,10 +1330,10 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
   "is_return_inventory_started": true,
   "location": "Gap",
   "manager": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -1313,7 +1347,31 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -1329,16 +1387,6 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -1347,20 +1395,6 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -1404,7 +1438,21 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -1428,20 +1476,6 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -1485,7 +1519,30 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 4,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+        "degressive_rate": /* Decimal Instance => */ "1.75",
+        "degressive_rate_id": 1,
+        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+        "id": 4,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Showtec SDS-6",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 4,
+            "name": "Conforme",
+            "type": "boolean",
+            "value": true,
+          },
           {
             "entities": [
               "material",
@@ -1508,30 +1565,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
             "unit": "W",
             "value": 60,
           },
-          {
-            "entities": [
-              "material",
-            ],
-            "id": 4,
-            "name": "Conforme",
-            "type": "boolean",
-            "value": true,
-          },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-        "degressive_rate": /* Decimal Instance => */ "1.75",
-        "degressive_rate_id": 1,
-        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-        "id": 4,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Showtec SDS-6",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "SDS-6-01",
         "rental_price": /* Decimal Instance => */ "15.95",
         "rental_price_period": /* Decimal Instance => */ "27.91",
@@ -1610,7 +1644,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
       "technician": {
         "country": null,
         "country_id": null,
-        "email": "tester2@robertmanager.net",
+        "email": "tester2@loxya.com",
         "first_name": "Roger",
         "full_address": null,
         "full_name": "Roger Rabbit",
@@ -1703,7 +1737,7 @@ exports[`Bookings Api one() parse the returned data correctly 1`] = `
 exports[`Bookings Api one() parse the returned data correctly 2`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -1770,6 +1804,7 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
   ],
   "global_discount_rate": /* Decimal Instance => */ "0",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": true,
   "has_unassigned_mandatory_positions": true,
@@ -1783,7 +1818,7 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
   "is_return_inventory_started": true,
   "location": "Lyon",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -1800,7 +1835,21 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
       "discount_rate": /* Decimal Instance => */ "10",
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -1824,20 +1873,6 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -1881,7 +1916,31 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -1897,16 +1956,6 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -1915,20 +1964,6 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -1988,10 +2023,10 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
   ],
   "reference": null,
   "return_inventory_author": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -2026,7 +2061,7 @@ exports[`Bookings Api one() parse the returned data correctly 2`] = `
 exports[`Bookings Api one() parse the returned data correctly 3`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2040,7 +2075,7 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
   "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
   "currency": /* Currency Instance => */ "EUR",
   "departure_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2053,6 +2088,7 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": null,
@@ -2071,7 +2107,6 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
       "departure_comment": null,
       "id": 5,
       "material": {
-        "attributes": [],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
         "degressive_rate": /* Decimal Instance => */ "1",
@@ -2086,6 +2121,7 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
         "out_of_order_quantity": 8,
         "park_id": 1,
         "picture": null,
+        "properties": [],
         "reference": "XLR10",
         "rental_price": /* Decimal Instance => */ "0.5",
         "rental_price_period": /* Decimal Instance => */ "0.5",
@@ -2110,7 +2146,21 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
       "departure_comment": null,
       "id": 3,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+        "degressive_rate": /* Decimal Instance => */ "1.75",
+        "degressive_rate_id": 1,
+        "description": "Projecteur PAR64 à LED, avec son set de gélatines",
+        "id": 3,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "PAR64 LED",
+        "note": "Soyez délicats avec ces projos !",
+        "out_of_order_quantity": 4,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -2134,20 +2184,6 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
             "value": 150,
           },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
-        "degressive_rate": /* Decimal Instance => */ "1.75",
-        "degressive_rate_id": 1,
-        "description": "Projecteur PAR64 à LED, avec son set de gélatines",
-        "id": 3,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "PAR64 LED",
-        "note": "Soyez délicats avec ces projos !",
-        "out_of_order_quantity": 4,
-        "park_id": 1,
-        "picture": null,
         "reference": "PAR64LED",
         "rental_price": /* Decimal Instance => */ "3.5",
         "rental_price_period": /* Decimal Instance => */ "6.13",
@@ -2177,7 +2213,21 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
       "departure_comment": null,
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -2201,20 +2251,6 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -2255,7 +2291,7 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
   "positions": [],
   "reference": null,
   "return_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2275,7 +2311,7 @@ exports[`Bookings Api one() parse the returned data correctly 3`] = `
 exports[`Bookings Api one() parse the returned data correctly 4`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2293,6 +2329,7 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -2311,18 +2348,6 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
       "departure_comment": null,
       "id": 6,
       "material": {
-        "attributes": [
-          {
-            "entities": [
-              "material",
-              "material",
-            ],
-            "id": 5,
-            "name": "Date d'achat",
-            "type": "date",
-            "value": /* Day Instance => */ "2021-01-28",
-          },
-        ],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
         "degressive_rate": /* Decimal Instance => */ "30.93",
@@ -2337,6 +2362,42 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
         "out_of_order_quantity": 1,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 5,
+            "name": "Date d'achat",
+            "type": "date",
+            "value": /* Day Instance => */ "2021-01-28",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Polyvalent",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 6,
+            "is_totalisable": true,
+            "name": "Prix d'achat",
+            "type": "float",
+            "unit": "€",
+            "value": 250,
+          },
+        ],
         "reference": "XR18",
         "rental_price": /* Decimal Instance => */ "49.99",
         "rental_price_period": /* Decimal Instance => */ "1546.19",
@@ -2361,7 +2422,31 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
       "departure_comment": null,
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -2377,16 +2462,6 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -2395,20 +2470,6 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -2438,7 +2499,6 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
       "departure_comment": null,
       "id": 7,
       "material": {
-        "attributes": [],
         "category_id": 3,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
         "degressive_rate": /* Decimal Instance => */ "30.75",
@@ -2453,6 +2513,22 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
         "out_of_order_quantity": 0,
         "park_id": 2,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Extérieur",
+          },
+        ],
         "reference": "Transporter",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "9225",
@@ -2499,7 +2575,7 @@ exports[`Bookings Api one() parse the returned data correctly 4`] = `
 exports[`Bookings Api one() parse the returned data correctly 5`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2525,6 +2601,7 @@ exports[`Bookings Api one() parse the returned data correctly 5`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -2534,7 +2611,7 @@ exports[`Bookings Api one() parse the returned data correctly 5`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -2558,6 +2635,7 @@ exports[`Bookings Api one() parse the returned data correctly 5`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -2576,7 +2654,6 @@ exports[`Bookings Api one() parse the returned data correctly 5`] = `
       "departure_comment": null,
       "id": 8,
       "material": {
-        "attributes": [],
         "category_id": 4,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
         "degressive_rate": /* Decimal Instance => */ "1",
@@ -2591,6 +2668,22 @@ exports[`Bookings Api one() parse the returned data correctly 5`] = `
         "out_of_order_quantity": 0,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Intérieur",
+          },
+        ],
         "reference": "Decor-Forest",
         "rental_price": /* Decimal Instance => */ "1500",
         "rental_price_period": /* Decimal Instance => */ "1500",
@@ -2637,7 +2730,7 @@ exports[`Bookings Api one() parse the returned data correctly 5`] = `
 exports[`Bookings Api one() parse the returned data correctly 6`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2655,6 +2748,7 @@ exports[`Bookings Api one() parse the returned data correctly 6`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": false,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -2694,7 +2788,7 @@ exports[`Bookings Api one() parse the returned data correctly 6`] = `
 exports[`Bookings Api one() parse the returned data correctly 7`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2715,6 +2809,7 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
   "extras": [],
   "global_discount_rate": /* Decimal Instance => */ "0",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -2728,7 +2823,7 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
   "is_return_inventory_started": true,
   "location": "Machin-le-chateau",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -2745,18 +2840,6 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 6,
       "material": {
-        "attributes": [
-          {
-            "entities": [
-              "material",
-              "material",
-            ],
-            "id": 5,
-            "name": "Date d'achat",
-            "type": "date",
-            "value": /* Day Instance => */ "2021-01-28",
-          },
-        ],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
         "degressive_rate": /* Decimal Instance => */ "3.25",
@@ -2771,6 +2854,42 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
         "out_of_order_quantity": 1,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 5,
+            "name": "Date d'achat",
+            "type": "date",
+            "value": /* Day Instance => */ "2021-01-28",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Polyvalent",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 6,
+            "is_totalisable": true,
+            "name": "Prix d'achat",
+            "type": "float",
+            "unit": "€",
+            "value": 250,
+          },
+        ],
         "reference": "XR18",
         "rental_price": /* Decimal Instance => */ "49.99",
         "rental_price_period": /* Decimal Instance => */ "162.47",
@@ -2809,7 +2928,31 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -2825,16 +2968,6 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -2843,20 +2976,6 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -2900,7 +3019,30 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 4,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+        "degressive_rate": /* Decimal Instance => */ "3.25",
+        "degressive_rate_id": 1,
+        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+        "id": 4,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Showtec SDS-6",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 4,
+            "name": "Conforme",
+            "type": "boolean",
+            "value": true,
+          },
           {
             "entities": [
               "material",
@@ -2923,30 +3065,7 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
             "unit": "W",
             "value": 60,
           },
-          {
-            "entities": [
-              "material",
-            ],
-            "id": 4,
-            "name": "Conforme",
-            "type": "boolean",
-            "value": true,
-          },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-        "degressive_rate": /* Decimal Instance => */ "3.25",
-        "degressive_rate_id": 1,
-        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-        "id": 4,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Showtec SDS-6",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "SDS-6-01",
         "rental_price": /* Decimal Instance => */ "15.95",
         "rental_price_period": /* Decimal Instance => */ "51.84",
@@ -2985,7 +3104,6 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 7,
       "material": {
-        "attributes": [],
         "category_id": 3,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
         "degressive_rate": /* Decimal Instance => */ "3",
@@ -3000,6 +3118,22 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
         "out_of_order_quantity": 0,
         "park_id": 2,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Extérieur",
+          },
+        ],
         "reference": "Transporter",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "900",
@@ -3121,7 +3255,7 @@ exports[`Bookings Api one() parse the returned data correctly 7`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3147,6 +3281,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -3156,7 +3291,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -3180,6 +3315,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
   "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
   "description": null,
   "entity": "event",
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": false,
   "has_unassigned_mandatory_positions": false,
@@ -3191,10 +3327,10 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
   "is_return_inventory_done": true,
   "location": "Gap",
   "manager": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -3215,6 +3351,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
     1,
   ],
   "reference": null,
+  "return_inventory_datetime": null,
   "technicians": [
     {
       "event_id": 1,
@@ -3232,7 +3369,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
       "technician": {
         "country": null,
         "country_id": null,
-        "email": "tester2@robertmanager.net",
+        "email": "tester2@loxya.com",
         "first_name": "Roger",
         "full_address": null,
         "full_name": "Roger Rabbit",
@@ -3311,7 +3448,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 1`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 2`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3349,6 +3486,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 2`] = `
   "created_at": /* DateTime Instance => */ "2018-12-16 12:50:45",
   "description": null,
   "entity": "event",
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": true,
   "has_unassigned_mandatory_positions": true,
@@ -3360,7 +3498,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 2`] = `
   "is_return_inventory_done": true,
   "location": "Lyon",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3384,6 +3522,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 2`] = `
     1,
   ],
   "reference": null,
+  "return_inventory_datetime": /* DateTime Instance => */ "2018-12-20 14:30:00",
   "technicians": [],
   "title": "Second événement",
 }
@@ -3392,7 +3531,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 2`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 3`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3410,6 +3549,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 3`] = `
   "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
   "description": null,
   "entity": "event",
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": null,
@@ -3436,6 +3576,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 3`] = `
     1,
   ],
   "reference": null,
+  "return_inventory_datetime": /* DateTime Instance => */ "2018-12-16 15:42:00",
   "technicians": [],
   "title": "Avant-premier événement",
 }
@@ -3444,7 +3585,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 3`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 4`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3462,6 +3603,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 4`] = `
   "created_at": /* DateTime Instance => */ "2019-01-01 20:12:00",
   "description": null,
   "entity": "event",
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -3489,6 +3631,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 4`] = `
     2,
   ],
   "reference": null,
+  "return_inventory_datetime": null,
   "technicians": [],
   "title": "Concert X",
 }
@@ -3497,7 +3640,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 4`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 5`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3523,6 +3666,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 5`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -3532,7 +3676,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 5`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -3555,6 +3699,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 5`] = `
   "created_at": /* DateTime Instance => */ "2019-12-25 14:59:40",
   "description": null,
   "entity": "event",
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -3581,6 +3726,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 5`] = `
     1,
   ],
   "reference": null,
+  "return_inventory_datetime": null,
   "technicians": [],
   "title": "Kermesse de l'école des trois cailloux",
 }
@@ -3589,7 +3735,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 5`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 6`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3604,6 +3750,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 6`] = `
   "created_at": /* DateTime Instance => */ "2019-02-01 12:00:00",
   "description": null,
   "entity": "event",
+  "has_materials": false,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -3628,6 +3775,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 6`] = `
   },
   "parks": [],
   "reference": null,
+  "return_inventory_datetime": null,
   "technicians": [],
   "title": "Un événement sans inspiration",
 }
@@ -3636,7 +3784,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 6`] = `
 exports[`Bookings Api oneSummary() parse the returned data correctly 7`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3655,6 +3803,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 7`] = `
   "created_at": /* DateTime Instance => */ "2022-05-29 18:00:00",
   "description": null,
   "entity": "event",
+  "has_materials": true,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -3666,7 +3815,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 7`] = `
   "is_return_inventory_done": false,
   "location": "Machin-le-chateau",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3691,6 +3840,7 @@ exports[`Bookings Api oneSummary() parse the returned data correctly 7`] = `
     2,
   ],
   "reference": null,
+  "return_inventory_datetime": null,
   "technicians": [
     {
       "event_id": 7,
@@ -3766,7 +3916,21 @@ exports[`Bookings Api resynchronizeMaterial() parse the returned data correctly 
   "discount_rate": /* Decimal Instance => */ "10",
   "id": 2,
   "material": {
-    "attributes": [
+    "category_id": 1,
+    "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+    "degressive_rate": /* Decimal Instance => */ "2",
+    "degressive_rate_id": null,
+    "description": "Système de diffusion numérique",
+    "id": 2,
+    "is_deleted": false,
+    "is_discountable": true,
+    "is_hidden_on_bill": false,
+    "name": "Processeur DBX PA2",
+    "note": null,
+    "out_of_order_quantity": 0,
+    "park_id": 1,
+    "picture": null,
+    "properties": [
       {
         "entities": [
           "material",
@@ -3790,20 +3954,6 @@ exports[`Bookings Api resynchronizeMaterial() parse the returned data correctly 
         "value": 35,
       },
     ],
-    "category_id": 1,
-    "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-    "degressive_rate": /* Decimal Instance => */ "2",
-    "degressive_rate_id": null,
-    "description": "Système de diffusion numérique",
-    "id": 2,
-    "is_deleted": false,
-    "is_discountable": true,
-    "is_hidden_on_bill": false,
-    "name": "Processeur DBX PA2",
-    "note": null,
-    "out_of_order_quantity": 0,
-    "park_id": 1,
-    "picture": null,
     "reference": "DBXPA2",
     "rental_price": /* Decimal Instance => */ "25.5",
     "rental_price_period": /* Decimal Instance => */ "51",
@@ -3845,7 +3995,7 @@ exports[`Bookings Api resynchronizeMaterial() parse the returned data correctly 
 exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3871,6 +4021,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -3880,7 +4031,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -3900,7 +4051,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
   "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
   "currency": /* Currency Instance => */ "EUR",
   "departure_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -3955,6 +4106,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
   "extras": [],
   "global_discount_rate": /* Decimal Instance => */ "10",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": false,
   "has_unassigned_mandatory_positions": false,
@@ -3986,10 +4138,10 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
   "is_return_inventory_started": true,
   "location": "Gap",
   "manager": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -4003,7 +4155,31 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -4019,16 +4195,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -4037,20 +4203,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -4094,7 +4246,21 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -4118,20 +4284,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -4175,7 +4327,30 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 4,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+        "degressive_rate": /* Decimal Instance => */ "1.75",
+        "degressive_rate_id": 1,
+        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+        "id": 4,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Showtec SDS-6",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 4,
+            "name": "Conforme",
+            "type": "boolean",
+            "value": true,
+          },
           {
             "entities": [
               "material",
@@ -4198,30 +4373,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
             "unit": "W",
             "value": 60,
           },
-          {
-            "entities": [
-              "material",
-            ],
-            "id": 4,
-            "name": "Conforme",
-            "type": "boolean",
-            "value": true,
-          },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-        "degressive_rate": /* Decimal Instance => */ "1.75",
-        "degressive_rate_id": 1,
-        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-        "id": 4,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Showtec SDS-6",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "SDS-6-01",
         "rental_price": /* Decimal Instance => */ "15.95",
         "rental_price_period": /* Decimal Instance => */ "27.91",
@@ -4300,7 +4452,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
       "technician": {
         "country": null,
         "country_id": null,
-        "email": "tester2@robertmanager.net",
+        "email": "tester2@loxya.com",
         "first_name": "Roger",
         "full_address": null,
         "full_name": "Roger Rabbit",
@@ -4393,7 +4545,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 1`] = `
 exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -4460,6 +4612,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
   ],
   "global_discount_rate": /* Decimal Instance => */ "0",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": true,
   "has_unassigned_mandatory_positions": true,
@@ -4473,7 +4626,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
   "is_return_inventory_started": true,
   "location": "Lyon",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -4490,7 +4643,21 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
       "discount_rate": /* Decimal Instance => */ "10",
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -4514,20 +4681,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -4571,7 +4724,31 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -4587,16 +4764,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -4605,20 +4772,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -4678,10 +4831,10 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
   ],
   "reference": null,
   "return_inventory_author": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -4716,7 +4869,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 2`] = `
 exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -4730,7 +4883,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
   "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
   "currency": /* Currency Instance => */ "EUR",
   "departure_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -4743,6 +4896,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": null,
@@ -4761,7 +4915,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
       "departure_comment": null,
       "id": 5,
       "material": {
-        "attributes": [],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
         "degressive_rate": /* Decimal Instance => */ "1",
@@ -4776,6 +4929,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
         "out_of_order_quantity": 8,
         "park_id": 1,
         "picture": null,
+        "properties": [],
         "reference": "XLR10",
         "rental_price": /* Decimal Instance => */ "0.5",
         "rental_price_period": /* Decimal Instance => */ "0.5",
@@ -4800,7 +4954,21 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
       "departure_comment": null,
       "id": 3,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+        "degressive_rate": /* Decimal Instance => */ "1.75",
+        "degressive_rate_id": 1,
+        "description": "Projecteur PAR64 à LED, avec son set de gélatines",
+        "id": 3,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "PAR64 LED",
+        "note": "Soyez délicats avec ces projos !",
+        "out_of_order_quantity": 4,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -4824,20 +4992,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
             "value": 150,
           },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
-        "degressive_rate": /* Decimal Instance => */ "1.75",
-        "degressive_rate_id": 1,
-        "description": "Projecteur PAR64 à LED, avec son set de gélatines",
-        "id": 3,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "PAR64 LED",
-        "note": "Soyez délicats avec ces projos !",
-        "out_of_order_quantity": 4,
-        "park_id": 1,
-        "picture": null,
         "reference": "PAR64LED",
         "rental_price": /* Decimal Instance => */ "3.5",
         "rental_price_period": /* Decimal Instance => */ "6.13",
@@ -4867,7 +5021,21 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
       "departure_comment": null,
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -4891,20 +5059,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -4945,7 +5099,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
   "positions": [],
   "reference": null,
   "return_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -4965,7 +5119,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 3`] = `
 exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -4983,6 +5137,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -5001,18 +5156,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
       "departure_comment": null,
       "id": 6,
       "material": {
-        "attributes": [
-          {
-            "entities": [
-              "material",
-              "material",
-            ],
-            "id": 5,
-            "name": "Date d'achat",
-            "type": "date",
-            "value": /* Day Instance => */ "2021-01-28",
-          },
-        ],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
         "degressive_rate": /* Decimal Instance => */ "30.93",
@@ -5027,6 +5170,42 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
         "out_of_order_quantity": 1,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 5,
+            "name": "Date d'achat",
+            "type": "date",
+            "value": /* Day Instance => */ "2021-01-28",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Polyvalent",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 6,
+            "is_totalisable": true,
+            "name": "Prix d'achat",
+            "type": "float",
+            "unit": "€",
+            "value": 250,
+          },
+        ],
         "reference": "XR18",
         "rental_price": /* Decimal Instance => */ "49.99",
         "rental_price_period": /* Decimal Instance => */ "1546.19",
@@ -5051,7 +5230,31 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
       "departure_comment": null,
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -5067,16 +5270,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -5085,20 +5278,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -5128,7 +5307,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
       "departure_comment": null,
       "id": 7,
       "material": {
-        "attributes": [],
         "category_id": 3,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
         "degressive_rate": /* Decimal Instance => */ "30.75",
@@ -5143,6 +5321,22 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
         "out_of_order_quantity": 0,
         "park_id": 2,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Extérieur",
+          },
+        ],
         "reference": "Transporter",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "9225",
@@ -5189,7 +5383,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 4`] = `
 exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -5215,6 +5409,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -5224,7 +5419,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -5248,6 +5443,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -5266,7 +5462,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
       "departure_comment": null,
       "id": 8,
       "material": {
-        "attributes": [],
         "category_id": 4,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
         "degressive_rate": /* Decimal Instance => */ "1",
@@ -5281,6 +5476,22 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
         "out_of_order_quantity": 0,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Intérieur",
+          },
+        ],
         "reference": "Decor-Forest",
         "rental_price": /* Decimal Instance => */ "1500",
         "rental_price_period": /* Decimal Instance => */ "1500",
@@ -5327,7 +5538,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 5`] = `
 exports[`Bookings Api updateBilling() parse the returned data correctly 6`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -5345,6 +5556,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 6`] = `
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": false,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -5384,7 +5596,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 6`] = `
 exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -5405,6 +5617,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
   "extras": [],
   "global_discount_rate": /* Decimal Instance => */ "0",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -5418,7 +5631,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
   "is_return_inventory_started": true,
   "location": "Machin-le-chateau",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -5435,18 +5648,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 6,
       "material": {
-        "attributes": [
-          {
-            "entities": [
-              "material",
-              "material",
-            ],
-            "id": 5,
-            "name": "Date d'achat",
-            "type": "date",
-            "value": /* Day Instance => */ "2021-01-28",
-          },
-        ],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
         "degressive_rate": /* Decimal Instance => */ "3.25",
@@ -5461,6 +5662,42 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
         "out_of_order_quantity": 1,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 5,
+            "name": "Date d'achat",
+            "type": "date",
+            "value": /* Day Instance => */ "2021-01-28",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Polyvalent",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 6,
+            "is_totalisable": true,
+            "name": "Prix d'achat",
+            "type": "float",
+            "unit": "€",
+            "value": 250,
+          },
+        ],
         "reference": "XR18",
         "rental_price": /* Decimal Instance => */ "49.99",
         "rental_price_period": /* Decimal Instance => */ "162.47",
@@ -5499,7 +5736,31 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -5515,16 +5776,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -5533,20 +5784,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -5590,7 +5827,30 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 4,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+        "degressive_rate": /* Decimal Instance => */ "3.25",
+        "degressive_rate_id": 1,
+        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+        "id": 4,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Showtec SDS-6",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 4,
+            "name": "Conforme",
+            "type": "boolean",
+            "value": true,
+          },
           {
             "entities": [
               "material",
@@ -5613,30 +5873,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
             "unit": "W",
             "value": 60,
           },
-          {
-            "entities": [
-              "material",
-            ],
-            "id": 4,
-            "name": "Conforme",
-            "type": "boolean",
-            "value": true,
-          },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-        "degressive_rate": /* Decimal Instance => */ "3.25",
-        "degressive_rate_id": 1,
-        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-        "id": 4,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Showtec SDS-6",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "SDS-6-01",
         "rental_price": /* Decimal Instance => */ "15.95",
         "rental_price_period": /* Decimal Instance => */ "51.84",
@@ -5675,7 +5912,6 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 7,
       "material": {
-        "attributes": [],
         "category_id": 3,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
         "degressive_rate": /* Decimal Instance => */ "3",
@@ -5690,6 +5926,22 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
         "out_of_order_quantity": 0,
         "park_id": 2,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Extérieur",
+          },
+        ],
         "reference": "Transporter",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "900",
@@ -5811,7 +6063,7 @@ exports[`Bookings Api updateBilling() parse the returned data correctly 7`] = `
 exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -5837,6 +6089,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -5846,7 +6099,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -5866,7 +6119,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
   "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
   "currency": /* Currency Instance => */ "EUR",
   "departure_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -5921,6 +6174,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
   "extras": [],
   "global_discount_rate": /* Decimal Instance => */ "10",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": false,
   "has_unassigned_mandatory_positions": false,
@@ -5952,10 +6206,10 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
   "is_return_inventory_started": true,
   "location": "Gap",
   "manager": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -5969,7 +6223,31 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -5985,16 +6263,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -6003,20 +6271,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -6060,7 +6314,21 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -6084,20 +6352,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -6141,7 +6395,30 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 4,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+        "degressive_rate": /* Decimal Instance => */ "1.75",
+        "degressive_rate_id": 1,
+        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+        "id": 4,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Showtec SDS-6",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 4,
+            "name": "Conforme",
+            "type": "boolean",
+            "value": true,
+          },
           {
             "entities": [
               "material",
@@ -6164,30 +6441,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
             "unit": "W",
             "value": 60,
           },
-          {
-            "entities": [
-              "material",
-            ],
-            "id": 4,
-            "name": "Conforme",
-            "type": "boolean",
-            "value": true,
-          },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-        "degressive_rate": /* Decimal Instance => */ "1.75",
-        "degressive_rate_id": 1,
-        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-        "id": 4,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Showtec SDS-6",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "SDS-6-01",
         "rental_price": /* Decimal Instance => */ "15.95",
         "rental_price_period": /* Decimal Instance => */ "27.91",
@@ -6266,7 +6520,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
       "technician": {
         "country": null,
         "country_id": null,
-        "email": "tester2@robertmanager.net",
+        "email": "tester2@loxya.com",
         "first_name": "Roger",
         "full_address": null,
         "full_name": "Roger Rabbit",
@@ -6359,7 +6613,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 1`] = 
 exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -6426,6 +6680,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
   ],
   "global_discount_rate": /* Decimal Instance => */ "0",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": true,
   "has_unassigned_mandatory_positions": true,
@@ -6439,7 +6694,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
   "is_return_inventory_started": true,
   "location": "Lyon",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -6456,7 +6711,21 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
       "discount_rate": /* Decimal Instance => */ "10",
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -6480,20 +6749,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -6537,7 +6792,31 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -6553,16 +6832,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -6571,20 +6840,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -6644,10 +6899,10 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
   ],
   "reference": null,
   "return_inventory_author": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -6682,7 +6937,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 2`] = 
 exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -6696,7 +6951,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
   "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
   "currency": /* Currency Instance => */ "EUR",
   "departure_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -6709,6 +6964,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": null,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": null,
@@ -6727,7 +6983,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
       "departure_comment": null,
       "id": 5,
       "material": {
-        "attributes": [],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
         "degressive_rate": /* Decimal Instance => */ "1",
@@ -6742,6 +6997,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
         "out_of_order_quantity": 8,
         "park_id": 1,
         "picture": null,
+        "properties": [],
         "reference": "XLR10",
         "rental_price": /* Decimal Instance => */ "0.5",
         "rental_price_period": /* Decimal Instance => */ "0.5",
@@ -6766,7 +7022,21 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
       "departure_comment": null,
       "id": 3,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+        "degressive_rate": /* Decimal Instance => */ "1.75",
+        "degressive_rate_id": 1,
+        "description": "Projecteur PAR64 à LED, avec son set de gélatines",
+        "id": 3,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "PAR64 LED",
+        "note": "Soyez délicats avec ces projos !",
+        "out_of_order_quantity": 4,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -6790,20 +7060,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
             "value": 150,
           },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
-        "degressive_rate": /* Decimal Instance => */ "1.75",
-        "degressive_rate_id": 1,
-        "description": "Projecteur PAR64 à LED, avec son set de gélatines",
-        "id": 3,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "PAR64 LED",
-        "note": "Soyez délicats avec ces projos !",
-        "out_of_order_quantity": 4,
-        "park_id": 1,
-        "picture": null,
         "reference": "PAR64LED",
         "rental_price": /* Decimal Instance => */ "3.5",
         "rental_price_period": /* Decimal Instance => */ "6.13",
@@ -6833,7 +7089,21 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
       "departure_comment": null,
       "id": 2,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
+        "degressive_rate": /* Decimal Instance => */ "2",
+        "degressive_rate_id": null,
+        "description": "Système de diffusion numérique",
+        "id": 2,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Processeur DBX PA2",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
           {
             "entities": [
               "material",
@@ -6857,20 +7127,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
             "value": 35,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:01:00",
-        "degressive_rate": /* Decimal Instance => */ "2",
-        "degressive_rate_id": null,
-        "description": "Système de diffusion numérique",
-        "id": 2,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Processeur DBX PA2",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "DBXPA2",
         "rental_price": /* Decimal Instance => */ "25.5",
         "rental_price_period": /* Decimal Instance => */ "51",
@@ -6911,7 +7167,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
   "positions": [],
   "reference": null,
   "return_inventory_author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -6931,7 +7187,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 3`] = 
 exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -6949,6 +7205,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -6967,18 +7224,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
       "departure_comment": null,
       "id": 6,
       "material": {
-        "attributes": [
-          {
-            "entities": [
-              "material",
-              "material",
-            ],
-            "id": 5,
-            "name": "Date d'achat",
-            "type": "date",
-            "value": /* Day Instance => */ "2021-01-28",
-          },
-        ],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
         "degressive_rate": /* Decimal Instance => */ "30.93",
@@ -6993,6 +7238,42 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
         "out_of_order_quantity": 1,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 5,
+            "name": "Date d'achat",
+            "type": "date",
+            "value": /* Day Instance => */ "2021-01-28",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Polyvalent",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 6,
+            "is_totalisable": true,
+            "name": "Prix d'achat",
+            "type": "float",
+            "unit": "€",
+            "value": 250,
+          },
+        ],
         "reference": "XR18",
         "rental_price": /* Decimal Instance => */ "49.99",
         "rental_price_period": /* Decimal Instance => */ "1546.19",
@@ -7017,7 +7298,31 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
       "departure_comment": null,
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -7033,16 +7338,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -7051,20 +7346,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -7094,7 +7375,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
       "departure_comment": null,
       "id": 7,
       "material": {
-        "attributes": [],
         "category_id": 3,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
         "degressive_rate": /* Decimal Instance => */ "30.75",
@@ -7109,6 +7389,22 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
         "out_of_order_quantity": 0,
         "park_id": 2,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Extérieur",
+          },
+        ],
         "reference": "Transporter",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "9225",
@@ -7155,7 +7451,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 4`] = 
 exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -7181,6 +7477,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = 
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -7190,7 +7487,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = 
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -7214,6 +7511,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = 
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": true,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -7232,7 +7530,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = 
       "departure_comment": null,
       "id": 8,
       "material": {
-        "attributes": [],
         "category_id": 4,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
         "degressive_rate": /* Decimal Instance => */ "1",
@@ -7247,6 +7544,22 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = 
         "out_of_order_quantity": 0,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Intérieur",
+          },
+        ],
         "reference": "Decor-Forest",
         "rental_price": /* Decimal Instance => */ "1500",
         "rental_price_period": /* Decimal Instance => */ "1500",
@@ -7293,7 +7606,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 5`] = 
 exports[`Bookings Api updateMaterials() parse the returned data correctly 6`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -7311,6 +7624,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 6`] = 
   "description": null,
   "entity": "event",
   "has_deleted_materials": false,
+  "has_materials": false,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -7350,7 +7664,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 6`] = 
 exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = `
 {
   "author": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -7371,6 +7685,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
   "extras": [],
   "global_discount_rate": /* Decimal Instance => */ "0",
   "has_deleted_materials": false,
+  "has_materials": true,
   "has_missing_materials": false,
   "has_not_returned_materials": null,
   "has_unassigned_mandatory_positions": false,
@@ -7384,7 +7699,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
   "is_return_inventory_started": true,
   "location": "Machin-le-chateau",
   "manager": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -7401,18 +7716,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 6,
       "material": {
-        "attributes": [
-          {
-            "entities": [
-              "material",
-              "material",
-            ],
-            "id": 5,
-            "name": "Date d'achat",
-            "type": "date",
-            "value": /* Day Instance => */ "2021-01-28",
-          },
-        ],
         "category_id": 1,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
         "degressive_rate": /* Decimal Instance => */ "3.25",
@@ -7427,6 +7730,42 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
         "out_of_order_quantity": 1,
         "park_id": 1,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 5,
+            "name": "Date d'achat",
+            "type": "date",
+            "value": /* Day Instance => */ "2021-01-28",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Polyvalent",
+          },
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 6,
+            "is_totalisable": true,
+            "name": "Prix d'achat",
+            "type": "float",
+            "unit": "€",
+            "value": 250,
+          },
+        ],
         "reference": "XR18",
         "rental_price": /* Decimal Instance => */ "49.99",
         "rental_price_period": /* Decimal Instance => */ "162.47",
@@ -7465,7 +7804,31 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 1,
       "material": {
-        "attributes": [
+        "category_id": 1,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+        "degressive_rate": /* Decimal Instance => */ "1",
+        "degressive_rate_id": 3,
+        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
+        "id": 1,
+        "is_deleted": false,
+        "is_discountable": false,
+        "is_hidden_on_bill": false,
+        "name": "Console Yamaha CL3",
+        "note": null,
+        "out_of_order_quantity": 1,
+        "park_id": 1,
+        "picture": "http://loxya.test/materials/1/picture",
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 2,
+            "max_length": null,
+            "name": "Couleur",
+            "type": "string",
+            "value": "Grise",
+          },
           {
             "entities": [
               "material",
@@ -7481,16 +7844,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
             "entities": [
               "material",
             ],
-            "id": 2,
-            "max_length": null,
-            "name": "Couleur",
-            "type": "string",
-            "value": "Grise",
-          },
-          {
-            "entities": [
-              "material",
-            ],
             "id": 3,
             "is_totalisable": true,
             "name": "Puissance",
@@ -7499,20 +7852,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
             "value": 850,
           },
         ],
-        "category_id": 1,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
-        "degressive_rate": /* Decimal Instance => */ "1",
-        "degressive_rate_id": 3,
-        "description": "Console numérique 64 entrées / 8 sorties + Master + Sub",
-        "id": 1,
-        "is_deleted": false,
-        "is_discountable": false,
-        "is_hidden_on_bill": false,
-        "name": "Console Yamaha CL3",
-        "note": null,
-        "out_of_order_quantity": 1,
-        "park_id": 1,
-        "picture": "http://loxya.test/materials/1/picture",
         "reference": "CL3",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "300",
@@ -7556,7 +7895,30 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 4,
       "material": {
-        "attributes": [
+        "category_id": 2,
+        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+        "degressive_rate": /* Decimal Instance => */ "3.25",
+        "degressive_rate_id": 1,
+        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
+        "id": 4,
+        "is_deleted": false,
+        "is_discountable": true,
+        "is_hidden_on_bill": false,
+        "name": "Showtec SDS-6",
+        "note": null,
+        "out_of_order_quantity": 0,
+        "park_id": 1,
+        "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 4,
+            "name": "Conforme",
+            "type": "boolean",
+            "value": true,
+          },
           {
             "entities": [
               "material",
@@ -7579,30 +7941,7 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
             "unit": "W",
             "value": 60,
           },
-          {
-            "entities": [
-              "material",
-            ],
-            "id": 4,
-            "name": "Conforme",
-            "type": "boolean",
-            "value": true,
-          },
         ],
-        "category_id": 2,
-        "created_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
-        "degressive_rate": /* Decimal Instance => */ "3.25",
-        "degressive_rate_id": 1,
-        "description": "Console DMX (jeu d'orgue) Showtec 6 canaux",
-        "id": 4,
-        "is_deleted": false,
-        "is_discountable": true,
-        "is_hidden_on_bill": false,
-        "name": "Showtec SDS-6",
-        "note": null,
-        "out_of_order_quantity": 0,
-        "park_id": 1,
-        "picture": null,
         "reference": "SDS-6-01",
         "rental_price": /* Decimal Instance => */ "15.95",
         "rental_price_period": /* Decimal Instance => */ "51.84",
@@ -7641,7 +7980,6 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
       "discount_rate": /* Decimal Instance => */ "0",
       "id": 7,
       "material": {
-        "attributes": [],
         "category_id": 3,
         "created_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
         "degressive_rate": /* Decimal Instance => */ "3",
@@ -7656,6 +7994,22 @@ exports[`Bookings Api updateMaterials() parse the returned data correctly 7`] = 
         "out_of_order_quantity": 0,
         "park_id": 2,
         "picture": null,
+        "properties": [
+          {
+            "entities": [
+              "material",
+            ],
+            "id": 7,
+            "name": "Lieu d'usage",
+            "options": [
+              "Intérieur",
+              "Extérieur",
+              "Polyvalent",
+            ],
+            "type": "list",
+            "value": "Extérieur",
+          },
+        ],
         "reference": "Transporter",
         "rental_price": /* Decimal Instance => */ "300",
         "rental_price_period": /* Decimal Instance => */ "900",

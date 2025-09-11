@@ -1,0 +1,14 @@
+@use '~@/themes/default/style/globals';
+
+.EstimatesInvoicesGlobalSettings {
+    &__form {
+        .FormField {
+            --label-width: 200px;
+        }
+    }
+
+    &__actions {
+        margin-top: globals.$spacing-large;
+        text-align: center;
+    }
+}

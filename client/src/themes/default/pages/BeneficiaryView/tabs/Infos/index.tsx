@@ -1,10 +1,10 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { Group } from '@/stores/api/groups';
 import Button from '@/themes/default/components/Button';
 import NextBookings from './NextBookings';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { GroupDetails } from '@/stores/api/groups';
 import type { BeneficiaryDetails } from '@/stores/api/beneficiaries';
 
@@ -152,7 +152,10 @@ const BeneficiaryViewInfos = defineComponent({
                                         <Button
                                             type="transparent"
                                             icon="edit"
-                                            to={{ name: 'edit-user', params: { id: user.id } }}
+                                            to={{
+                                                name: 'edit-user',
+                                                params: { id: user.id.toString() },
+                                            }}
                                             tooltip={__('page.technician-view.infos.modify-associated-user')}
                                             class="BeneficiaryViewInfos__user-edit-button"
                                         />
@@ -188,7 +191,14 @@ const BeneficiaryViewInfos = defineComponent({
                             </dt>
                             <dd class="BeneficiaryViewInfos__info__value">
                                 <h4 class="BeneficiaryViewInfos__company__name">
-                                    {company.legal_name}
+                                    <span class="BeneficiaryViewInfos__company__name__legal">
+                                        {company.legal_name}
+                                    </span>
+                                    {(company.registration_id ?? '').length > 0 && (
+                                        <span class="BeneficiaryViewInfos__company__name__registration-id">
+                                            {company.registration_id}
+                                        </span>
+                                    )}
                                 </h4>
                                 <p class="BeneficiaryViewInfos__company__address">
                                     {company.full_address}

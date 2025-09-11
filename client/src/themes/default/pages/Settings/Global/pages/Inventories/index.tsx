@@ -1,7 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import axios from 'axios';
 import pick from 'lodash/pick';
+import { RequestError } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import apiSettings, { ReturnInventoryMode } from '@/stores/api/settings';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import Fieldset from '@/themes/default/components/Fieldset';
@@ -68,14 +68,13 @@ const InventoriesGlobalSettings = defineComponent({
                 this.$store.dispatch('settings/fetch');
                 this.$toasted.success(__('page.settings.inventories.saved'));
             } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
 
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the settings`, error);
                 this.$toasted.error(__('errors.unexpected-while-saving'));
             } finally {
                 this.isSaving = false;

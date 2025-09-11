@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiRoles from '@/stores/api/roles';
 import { confirm } from '@/utils/alert';
 import showModal from '@/utils/showModal';
@@ -176,7 +176,7 @@ const Roles = defineComponent({
 
         if (roles.length === 0) {
             return (
-                <Page name="roles" title={__('title')} help={__('help')}>
+                <Page name="roles" title={__('title')} help={__('help')} centered>
                     <div class="Roles">
                         <EmptyMessage
                             message={__('no-role-yet')}
@@ -205,8 +205,8 @@ const Roles = defineComponent({
             >
                 <ul class="Roles__list">
                     {roles.map(({ id, name, is_used: isUsed }: Role) => (
-                        <li key={id} class="Roles__item">
-                            <span class="Roles__item__name">
+                        <li key={id} class="Roles__list__item">
+                            <span class="Roles__list__item__name">
                                 {(
                                     processing.includes(id)
                                         ? <Icon name="circle-notch" spin />
@@ -214,7 +214,7 @@ const Roles = defineComponent({
                                 )}
                                 {name}
                             </span>
-                            <span class="Roles__item__actions">
+                            <span class="Roles__list__item__actions">
                                 <Button
                                     type="edit"
                                     onClick={() => { handleEdit(id); }}

@@ -4,10 +4,9 @@ import Period from '@/utils/period';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
 import DateTime from '@/utils/datetime';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
-import { isRequestErrorStatusCode } from '@/utils/errors';
+import { defineComponent, markRaw } from 'vue';
 import config, { BillingMode } from '@/globals/config';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import { confirm } from '@/utils/alert';
@@ -42,7 +41,7 @@ import AssignTags from '@/themes/default/modals/AssignTags';
 
 import type { DebouncedMethod } from 'lodash';
 import type { Filters } from './components/Filters';
-import type { ComponentRef, CreateElement } from 'vue';
+import type { ComponentRef, CreateElement, Raw } from 'vue';
 import type { PaginationParams, SortableParams } from '@/stores/api/@types';
 import type { Columns } from '@/themes/default/components/Table/Server';
 import type { MaterialWithAvailability as Material } from '@/stores/api/materials';
@@ -64,8 +63,8 @@ type Data = {
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
-    quantitiesPeriodRaw: Period | null,
-    now: DateTime,
+    quantitiesPeriodRaw: Raw<Period> | null,
+    now: Raw<DateTime>,
 };
 
 /** La clé utilisé pour la persistence des filtres de la page. */
@@ -121,7 +120,7 @@ const Materials = defineComponent({
             isTrashDisplayed: false,
             shouldDisplayTrashed: false,
             quantitiesPeriodRaw: null,
-            now: DateTime.now(),
+            now: markRaw(DateTime.now()),
             filters,
         };
     },
@@ -143,6 +142,10 @@ const Materials = defineComponent({
             return this.$store.getters['auth/is'](Group.ADMINISTRATION);
         },
 
+        isSupervisor(): boolean {
+            return this.$store.getters['auth/is'](Group.SUPERVISION);
+        },
+
         quantitiesPeriod(): Period {
             if (this.quantitiesPeriodRaw === null) {
                 const currentHour = this.now.startOfHour();
@@ -156,7 +159,6 @@ const Materials = defineComponent({
             const {
                 $t: __,
                 $store: store,
-                filters,
                 handleSetTags,
                 isTrashDisplayed,
                 handleRestoreItemClick,
@@ -273,7 +275,6 @@ const Materials = defineComponent({
                     render: (h: CreateElement, material: Material) => (
                         <Quantities
                             material={material}
-                            parkFilter={filters.park}
                         />
                     ),
                 },
@@ -284,8 +285,7 @@ const Materials = defineComponent({
                     sortable: true,
                     defaultHidden: true,
                     render(h: CreateElement, material: Material) {
-                        const quantityBroken: number = material.out_of_order_quantity;
-
+                        const quantityBroken = material.out_of_order_quantity;
                         const className = ['Materials__quantity-broken', {
                             'Materials__quantity-broken--exists': quantityBroken > 0,
                         }];
@@ -343,12 +343,18 @@ const Materials = defineComponent({
                             <Fragment>
                                 <Button
                                     icon="eye"
-                                    to={{ name: 'view-material', params: { id } }}
+                                    to={{
+                                        name: 'view-material',
+                                        params: { id: id.toString() },
+                                    }}
                                 />
                                 <Dropdown>
                                     <Button
                                         type="edit"
-                                        to={{ name: 'edit-material', params: { id } }}
+                                        to={{
+                                            name: 'edit-material',
+                                            params: { id: id.toString() },
+                                        }}
                                     >
                                         {__('action-edit')}
                                     </Button>
@@ -376,22 +382,18 @@ const Materials = defineComponent({
         filters: {
             handler(newFilters: Filters, prevFilters: Filters | undefined) {
                 if (prevFilters !== undefined) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
-                    this.refreshTableDebounced();
+                    this.refreshTableDebounced!();
                 }
 
                 // - Persistance dans le local storage.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
                     persistFilters(FILTERS_PERSISTENCE_KEY, newFilters);
                 }
 
                 // - Mise à jour de l'URL.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 const prevRouteQuery = this.$route?.query ?? {};
                 const newRouteQuery = convertFiltersToRouteQuery(newFilters);
                 if (!isEqual(prevRouteQuery, newRouteQuery)) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     this.$router.replace({ query: newRouteQuery });
                 }
             },
@@ -420,7 +422,7 @@ const Materials = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
@@ -469,7 +471,7 @@ const Materials = defineComponent({
             }
         },
 
-        handleQuantitiesPeriodChange(newPeriod: Period) {
+        handleQuantitiesPeriodChange(newPeriod: Raw<Period>) {
             this.quantitiesPeriodRaw = newPeriod;
 
             // Note: Pas de refresh car sera refresh par le watch automatiquement.
@@ -602,7 +604,7 @@ const Materials = defineComponent({
                 this.hasMaterial = data.pagination.total.items > 0;
                 return data;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     this.refreshTable();
                     return undefined;
                 }
@@ -631,6 +633,7 @@ const Materials = defineComponent({
             $options,
             hasCriticalError,
             isAdmin,
+            isSupervisor,
             hasMaterial,
             isLoading,
             filters,
@@ -683,15 +686,15 @@ const Materials = defineComponent({
                 {__('page.materials.action-add')}
             </Button>,
             <Dropdown>
-                {isAdmin && (
+                {(isAdmin || isSupervisor) && (
                     <Fragment>
                         <Button
                             icon="cog"
-                            to={{ name: 'attributes' }}
+                            to={{ name: 'properties' }}
                         >
-                            {__('page.materials.manage-attributes')}
+                            {__('page.materials.manage-properties')}
                         </Button>
-                        {hasMaterial && (
+                        {(isAdmin && hasMaterial) && (
                             <Fragment>
                                 <Button
                                     icon="print"

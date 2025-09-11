@@ -7,7 +7,7 @@ use Adbar\Dot as DotArray;
 use Illuminate\Support\Str;
 use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Enums\PublicCalendarPeriodDisplay;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Configuration de l'application.
@@ -26,7 +26,7 @@ final class Setting extends BaseModel
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'key' => V::custom([$this, 'checkKey']),
             'value' => V::custom([$this, 'checkValue']),
         ];
@@ -42,30 +42,25 @@ final class Setting extends BaseModel
 
             'eventSummary.materialDisplayMode' => [
                 'type' => 'string',
-                'validation' => V::custom(static fn ($value) => (
-                    V::create()
-                        ->notEmpty()
-                        ->anyOf(
-                            V::equals('categories'),
-                            V::equals('sub-categories'),
-                            V::equals('parks'),
-                            V::equals('flat'),
-                        )
-                        ->validate($value)
-                )),
+                'validation' => V::in([
+                    'categories',
+                    'sub-categories',
+                    'parks',
+                    'flat',
+                ]),
                 'sensitive' => false,
                 'default' => 'sub-categories',
             ],
             'eventSummary.customText.title' => [
                 'type' => 'string',
                 'validation' => V::optional(V::length(null, 191)),
-                'sensitive' => false,
+                'sensitive' => true,
                 'default' => null,
             ],
             'eventSummary.customText.content' => [
                 'type' => 'string',
                 'validation' => null,
-                'sensitive' => false,
+                'sensitive' => true,
                 'default' => null,
             ],
             'eventSummary.showLegalNumbers' => [
@@ -123,24 +118,17 @@ final class Setting extends BaseModel
             ],
             'calendar.public.uuid' => [
                 'type' => 'string',
-                'validation' => V::Uuid(4),
+                'validation' => V::uuid(4),
                 'sensitive' => true,
-                'default' => (string) Str::uuid(),
+                'default' => static fn () => (
+                    (string) Str::uuid()
+                ),
             ],
             'calendar.public.displayedPeriod' => [
                 'type' => 'string',
-                'validation' => V::custom(static fn ($value) => (
-                    V::create()
-                        ->notEmpty()
-                        ->anyOf(
-                            V::equals(PublicCalendarPeriodDisplay::MOBILIZATION),
-                            V::equals(PublicCalendarPeriodDisplay::OPERATION),
-                            V::equals(PublicCalendarPeriodDisplay::BOTH),
-                        )
-                        ->validate($value)
-                )),
+                'validation' => V::enumValue(PublicCalendarPeriodDisplay::class),
                 'sensitive' => false,
-                'default' => PublicCalendarPeriodDisplay::OPERATION,
+                'default' => PublicCalendarPeriodDisplay::OPERATION->value,
             ],
 
             //
@@ -149,15 +137,7 @@ final class Setting extends BaseModel
 
             'returnInventory.mode' => [
                 'type' => 'string',
-                'validation' => V::custom(static fn ($value) => (
-                    V::create()
-                        ->notEmpty()
-                        ->anyOf(
-                            V::equals('start-empty'),
-                            V::equals('start-full'),
-                        )
-                        ->validate($value)
-                )),
+                'validation' => V::in(['start-empty', 'start-full']),
                 'sensitive' => false,
                 'default' => 'start-empty',
             ],
@@ -185,6 +165,136 @@ final class Setting extends BaseModel
                 }),
                 'sensitive' => false,
                 'default' => null,
+            ],
+
+            //
+            // - Devis
+            //
+
+            'estimates.customText.title' => [
+                'type' => 'string',
+                'validation' => V::optional(V::length(null, 191)),
+                'sensitive' => true,
+                'default' => null,
+            ],
+            'estimates.customText.content' => [
+                'type' => 'string',
+                'validation' => null,
+                'sensitive' => true,
+                'default' => null,
+            ],
+            'estimates.showBookingDescription' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'estimates.showMobilizationPeriod' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'estimates.showTotalReplacementPrice' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'estimates.showTotalisableProperties' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'estimates.showPictures' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'estimates.showDescriptions' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'estimates.showReplacementPrices' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => true,
+            ],
+            'estimates.showUnitPrices' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => true,
+            ],
+
+            //
+            // - Factures
+            //
+
+            'invoices.customText.title' => [
+                'type' => 'string',
+                'validation' => V::optional(V::length(null, 191)),
+                'sensitive' => true,
+                'default' => null,
+            ],
+            'invoices.customText.content' => [
+                'type' => 'string',
+                'validation' => null,
+                'sensitive' => true,
+                'default' => null,
+            ],
+            'invoices.showBookingDescription' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'invoices.showMobilizationPeriod' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'invoices.showTotalReplacementPrice' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'invoices.showTotalisableProperties' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'invoices.showPictures' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'invoices.showDescriptions' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => false,
+            ],
+            'invoices.showReplacementPrices' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => true,
+            ],
+            'invoices.showUnitPrices' => [
+                'type' => 'boolean',
+                'validation' => V::boolVal(),
+                'sensitive' => false,
+                'default' => true,
             ],
         ];
     }
@@ -287,7 +397,8 @@ final class Setting extends BaseModel
             );
         }
 
-        $this->value = $manifest[$this->key]['default'];
+        $default = $manifest[$this->key]['default'];
+        $this->value = is_callable($default) ? $default() : $default;
         $this->save();
         $this->refresh();
     }
@@ -348,18 +459,27 @@ final class Setting extends BaseModel
     {
         $settings = new DotArray();
 
+        $manifest = static::manifest();
         foreach (static::all() as $setting) {
+            $meta = $manifest[$setting->key] ?? null;
+            if ($meta && $meta['sensitive'] && !$withSensitive) {
+                continue;
+            }
+
             $settings->set($setting->key, $setting->value);
         }
 
-        foreach (static::manifest() as $key => $meta) {
+        foreach ($manifest as $key => $meta) {
             if ($meta['sensitive'] && !$withSensitive) {
-                $settings->delete($key);
                 continue;
             }
 
             if (!$settings->has($key)) {
-                $settings->set($key, $meta['default']);
+                $settings->set($key, (
+                    is_callable($meta['default'])
+                        ? $meta['default']()
+                        : $meta['default']
+                ));
             }
         }
 

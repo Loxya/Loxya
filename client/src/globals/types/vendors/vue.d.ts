@@ -1,51 +1,36 @@
 import 'vue';
 
 declare module 'vue' {
-    import type { ComponentOptions, VueConstructor } from 'vue';
-    import type { DefaultData, DefaultComputed, DefaultMethods } from 'vue/types/options';
+    import type { markRaw } from 'vue';
+    import type {
+        DefaultData,
+        DefaultProps,
+        DefaultComputed,
+        DefaultMethods,
+    } from 'vue/types/options';
 
-    export type ComponentRef<T extends abstract new (...args: any) => any> = (
+    // eslint-disable-next-line @typescript-eslint/no-restricted-types
+    export type Raw<T extends object> = ReturnType<typeof markRaw<T>>;
+
+    export type ComponentRef<T extends abstract new (...args: any) => any = RawComponent> = (
         | InstanceType<T>
         | undefined
     );
 
-    export type RawComponent<Props = Record<string, any>, Methods = DefaultMethods<Vue>> = (
-        & ComponentOptions<Vue, DefaultData<Vue>, Methods, DefaultComputed, Props>
-        & VueConstructor
+    export type RawComponent<Props = DefaultProps, Methods = DefaultMethods<never>> = (
+        Component<DefaultData<never>, Methods, DefaultComputed, Props>
     );
 
-    export type VNodeClass =
-        | string
-        | number
-        | null
-        | undefined
-        | boolean
-        | Record<string, boolean>
-        | VNodeClass[];
-}
+    //
+    // - HTML Attributes
+    //
 
-declare module 'vue/types/options' {
-    import type {
-        VNode,
-        CreateElement,
-        RenderContext,
-        ComponentOptions as CoreComponentOptions,
-    } from 'vue';
-
-    interface ComponentOptions<
-        V extends Vue,
-        Data = DefaultData<V>,
-        Methods = DefaultMethods<V>,
-        Computed = DefaultComputed,
-        PropsDef = PropsDefinition<DefaultProps>,
-        Props = DefaultProps,
-    > extends Omit<CoreComponentOptions, 'render'> {
-        render?(createElement: CreateElement, hack: RenderContext<Props>): VNode | null;
+    export interface InputHTMLAttributes {
+        onChange?(payload: InputEvent): void;
+        onInput?(payload: InputEvent): void;
     }
-}
 
-declare module '*.vue' {
-    import Vue from 'vue';
-
-    export default Vue;
+    export interface FormHTMLAttributes {
+        onSubmit?(payload: SubmitEvent): void;
+    }
 }

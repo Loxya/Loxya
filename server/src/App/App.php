@@ -9,6 +9,7 @@ use Loxya\Errors\ErrorHandler;
 use Loxya\Http\Request;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use RKA\Middleware\IpAddress as IpAddressMiddleware;
 use Slim\App as CoreApp;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Factory\AppFactory;
@@ -27,6 +28,7 @@ final class App
 {
     private Container $container;
 
+    /** @var CoreApp<Container> */
     private CoreApp $app;
 
     public function __construct()
@@ -92,6 +94,8 @@ final class App
         $useRouterCache = (bool) Config::get('useRouterCache') && Config::getEnv() === 'production';
         $routeCollector = $this->app->getRouteCollector();
 
+        $getActionFqn = static fn ($action) => sprintf('Loxya\\Controllers\\%s', $action);
+
         // - Ajoute le parseur de route au conteneur.
         $this->container->set(RouteParserInterface::class, $routeCollector->getRouteParser());
 
@@ -111,8 +115,6 @@ final class App
         // -- Routes: Api
         //
 
-        $getActionFqn = static fn ($action) => sprintf('Loxya\\Controllers\\%s', $action);
-
         /* phpcs:disable SlevomatCodingStandard.Functions.StaticClosure.ClosureNotStatic */
         $this->app->group('/api', function (RouteCollectorProxy $group) use ($isCORSEnabled, $getActionFqn) {
             // - Autorise les requêtes de type OPTIONS sur les routes d'API.
@@ -121,6 +123,7 @@ final class App
             }
 
             // - Toutes les routes d'API sont définies dans le fichier `Config/routes.php`.
+            // @phpstan-ignore-next-line include.fileNotFound
             $routeMethods = include CONFIG_FOLDER . DS . 'routes.php';
             foreach ($routeMethods as $method => $routes) {
                 foreach ($routes as $route => $action) {
@@ -175,6 +178,7 @@ final class App
         $this->app->add(Middlewares\Acl::class);
         $this->app->add([$this->container->get('auth'), 'middleware']);
         $this->app->add(new Middlewares\BodyParser());
+        $this->app->add(new IpAddressMiddleware(false, null, 'ip'));
         $this->app->add(Middlewares\SessionStart::class);
     }
 

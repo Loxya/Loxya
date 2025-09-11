@@ -34,6 +34,11 @@ trait ConfigurationTrait
                         'collation' => $dbConfig['collation'],
                     ],
                 ],
+                'feature_flags' => [
+                    // - Utilise le type `datetime` pour les champs
+                    //   créés via `addTimestamps()`.
+                    'add_timestamps_use_datetime' => true,
+                ],
             ]);
         }
         return $this->config;

@@ -2,12 +2,11 @@ import './index.scss';
 import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import isTruthy from '@/utils/isTruthy';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
-import { isRequestErrorStatusCode } from '@/utils/errors';
 import { TechniciansViewMode } from '@/stores/api/users';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import Fragment from '@/components/Fragment';
@@ -266,7 +265,7 @@ const TechniciansListing = defineComponent({
                                     icon="eye"
                                     to={{
                                         name: 'view-technician',
-                                        params: { id },
+                                        params: { id: id.toString() },
                                         hash: '#infos',
                                     }}
                                 />
@@ -274,7 +273,7 @@ const TechniciansListing = defineComponent({
                                     icon="calendar-alt"
                                     to={{
                                         name: 'view-technician',
-                                        params: { id },
+                                        params: { id: id.toString() },
                                         hash: '#schedule',
                                     }}
                                 />
@@ -283,7 +282,7 @@ const TechniciansListing = defineComponent({
                                         type="edit"
                                         to={{
                                             name: 'edit-technician',
-                                            params: { id },
+                                            params: { id: id.toString() },
                                         }}
                                     >
                                         {__('global.action-edit')}
@@ -308,22 +307,18 @@ const TechniciansListing = defineComponent({
         filters: {
             handler(newFilters: Filters, prevFilters: Filters | undefined) {
                 if (prevFilters !== undefined) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
-                    this.refreshTableDebounced();
+                    this.refreshTableDebounced!();
                 }
 
                 // - Persistance dans le local storage.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
                     persistFilters(newFilters);
                 }
 
                 // - Mise à jour de l'URL.
-                // @ts-expect-error -- `this` fait bien référence au component.
                 const prevRouteQuery = this.$route?.query ?? {};
                 const newRouteQuery = convertFiltersToRouteQuery(newFilters);
                 if (!isEqual(prevRouteQuery, newRouteQuery)) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     this.$router.replace({ query: newRouteQuery });
                 }
             },
@@ -475,11 +470,10 @@ const TechniciansListing = defineComponent({
                     ...this.filters,
                     deleted: this.shouldDisplayTrashed,
                 });
-
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
-                return { data };
+                return data;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     this.refreshTable();
                     return undefined;
                 }

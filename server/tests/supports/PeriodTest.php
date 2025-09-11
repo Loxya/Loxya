@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Loxya\Tests;
 
-use Carbon\Carbon;
 use Eluceo\iCal\Domain\ValueObject\MultiDay as CalendarMultiDay;
 use Eluceo\iCal\Domain\ValueObject\SingleDay as CalendarSingleDay;
 use Eluceo\iCal\Domain\ValueObject\TimeSpan as CalendarTimeSpan;
+use Illuminate\Support\Carbon;
 use Loxya\Models\Event;
 use Loxya\Support\Period;
 
@@ -25,6 +25,64 @@ final class PeriodTest extends TestCase
         $this->assertSame('2024-01-01 00:00:00', $period2->getStartDate()->format('Y-m-d H:i:s'));
         $this->assertSame('2024-01-03 00:00:00', $period2->getEndDate()->format('Y-m-d H:i:s'));
         $this->assertTrue($period2->isFullDays());
+    }
+
+    public function testSetFullDays(): void
+    {
+        $doTest = function (Period $result, array $expected) {
+            $result = $result->toArray();
+            $this->assertSame($expected[0], $result['start']);
+            $this->assertSame($expected[1], $result['end']);
+            $this->assertSame($expected[2], $result['isFullDays']);
+        };
+
+        // - Avec une période à l'heure près vers une période à l'heure près.
+        $doTest(
+            (new Period('2024-01-01 14:30:00', '2024-01-02 10:20:00'))->setFullDays(false),
+            ['2024-01-01 14:30:00', '2024-01-02 10:20:00', false],
+        );
+
+        // - Avec une période en journées entières vers une période en journées entières.
+        $doTest(
+            (new Period('2024-01-01', '2024-01-02', true))->setFullDays(true),
+            ['2024-01-01', '2024-01-02', true],
+        );
+
+        // - Avec une heure de fin en milieu de journée.
+        $doTest(
+            (new Period('2024-01-01 14:30:00', '2024-01-02 10:20:00'))->setFullDays(true),
+            ['2024-01-01', '2024-01-02', true],
+        );
+
+        // - Avec une heure de fin à `00:00:00` de journée suivante (= Fin de la journée précédente).
+        $doTest(
+            (new Period('2024-01-01 00:00:00', '2024-01-02 00:00:00'))->setFullDays(true),
+            ['2024-01-01', '2024-01-01', true],
+        );
+
+        // - Avec une période plusieurs jours.
+        $doTest(
+            (new Period('2024-01-01', '2024-01-02', true))->setFullDays(false),
+            ['2024-01-01 00:00:00', '2024-01-03 00:00:00', false],
+        );
+
+        // - Avec une période sur une seule journée.
+        $doTest(
+            (new Period('2024-01-01', '2024-01-01', true))->setFullDays(false),
+            ['2024-01-01 00:00:00', '2024-01-02 00:00:00', false],
+        );
+
+        // - Avec une période plusieurs jours.
+        $doTest(
+            (new Period('2024-01-01', '2024-01-02', true))->setFullDays(false, true),
+            ['2024-01-01 12:00:00', '2024-01-02 12:00:00', false],
+        );
+
+        // - Avec une période sur une seule journée.
+        $doTest(
+            (new Period('2024-01-01', '2024-01-01', true))->setFullDays(false, true),
+            ['2024-01-01 12:00:00', '2024-01-01 12:00:00', false],
+        );
     }
 
     public function testAsDays(): void
@@ -81,23 +139,29 @@ final class PeriodTest extends TestCase
         $period4 = new Period('2024-01-01 10:00:00', '2024-02-01 11:00:00');
         $this->assertFalse($period1->contain($period4));
 
-        // - Avec une période non contenue dans l'autre : Se termine après.
-        $period5 = new Period('2024-01-01 14:00:00', '2024-02-01 11:00:00');
-        $this->assertFalse($period1->contain($period5));
+        // - Avec une période infinie.
+        $period5 = new Period('2024-01-01 12:00:00', null);
+        $this->assertTrue($period5->contain($period3));
+        $this->assertFalse($period5->contain($period4));
+        $this->assertFalse($period3->contain($period5));
 
-        // - Avec une période non contenue dans l'autre : Commence avant.
-        $period6 = new Period('2024-01-01 12:00:00', '2024-02-01 11:00:00');
+        // - Avec une période non contenue dans l'autre : Se termine après.
+        $period6 = new Period('2024-01-01 14:00:00', '2024-02-01 11:00:00');
         $this->assertFalse($period1->contain($period6));
 
-        // - Avec une période non contenue dans l'autre : Pas en même temps.
-        $period7 = new Period('2024-02-01 10:50:00', '2024-02-01 11:00:00');
+        // - Avec une période non contenue dans l'autre : Commence avant.
+        $period7 = new Period('2024-01-01 12:00:00', '2024-02-01 11:00:00');
         $this->assertFalse($period1->contain($period7));
 
-        $period8 = new Period('2024-01-01 12:00:00', '2024-01-01 14:00:00');
+        // - Avec une période non contenue dans l'autre : Pas en même temps.
+        $period8 = new Period('2024-02-01 10:50:00', '2024-02-01 11:00:00');
         $this->assertFalse($period1->contain($period8));
 
-        $period9 = new Period('2024-02-01 11:00:00', '2024-02-01 12:00:00');
+        $period9 = new Period('2024-01-01 12:00:00', '2024-01-01 14:00:00');
         $this->assertFalse($period1->contain($period9));
+
+        $period10 = new Period('2024-02-01 11:00:00', '2024-02-01 12:00:00');
+        $this->assertFalse($period1->contain($period10));
     }
 
     public function testOverlaps(): void
@@ -133,6 +197,14 @@ final class PeriodTest extends TestCase
 
         $period9 = new Period('2024-02-01 11:00:00', '2024-02-01 12:00:00');
         $this->assertFalse($period1->overlaps($period9));
+
+        // - Avec des périodes infinies.
+        $period10 = new Period('2024-01-01 12:00:00', null);
+        $period11 = new Period('2024-02-01 13:00:00', null);
+        $this->assertTrue($period10->overlaps($period11));
+        $this->assertTrue($period11->overlaps($period10));
+        $this->assertTrue($period10->overlaps($period5));
+        $this->assertFalse($period11->overlaps($period7));
     }
 
     public function testSurroundingPeriods(): void
@@ -166,7 +238,7 @@ final class PeriodTest extends TestCase
             ],
         );
 
-        // - Avec une période "plus petite" que l'autre:
+        // - Avec une période "plus petite" que l'autre :
         //   => Pas de périodes englobantes.
         $doTest(
             new Period('2024-01-01 16:10:59', '2024-02-01 10:50:00'),
@@ -174,7 +246,7 @@ final class PeriodTest extends TestCase
             ['pre' => null, 'post' => null],
         );
 
-        // - Avec des périodes identiques:
+        // - Avec des périodes identiques :
         //   => Pas de périodes englobantes.
         $doTest(
             new Period('2024-01-01 16:10:59', '2024-02-01 10:50:00'),
@@ -182,7 +254,7 @@ final class PeriodTest extends TestCase
             ['pre' => null, 'post' => null],
         );
 
-        // - Avec une période qui commence après mais qui se termine avant:
+        // - Avec une période qui commence après mais qui se termine avant :
         //   => Période après uniquement.
         $doTest(
             new Period('2024-01-02 17:00:00', '2024-02-15 10:50:00'),
@@ -193,7 +265,7 @@ final class PeriodTest extends TestCase
             ],
         );
 
-        // - Avec une période qui commence avant mais qui se termine après:
+        // - Avec une période qui commence avant mais qui se termine après :
         //   => Période avant uniquement.
         $doTest(
             new Period('2024-01-01 16:00:00', '2024-02-05 00:00:00'),
@@ -201,6 +273,37 @@ final class PeriodTest extends TestCase
             [
                 'pre' => new Period('2024-01-01 16:00:00', '2024-01-02 17:00:00'),
                 'post' => null,
+            ],
+        );
+
+        // - Avec deux périodes infinies.
+        $doTest(
+            new Period('2024-01-01 16:00:00', null),
+            new Period('2024-01-02 17:00:00', null),
+            [
+                'pre' => new Period('2024-01-01 16:00:00', '2024-01-02 17:00:00'),
+                'post' => null,
+            ],
+        );
+
+        // - Avec une période qui commence en même-temps et une période englobée infinie.
+        $doTest(
+            new Period('2024-01-02 17:00:00', '2024-01-02 18:00:00'),
+            new Period('2024-01-01 17:00:00', null),
+            [
+                'pre' => null,
+                'post' => null,
+            ],
+        );
+
+        // - Avec une période qui commence en même-temps et qui n'a pas de fin
+        //   et une période englobée avec une date de fin spécifiée.
+        $doTest(
+            new Period('2024-01-02 17:00:00', null),
+            new Period('2024-01-01 17:00:00', '2024-01-02 18:00:00'),
+            [
+                'pre' => null,
+                'post' => new Period('2024-01-02 18:00:00', null),
             ],
         );
     }
@@ -277,6 +380,61 @@ final class PeriodTest extends TestCase
         $this->assertFalse($period1->isSame($period3));
     }
 
+    public function testIsInfinite(): void
+    {
+        $period1 = new Period('2024-01-01 14:40:21', '2024-12-01 10:02:20');
+        $this->assertFalse($period1->isInfinite());
+
+        $period2 = new Period('2024-01-01 14:40:21', null);
+        $this->assertTrue($period2->isInfinite());
+
+        $period3 = new Period('2024-01-01', null, true);
+        $this->assertTrue($period3->isInfinite());
+    }
+
+    public function testIsPast(): void
+    {
+        static::setNow(Carbon::create(2025, 05, 23, 17, 05, 47));
+
+        $period1 = new Period('2024-01-01 14:40:21', '2025-05-24 10:02:20');
+        $this->assertFalse($period1->isPast());
+
+        $period2 = new Period('2025-05-24 10:02:20', '2025-05-24 11:02:20');
+        $this->assertFalse($period2->isPast());
+
+        $period3 = new Period('2024-01-01 14:40:21', '2025-05-23 17:05:47');
+        $this->assertTrue($period3->isPast());
+
+        $period4 = new Period('2024-01-01 14:40:21', '2025-05-23 17:05:50');
+        $this->assertFalse($period4->isPast());
+
+        $period5 = new Period('2024-01-01 14:40:21', null);
+        $this->assertFalse($period5->isPast());
+    }
+
+    public function testIsPastOrOngoing(): void
+    {
+        static::setNow(Carbon::create(2025, 05, 23, 17, 05, 47));
+
+        $period1 = new Period('2024-01-01 14:40:21', '2025-05-24 10:02:20');
+        $this->assertTrue($period1->isPastOrOngoing());
+
+        $period2 = new Period('2025-05-24 10:02:20', '2025-05-24 11:02:20');
+        $this->assertFalse($period2->isPastOrOngoing());
+
+        $period3 = new Period('2024-01-01 14:40:21', '2025-05-23 17:05:47');
+        $this->assertTrue($period3->isPastOrOngoing());
+
+        $period4 = new Period('2024-01-01 14:40:21', '2025-05-23 17:05:20');
+        $this->assertTrue($period4->isPastOrOngoing());
+
+        $period5 = new Period('2024-01-01 14:40:21', null);
+        $this->assertTrue($period5->isPastOrOngoing());
+
+        $period6 = new Period('2025-05-23 17:05:50', null);
+        $this->assertFalse($period6->isPastOrOngoing());
+    }
+
     public function testToArray(): void
     {
         // - Test simple.
@@ -314,6 +472,15 @@ final class PeriodTest extends TestCase
         ];
         $period4 = new Period('2024-01-01 14:12:10', '2024-01-02 12:45:00', true);
         $this->assertSameCanonicalize($expected4, $period4->toArray());
+
+        // - Période infinie.
+        $expected5 = [
+            'start' => '2024-01-01 00:00:00',
+            'end' => null,
+            'isFullDays' => false,
+        ];
+        $period5 = new Period('2024-01-01 00:00:00', null);
+        $this->assertSameCanonicalize($expected5, $period5->toArray());
     }
 
     public function testFromArray(): void
@@ -341,7 +508,7 @@ final class PeriodTest extends TestCase
             $result = Period::fromArray($data);
             $this->assertInstanceOf(Period::class, $result);
             $this->assertSame($expected[0], $result->getStartDate()->format('Y-m-d H:i:s'));
-            $this->assertSame($expected[1], $result->getEndDate()->format('Y-m-d H:i:s'));
+            $this->assertSame($expected[1], $result->getEndDate()?->format('Y-m-d H:i:s'));
             $this->assertSame($expected[2], $result->isFullDays());
         };
 
@@ -433,6 +600,23 @@ final class PeriodTest extends TestCase
                 'isFullDays' => true,
             ],
             ['2019-01-01 00:00:00', '2019-02-02 00:00:00', true],
+        );
+
+        // - Avec période infinie.
+        $doTest(
+            [
+                'start' => '2019-01-01 10:28:14',
+                'end' => null,
+                'isFullDays' => false,
+            ],
+            ['2019-01-01 10:28:14', null, false],
+        );
+
+
+        // - Avec période infinie + format simple.
+        $doTest(
+            ['2019-01-01', null],
+            ['2019-01-01 00:00:00', null, true],
         );
     }
 

@@ -13,8 +13,9 @@ use Loxya\Contracts\Serializable;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Models\Traits\TransientAttributes;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 
 /**
  * Matériel dans un événement.
@@ -56,7 +57,6 @@ final class EventMaterial extends BaseModel implements Serializable
 
     // - Types de sérialisation.
     public const SERIALIZE_DEFAULT = 'default';
-    public const SERIALIZE_SUMMARY = 'summary';
     public const SERIALIZE_WITH_QUANTITY_MISSING = 'with-quantity-missing';
 
     protected $table = 'event_materials';
@@ -73,7 +73,7 @@ final class EventMaterial extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'event_id' => V::custom([$this, 'checkEventId']),
             'material_id' => V::custom([$this, 'checkMaterialId']),
             'name' => V::notEmpty()->length(2, 191),
@@ -271,7 +271,7 @@ final class EventMaterial extends BaseModel implements Serializable
             if (!V::nullable(V::json())->validate($value)) {
                 return false;
             }
-            $value = $value !== null ? json_decode($value, true) : null;
+            $value = $value !== null ? $this->fromJson($value) : null;
         }
 
         if ($value === null) {
@@ -285,7 +285,7 @@ final class EventMaterial extends BaseModel implements Serializable
 
         // Note: S'il n'y a pas de taxes, le champ doit être à `null` et non un tableau vide.
         $schema = V::arrayType()->notEmpty()->each(V::custom(static fn ($taxValue) => (
-            new Rule\KeySetStrict(
+            new SchemaStrict(
                 new Rule\Key('name', V::notEmpty()->length(1, 30)),
                 new Rule\Key('is_rate', V::boolType()),
                 new Rule\Key('value', V::custom(static function ($subValue) use ($taxValue) {
@@ -640,25 +640,17 @@ final class EventMaterial extends BaseModel implements Serializable
 
     public function serialize(string $format = self::SERIALIZE_DEFAULT): array
     {
-        /** @var EventMaterial $eventMaterial */
-        $eventMaterial = tap(clone $this, static function (EventMaterial $eventMaterial) use ($format) {
-            if ($format === self::SERIALIZE_WITH_QUANTITY_MISSING) {
-                $eventMaterial->append(['quantity_missing']);
-            }
-        });
+        /** @var static $eventMaterial */
+        $eventMaterial = tap(
+            clone $this,
+            static function (EventMaterial $eventMaterial) use ($format) {
+                if ($format === self::SERIALIZE_WITH_QUANTITY_MISSING) {
+                    $eventMaterial->append(['quantity_missing']);
+                }
+            },
+        );
 
         $data = new DotArray($eventMaterial->attributesForSerialization());
-
-        $formatWithMaterial = [
-            self::SERIALIZE_DEFAULT,
-            self::SERIALIZE_WITH_QUANTITY_MISSING,
-        ];
-        if (in_array($format, $formatWithMaterial, true)) {
-            $material = tap(clone $this->material, function (Material $material) {
-                $material->context = $this->event;
-            });
-            $data['material'] = $material->serialize(Material::SERIALIZE_WITH_CONTEXT_EXCERPT);
-        }
 
         if (!$eventMaterial->event->is_billable) {
             $data->delete([
@@ -672,6 +664,12 @@ final class EventMaterial extends BaseModel implements Serializable
                 'total_without_taxes',
             ]);
         }
+
+        // - Matériel avec contexte.
+        $material = tap(clone $this->material, function (Material $material) {
+            $material->context = $this->event;
+        });
+        $data['material'] = $material->serialize(Material::SERIALIZE_WITH_CONTEXT_EXCERPT);
 
         return $data
             ->set('id', $eventMaterial->material_id)

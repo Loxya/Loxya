@@ -1,11 +1,11 @@
 import './index.scss';
-import axios from 'axios';
+import { RequestError } from '@/globals/requester';
 import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
 import upperFirst from 'lodash/upperFirst';
 import { Group } from '@/stores/api/groups';
 import { ApiErrorCode } from '@/stores/api/@codes';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { getBookingIconFromEvent } from '@/utils/getBookingIcon';
 import { confirm } from '@/utils/alert';
 import showModal from '@/utils/showModal';
@@ -15,12 +15,38 @@ import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 
 type Props = {
     /** L'événement dont on veut afficher le header. */
     event: EventDetails,
+
+    /**
+     * Fonction appelée lorsque l'événement a été mis à jour.
+     * C'est le cas notamment quand il est archivé ou désarchivé.
+     *
+     * @param event - L'événement, mise à jour.
+     */
+    onUpdated?(event: EventDetails): void,
+
+    /**
+     * Fonction appelée lorsque l'événement a été dupliqué.
+     *
+     * @param event - Le nouvel événement, issu de la duplication.
+     */
+    onDuplicated?(event: EventDetails): void,
+
+    /**
+     * Fonction appelée lorsque la réservation a été supprimée.
+     */
+    onDeleted?(): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande
+     * la fermeture de la fenêtre modale.
+     */
+    onClose?(): void,
 };
 
 type InstanceProperties = {
@@ -28,7 +54,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    now: DateTime,
+    now: Raw<DateTime>,
     isConfirming: boolean,
     isArchiving: boolean,
     isDeleting: boolean,
@@ -42,9 +68,29 @@ const EventDetailsHeader = defineComponent({
             type: Object as PropType<Props['event']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpdated: {
+            type: Function as PropType<Props['onUpdated']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDuplicated: {
+            type: Function as PropType<Props['onDuplicated']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDeleted: {
+            type: Function as PropType<Props['onDeleted']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
+        },
     },
     emits: [
-        'saved',
+        'updated',
         'duplicated',
         'deleted',
         'close',
@@ -53,7 +99,7 @@ const EventDetailsHeader = defineComponent({
         nowTimer: undefined,
     }),
     data: (): Data => ({
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
         isConfirming: false,
         isArchiving: false,
         isDeleting: false,
@@ -81,7 +127,8 @@ const EventDetailsHeader = defineComponent({
         isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
 
@@ -195,7 +242,7 @@ const EventDetailsHeader = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -226,7 +273,7 @@ const EventDetailsHeader = defineComponent({
 
             try {
                 const data = await apiEvents.setConfirmed(id, !isConfirmed);
-                this.$emit('saved', data);
+                this.$emit('updated', data);
             } catch {
                 this.$toasted.error(__('global.errors.unexpected-while-saving'));
             } finally {
@@ -254,18 +301,16 @@ const EventDetailsHeader = defineComponent({
                     ? await apiEvents.unarchive(id)
                     : await apiEvents.archive(id);
 
-                this.$emit('saved', data);
+                this.$emit('updated', data);
             } catch (error) {
-                const defaultMessage = __('global.errors.unexpected-while-saving');
-                if (!axios.isAxiosError(error)) {
-                    this.$toasted.error(defaultMessage);
+                if (
+                    error instanceof RequestError &&
+                    error.code === ApiErrorCode.VALIDATION_FAILED &&
+                    error.details?.is_archived !== undefined
+                ) {
+                    this.$toasted.error(error.details.is_archived);
                 } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.$toasted.error(details.is_archived ?? defaultMessage);
-                    } else {
-                        this.$toasted.error(defaultMessage);
-                    }
+                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
                 }
             } finally {
                 this.isArchiving = false;
@@ -408,7 +453,7 @@ const EventDetailsHeader = defineComponent({
                             !isDepartureInventoryUnavailable
                                 ? {
                                     name: 'event-departure-inventory',
-                                    params: { id: event.id },
+                                    params: { id: event.id.toString() },
                                 }
                                 : undefined
                         )}
@@ -432,7 +477,7 @@ const EventDetailsHeader = defineComponent({
                             !isReturnInventoryUnavailable
                                 ? {
                                     name: 'event-return-inventory',
-                                    params: { id: event.id },
+                                    params: { id: event.id.toString() },
                                 }
                                 : undefined
                         )}
@@ -554,10 +599,9 @@ const EventDetailsHeader = defineComponent({
                     {isPrintable && (
                         <Button
                             icon="print"
-                            label={__('global.print')}
                             to={summaryPdfUrl}
-                            download
                             class="EventDetailsHeader__actions__print"
+                            download
                         >
                             {__('global.print')}
                         </Button>
@@ -566,7 +610,10 @@ const EventDetailsHeader = defineComponent({
                         <Button
                             icon="edit"
                             type={!hasStarted ? 'primary' : 'default'}
-                            to={{ name: 'edit-event', params: { id: event.id } }}
+                            to={{
+                                name: 'edit-event',
+                                params: { id: event.id.toString() },
+                            }}
                         >
                             {__('global.action-edit')}
                         </Button>

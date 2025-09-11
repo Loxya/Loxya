@@ -6,12 +6,13 @@ namespace Loxya\Tests;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Loxya\Models\Enums\AttributeEntity;
-use Loxya\Models\Enums\AttributeType;
+use Loxya\Models\Enums\CustomFieldType;
+use Loxya\Models\Enums\PropertyEntity;
 use Loxya\Models\Event;
 use Loxya\Models\Material;
 use Loxya\Support\Arr;
-use Loxya\Support\Filesystem\UploadedFile;
+use Loxya\Support\File\UploadedFile;
+use Loxya\Support\Period;
 
 final class MaterialsTest extends ApiTestCase
 {
@@ -40,14 +41,14 @@ final class MaterialsTest extends ApiTestCase
                 'is_deleted' => false,
                 'picture' => 'http://loxya.test/static/materials/1/picture',
                 'note' => null,
-                'attributes' => [
-                    array_merge(AttributesTest::data(2), [
+                'properties' => [
+                    array_merge(PropertiesTest::data(2), [
                         'value' => 'Grise',
                     ]),
-                    array_merge(AttributesTest::data(1), [
+                    array_merge(PropertiesTest::data(1), [
                         'value' => 36.5,
                     ]),
-                    array_merge(AttributesTest::data(3), [
+                    array_merge(PropertiesTest::data(3), [
                         'value' => 850,
                     ]),
                 ],
@@ -79,11 +80,11 @@ final class MaterialsTest extends ApiTestCase
                 'is_deleted' => false,
                 'picture' => null,
                 'note' => null,
-                'attributes' => [
-                    array_merge(AttributesTest::data(1), [
+                'properties' => [
+                    array_merge(PropertiesTest::data(1), [
                         'value' => 2.2,
                     ]),
-                    array_merge(AttributesTest::data(3), [
+                    array_merge(PropertiesTest::data(3), [
                         'value' => 35,
                     ]),
                 ],
@@ -115,11 +116,11 @@ final class MaterialsTest extends ApiTestCase
                 'is_deleted' => false,
                 'picture' => null,
                 'note' => 'Soyez délicats avec ces projos !',
-                'attributes' => [
-                    array_merge(AttributesTest::data(1), [
+                'properties' => [
+                    array_merge(PropertiesTest::data(1), [
                         'value' => 0.85,
                     ]),
-                    array_merge(AttributesTest::data(3), [
+                    array_merge(PropertiesTest::data(3), [
                         'value' => 150,
                     ]),
                 ],
@@ -151,14 +152,14 @@ final class MaterialsTest extends ApiTestCase
                 'is_deleted' => false,
                 'picture' => null,
                 'note' => null,
-                'attributes' => [
-                    array_merge(AttributesTest::data(4), [
+                'properties' => [
+                    array_merge(PropertiesTest::data(4), [
                         'value' => true,
                     ]),
-                    array_merge(AttributesTest::data(1), [
+                    array_merge(PropertiesTest::data(1), [
                         'value' => 3.15,
                     ]),
-                    array_merge(AttributesTest::data(3), [
+                    array_merge(PropertiesTest::data(3), [
                         'value' => 60,
                     ]),
                 ],
@@ -188,7 +189,7 @@ final class MaterialsTest extends ApiTestCase
                 'is_deleted' => false,
                 'picture' => null,
                 'note' => null,
-                'attributes' => [],
+                'properties' => [],
                 'tags' => [],
                 'created_at' => '2021-02-12 23:14:00',
                 'updated_at' => '2021-02-12 23:14:00',
@@ -216,12 +217,12 @@ final class MaterialsTest extends ApiTestCase
                 'picture' => null,
                 'note' => null,
                 'tags' => [],
-                'attributes' => [
-                    array_merge(AttributesTest::data(5), [
+                'properties' => [
+                    array_merge(PropertiesTest::data(5), [
                         'value' => '2021-01-28',
                     ]),
-                    array_merge(AttributesTest::data(8), [
-                        'value' => 250,
+                    array_merge(PropertiesTest::data(7), [
+                        'value' => "Polyvalent",
                     ]),
                 ],
                 'created_at' => '2021-02-12 23:15:00',
@@ -250,7 +251,11 @@ final class MaterialsTest extends ApiTestCase
                 'picture' => null,
                 'note' => null,
                 'tags' => [],
-                'attributes' => [],
+                'properties' => [
+                    array_merge(PropertiesTest::data(7), [
+                        'value' => "Extérieur",
+                    ]),
+                ],
                 'created_at' => '2021-02-12 23:16:00',
                 'updated_at' => '2021-02-12 23:16:00',
             ],
@@ -277,7 +282,11 @@ final class MaterialsTest extends ApiTestCase
                 'picture' => null,
                 'note' => null,
                 'tags' => [],
-                'attributes' => [],
+                'properties' => [
+                    array_merge(PropertiesTest::data(7), [
+                        'value' => "Intérieur",
+                    ]),
+                ],
                 'created_at' => '2021-02-12 23:18:00',
                 'updated_at' => '2021-02-12 23:18:00',
             ],
@@ -526,7 +535,7 @@ final class MaterialsTest extends ApiTestCase
     public function testGetAllWithQuantitiesPeriod(): void
     {
         // - Récupère le matériel avec les quantités qu'il reste pour une période
-        // - pendant laquelle se déroulent les événements n°1, n°2 et n°3
+        // - pendant laquelle se déroulent les événements #1, #2 et #3
         $this->client->get('/api/materials?quantitiesPeriod[start]=2018-12-16&quantitiesPeriod[end]=2018-12-19');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $response = $this->client->getResponseAsArray();
@@ -551,7 +560,7 @@ final class MaterialsTest extends ApiTestCase
 
     public function testCreate(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         // - Test avec des données vides.
         $this->client->post('/api/materials');
@@ -582,7 +591,39 @@ final class MaterialsTest extends ApiTestCase
             'rental_price' => '500.00',
             'stock_quantity' => 1,
         ]);
-        $this->assertApiValidationError();
+        $this->assertApiValidationError([
+            'reference' => "This reference is already in use.",
+        ]);
+
+        // - Test avec des caractéristiques spéciales invalides.
+        $this->client->post('/api/materials', [
+            'name' => 'Console numérique Yamaha 01V96 V2',
+            'reference' => '01V96-v2',
+            'park_id' => 1,
+            'park_location_id' => 3,
+            'category_id' => 1,
+            'sub_category_id' => 1,
+            'rental_price' => '180.00',
+            'degressive_rate_id' => 3,
+            'tax_id' => 1,
+            'replacement_price' => '2000.00',
+            'stock_quantity' => 2,
+            'properties' => [
+                ['id' => 1, 'value' => 'test'],
+                ['id' => 2, 'value' => 'Red'],
+                ['id' => 3, 'value' => '1000'],
+                ['id' => 4, 'value' => 'ok'],
+                ['id' => 5, 'value' => '2025-10-21'],
+                ['id' => 7, 'value' => new Period('2025-10-21', '2025-10-22', true)],
+            ],
+        ]);
+        $this->assertApiValidationError([
+            'properties' => [
+                0 => ['value' => 'This field must contain a decimal number.'],
+                3 => ['value' => 'This field should be a boolean.'],
+                5 => ['value' => 'This field is invalid.'],
+            ],
+        ]);
 
         // - Création d'un matériel en lui assignant des tags.
         $this->client->post('/api/materials', [
@@ -618,7 +659,7 @@ final class MaterialsTest extends ApiTestCase
             'description' => null,
             'picture' => null,
             'note' => null,
-            'attributes' => [],
+            'properties' => [],
             'tags' => [
                 TagsTest::data(1),
                 TagsTest::data(2),
@@ -639,7 +680,7 @@ final class MaterialsTest extends ApiTestCase
             'tax_id' => 1,
             'replacement_price' => '2000.00',
             'stock_quantity' => 2,
-            'attributes' => [
+            'properties' => [
                 ['id' => 1, 'value' => 12.5],
                 ['id' => 3, 'value' => 60],
                 ['id' => 4, 'value' => 'true'],
@@ -667,19 +708,19 @@ final class MaterialsTest extends ApiTestCase
             'description' => null,
             'picture' => null,
             'note' => null,
-            'attributes' => [
+            'properties' => [
                 [
                     'id' => 4,
                     'name' => 'Conforme',
-                    'entities' => [AttributeEntity::MATERIAL->value],
-                    'type' => AttributeType::BOOLEAN->value,
+                    'entities' => [PropertyEntity::MATERIAL->value],
+                    'type' => CustomFieldType::BOOLEAN->value,
                     'value' => true,
                 ],
                 [
                     'id' => 1,
                     'name' => 'Poids',
-                    'entities' => [AttributeEntity::MATERIAL->value],
-                    'type' => AttributeType::FLOAT->value,
+                    'entities' => [PropertyEntity::MATERIAL->value],
+                    'type' => CustomFieldType::FLOAT->value,
                     'unit' => 'kg',
                     'value' => 12.5,
                     'is_totalisable' => true,
@@ -687,8 +728,8 @@ final class MaterialsTest extends ApiTestCase
                 [
                     'id' => 3,
                     'name' => 'Puissance',
-                    'entities' => [AttributeEntity::MATERIAL->value],
-                    'type' => AttributeType::INTEGER->value,
+                    'entities' => [PropertyEntity::MATERIAL->value],
+                    'type' => CustomFieldType::INTEGER->value,
                     'unit' => 'W',
                     'value' => 60,
                     'is_totalisable' => true,
@@ -702,7 +743,7 @@ final class MaterialsTest extends ApiTestCase
 
     public function testUpdate(): void
     {
-        Carbon::setTestNow(Carbon::create(2023, 5, 26, 16, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 26, 16, 0, 0));
 
         // - Update material #1
         $data = [
@@ -786,7 +827,7 @@ final class MaterialsTest extends ApiTestCase
 
     public function testAttachDocument(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         $createUploadedFile = static function (string $from) {
             $tmpFile = tmpfile();
@@ -964,7 +1005,7 @@ final class MaterialsTest extends ApiTestCase
 
     public function testPrintAll(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 9, 23, 12, 0, 0));
+        static::setNow(Carbon::create(2022, 9, 23, 12, 0, 0));
 
         $responseStream = $this->client->get('/materials/print');
         $this->assertStatusCode(StatusCode::STATUS_OK);

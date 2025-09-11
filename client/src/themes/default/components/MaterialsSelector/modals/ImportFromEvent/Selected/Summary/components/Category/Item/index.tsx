@@ -1,13 +1,13 @@
 import './index.scss';
 import Decimal from 'decimal.js';
 import config from '@/globals/config';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import formatAmount from '@/utils/formatAmount';
 import Icon from '@/themes/default/components/Icon';
 import getRentalPriceData from '../../../../../../../utils/getRentalPriceData';
 
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EmbeddedMaterial } from '../../../_types';
 
 type Props = {

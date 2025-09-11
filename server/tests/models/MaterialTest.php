@@ -42,7 +42,7 @@ final class MaterialTest extends TestCase
         $originalMaterials = Material::orderBy('id', 'asc')->get();
 
         // - Calcul des quantités restantes de chaque matériel sans spécifier de date (aucun événement)
-        $materials = Material::allWithAvailabilities($originalMaterials);
+        $materials = Material::allWithAvailabilities($originalMaterials, null);
         $this->assertCount(8, $materials);
         $this->assertEquals([4, 2, 30, 2, 32, 2, 2, 2], $materials->pluck('available_quantity')->all());
 
@@ -114,7 +114,7 @@ final class MaterialTest extends TestCase
 
     public function testCreateMaterial(): void
     {
-        Carbon::setTestNow(Carbon::create(2019, 02, 24, 23, 59, 00));
+        static::setNow(Carbon::create(2019, 02, 24, 23, 59, 00));
 
         $expected = [
             'id' => 9,

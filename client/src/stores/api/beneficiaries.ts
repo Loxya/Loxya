@@ -127,27 +127,27 @@ type GetBookingsParams = PaginationParams & {
 
 const all = async (params: GetAllParams = {}): Promise<PaginatedData<Beneficiary[]>> => {
     const response = await requester.get('/beneficiaries', { params });
-    return withPaginationEnvelope(BeneficiarySchema).parse(response.data);
+    return withPaginationEnvelope(BeneficiarySchema).parse(response);
 };
 
 const one = async (id: Beneficiary['id']): Promise<BeneficiaryDetails> => {
     const response = await requester.get(`/beneficiaries/${id}`);
-    return BeneficiaryDetailsSchema.parse(response.data);
+    return BeneficiaryDetailsSchema.parse(response);
 };
 
 const create = async (data: BeneficiaryEdit): Promise<BeneficiaryDetails> => {
     const response = await requester.post('/beneficiaries', data);
-    return BeneficiaryDetailsSchema.parse(response.data);
+    return BeneficiaryDetailsSchema.parse(response);
 };
 
 const update = async (id: Beneficiary['id'], data: BeneficiaryEdit): Promise<BeneficiaryDetails> => {
     const response = await requester.put(`/beneficiaries/${id}`, data);
-    return BeneficiaryDetailsSchema.parse(response.data);
+    return BeneficiaryDetailsSchema.parse(response);
 };
 
 const restore = async (id: Beneficiary['id']): Promise<BeneficiaryDetails> => {
     const response = await requester.put(`/beneficiaries/restore/${id}`);
-    return BeneficiaryDetailsSchema.parse(response.data);
+    return BeneficiaryDetailsSchema.parse(response);
 };
 
 const remove = async (id: Beneficiary['id']): Promise<void> => {
@@ -156,17 +156,17 @@ const remove = async (id: Beneficiary['id']): Promise<void> => {
 
 const bookings = async (id: Beneficiary['id'], params: GetBookingsParams = {}): Promise<PaginatedData<BookingExcerpt[]>> => {
     const response = await requester.get(`/beneficiaries/${id}/bookings`, { params });
-    return withPaginationEnvelope(BookingExcerptSchema).parse(response.data);
+    return withPaginationEnvelope(BookingExcerptSchema).parse(response);
 };
 
 const estimates = async (id: Beneficiary['id']): Promise<Estimate[]> => {
     const response = await requester.get(`/beneficiaries/${id}/estimates`);
-    return EstimateSchema.array().parse(response.data);
+    return EstimateSchema.array().parse(response);
 };
 
 const invoices = async (id: Beneficiary['id']): Promise<Invoice[]> => {
     const response = await requester.get(`/beneficiaries/${id}/invoices`);
-    return InvoiceSchema.array().parse(response.data);
+    return InvoiceSchema.array().parse(response);
 };
 
 export default {

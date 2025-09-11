@@ -6,9 +6,12 @@ namespace Loxya\Errors;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Loxya\Errors\Exception\ApiException;
+use Loxya\Errors\Exception\ApiTooManyRequestsException;
+use Loxya\Errors\Exception\HttpTooManyRequestsException;
 use Loxya\Errors\Exception\ValidationException;
 use Loxya\Errors\Renderer\HtmlErrorRenderer;
 use Loxya\Errors\Renderer\JsonErrorRenderer;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpException;
 use Slim\Handlers\ErrorHandler as CoreErrorHandler;
 
@@ -45,6 +48,26 @@ class ErrorHandler extends CoreErrorHandler
         }
 
         return StatusCode::STATUS_INTERNAL_SERVER_ERROR;
+    }
+
+    protected function respond(): ResponseInterface
+    {
+        $response = parent::respond();
+
+        if (
+            (
+                $this->exception instanceof HttpTooManyRequestsException ||
+                $this->exception instanceof ApiTooManyRequestsException
+            ) &&
+            $this->exception->getRetryAt() !== null
+        ) {
+            $retryAfter = $this->exception->getRetryAt()->diffInSeconds();
+            if ($retryAfter > 0) {
+                $response = $response->withHeader('Retry-After', $retryAfter);
+            }
+        }
+
+        return $response;
     }
 
     protected function writeToErrorLog(): void

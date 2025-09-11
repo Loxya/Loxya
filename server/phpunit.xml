@@ -30,8 +30,8 @@
         <testsuite name="api">
             <directory>tests/endpoints</directory>
         </testsuite>
-        <testsuite name="events">
-            <directory>tests/events</directory>
+        <testsuite name="services">
+            <directory>tests/services</directory>
         </testsuite>
     </testsuites>
 

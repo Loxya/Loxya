@@ -36,17 +36,17 @@
 
         &--decrement {
             border-radius: globals.$input-border-radius 0 0 globals.$input-border-radius;
-            background-color: #616161;
+            background-color: globals.$interactive-element-default-background-color;
             color: #e0e0e0;
 
             &:hover,
             &:focus {
-                background-color: color.adjust(#616161, $lightness: 8%);
+                background-color: color.adjust(globals.$interactive-element-default-background-color, $lightness: 8%);
                 color: #fff;
             }
 
             &:active {
-                background-color: color.adjust(#616161, $lightness: -8%);
+                background-color: color.adjust(globals.$interactive-element-default-background-color, $lightness: -8%);
                 color: #fff;
             }
 
@@ -63,17 +63,17 @@
 
         &--increment {
             border-radius: 0 globals.$input-border-radius globals.$input-border-radius 0;
-            background-color: globals.$bg-color-button-success;
+            background-color: globals.$interactive-element-success-background-color;
             color: #fff;
 
             &:hover,
             &:focus {
-                background-color: color.adjust(globals.$bg-color-button-success, $lightness: 8%);
+                background-color: color.adjust(globals.$interactive-element-success-background-color, $lightness: 8%);
                 color: #fff;
             }
 
             &:active {
-                background-color: color.adjust(globals.$bg-color-button-success, $lightness: -8%);
+                background-color: color.adjust(globals.$interactive-element-success-background-color, $lightness: -8%);
                 color: #fff;
             }
 
@@ -82,7 +82,11 @@
                 &:hover,
                 &:focus,
                 &:active {
-                    background-color: color.adjust(globals.$bg-color-button-success, $lightness: 8%);
+                    background-color:
+                        color.adjust(
+                            globals.$interactive-element-success-background-color,
+                            $lightness: 8%,
+                        );
                     color: #fff;
                 }
             }

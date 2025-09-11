@@ -1,21 +1,21 @@
 import './index.scss';
 import config from '@/globals/config';
 import debounce from 'lodash/debounce';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import apiEvents from '@/stores/api/events';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import Button from '@/themes/default/components/Button';
 import MaterialsSelector, {
+    BookableEntity,
     hasQuantitiesChanged,
     getEmbeddedMaterialsQuantities,
 } from '@/themes/default/components/MaterialsSelector';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
-import type { Booking } from '@/stores/api/bookings';
-import type { SelectedMaterial } from '@/themes/default/components/MaterialsSelector';
+import type { Bookable, SelectedMaterial } from '@/themes/default/components/MaterialsSelector';
 
 type Props = {
     /** L'événement en cours d'édition. */
@@ -45,6 +45,8 @@ const EventEditStepMaterials = defineComponent({
         'stopLoading',
         'goToStep',
         'updateEvent',
+        'dataChange', // eslint-disable-line vue/no-unused-emit-declarations
+        'dataReset', // eslint-disable-line vue/no-unused-emit-declarations
     ],
     setup: (): InstanceProperties => ({
         debouncedSave: undefined,
@@ -62,9 +64,9 @@ const EventEditStepMaterials = defineComponent({
             return config.features.technicians;
         },
 
-        booking(): Booking {
+        booking(): Bookable {
             return {
-                entity: BookingEntity.EVENT,
+                entity: BookableEntity.EVENT,
                 ...this.event,
             };
         },
@@ -181,8 +183,8 @@ const EventEditStepMaterials = defineComponent({
     render() {
         const {
             __,
-            materials,
             booking,
+            materials,
             handleChange,
             handlePrevClick,
             handleNextClick,
@@ -193,12 +195,10 @@ const EventEditStepMaterials = defineComponent({
             <div class="EventEditStepMaterials">
                 <MaterialsSelector
                     class="EventEditStepMaterials__selector"
-                    booking={booking}
+                    bookable={booking}
                     defaultValues={materials}
-                    onSubListChange={handleGlobalChange}
                     onMaterialResynced={handleGlobalChange}
                     onChange={handleChange}
-                    withTemplates
                 />
                 <section class="EventEditStepMaterials__actions">
                     <Button

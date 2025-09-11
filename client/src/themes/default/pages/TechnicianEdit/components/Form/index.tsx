@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import pick from 'lodash/pick';
 import cloneDeep from 'lodash/cloneDeep';
 import formatOptions from '@/utils/formatOptions';
@@ -9,8 +9,7 @@ import FormField from '@/themes/default/components/FormField';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 import type { Country } from '@/stores/api/countries';
 import type { Role } from '@/stores/api/roles';
@@ -27,7 +26,21 @@ type Props = {
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Record<keyof TechnicianEdit | 'user', string>,
+    errors?: Partial<Record<keyof TechnicianEdit | 'user', string>> | null,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur soumet les changements.
+     *
+     * @param data - Les données soumises.
+     * @param withUser - Y'a t'il une création d'utilisateur en même temps ?
+     */
+    onSubmit?(data: TechnicianEdit, withUser: boolean): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur manifeste
+     * son souhait d'annuler l'edition.
+     */
+    onCancel?(): void,
 };
 
 type Data = {
@@ -67,6 +80,16 @@ const TechnicianEditForm = defineComponent({
         errors: {
             type: Object as PropType<Required<Props>['errors']>,
             default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
+            default: undefined,
         },
     },
     emits: ['submit', 'cancel'],
@@ -234,24 +257,33 @@ const TechnicianEditForm = defineComponent({
                             ref="inputFirstName"
                             label="first-name"
                             class="TechnicianEditForm__first-name"
-                            v-model={data.first_name}
+                            value={data.first_name}
                             error={errors?.first_name}
                             autocomplete="off"
+                            onInput={(value: string) => {
+                                data.first_name = value;
+                            }}
                             required
                         />
                         <FormField
                             label="last-name"
                             class="TechnicianEditForm__last-name"
-                            v-model={data.last_name}
+                            value={data.last_name}
                             error={errors?.last_name}
                             autocomplete="off"
+                            onInput={(value: string) => {
+                                data.last_name = value;
+                            }}
                             required
                         />
                     </div>
                     <FormField
                         label="nickname"
-                        v-model={data.nickname}
+                        value={data.nickname}
                         error={errors?.nickname}
+                        onInput={(value: string) => {
+                            data.nickname = value;
+                        }}
                     />
                 </Fieldset>
                 <Fieldset title={__('contact-details')}>
@@ -259,36 +291,51 @@ const TechnicianEditForm = defineComponent({
                         label="phone"
                         type="tel"
                         autocomplete="off"
-                        v-model={data.phone}
+                        value={data.phone}
                         error={errors?.phone}
+                        onInput={(value: string) => {
+                            data.phone = value;
+                        }}
                     />
                     <FormField
                         label="email"
                         type="email"
                         autocomplete="off"
-                        v-model={data.email}
+                        value={data.email}
                         error={errors?.email}
+                        onInput={(value: string) => {
+                            data.email = value;
+                        }}
                     />
                     <FormField
                         label="street"
                         autocomplete="off"
-                        v-model={data.street}
+                        value={data.street}
                         error={errors?.street}
+                        onInput={(value: string) => {
+                            data.street = value;
+                        }}
                     />
                     <div class="TechnicianEditForm__locality">
                         <FormField
                             label="postal-code"
                             class="TechnicianEditForm__postal-code"
                             autocomplete="off"
-                            v-model={data.postal_code}
+                            value={data.postal_code}
                             error={errors?.postal_code}
+                            onInput={(value: string) => {
+                                data.postal_code = value;
+                            }}
                         />
                         <FormField
                             label="city"
                             class="TechnicianEditForm__city"
                             autocomplete="off"
-                            v-model={data.locality}
+                            value={data.locality}
                             error={errors?.locality}
+                            onInput={(value: string) => {
+                                data.locality = value;
+                            }}
                         />
                     </div>
                     <FormField

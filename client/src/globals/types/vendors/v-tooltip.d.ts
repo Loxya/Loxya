@@ -1,7 +1,7 @@
 import 'v-tooltip';
 
 declare module 'v-tooltip' {
-    export type TooltipPlacement =
+    export type TooltipPlacement = (
         | 'top'
         | 'top-start'
         | 'top-end'
@@ -13,7 +13,8 @@ declare module 'v-tooltip' {
         | 'bottom-end'
         | 'left'
         | 'left-start'
-        | 'left-end';
+        | 'left-end'
+    );
 
     export type TooltipOptions = {
         content: string,

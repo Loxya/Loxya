@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -62,8 +60,7 @@ final class ImproveDocumentsTable extends AbstractMigration
         $prefix = Config::get('db.prefix');
         $documentsData = $this->fetchAll(sprintf('SELECT `id`, `name` FROM `%sdocuments`', $prefix));
         foreach ($documentsData as $documentData) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sdocuments', $prefix))
                 ->set(['file' => $documentData['name']])
@@ -113,8 +110,7 @@ final class ImproveDocumentsTable extends AbstractMigration
         $prefix = Config::get('db.prefix');
         $documentsData = $this->fetchAll(sprintf('SELECT `id`, `name` FROM `%sdocuments`', $prefix));
         foreach ($documentsData as $documentData) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sdocuments', $prefix))
                 ->set(['file' => $documentData['name']])

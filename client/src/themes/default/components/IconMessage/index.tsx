@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon, { Variant } from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /**

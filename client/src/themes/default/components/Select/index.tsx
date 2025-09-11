@@ -1,12 +1,13 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import stringIncludes from '@/utils/stringIncludes';
 import VueSelect from 'vue-select';
 import Button from '@/themes/default/components/Button';
 import Fragment from '@/components/Fragment';
 import icons from './icons';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, ComponentRef } from 'vue';
+import type { DebouncedFunc } from 'lodash';
 
 export type Option = {
     /** Le libellé qui sera affiché pour cette option. */
@@ -16,7 +17,28 @@ export type Option = {
     value: string | number,
 };
 
-type Props = {
+type LooseOptions = string[] | Option[];
+type SearcherFunc = (search: string) => Promise<void> | void;
+
+/** Retourne le type de valeur des options. */
+type ValuesOf<T extends readonly unknown[], TO = T[number]> = (
+    TO extends { value: infer V } ? V
+        : TO extends string | number ? TO
+            : never
+);
+
+type Props<
+    Options extends LooseOptions = LooseOptions,
+    IsMultiple extends boolean = boolean,
+    Placeholder extends boolean | string = boolean | string,
+    NullValue = (
+        /* eslint-disable @stylistic/indent */
+        Placeholder extends false ? never
+            : IsMultiple extends true ? never
+            : null
+        /* eslint-enable @stylistic/indent */
+    ),
+> = {
     /**
      * Le nom du champ (attribut `[name]`).
      *
@@ -35,8 +57,10 @@ type Props = {
     /**
      * L'éventuel texte affiché en filigrane dans le
      * champ quand celui-ci est vide.
+     *
+     * @default true
      */
-    placeholder?: boolean,
+    placeholder?: Placeholder,
 
     /**
      * Permet de spécifier le type d'assistance automatisée
@@ -48,18 +72,26 @@ type Props = {
      */
     autocomplete?: AutoFill,
 
-    /** Le champ doit-il être mis en surbrillance ? */
+    /**
+     * Le champ doit-il être mis en surbrillance ?
+     *
+     * @default false
+     */
     highlight?: boolean,
 
-    /** S'agit-il d'un sélecteur à choix multiple ? */
-    multiple?: boolean,
+    /**
+     * S'agit-il d'un sélecteur à choix multiple ?
+     *
+     * @default false
+     */
+    multiple?: IsMultiple,
 
     /**
      * Permet de déléguer la recherche à une fonction externe.
      *
      * Lorsque cette option est utilisée, le filtrage interne du champ est désactivé.
      */
-    searcher?(search: string): Promise<void>,
+    searcher?: SearcherFunc | DebouncedFunc<SearcherFunc>,
 
     /**
      * Peut-on ajouter une option en écrivant sa valeur dans le champ ?
@@ -67,6 +99,8 @@ type Props = {
      *
      * Si une fonction externe est utilisée pour la recherche, un bouton d'ajout
      * sera proposé à l'utilisateur si aucun résultat ne correspond à sa recherche.
+     *
+     * @default false
      */
     canCreate?: boolean,
 
@@ -91,7 +125,11 @@ type Props = {
      * Dans le cas d'un choix multiple, un tableau peut être passé.
      * Si `null` est passé, aucune valeur ne sera sélectionnée.
      */
-    value: Option['value'] | Array<Option['value']> | null,
+    value: (
+        IsMultiple extends true
+            ? Array<ValuesOf<Options>>
+            : ValuesOf<Options>
+    ) | NullValue,
 
     /**
      * Les options du champ select.
@@ -100,7 +138,33 @@ type Props = {
      * Voir le type {@link Option} pour plus de détails sur le format de chaque option.
      * Peut également être fourni sous la forme d'un tableau de simples chaînes de caractères.
      */
-    options: string[] | Option[],
+    options: Options,
+
+    /**
+     * Fonction appelée lorsque la valeur du select change.
+     *
+     * @param newValue - La nouvelle valeur du select.
+     */
+    onInput?: IsMultiple extends true
+        ? (newValue: Array<ValuesOf<Options>> | NullValue) => void
+        : (newValue: ValuesOf<Options> | NullValue) => void,
+
+    /**
+     * Fonction appelée lorsque la valeur du select change.
+     *
+     * @param newValue - La nouvelle valeur du select.
+     */
+    onChange?: IsMultiple extends true
+        ? (newValue: Array<ValuesOf<Options>> | NullValue) => void
+        : (newValue: ValuesOf<Options> | NullValue) => void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande
+     * à créer une nouvelle valeur dans le select.
+     *
+     * @param input - La nouvelle valeur demandée.
+     */
+    onCreate?(input: string): void,
 };
 
 /**
@@ -119,8 +183,8 @@ type SelectedValue = string | Option | Array<string | Option> | null;
 const Select = defineComponent({
     name: 'Select',
     inject: {
-        'input.invalid': { default: { value: false } },
-        'input.disabled': { default: { value: false } },
+        'input.invalid': { default: false },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -144,11 +208,11 @@ const Select = defineComponent({
             default: 'off',
         },
         highlight: {
-            type: Boolean as PropType<Props['highlight']>,
+            type: Boolean as PropType<Required<Props>['highlight']>,
             default: false,
         },
         multiple: {
-            type: Boolean as PropType<Props['multiple']>,
+            type: Boolean as PropType<Required<Props>['multiple']>,
             default: false,
         },
         searcher: {
@@ -156,7 +220,7 @@ const Select = defineComponent({
             default: undefined,
         },
         canCreate: {
-            type: Boolean as PropType<Props['canCreate']>,
+            type: Boolean as PropType<Required<Props>['canCreate']>,
             default: false,
         },
         createLabel: {
@@ -164,7 +228,7 @@ const Select = defineComponent({
             default: undefined,
         },
         value: {
-            // TODO [vue@>2.7]: Mettre `[Array, String, Number, null] as PropType<Props['value']>,` en Vue 2.7.
+            // TODO [vue@>3]: Mettre `[Array, String, Number, null]` en Vue 3.
             // @see https://github.com/vuejs/core/issues/3948#issuecomment-860466204
             type: null as unknown as PropType<Props['value']>,
             required: true,
@@ -203,6 +267,21 @@ const Select = defineComponent({
                 });
             },
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCreate: {
+            type: Function as PropType<Props['onCreate']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change', 'create'],
     data: (): Data => ({
@@ -210,14 +289,14 @@ const Select = defineComponent({
     }),
     computed: {
         formattedPlaceholder(): string | undefined {
-            const { $t: __, placeholder } = this;
+            const { __, placeholder } = this;
 
             if (placeholder === false) {
                 return undefined;
             }
 
             return placeholder === true
-                ? __('please-choose')
+                ? __('global.please-choose')
                 : placeholder;
         },
 
@@ -247,7 +326,7 @@ const Select = defineComponent({
 
             // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'].value;
+            return this['input.invalid'];
         },
 
         inheritedDisabled(): boolean {
@@ -257,7 +336,7 @@ const Select = defineComponent({
 
             // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
 
         selected(): SelectedValue {
@@ -581,4 +660,15 @@ const Select = defineComponent({
     },
 });
 
-export default Select;
+//
+// - Exports
+//
+
+type SelectGeneric = <
+    Options extends LooseOptions,
+    IsMultiple extends boolean = false,
+    Placeholder extends boolean | string = true,
+>(props: Props<Options, IsMultiple, Placeholder>) => JSX.Element;
+
+export type SelectRef = ComponentRef<typeof Select>;
+export default Select as any as SelectGeneric;

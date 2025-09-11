@@ -17,7 +17,17 @@ inventory-unavailable-help: >-
 infos:
     beneficiary-phone: "Tél\_:"
     beneficiary-email: "E-mail\_:"
-    manager: "Chef de projet\_:"
+    created-by: "Créé par\_: {author}"
+    request-date: "Date de la demande\_: {date}"
+    manager: "Chef de projet\_: {manager}"
+    mobilization-period: "Période de mobilisation\_: {period}"
+    initially-planned-period: Initialement {period}
+    overdue-since: En retard depuis {duration}
+    late-return-on: Retourné le {date} (retard de {duration})
+    with-technicians: "Avec\_:"
+    warning-overdue: |
+        Le retour du matériel de cet événement est en retard.
+        Il aurait dû être retourné avant le {date} (il y a {duration}).
 
 materials:
     problems-on-returned-materials: Problèmes sur le matériel retourné
@@ -53,10 +63,6 @@ estimates:
         deleted: Le devis a été supprimé.
         confirm-delete: "Voulez-vous vraiment supprimer ce devis\_?"
 
-    modals:
-        create:
-            # warning-event-has-invoice: "Attention, cet événement a déjà une facture\_!"
-
 invoices:
     previous-invoices: Anciennes factures
     no-invoice-help: Il n'y a aucune facture pour le moment.
@@ -68,6 +74,7 @@ invoices:
     contact-someone-to-create-invoice: >-
         Si besoin, contactez un membre de l'équipe pour lui demander d'éditer la facture.
     create-invoice: Créer une facture...
+    confirm-create: "Confirmez-vous vouloir générer une nouvelle facture maintenant\_?"
     regenerate-help: >-
         Vous pouvez créer une nouvelle facture en cliquant sur le bouton ci-dessous.
     create-new-invoice: Créer une nouvelle facture...
@@ -75,12 +82,12 @@ invoices:
     invoice-created: La facture a bien été créée.
 
     item:
-        title: 'Facture n° {number}, générée le {date}'
-        download: Télécharger la facture
-
-    modals:
-        create:
-            # warning-no-estimate-before-billing: "Attention, cet événement n'a pas eu de devis\_!"
+        title:
+            invoice: "Facture n°\_{number}, générée le {date}"
+            credit-note: "Avoir n°\_{number}, générée le {date}"
+        download:
+            invoice: Télécharger la facture
+            credit-note: Télécharger l'avoir
 
 documents:
     confirm-permanently-delete: "Voulez-vous vraiment supprimer définitivement ce document\_?"

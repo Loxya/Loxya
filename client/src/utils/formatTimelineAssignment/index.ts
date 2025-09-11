@@ -23,7 +23,6 @@ const withIcon = (iconName: string | null, text: string): string => (
     iconName ? `<i class="fas fa-${iconName}"></i> ${text}` : text
 );
 
-/* eslint-disable @stylistic/ts/lines-around-comment */
 const factory = (__: I18nTranslate, now: DateTime = DateTime.now()): Formatter => (
     /**
      * Permet de formater une assignation de technicien pour une timeline.
@@ -124,6 +123,5 @@ const factory = (__: I18nTranslate, now: DateTime = DateTime.now()): Formatter =
         };
     }
 );
-/* eslint-enable @stylistic/ts/lines-around-comment */
 
 export default factory;

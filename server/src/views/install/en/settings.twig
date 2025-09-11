@@ -1,7 +1,7 @@
 <section class="page__content">
     <h2>{{ stepNumber }} - Paramètres de l'application</h2>
     <p>
-        In this step we'll define some important parameters for <strong>your personal</strong>
+        In this step we'll define some important parameters for <strong>your personnal</strong>
         use of Loxya.
     </p>
     <form method="POST" class="form">
@@ -38,7 +38,7 @@
                     type="radio"
                     id="billingModeAll"
                     name="billingMode"
-                    value="{{ constant('Loxya\\Config\\Enums\\BillingMode::ALL').value }}"
+                    value="{{ enum('Loxya\\Config\\Enums\\BillingMode').ALL.value }}"
                     onchange="handleBillingModeChange(this)"
                 />
                 <label for="billingModeAll">
@@ -51,7 +51,7 @@
                     type="radio"
                     id="billingModePartial"
                     name="billingMode"
-                    value="{{ constant('Loxya\\Config\\Enums\\BillingMode::PARTIAL').value }}"
+                    value="{{ enum('Loxya\\Config\\Enums\\BillingMode').PARTIAL.value }}"
                     onchange="handleBillingModeChange(this)"
                     checked
                 />
@@ -65,12 +65,45 @@
                     type="radio"
                     id="billingModeNone"
                     name="billingMode"
-                    value="{{ constant('Loxya\\Config\\Enums\\BillingMode::NONE').value }}"
+                    value="{{ enum('Loxya\\Config\\Enums\\BillingMode').NONE.value }}"
                     onchange="handleBillingModeChange(this)"
                 />
                 <label for="billingModeNone">
                     <strong>Loan of equipment</strong>&nbsp;:
                     No billing at all.
+                </label>
+            </div>
+        </section>
+        <section class="form__field">
+            <h3 class="form__field-title">Equipment Return Policy</h3>
+            <p class="form__field-description">
+                How should the software handle completed events or reservations?
+            </p>
+            <div class="form__radio" style="margin-top: .5rem;">
+                <input
+                    type="radio"
+                    id="returnPolicyAuto"
+                    name="returnPolicy"
+                    value="{{ enum('Loxya\\Config\\Enums\\ReturnPolicy').AUTO.value }}"
+                />
+                <label for="returnPolicyAuto">
+                    <strong>Automatic closure</strong><br />
+                    Equipment is considered returned at the scheduled end of the event or booking,
+                    even if the return inventory has not been performed.
+                </label>
+            </div>
+            <div class="form__radio">
+                <input
+                    type="radio"
+                    id="returnPolicyManual"
+                    name="returnPolicy"
+                    value="{{ enum('Loxya\\Config\\Enums\\ReturnPolicy').MANUAL.value }}"
+                    checked
+                />
+                <label for="returnPolicyManual">
+                    <strong>Manual closure</strong><br />
+                    An event remains active until the equipment is manually checked
+                    via a return inventory.
                 </label>
             </div>
         </section>

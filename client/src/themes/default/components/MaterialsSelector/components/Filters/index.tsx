@@ -2,13 +2,13 @@ import './index.scss';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 import debounce from 'lodash/debounce';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import SearchPanel from '@/themes/default/components/MaterialsFilters';
 import SwitchToggle from '@/themes/default/components/SwitchToggle';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Filters as CoreFilters } from '@/themes/default/components/MaterialsFilters';
 import type { Filters } from '../../_types';
 
@@ -21,6 +21,13 @@ type Props = {
      * que les éléments sélectionnés ?
      */
     withSelectedOnlyFilter?: boolean,
+
+    /**
+     * Fonction appelée lorsque les filtres ont changés.
+     *
+     * @param newFilters - Les nouveaux filtres.
+     */
+    onChange?(newFilters: Filters): void,
 };
 
 type InstanceProperties = {
@@ -41,6 +48,11 @@ const MaterialsSelectorFilters = defineComponent({
         withSelectedOnlyFilter: {
             type: Boolean as PropType<Required<Props>['withSelectedOnlyFilter']>,
             default: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],

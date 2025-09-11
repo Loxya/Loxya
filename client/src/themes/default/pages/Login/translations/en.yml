@@ -2,6 +2,7 @@ title: Login
 
 welcome: Hello! Who are you?
 connexion: Connection
+forgot-password: "Forgot your password?"
 
 please-wait: 'Authentication, please wait...'
 bye: "See you\_!"

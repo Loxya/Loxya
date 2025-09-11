@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Carbon\Carbon;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
@@ -25,8 +23,7 @@ final class EventTechniciansDatesInLocalTime extends AbstractMigration
                 ->setTimezone(date_default_timezone_get())
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_technicians', $prefix))
                 ->set('start_time', $startTime)
@@ -52,8 +49,7 @@ final class EventTechniciansDatesInLocalTime extends AbstractMigration
                 ->setTimezone('UTC')
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_technicians', $prefix))
                 ->set('start_time', $startTime)
