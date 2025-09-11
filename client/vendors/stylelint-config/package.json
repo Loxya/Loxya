@@ -1,0 +1,17 @@
+{
+    "name": "@loxya/stylelint-config",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "exports": "./index.js",
+    "keywords": [
+        "stylelint",
+        "stylelint-config"
+    ],
+    "dependencies": {
+        "@pulsanova/stylelint-config-scss": "~2.1.1"
+    },
+    "peerDependencies": {
+        "stylelint": "^16.23.1"
+    }
+}

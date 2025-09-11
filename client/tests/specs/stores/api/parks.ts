@@ -9,28 +9,28 @@ describe('Parks Api', () => {
     describe('all()', () => {
         it('parse the returned data correctly', async () => {
             const paginatedData = withPaginationEnvelope(data.default());
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiParks.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiParks.all()).resolves.toMatchSnapshot();
         });
     });
 
     describe('list()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.summary() });
-            expect(await apiParks.list()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(data.summary());
+            await expect(apiParks.list()).resolves.toMatchSnapshot();
         });
     });
 
     describe('one()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: datum });
-            expect(await apiParks.one(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(datum);
+            await expect(apiParks.one(datum.id)).resolves.toMatchSnapshot();
         });
     });
 
     describe('oneTotalAmount()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: '119_061.80' });
+            jest.spyOn(requester, 'get').mockResolvedValue('119_061.80');
 
             const result = await apiParks.oneTotalAmount(1);
             expect(result).toBeInstanceOf(Decimal);
@@ -40,29 +40,29 @@ describe('Parks Api', () => {
 
     describe('materials()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: materials.default() });
-            expect(await apiParks.materials(1)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(materials.default());
+            await expect(apiParks.materials(1)).resolves.toMatchSnapshot();
         });
     });
 
     describe('create()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
-            expect(await apiParks.create({} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
+            await expect(apiParks.create({} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('update()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiParks.update(datum.id, {} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiParks.update(datum.id, {} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('restore()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiParks.restore(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiParks.restore(datum.id)).resolves.toMatchSnapshot();
         });
     });
 });

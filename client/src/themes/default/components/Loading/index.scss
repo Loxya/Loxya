@@ -39,13 +39,19 @@
         font-size: 1.1rem;
 
         #{$block}__spinner {
-            width: 2em;
-            height: 2em;
+            width: 1.8em;
+            height: 1.8em;
         }
 
         #{$block}__text {
             margin-top: 0;
             margin-left: 10px;
+        }
+
+        // NOTE: Pour éviter un bug qui ajoute un espace
+        //       lorsqu'il n'y a que le l'icône.
+        &#{$block}--minimalist {
+            flex-direction: column;
         }
     }
 }

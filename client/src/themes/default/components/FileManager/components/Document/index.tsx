@@ -1,11 +1,11 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import formatBytes from '@/utils/formatBytes';
 import Button from '@/themes/default/components/Button';
 import Icon from '@/themes/default/components/Icon';
 import { getIconFromFile } from '../../_utils';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Document } from '@/stores/api/documents';
 
 type Props = {
@@ -14,6 +14,14 @@ type Props = {
 
     /** Est-ce que la suppression du fichier doit être désactivée ? */
     readonly?: boolean,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande la
+     * suppression du document.
+     *
+     * @param id - L'identifiant du fichier à supprimer.
+     */
+    onDelete?(id: Document['id']): void,
 };
 
 /** Document du gestionnaire de fichiers. */
@@ -27,6 +35,11 @@ const FileManagerDocument = defineComponent({
         readonly: {
             type: Boolean as PropType<Required<Props>['readonly']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDelete: {
+            type: Function as PropType<Props['onDelete']>,
+            default: undefined,
         },
     },
     emits: ['delete'],

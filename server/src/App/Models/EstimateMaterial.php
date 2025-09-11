@@ -6,8 +6,9 @@ namespace Loxya\Models;
 use Brick\Math\BigDecimal as Decimal;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Loxya\Models\Casts\AsDecimal;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 
 /**
  * Matériel dans un devis.
@@ -41,7 +42,7 @@ final class EstimateMaterial extends BaseModel
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'estimate_id' => V::custom([$this, 'checkEstimateId']),
             'material_id' => V::custom([$this, 'checkMaterialId']),
             'name' => V::notEmpty()->length(2, 191),
@@ -139,7 +140,7 @@ final class EstimateMaterial extends BaseModel
             if (!V::nullable(V::json())->validate($value)) {
                 return false;
             }
-            $value = $value !== null ? json_decode($value, true) : null;
+            $value = $value !== null ? $this->fromJson($value) : null;
         }
 
         if ($value === null) {
@@ -148,7 +149,7 @@ final class EstimateMaterial extends BaseModel
 
         // Note: S'il n'y a pas de taxes, le champ doit être à `null` et non un tableau vide.
         $schema = V::arrayType()->notEmpty()->each(V::custom(static fn ($taxValue) => (
-            new Rule\KeySetStrict(
+            new SchemaStrict(
                 new Rule\Key('name', V::notEmpty()->length(1, 30)),
                 new Rule\Key('is_rate', V::boolType()),
                 new Rule\Key('value', V::custom(static function ($subValue) use ($taxValue) {

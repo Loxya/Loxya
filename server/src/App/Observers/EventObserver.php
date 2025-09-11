@@ -4,7 +4,11 @@ declare(strict_types=1);
 namespace Loxya\Observers;
 
 use Brick\Math\BigDecimal as Decimal;
+use Carbon\CarbonImmutable;
+use Loxya\Config\Config;
+use Loxya\Config\Enums\ReturnPolicy;
 use Loxya\Models\Event;
+use Loxya\Support\Period;
 
 final class EventObserver
 {
@@ -28,7 +32,9 @@ final class EventObserver
         // -- Événements ...
         //
 
-        $neighborEvents = Event::inPeriod($event)->get();
+        // Note: Sans la période de retard car seules les périodes nominales des
+        //       événements sont pertinentes pour le calcul du matériel disponible.
+        $neighborEvents = Event::inPeriod($event, withOverdue: false)->get();
         foreach ($neighborEvents as $neighborEvent) {
             $neighborEvent->invalidateCache('has_missing_materials');
         }
@@ -74,7 +80,9 @@ final class EventObserver
         // -- Événements ...
         //
 
-        $neighborEvents = Event::inPeriod($event)->get();
+        // Note: Sans la période de retard car seules les périodes nominales des
+        //       événements sont pertinentes pour le calcul du matériel disponible.
+        $neighborEvents = Event::inPeriod($event, withOverdue: false)->get();
         foreach ($neighborEvents as $neighborEvent) {
             $neighborEvent->invalidateCache('has_missing_materials');
         }
@@ -87,7 +95,7 @@ final class EventObserver
         }
 
         //
-        // - Supprime les factures et devis liés.
+        // - Supprime les factures et devis liés, ainsi que les entrées d'historique.
         //   (Doit être géré manuellement car tables polymorphes)
         //
 
@@ -111,26 +119,62 @@ final class EventObserver
 
         //
         // - On invalide le cache du matériel manquant des bookables voisins à celui qui vient
-        //   d'être modifié lors de la modification de la période de mobilisation de l'événement.
-        //   (anciens voisins ou nouveau, peu importe).
+        //   d'être modifié lors de la modification de la période de mobilisation de l'événement
+        //   (anciens voisins ou nouveaux, peu importe) ou la modification du statut d'inventaire.
         //
 
-        if (!$event->wasChanged(['mobilization_start_date', 'mobilization_end_date'])) {
+        $hasRelevantChanges = $event->wasChanged([
+            'mobilization_start_date',
+            'mobilization_end_date',
+            'is_departure_inventory_done',
+            'is_return_inventory_done',
+            'return_inventory_datetime',
+            'is_archived',
+        ]);
+        if (!$hasRelevantChanges) {
             return;
         }
         $oldData = $event->getPrevious();
+
+        $oldMobilizationPeriod = new Period(
+            $oldData['mobilization_start_date'],
+            $oldData['mobilization_end_date'],
+        );
+        $oldPeriod = $oldMobilizationPeriod;
+        $useManualReturn = Config::get('returnPolicy') === ReturnPolicy::MANUAL;
+        if ($useManualReturn && $oldMobilizationPeriod->isPast() && $event->has_materials) {
+            // - Si l'inventaire de retour était fait et que la date
+            //   d'inventaire était postérieure à la fin de la mobilisation,
+            //   il y avait un retard.
+            if (
+                $oldData['is_return_inventory_done'] &&
+                $oldData['return_inventory_datetime'] !== null &&
+                $oldMobilizationPeriod->getEndDate()->isBefore(
+                    $oldData['return_inventory_datetime'],
+                )
+            ) {
+                $oldPeriod = new Period(
+                    $oldData['mobilization_start_date'],
+                    CarbonImmutable::parse($oldData['return_inventory_datetime'])
+                        ->roundMinutes(15, 'ceil'),
+                );
+            }
+
+            // - Sinon, si l'événement n'était pas archivé et qu'il n'y avait pas
+            //   d'inventaire de retour, il n'y avait pas de date de fin.
+            if (!$oldData['is_archived'] && !$oldData['is_return_inventory_done']) {
+                $oldPeriod = new Period($oldData['mobilization_start_date'], null);
+            }
+        }
 
         //
         // -- Événements ...
         //
 
-        $newNeighborEvents = Event::inPeriod($event)->get();
-        $oldNeighborEvents = Event::query()
-            ->inPeriod(
-                $oldData['mobilization_start_date'],
-                $oldData['mobilization_end_date'],
-            )
-            ->get();
+        // Note: Sans la période de retard car seules les périodes nominales des
+        //       événements sont pertinentes pour le calcul du matériel disponible.
+        $newNeighborEvents = Event::inPeriod($event, withOverdue: false)->get();
+        $oldNeighborEvents = Event::inPeriod($oldPeriod, withOverdue: false)->get();
 
         $neighborEvents = $oldNeighborEvents->merge($newNeighborEvents)
             ->unique('id')
@@ -216,6 +260,9 @@ final class EventObserver
                 $eventMaterial->save(['validate' => false]);
             }
         });
+
+        // - On trigger le refresh du cache.
+        $this->onUpdateSyncCache($event);
     }
 
     private function onUpdateSyncReturnInventories(Event $event): void
@@ -251,6 +298,9 @@ final class EventObserver
                 $eventMaterial->save(['validate' => false]);
             }
         });
+
+        // - On trigger le refresh du cache.
+        $this->onUpdateSyncCache($event);
     }
 
     private function onRestoreSyncCache(Event $event): void
@@ -270,7 +320,9 @@ final class EventObserver
         // -- Événements ...
         //
 
-        $neighborEvents = Event::inPeriod($event)->get();
+        // Note: Sans la période de retard car seules les périodes nominales des
+        //       événements sont pertinentes pour le calcul du matériel disponible.
+        $neighborEvents = Event::inPeriod($event, withOverdue: false)->get();
         foreach ($neighborEvents as $neighborEvent) {
             $neighborEvent->invalidateCache('has_missing_materials');
         }

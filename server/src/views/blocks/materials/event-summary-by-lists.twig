@@ -1,6 +1,6 @@
 {% for listName, listMaterials in materialsSorted -%}
 {% if materialsSorted|length > 1 -%}
-<h2>
+<h2 {{ not loop.first ? 'class="changePage"' : '' }}>
     {{-
         not listName
             ? __('materials-list-global')

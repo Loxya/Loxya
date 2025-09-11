@@ -1,35 +1,53 @@
 import './index.scss';
 
 import Queue from 'p-queue';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { FileError, getFileError } from './_utils';
 import uniqueId from 'lodash/uniqueId';
 import DropZone from '@/themes/default/components/DropZone';
 import UploadItem from './Upload';
 
-import type { ProgressCallback } from 'axios';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
+import type { ProgressCallback } from '@/globals/requester';
 import type { Document } from '@/stores/api/documents';
 
 export type Upload = {
     uid: string,
-    file: File,
+    file: Raw<File>,
     error: FileError | null,
     progress: number,
     isStarted: boolean,
     isFinished: boolean,
     isCancelled: boolean,
-    signal: AbortSignal,
+    signal: Raw<AbortSignal>,
     cancel(): void,
 };
 
 type Props = {
-    /** Fonction permettant de persister un nouveau document. */
+    /**
+     * Fonction permettant de persister un nouveau document.
+     *
+     * @param file - Le fichier à persister.
+     * @param signal - Un `AbortSignal` fourni par le composant.
+     *                 Permet au composant d'annuler l'opération (par
+     *                 exemple si l'utilisateur annule l'envoi du fichier).
+     * @param onProgress - Callback a appeler régulièrement pour indiquer
+     *                     l'avancement du transfert (voir {@link ProgressCallback}).
+     *
+     * @returns La fonction doit retourner une promesse résolue avec le `Document` persisté.
+     */
     persister(file: File, signal: AbortSignal, onProgress: ProgressCallback): Promise<Document>,
+
+    /**
+     * Fonction appelée lorsqu'un fichier vient d'être uploadé.
+     *
+     * @param document - Le document uploadé.
+     */
+    onUpload?(document: Document): void,
 };
 
 type Data = {
-    uploadQueue: Queue,
+    uploadQueue: Raw<Queue>,
     uploads: Upload[],
 };
 
@@ -47,10 +65,15 @@ const FileManagerUploadArea = defineComponent({
             type: Function as PropType<Required<Props>['persister']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpload: {
+            type: Function as PropType<Props['onUpload']>,
+            default: undefined,
+        },
     },
     emits: ['upload'],
     data: (): Data => ({
-        uploadQueue: new Queue({ concurrency: MAX_CONCURRENT_UPLOADS }),
+        uploadQueue: markRaw(new Queue({ concurrency: MAX_CONCURRENT_UPLOADS })),
         uploads: [],
     }),
     beforeDestroy() {
@@ -80,9 +103,9 @@ const FileManagerUploadArea = defineComponent({
 
                 const upload: Upload = {
                     uid: uniqueId(),
-                    file,
+                    file: markRaw(file),
                     error,
-                    signal: abortController.signal,
+                    signal: markRaw(abortController.signal),
                     isStarted: false,
                     isFinished: hasError,
                     isCancelled: false,

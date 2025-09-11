@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Carbon\CarbonImmutable;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
@@ -63,8 +61,7 @@ final class AddMobilizationDatesToBookable extends AbstractMigration
                 }
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevents', $prefix))
                 ->set('mobilization_start_date', $mobilizationStartDate->format('Y-m-d H:i:s'))
@@ -132,8 +129,7 @@ final class AddMobilizationDatesToBookable extends AbstractMigration
                 }
             }
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sreservations', $prefix))
                 ->set('mobilization_start_date', $mobilizationStartDate->format('Y-m-d H:i:s'))

@@ -7,8 +7,8 @@ describe('Persons Api', () => {
     describe('all()', () => {
         it('parse the returned data correctly', async () => {
             const paginatedData = withPaginationEnvelope(data.default());
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiPersons.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiPersons.all()).resolves.toMatchSnapshot();
         });
     });
 });

@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -12,8 +10,7 @@ final class NormalizePolymorphTypes extends AbstractMigration
     {
         $prefix = Config::get('db.prefix');
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%staggables', $prefix))
             ->set(['taggable_type' => 'material'])
@@ -25,8 +22,7 @@ final class NormalizePolymorphTypes extends AbstractMigration
     {
         $prefix = Config::get('db.prefix');
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%staggables', $prefix))
             ->set(['taggable_type' => 'Robert2\\API\\Models\\Material'])

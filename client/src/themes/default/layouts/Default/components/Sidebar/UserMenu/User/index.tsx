@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import ClickOutside from 'vue-click-outside';
 import { MountingPortal as Portal } from 'portal-vue';
 import Icon from '@/themes/default/components/Icon';

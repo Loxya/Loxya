@@ -1,0 +1,24 @@
+{#
+    À cause de la mauvaise prise en charge du `white-space: nowrap` par DomPDF,
+    les espaces invisibles doivent être supprimés pour éviter qu'ils soient wrappés
+    n'importe comment après le label et avant la valeur, mais qu'il puissent être
+    wrappés dans la valeur elle-même si c'est un texte un peu long.
+#}
+<span class="lighter">
+    {{- property.name }}&nbsp;:&nbsp;
+    {%- if property.type == enum('Loxya\\Models\\Enums\\CustomFieldType').BOOLEAN.value -%}
+        {{- property.value == '1' ? __('yes') : __('no') -}}.
+    {%- elseif property.type == enum('Loxya\\Models\\Enums\\CustomFieldType').DATE.value -%}
+        {{- property.value|format_date('short', locale=locale) -}}.
+    {%- elseif property.type == enum('Loxya\\Models\\Enums\\CustomFieldType').PERIOD.value -%}
+        {{- property.value|format_period('short', locale=locale)|ucfirst -}}.
+    {%- else -%}
+        {{- property.value -}}
+        {%- if property.type in [
+            enum('Loxya\\Models\\Enums\\CustomFieldType').INTEGER.value,
+            enum('Loxya\\Models\\Enums\\CustomFieldType').FLOAT.value
+        ] and property.unit is not empty -%}
+            &nbsp;{{ property.unit }}
+        {%- endif -%}.
+    {%- endif -%}
+</span>

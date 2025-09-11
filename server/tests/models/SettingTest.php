@@ -43,6 +43,34 @@ final class SettingTest extends TestCase
                 'defaultTax' => 1,
                 'defaultDegressiveRate' => 1,
             ],
+            'estimates' => [
+                'customText' => [
+                    'title' => "Modalité de paiement",
+                    'content' => "Paiement par virement ou chèque.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
+            ],
+            'invoices' => [
+                'customText' => [
+                    'title' => null,
+                    'content' => "Paiement attendu sous 30 jours.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
+            ],
         ];
         $this->assertSameCanonicalize($expected, $result);
 
@@ -50,10 +78,6 @@ final class SettingTest extends TestCase
         $result = Setting::getList(false);
         $expected = [
             'eventSummary' => [
-                'customText' => [
-                    'title' => "Contrat",
-                    'content' => "Un petit contrat de test.",
-                ],
                 'materialDisplayMode' => 'categories',
                 'showDescriptions' => false,
                 'showLegalNumbers' => true,
@@ -77,6 +101,26 @@ final class SettingTest extends TestCase
             'billing' => [
                 'defaultTax' => 1,
                 'defaultDegressiveRate' => 1,
+            ],
+            'estimates' => [
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
+            ],
+            'invoices' => [
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
             ],
         ];
         $this->assertSameCanonicalize($expected, $result);
@@ -115,6 +159,46 @@ final class SettingTest extends TestCase
                 'value' => 'dfe7cd82-52b9-4c9b-aaed-033df210f23b',
             ],
             [
+                'key' => 'estimates.customText.content',
+                'value' => "Paiement par virement ou chèque.",
+            ],
+            [
+                'key' => 'estimates.customText.title',
+                'value' => "Modalité de paiement",
+            ],
+            [
+                'key' => 'estimates.showBookingDescription',
+                'value' => false,
+            ],
+            [
+                'key' => 'estimates.showDescriptions',
+                'value' => false,
+            ],
+            [
+                'key' => 'estimates.showMobilizationPeriod',
+                'value' => false,
+            ],
+            [
+                'key' => 'estimates.showPictures',
+                'value' => false,
+            ],
+            [
+                'key' => 'estimates.showReplacementPrices',
+                'value' => true,
+            ],
+            [
+                'key' => 'estimates.showTotalisableProperties',
+                'value' => false,
+            ],
+            [
+                'key' => 'estimates.showTotalReplacementPrice',
+                'value' => false,
+            ],
+            [
+                'key' => 'estimates.showUnitPrices',
+                'value' => true,
+            ],
+            [
                 'key' => 'eventSummary.customText.content',
                 'value' => "Un petit contrat de test.",
             ],
@@ -145,6 +229,46 @@ final class SettingTest extends TestCase
             [
                 'key' => 'eventSummary.showTags',
                 'value' => false,
+            ],
+            [
+                'key' => 'invoices.customText.content',
+                'value' => "Paiement attendu sous 30 jours.",
+            ],
+            [
+                'key' => 'invoices.customText.title',
+                'value' => null,
+            ],
+            [
+                'key' => 'invoices.showBookingDescription',
+                'value' => false,
+            ],
+            [
+                'key' => 'invoices.showDescriptions',
+                'value' => false,
+            ],
+            [
+                'key' => 'invoices.showMobilizationPeriod',
+                'value' => false,
+            ],
+            [
+                'key' => 'invoices.showPictures',
+                'value' => false,
+            ],
+            [
+                'key' => 'invoices.showReplacementPrices',
+                'value' => true,
+            ],
+            [
+                'key' => 'invoices.showTotalisableProperties',
+                'value' => false,
+            ],
+            [
+                'key' => 'invoices.showTotalReplacementPrice',
+                'value' => false,
+            ],
+            [
+                'key' => 'invoices.showUnitPrices',
+                'value' => true,
             ],
             [
                 'key' => 'returnInventory.mode',
@@ -213,6 +337,10 @@ final class SettingTest extends TestCase
             'calendar.public.displayedPeriod' => 'both',
             'billing.defaultDegressiveRate' => 3,
             'billing.defaultTax' => 2,
+            'estimates.customText.title' => 'Test',
+            'estimates.customText.content' => null,
+            'estimates.showBookingDescription' => true,
+            'estimates.showReplacementPrices' => false,
         ]);
         $expected = [
             'eventSummary' => [
@@ -244,6 +372,34 @@ final class SettingTest extends TestCase
             'billing' => [
                 'defaultTax' => 2,
                 'defaultDegressiveRate' => 3,
+            ],
+            'estimates' => [
+                'customText' => [
+                    'title' => "Test",
+                    'content' => null,
+                ],
+                'showBookingDescription' => true,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => false,
+                'showUnitPrices' => true,
+            ],
+            'invoices' => [
+                'customText' => [
+                    'title' => null,
+                    'content' => "Paiement attendu sous 30 jours.",
+                ],
+                'showBookingDescription' => false,
+                'showMobilizationPeriod' => false,
+                'showTotalReplacementPrice' => false,
+                'showTotalisableProperties' => false,
+                'showPictures' => false,
+                'showDescriptions' => false,
+                'showReplacementPrices' => true,
+                'showUnitPrices' => true,
             ],
         ];
         $this->assertEquals($expected, Setting::getList());

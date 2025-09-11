@@ -30,7 +30,7 @@ $icon-color: globals.$text-soft-color !default;
 
 /// Couleur de fond des zones de dépôt de fichier lorsqu'elles sont actives.
 /// @type Color
-$active-background-color: rgba(224, 68, 6, 0.3) !default;
+$active-background-color: rgb(224 68 6 / 30%) !default;
 
 /// Couleur du texte des zones de dépôt de fichier lorsqu'elles sont actives.
 /// @type Color

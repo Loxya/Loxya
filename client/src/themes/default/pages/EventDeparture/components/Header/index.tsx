@@ -1,13 +1,13 @@
 import './index.scss';
 import Day, { DayReadableFormat } from '@/utils/day';
 import { DateTimeReadableFormat } from '@/utils/datetime';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Button from '@/themes/default/components/Button';
 import MultiSwitch from '@/themes/default/components/MultiSwitch';
 import { DisplayGroup } from '../Inventory';
 
 import type DateTime from '@/utils/datetime';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 
@@ -23,6 +23,19 @@ type Props = {
 
     /** Doit-on afficher le bouton de modification du matériel ? */
     showMaterialEditAction: boolean,
+
+    /**
+     * Fonction appelée lorsque l'affichage par groupe a changé.
+     *
+     * @param newGroup - Le nouvel affichage par groupe sélectionné
+     */
+    onDisplayGroupChange?(newGroup: DisplayGroup): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à accéder
+     * à la modification du matériel de l'événement.
+     */
+    onUpdateMaterialClick?(): void,
 };
 
 /** Header de la page d'inventaire de départ d'événement. */
@@ -48,6 +61,16 @@ const EventDepartureHeader = defineComponent({
         showMaterialEditAction: {
             type: Boolean as PropType<Required<Props>['showMaterialEditAction']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDisplayGroupChange: {
+            type: Function as PropType<Props['onDisplayGroupChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpdateMaterialClick: {
+            type: Function as PropType<Props['onUpdateMaterialClick']>,
+            default: undefined,
         },
     },
     emits: [

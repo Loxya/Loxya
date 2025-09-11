@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type {
     Props as IconProps,
     Variant as IconVariant,
@@ -46,6 +46,11 @@ type Props = {
      * l'onglet, comme le nombre de notifications ou d'éléments.
      */
     counter?: number,
+
+    /**
+     * Fonction appelée lorsque le bouton d'onglet est cliqué.
+     */
+    onClick?(): void,
 };
 
 /** Un bouton d'onglet. */
@@ -74,6 +79,11 @@ const TabButton = defineComponent({
         },
         counter: {
             type: Number as PropType<Props['counter']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
             default: undefined,
         },
     },
@@ -121,7 +131,13 @@ const TabButton = defineComponent({
 
         return (
             <li role="tab" class={className} onClick={handleClick}>
-                {icon && <Icon {...{ props: icon }} class="TabButton__icon" />}
+                {icon && (
+                    <Icon
+                        name={icon.name}
+                        variant={icon.variant}
+                        class="TabButton__icon"
+                    />
+                )}
                 {title}
                 {hasCounter && (
                     <span class="TabButton__counter">

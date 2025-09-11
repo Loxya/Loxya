@@ -85,7 +85,7 @@ final class Dataseed
         } elseif (is_array($value)) {
             $isConstantArray = !Arr::isList($value) || empty($value) ? false : (
                 (new Collection($value))->every(
-                    static fn ($v) => is_string($v)
+                    static fn ($v) => is_string($v),
                 )
             );
             $value = $isConstantArray

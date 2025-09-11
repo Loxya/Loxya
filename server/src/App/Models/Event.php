@@ -8,6 +8,7 @@ use Brick\Math\BigDecimal as Decimal;
 use Brick\Math\RoundingMode;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,7 @@ use Illuminate\Support\Collection as CoreCollection;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\BillingMode;
 use Loxya\Config\Enums\Feature;
+use Loxya\Config\Enums\ReturnPolicy;
 use Loxya\Contracts\Bookable;
 use Loxya\Contracts\Pdfable;
 use Loxya\Contracts\PeriodInterface;
@@ -26,7 +28,7 @@ use Loxya\Contracts\Serializable;
 use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Enums\Group;
-use Loxya\Models\Traits\Cache;
+use Loxya\Models\Traits\Caching;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Services\Auth;
 use Loxya\Services\I18n;
@@ -35,8 +37,9 @@ use Loxya\Support\Collections\MaterialsCollection;
 use Loxya\Support\Pdf\Pdf;
 use Loxya\Support\Period;
 use Loxya\Support\Str;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 
 /**
@@ -82,6 +85,7 @@ use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
  * @property string|null $return_inventory_datetime
  * @property int|null $return_inventory_author_id
  * @property-read User|null $return_inventory_author
+ * @property-read bool $has_materials
  * @property-read bool|null $has_missing_materials
  * @property-read bool $has_deleted_materials
  * @property-read bool|null $has_not_returned_materials
@@ -106,22 +110,24 @@ use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
  * @property-read Collection<array-key, Estimate> $estimates
  * @property-read Collection<array-key, Invoice> $invoices
  * @property-read Collection<array-key, Document> $documents
- * @property-read Collection<array-key, Attribute> $totalisable_attributes
+ * @property-read Collection<array-key, Property> $totalisable_properties
  *
  * @method static Builder|static search(string|string[] $term)
  * @method static Builder|static inProgress()
- * @method static Builder|static inPeriod(PeriodInterface $period)
- * @method static Builder|static inPeriod(string|\DateTimeInterface $start, string|\DateTimeInterface|null $end)
- * @method static Builder|static inPeriod(string|\DateTimeInterface|PeriodInterface $start, string|\DateTimeInterface|null $end = null)
+ * @method static Builder|static endingToday()
+ * @method static Builder|static returnInventoryTodo()
+ * @method static Builder|static inPeriod(PeriodInterface $period, bool $withOverdue = false)
+ * @method static Builder|static closureSameOrAfter(string|\DateTimeInterface $date)
  * @method static Builder|static havingMaterialInPark(int $parkId)
  * @method static Builder|static notReturned(PeriodInterface $period)
  * @method static Builder|static withInvolvedUser(User $user, bool $checkBeneficiaries = true)
+ * @method static Builder|static onlyWithMaterialsSelectableBy(User $user)
  */
-final class Event extends BaseModel implements Serializable, PeriodInterface, Bookable, Pdfable
+final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 {
     use Serializer;
     use SoftDeletes;
-    use Cache;
+    use Caching;
 
     /** L'identifiant unique du modèle. */
     public const TYPE = 'event';
@@ -162,7 +168,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
 
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'title' => V::notEmpty()->length(2, 191),
             'reference' => V::custom([$this, 'checkReference']),
             'color' => V::nullable(V::custom([$this, 'checkColor'])),
@@ -412,7 +418,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         }
 
         $isPastAndInventoryDone = (
-            Carbon::parse($mobilizationEndDateRaw)->isPast()
+            !Carbon::parse($mobilizationEndDateRaw)->isFuture()
             && $isReturnInventoryDone
         );
 
@@ -756,21 +762,21 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         return $this->getRelationValue('invoices');
     }
 
-    /** @return Collection<array-key, Attribute> */
-    public function getTotalisableAttributesAttribute(): Collection
+    /** @return Collection<array-key, Property> */
+    public function getTotalisablePropertiesAttribute(): Collection
     {
-        $totalisableProperties = Attribute::query()
+        $totalisableProperties = Property::query()
             ->where('is_totalisable', true)
             ->get();
 
         $results = $totalisableProperties->reduce(
-            function (Collection $totals, Attribute $property) {
+            function (Collection $totals, Property $property) {
                 $propertyTotal = 0;
                 foreach ($this->materials as $eventMaterial) {
                     $quantity = $eventMaterial->quantity;
 
                     $material = $eventMaterial->material;
-                    $materialProperty = $material->attributes->find($property->id);
+                    $materialProperty = $material->properties->find($property->id);
                     if (!$materialProperty || $quantity === 0) {
                         continue;
                     }
@@ -964,6 +970,11 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         );
     }
 
+    public function getHasMaterialsAttribute(): bool
+    {
+        return !$this->materials->isEmpty();
+    }
+
     public function getHasMissingMaterialsAttribute(): bool|null
     {
         if (!$this->exists || $this->is_archived) {
@@ -972,7 +983,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
 
         // - Si l'événement est passé ET que l'inventaire de retour est fait,
         //   la disponibilité du matériel n'est pas calculée.
-        if ($this->mobilization_period->getEndDate()->isPast() && $this->is_return_inventory_done) {
+        if ($this->mobilization_period->isPast() && $this->is_return_inventory_done) {
             return null;
         }
 
@@ -1058,7 +1069,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         return $this->materials->every(
             static fn (EventMaterial $material) => (
                 $material->is_departure_inventory_filled
-            )
+            ),
         );
     }
 
@@ -1068,7 +1079,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         //       le retour, pas la date de début de mobilisation.
         //       (sans quoi on pourrait faire le retour d'un événement avant même
         //       qu'il ait réellement commencé, ce qui n'a pas de sens).
-        return $this->operation_period->getStartDate()->isPast();
+        return $this->operation_period->isPastOrOngoing();
     }
 
     public function getCanFinishReturnInventoryAttribute(): bool
@@ -1092,7 +1103,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         return $this->materials->every(
             static fn (EventMaterial $material) => (
                 $material->is_return_inventory_filled
-            )
+            ),
         );
     }
 
@@ -1140,7 +1151,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                 return $this->materials->some(
                     static fn (EventMaterial $material) => (
                         ($material->quantity - ($material->quantity_returned ?? 0)) > 0
-                    )
+                    ),
                 );
             },
         );
@@ -1167,7 +1178,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         return $this->materials->some(
             static fn (EventMaterial $material) => (
                 ($material->quantity_returned_broken ?? 0) > 0
-            )
+            ),
         );
     }
 
@@ -1182,14 +1193,42 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         return $this->mobilization_period->getStartDate();
     }
 
-    public function getEndDate(): CarbonImmutable
+    public function getEndDate(): CarbonImmutable|null
     {
-        return $this->mobilization_period->getEndDate();
-    }
+        // - Si la gestion manuelle des retours est activé, que
+        //   la mobilisation est terminée et qu'on a du matériel,
+        //   on considère l'éventuel retard.
+        $useManualReturn = Config::get('returnPolicy') === ReturnPolicy::MANUAL;
+        if (
+            $useManualReturn &&
+            $this->mobilization_period->isPast() &&
+            !$this->materials->isEmpty()
+        ) {
+            // - Si l'inventaire de retour est fait et que la date
+            //   d'inventaire est postérieure à la fin de la mobilisation,
+            //   il y a eu un retard.
+            if (
+                $this->is_return_inventory_done &&
+                $this->return_inventory_datetime !== null &&
+                $this->mobilization_period->getEndDate()->isBefore(
+                    $this->return_inventory_datetime,
+                )
+            ) {
+                return CarbonImmutable::parse($this->return_inventory_datetime)
+                    ->roundMinutes(15, 'ceil');
+            }
 
-    public function overlaps(PeriodInterface $period): bool
-    {
-        return $this->mobilization_period->overlaps($period);
+            // - Sinon, si l'événement n'est pas archivé et qu'il n'a pas
+            //   d'inventaire de retour, on ne connaît pas la date de fin.
+            if (!$this->is_archived && !$this->is_return_inventory_done) {
+                return null;
+            }
+        }
+
+        // - Sinon, si l'événement est en cours ou que le mode manuel n'est
+        //   pas activé, ou encore qu'il n'y a pas de matériel, on utilise
+        //   la date de fin de mobilisation.
+        return $this->mobilization_period->getEndDate();
     }
 
     // ------------------------------------------------------
@@ -1225,7 +1264,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         $period = Period::tryFrom($rawPeriod);
 
         $this->operation_start_date = $period?->getStartDate()->format('Y-m-d H:i:s');
-        $this->operation_end_date = $period?->getEndDate()->format('Y-m-d H:i:s');
+        $this->operation_end_date = $period?->getEndDate()?->format('Y-m-d H:i:s');
         $this->operation_is_full_days = $period?->isFullDays() ?? false;
     }
 
@@ -1234,7 +1273,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         $period = Period::tryFrom($rawPeriod);
 
         $this->mobilization_start_date = $period?->getStartDate()->format('Y-m-d H:i:s');
-        $this->mobilization_end_date = $period?->getEndDate()->format('Y-m-d H:i:s');
+        $this->mobilization_end_date = $period?->getEndDate()?->format('Y-m-d H:i:s');
     }
 
     public function setReferenceAttribute(mixed $value): void
@@ -1281,7 +1320,22 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             $data['global_discount_rate'] = null;
         }
 
-        $this->fill($data)->save();
+        $this->fill($data);
+
+        $validationErrors = [];
+        if (!$this->isValid()) {
+            $validationErrors = $this->validationErrors();
+        }
+
+        $hasPeriodChanged = (
+            !($oldOperationPeriod?->isSame($this->operation_period) ?? true) ||
+            !($oldMobilizationPeriod?->isSame($this->mobilization_period) ?? true)
+        );
+
+        if (!empty($validationErrors)) {
+            throw new ValidationException($validationErrors);
+        }
+        $this->save();
 
         // - Bénéficiaires
         if (isset($data['beneficiaries'])) {
@@ -1297,10 +1351,6 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         }
 
         // - Techniciens
-        $hasPeriodChanged = (
-            !($oldOperationPeriod?->isSame($this->operation_period) ?? true) ||
-            !($oldMobilizationPeriod?->isSame($this->mobilization_period) ?? true)
-        );
         if (isFeatureEnabled(Feature::TECHNICIANS)) {
             $technicians = null;
             if (isset($data['technicians'])) {
@@ -1391,7 +1441,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             );
         }
 
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('id'),
             new Rule\Key('role_id'),
             new Rule\Key('period'),
@@ -1438,7 +1488,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
 
     public function syncMaterials(array $materialsData): static
     {
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('id'),
             new Rule\Key('quantity', V::intVal()->min(0)),
             new Rule\Key('unit_price', null, false),
@@ -1590,7 +1640,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             throw new \LogicException("Unable to add extra lines to a non billable event.");
         }
 
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('id', null, false),
             new Rule\Key('description'),
             new Rule\Key('quantity', V::intVal()->min(1)),
@@ -1680,10 +1730,10 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             throw new \LogicException("Unable to update billing data of a non billable event.");
         }
 
-        $schema = new Rule\KeySetStrict(
+        $schema = new SchemaStrict(
             new Rule\Key(
                 'materials',
-                V::arrayType()->each(new Rule\KeySetStrict(
+                V::arrayType()->each(new SchemaStrict(
                     new Rule\Key('id'),
                     new Rule\Key('unit_price'),
                     new Rule\Key('discount_rate'),
@@ -1691,7 +1741,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             ),
             new Rule\Key(
                 'extras',
-                V::arrayType()->each(new Rule\KeySetStrict(
+                V::arrayType()->each(new SchemaStrict(
                     new Rule\Key('id', null, false),
                     new Rule\Key('description'),
                     new Rule\Key('quantity', V::intVal()->min(1)),
@@ -1777,7 +1827,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             throw new \LogicException("This event contains shortage that should be fixed.");
         }
 
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('id'),
             new Rule\Key('actual', V::intVal()->min(0)),
             new Rule\Key('comment', V::anyOf(V::nullType(), V::stringType()), false),
@@ -1922,7 +1972,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         }
 
         // - Si le début de l'événement est dans le passé, on ne peut plus annuler l'inventaire de départ.
-        if ($this->operation_period->getStartDate()->isPast()) {
+        if ($this->operation_period->isPastOrOngoing()) {
             throw new \LogicException(
                 "This event has already started, the departure inventory can no " .
                 "longer be cancelled.",
@@ -1975,7 +2025,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             throw new \LogicException("This event contains shortage that should be fixed.");
         }
 
-        $schema = V::arrayType()->each(new Rule\KeySetStrict(
+        $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('id'),
             new Rule\Key('actual', V::intVal()->min(0)),
             new Rule\Key('broken', V::intVal()->min(0)),
@@ -2040,7 +2090,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         return $this->refresh();
     }
 
-    public function finishReturnInventory(User $author): static
+    public function finishReturnInventory(User $author, ?CarbonInterface $date = null): static
     {
         if ($this->is_archived) {
             throw new \LogicException("This event is archived.");
@@ -2070,25 +2120,37 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             throw new \LogicException("This event's return inventory cannot be finished.");
         }
 
-        return dbTransaction(function () use ($author) {
+        // - Date de l'inventaire.
+        if ($date !== null) {
+            if ($date->isFuture()) {
+                throw new \InvalidArgumentException(
+                    'The return inventory date cannot be in the future.',
+                );
+            }
+            if (
+                !$this->operation_period->getStartDate()->isBefore($date) ||
+                !$this->mobilization_period->getStartDate()->isBefore($date)
+            ) {
+                throw new \InvalidArgumentException(
+                    'The return inventory date cannot be before the ' .
+                    'operation / mobilization start date.',
+                );
+            }
+        } else {
+            $date = CarbonImmutable::now();
+        }
+
+        return dbTransaction(function () use ($author, $date) {
             $this->is_confirmed = true;
             $this->is_return_inventory_done = true;
-
-            $returnInventoryDate = CarbonImmutable::now();
-            $this->return_inventory_datetime = (
-                $returnInventoryDate->format('Y-m-d H:i:s')
-            );
+            $this->return_inventory_datetime = $date->format('Y-m-d H:i:s');
 
             // - On déplace la date de fin de mobilisation si l'inventaire de retour
             //   est réalisé avant la date de fin de mobilisation prévue.
-            $roundedReturnInventoryDate = $returnInventoryDate->roundMinutes(15, 'ceil');
-            $shouldMoveMobilizationEndDate = (
-                $roundedReturnInventoryDate->isBefore($this->mobilization_end_date)
-            );
+            $roundedDate = $date->roundMinutes(15, 'ceil');
+            $shouldMoveMobilizationEndDate = $roundedDate->isBefore($this->mobilization_end_date);
             if ($shouldMoveMobilizationEndDate) {
-                $this->mobilization_end_date = (
-                    $roundedReturnInventoryDate->format('Y-m-d H:i:s')
-                );
+                $this->mobilization_end_date = $roundedDate->format('Y-m-d H:i:s');
             }
 
             $this->returnInventoryAuthor()->associate($author);
@@ -2371,40 +2433,76 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         ));
     }
 
-    public function scopeInProgress(Builder $query): Builder
+    public function scopeInProgress(Builder $rootQuery): Builder
     {
+        $useManualReturn = Config::get('returnPolicy') === ReturnPolicy::MANUAL;
         $now = CarbonImmutable::now();
 
-        return $query
-            ->orderBy('mobilization_start_date', 'asc')
-            ->where([
-                ['mobilization_start_date', '<=', $now],
-                ['mobilization_end_date', '>', $now],
-            ]);
+        return $rootQuery
+            ->where(static fn (Builder $query) => (
+                $query
+                    ->where('mobilization_start_date', '<=', $now)
+                    ->where(static fn (Builder $subQuery) => (
+                        $subQuery
+                            ->orWhere('mobilization_end_date', '>', $now)
+                            ->when($useManualReturn, static fn (Builder $subSubQuery) => (
+                                // - Bookings non retourné actuellement.
+                                $subSubQuery->orWhere(static fn (Builder $subSubSubQuery) => (
+                                    $subSubSubQuery
+                                        ->where('is_archived', false)
+                                        ->where('is_return_inventory_done', false)
+                                        ->whereHas('materials')
+                                ))
+                            ))
+                    ))
+            ))
+            ->orderBy('mobilization_start_date', 'asc');
     }
 
-    /**
-     * @param Builder $query
-     * @param string|\DateTimeInterface|PeriodInterface $start
-     * @param string|\DateTimeInterface|null $end (optional)
-     */
-    public function scopeInPeriod(Builder $query, $start, $end = null): Builder
+    public function scopeInPeriod(Builder $rootQuery, PeriodInterface $period, bool $withOverdue = false): Builder
     {
-        if ($start instanceof PeriodInterface) {
-            $end = $start->getEndDate();
-            $start = $start->getStartDate();
-        }
+        $useManualReturn = Config::get('returnPolicy') === ReturnPolicy::MANUAL;
+        $now = CarbonImmutable::now();
+        $start = $period->getStartDate();
+        $end = $period->getEndDate();
 
-        // - Si pas de date de fin: Période de 24 heures.
-        $start = new CarbonImmutable($start);
-        $end = new CarbonImmutable($end ?? $start->addDay());
-
-        return $query
-            ->orderBy('mobilization_start_date', 'asc')
-            ->where([
-                ['mobilization_start_date', '<', $end],
-                ['mobilization_end_date', '>', $start],
-            ]);
+        return $rootQuery
+            ->where(static fn (Builder $query) => (
+                $query
+                    ->when($end !== null, static fn (Builder $subQuery) => (
+                        $subQuery->where('mobilization_start_date', '<', $end)
+                    ))
+                    ->where(static fn (Builder $subQuery) => (
+                        $subQuery
+                            ->orWhere('mobilization_end_date', '>', $start)
+                            ->when(
+                                $withOverdue && $useManualReturn,
+                                static fn (Builder $subSubQuery) => (
+                                    $subSubQuery
+                                        // - Événements en retard actuellement.
+                                        ->orWhere(static fn (Builder $subSubQuery) => (
+                                            $subSubQuery
+                                                // - On part du principe que les événements en cours ou
+                                                //   à venir ne vont pas être retournés en retard, donc
+                                                //   on ne garde que les éléments normalement terminés.
+                                                ->where('mobilization_end_date', '<=', $now)
+                                                ->where('is_archived', false)
+                                                ->where('is_return_inventory_done', false)
+                                                ->whereHas('materials')
+                                        ))
+                                        // - Événements qui n'étaient pas retournés avant la date spécifiée.
+                                        ->orWhere(static fn (Builder $subSubQuery) => (
+                                            $subSubQuery
+                                                ->where('is_return_inventory_done', true)
+                                                ->whereNotNull('return_inventory_datetime')
+                                                // phpcs:ignore Generic.Files.LineLength
+                                                ->whereDatetimeRoundedMinutes('return_inventory_datetime', '>', $start, 15, 'ceil')
+                                        ))
+                                ),
+                            )
+                    ))
+            ))
+            ->orderBy('mobilization_start_date', 'asc');
     }
 
     public function scopeHavingMaterialInPark(Builder $query, int $parkId): Builder
@@ -2422,13 +2520,19 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
 
     public function scopeNotReturned(Builder $query, PeriodInterface $period): Builder
     {
+        $start = $period->getStartDate();
+        $end = $period->getEndDate();
+
         return $query
             ->where('is_archived', false)
             ->where('is_return_inventory_done', false)
-            ->where([
-                ['mobilization_end_date', '>', $period->getStartDate()],
-                ['mobilization_end_date', '<=', $period->getEndDate()],
-            ])
+            ->where(static fn (Builder $subQuery) => (
+                $subQuery
+                    ->where('mobilization_end_date', '>', $start)
+                    ->when($end !== null, static fn (Builder $subSubQuery) => (
+                        $subSubQuery->where('mobilization_end_date', '<=', $end)
+                    ))
+            ))
             ->whereHas('materials', static function (Builder $subQuery) {
                 $subQuery->whereRaw('`quantity` > COALESCE(`quantity_returned`, 0)');
             });
@@ -2449,11 +2553,53 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             ->where('mobilization_start_date', '>=', (Carbon::now()->startOfDay()));
     }
 
-    public function scopeReturnInventoryTodo(Builder $query): Builder
+    /**
+     * Permet de ne récupérer que les événements pour lesquels un inventaire de retour
+     * est à faire.
+     *
+     * @param bool $lax Est-ce qu'il faut limiter la récupération aux 30 derniers jours ?
+     */
+    public function scopeReturnInventoryTodo(Builder $query, bool $lax = false): Builder
     {
         return $query
             ->where('mobilization_end_date', '<=', Carbon::now())
-            ->where('is_return_inventory_done', false);
+            ->where('is_return_inventory_done', false)
+            ->when($lax, static fn (Builder $subQuery) => (
+                $subQuery->where('mobilization_end_date', '>=', Carbon::now()->subDays(30))
+            ));
+    }
+
+    public function scopeClosureSameOrAfter(Builder $rootQuery, string|\DateTimeInterface $date): Builder
+    {
+        $useManualReturn = Config::get('returnPolicy') === ReturnPolicy::MANUAL;
+
+        return $rootQuery->where(static fn (Builder $query) => (
+            $query
+                ->orWhere('mobilization_end_date', '>=', $date)
+                ->when($useManualReturn, static fn (Builder $subQuery) => (
+                    $subQuery
+                        // - Bookings non retourné actuellement.
+                        ->orWhere(static fn (Builder $subSubQuery) => (
+                            $subSubQuery
+                                ->where('is_archived', false)
+                                ->where('is_return_inventory_done', false)
+                                ->whereHas('materials')
+                        ))
+                        // - Bookings qui n'étaient pas retournés avant la date spécifiée.
+                        ->orWhere(static fn (Builder $subSubQuery) => (
+                            $subSubQuery
+                                ->where('is_return_inventory_done', true)
+                                ->whereNotNull('return_inventory_datetime')
+                                ->whereDatetimeRoundedMinutes(
+                                    'return_inventory_datetime',
+                                    '>=',
+                                    $date,
+                                    15,
+                                    'ceil',
+                                )
+                        ))
+                ))
+        ));
     }
 
     /**
@@ -2496,7 +2642,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
     public function toPdf(I18n $i18n, string $sortedBy = 'lists'): Pdf
     {
         $supportedSorts = ['lists', 'parks'];
-        if (!in_array($sortedBy, $supportedSorts)) {
+        if (!in_array($sortedBy, $supportedSorts, true)) {
             throw new \InvalidArgumentException(vsprintf(
                 "Unsupported release sheet sort \"%s\". Valid values are: \"%s\".",
                 [$sortedBy, join('", "', $supportedSorts)],
@@ -2507,7 +2653,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         $company = Config::get('companyData');
         $company = array_replace($company, [
             'country' => ($company['country'] ?? null) !== null
-                ? Country::where('code', $company['country'])->first()
+                ? Country::tryFromCode($company['country'])
                 : null,
         ]);
 
@@ -2531,7 +2677,6 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             };
             $materialsSorted->put(null, $listMaterials);
         }
-
         if ($sortedBy === 'parks') {
             $parks = $materials->byParks();
             foreach ($parks as $parkName => $parkMaterials) {
@@ -2547,9 +2692,10 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             'sortedBy' => $sortedBy,
             'materialsSorted' => $materialsSorted,
             'materialDisplayMode' => $displayMode,
-            'totalisableAttributes' => $this->totalisable_attributes,
+            'totalisableProperties' => $this->totalisable_properties,
             'customText' => Setting::getWithKey('eventSummary.customText'),
             'showLegalNumbers' => Setting::getWithKey('eventSummary.showLegalNumbers'),
+            'showMobilizationPeriod' => !$this->mobilization_period->isSame($this->operation_period),
             'showReplacementPrices' => Setting::getWithKey('eventSummary.showReplacementPrices'),
             'showDescriptions' => Setting::getWithKey('eventSummary.showDescriptions'),
             'showTags' => Setting::getWithKey('eventSummary.showTags'),
@@ -2584,12 +2730,6 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
 
     // ------------------------------------------------------
     // -
-    // -    Méthodes de "repository"
-    // -
-    // ------------------------------------------------------
-
-    // ------------------------------------------------------
-    // -
     // -    Serialization
     // -
     // ------------------------------------------------------
@@ -2608,9 +2748,11 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                         'technicians',
                         'positions',
                         'total_replacement',
+                        'materials',
                         'departure_inventory_author',
                         'return_inventory_author',
                         'is_return_inventory_started',
+                        'has_materials',
                         'has_not_returned_materials',
                         'has_missing_materials',
                         'has_deleted_materials',
@@ -2623,7 +2765,10 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                     break;
 
                 case self::SERIALIZE_DEFAULT:
-                    $event->append(['beneficiaries']);
+                    $event->append([
+                        'beneficiaries',
+                        'has_materials',
+                    ]);
                     break;
 
                 case self::SERIALIZE_BOOKING_EXCERPT:
@@ -2631,6 +2776,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                         'manager',
                         'beneficiaries',
                         'technicians',
+                        'has_materials',
                         'has_not_returned_materials',
                         'has_unassigned_mandatory_positions',
                         'categories',
@@ -2644,6 +2790,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                         'manager',
                         'beneficiaries',
                         'technicians',
+                        'has_materials',
                         'has_not_returned_materials',
                         'has_missing_materials',
                         'has_unassigned_mandatory_positions',
@@ -2658,10 +2805,12 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                         'manager',
                         'beneficiaries',
                         'technicians',
+                        'materials',
                         'positions',
                         'departure_inventory_author',
                         'return_inventory_author',
                         'is_return_inventory_started',
+                        'has_materials',
                         'has_not_returned_materials',
                         'has_missing_materials',
                         'has_deleted_materials',
@@ -2709,7 +2858,6 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                 $data->delete([
                     'currency',
                     'departure_inventory_datetime',
-                    'return_inventory_datetime',
                     'global_discount_rate',
                     'total_without_global_discount',
                     'total_global_discount',
@@ -2726,7 +2874,6 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                         'reference',
                         'description',
                         'departure_inventory_datetime',
-                        'return_inventory_datetime',
                         'materials_count',
                         'currency',
                         'is_billable',
@@ -2746,7 +2893,6 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
                     ->set('entity', static::TYPE)
                     ->delete([
                         'departure_inventory_datetime',
-                        'return_inventory_datetime',
                         'currency',
                         'global_discount_rate',
                         'total_without_global_discount',
@@ -2769,7 +2915,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         //   et les factures du payload.
         $user = Auth::user();
         $canSeeBilling = (
-            Auth::is([Group::ADMINISTRATION, Group::MANAGEMENT]) ||
+            Auth::is([Group::ADMINISTRATION, Group::SUPERVISION, Group::OPERATION]) ||
             (
                 $user !== null &&
                 Auth::is([
@@ -2786,7 +2932,7 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
         //   n'est pas le chef de projet, ou un technicien assigné à l'événement,
         //   on enlève les notes du payload.
         $canSeeNotes = (
-            Auth::is([Group::ADMINISTRATION, Group::MANAGEMENT]) ||
+            Auth::is([Group::ADMINISTRATION, Group::SUPERVISION, Group::OPERATION]) ||
             (
                 $user !== null &&
                 Auth::is([
@@ -2816,32 +2962,12 @@ final class Event extends BaseModel implements Serializable, PeriodInterface, Bo
             ]);
         }
 
-        $formatsWithMaterials = [
-            self::SERIALIZE_DETAILS,
-            self::SERIALIZE_BOOKING_DEFAULT,
-        ];
-        if (in_array($format, $formatsWithMaterials, true)) {
-            $materialFormat = match ($format) {
-                self::SERIALIZE_BOOKING_SUMMARY => (
-                    EventMaterial::SERIALIZE_SUMMARY
-                ),
-                default => (
-                    EventMaterial::SERIALIZE_DEFAULT
-                ),
-            };
-
-            $data['materials'] = $event->materials
-                ->map(static fn ($material) => (
-                    $material->serialize($materialFormat)
-                ))
-                ->all();
-        }
-
         return $data
             ->delete([
                 'author_id',
                 'preparer_id',
                 'manager_id',
+                'request_id',
                 'operation_start_date',
                 'operation_end_date',
                 'operation_is_full_days',

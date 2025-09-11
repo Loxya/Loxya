@@ -1,7 +1,0 @@
-{
-    "extends": "@pulsanova/stylelint-config-scss",
-    "rules": {
-        "custom-property-pattern": null,
-        "max-nesting-depth": null
-    }
-}

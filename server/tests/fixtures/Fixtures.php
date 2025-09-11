@@ -13,9 +13,9 @@ final class Fixtures
 
     protected static $alreadyCreated = false;
 
-    public static function getConnection(): \PDO
+    public static function getConnection(bool $withDatabase = true): \PDO
     {
-        return Config::getPDO();
+        return Config::getPDO(withDatabase: $withDatabase);
     }
 
     public static function resetTestDatabase(): void
@@ -38,7 +38,7 @@ final class Fixtures
             $dbConfig['testDatabase'],
         );
 
-        $pdo = self::getConnection();
+        $pdo = self::getConnection(withDatabase: false);
         $pdo->prepare($sqlRecreate)->execute();
         unset($pdo);
 

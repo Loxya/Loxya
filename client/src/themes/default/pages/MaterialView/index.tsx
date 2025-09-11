@@ -1,8 +1,7 @@
 import './index.scss';
-import axios from 'axios';
-import HttpCode from 'status-code-enum';
 import parseInteger from '@/utils/parseInteger';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError, HttpCode } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import apiMaterials from '@/stores/api/materials';
 import { confirm } from '@/utils/alert';
 import Page from '@/themes/default/components/Page';
@@ -10,6 +9,8 @@ import CriticalError, { ErrorType } from '@/themes/default/components/CriticalEr
 import Loading from '@/themes/default/components/Loading';
 import { Tabs, Tab } from '@/themes/default/components/Tabs';
 import Button from '@/themes/default/components/Button';
+
+// - Tabs
 import Infos from './tabs/Infos';
 import Documents from './tabs/Documents';
 
@@ -74,7 +75,10 @@ const MaterialView = defineComponent({
                     return [
                         <Button
                             type="edit"
-                            to={{ name: 'edit-material', params: { id } }}
+                            to={{
+                                name: 'edit-material',
+                                params: { id: id.toString() },
+                            }}
                             collapsible
                         >
                             {__('action-edit')}
@@ -154,21 +158,19 @@ const MaterialView = defineComponent({
                 this.selectTabFromRouting();
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving material #${this.id} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
-                }
-
                 // - On ne tente pas de refetch si on est en erreur critique...
                 if (this.fetchInterval) {
                     clearInterval(this.fetchInterval);
                 }
+
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving material #${this.id} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
     },
@@ -203,10 +205,10 @@ const MaterialView = defineComponent({
                         actions={tabsActions}
                     >
                         <Tab title={__('informations')} icon="info-circle">
-                            <Infos material={material} />
+                            <Infos material={material!} />
                         </Tab>
                         <Tab title={__('documents')} icon="file-pdf">
-                            <Documents ref="documents" material={material} />
+                            <Documents ref="documents" material={material!} />
                         </Tab>
                     </Tabs>
                 </div>

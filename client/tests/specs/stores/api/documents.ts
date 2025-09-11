@@ -4,7 +4,7 @@ import data from '@fixtures/documents';
 import type { SafeParseSuccess } from 'zod';
 
 describe('Documents Api', () => {
-    test('Schema', () => {
+    it('has a valid schema', () => {
         data.default().forEach((datum: any) => {
             const result = DocumentSchema.safeParse(datum);
             expect(result.success).toBeTruthy();

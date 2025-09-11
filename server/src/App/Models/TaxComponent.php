@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Une composante de taxe.
@@ -33,7 +33,7 @@ final class TaxComponent extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'tax_id' => V::custom([$this, 'checkTaxId']),
             'name' => V::custom([$this, 'checkName']),
             'is_rate' => V::boolType(),

@@ -13,6 +13,7 @@ use Loxya\Http\Enums\AppContext;
 use Loxya\Models\BaseModel;
 use Loxya\Support\Assert;
 use Loxya\Support\Period;
+use Loxya\Support\Str;
 use Slim\Http\ServerRequest as CoreRequest;
 
 class Request extends CoreRequest
@@ -72,9 +73,13 @@ class Request extends CoreRequest
                 $methods = null;
             }
 
-            $path = rtrim(Config::getBaseUri()->withPath($path)->getPath(), '/');
-            $isUriMatching = (bool) preg_match(sprintf('@^%s(?:/|$)@', preg_quote($path, '@')), $requestPath);
+            $exact = substr($path, -1) === '$';
+            $path = rtrim(rtrim(Config::getBaseUri()->withPath($path)->getPath(), '$'), '/');
             $isMethodMatching = $methods === null || in_array($requestMethod, (array) $methods, true);
+            $isUriMatching = (bool) preg_match(
+                sprintf('@^%s%s@', preg_quote($path, '@'), $exact ? '/?$' : '(?:/|$)'),
+                $requestPath,
+            );
 
             if ($isUriMatching && $isMethodMatching) {
                 return true;
@@ -85,11 +90,11 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve attribute as an integer value.
+     * Récupère un attribut sous forme d'entier.
      *
-     * @param string $key The key in which the attribute to retrieve is located.
+     * @param string $key La clé dans laquelle se trouve l'attribut à récupérer.
      *
-     * @return int The attribute as an integer value.
+     * @return int L'attribut sous forme de valeur entière.
      */
     public function getIntegerAttribute(string $key): int
     {
@@ -101,20 +106,69 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as a boolean value.
+     * Récupère un attribut sous forme de valeur d'énumération.
      *
-     * Returns `true` when value is "1", "true", "on", and "yes". Otherwise, returns `false`.
+     * @template T of BackedEnum
+     *
+     * @param string          $key       La clé dans laquelle se trouve l'attribut à récupérer.
+     * @param class-string<T> $enumClass La classe d'énumération.
+     *
+     * @return T La valeur d'énumération.
+     */
+    public function getEnumAttribute(string $key, string $enumClass): BackedEnum
+    {
+        Assert::enumExists($enumClass, 'Unknown enum class `%s`.');
+        Assert::isAOf($enumClass, BackedEnum::class, 'Enum class should be a backed enum.');
+
+        $rawValue = $this->getAttribute($key, null);
+        $value = $rawValue !== null ? $enumClass::tryFrom($rawValue) : null;
+        if ($value === null) {
+            throw new \LogicException(sprintf('Unexpected unknown enum attribute `%s`.', $key));
+        }
+        return $value;
+    }
+
+    /**
+     * Récupère un attribut sous forme de valeur brute d'énumération.
+     *
+     * Une valeur brute d'énumération est une valeur valide parmi une liste donnée.
+     *
+     * @template T of mixed
+     *
+     * @param string $key  La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param T[]    $enum Les valeurs valides de l'énumération.
+     *
+     * @return T La valeur brute d'énumération.
+     */
+    public function getRawEnumAttribute(string $key, array $enum): mixed
+    {
+        $rawValue = $this->getAttribute($key, null);
+        if ($rawValue === null || !in_array($rawValue, $enum, true)) {
+            throw new \LogicException(sprintf('Unexpected unknown raw enum attribute `%s`.', $key));
+        }
+        return $rawValue;
+    }
+
+    /**
+     * Récupère un paramètre de requête sous forme booléenne.
+     *
+     * Retourne `true` si la valeur est "1", "true", "on" ou "yes" ou que le paramètre
+     * est passé sans valeur (e.g. `?param`). Sinon, retourne `false`.
      *
      * @template D of bool|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return bool|D The boolean valu(or `null` if its the default value).
+     * @return bool|D La valeur booléenne (ou `null` si c'est la valeur par défaut).
      */
     public function getBooleanQueryParam(string $key, bool|null $default = false): bool|null
     {
         $rawValue = $this->getQueryParam($key, null);
+
+        // - Si le query-param est passé sous la forme `?param` (sans valeur)...
+        //   => On considère que sa valeur vaut `true`.
+        $rawValue = $rawValue === '' ? true : $rawValue;
 
         return $rawValue !== null
             ? filter_var($rawValue, FILTER_VALIDATE_BOOLEAN)
@@ -122,30 +176,30 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as a string (or `null` if its the default value).
+     * Récupère un paramètre de requête sous forme de chaîne (ou `null` si c'est la valeur par défaut).
      *
      * @template D of string|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return string|D The resulting string (or `null` if its the default value).
+     * @return string|D La chaîne résultante (ou `null` si c'est la valeur par défaut).
      */
     public function getStringQueryParam(string $key, string|null $default = null): string|null
     {
         $rawValue = $this->getQueryParam($key, null);
-        return $rawValue !== null && is_string($rawValue) ? trim((string) $rawValue) : $default;
+        return $rawValue !== null && is_string($rawValue) ? trim($rawValue) : $default;
     }
 
     /**
-     * Retrieve query parameter as a string array.
+     * Récupère un paramètre de requête sous forme de tableau de chaînes.
      *
      * @template D of string[]
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return string[]|D The resulting string array.
+     * @return string[]|D Le tableau de chaînes résultant.
      */
     public function getStringArrayQueryParam(string $key, array $default = []): array
     {
@@ -156,35 +210,36 @@ class Request extends CoreRequest
 
         $rawValues = !is_array($rawValues) ? [$rawValues] : $rawValues;
         return array_map(
-            static fn ($rawValue) => trim((string) $rawValue),
+            static fn ($rawValue) => trim($rawValue),
             array_filter($rawValues, 'is_string'),
         );
     }
 
     /**
-     * Retrieve query parameter as a search array.
+     * Récupère un paramètre de requête sous forme de tableau de chaînes de recherche.
      *
-     * @param string $key The key in which the parameter to retrieve is located.
+     * @param string $key La clé dans laquelle se trouve le paramètre à récupérer.
      *
-     * @return string[] The resulting search array.
+     * @return string[] Le tableau de chaînes de recherche résultant.
      */
     public function getSearchArrayQueryParam(string $key): array
     {
         return array_filter(
             $this->getStringArrayQueryParam($key),
-            static fn ($searchTerm) => strlen($searchTerm) >= 2,
+            static fn ($searchTerm) => mb_strlen($searchTerm) >= 2,
         );
     }
 
     /**
-     * Retrieve query parameter as an integer value (or `null` if its the default value).
+     * Récupère un paramètre de requête sous forme de valeur entière
+     * (ou `null` si c'est la valeur par défaut).
      *
      * @template D of int|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return int|D The integer value (or `null` if its the default value).
+     * @return int|D La valeur entière (ou `null` si c'est la valeur par défaut).
      */
     public function getIntegerQueryParam(string $key, int|null $default = null): int|null
     {
@@ -193,14 +248,14 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as a integer array.
+     * Récupère un paramètre de requête sous forme de tableau d'entiers.
      *
      * @template D of int[]
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return int[]|D The resulting integer array.
+     * @return int[]|D Le tableau d'entiers résultant.
      */
     public function getIntegerArrayQueryParam(string $key, array $default = []): array
     {
@@ -217,13 +272,14 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as a date (or `null` if its the default value).
+     * Récupère un paramètre de requête sous forme de date
+     * (ou `null` si c'est la valeur par défaut).
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param string|DateTimeInterface|null $default The default value if the parameter does not exist.
-     * @param DateTimeZone|string|null $tz The timezone to use for the value / default value.
+     * @param string                        $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param string|DateTimeInterface|null $default La valeur par défaut si le paramètre n'existe pas.
+     * @param DateTimeZone|string|null      $tz      Le fuseau horaire à utiliser pour la valeur / valeur par défaut.
      *
-     * @return CarbonInterface|null The date (or `null` if its the default value).
+     * @return CarbonInterface|null La date (ou `null` si c'est la valeur par défaut).
      */
     public function getDateQueryParam(
         string $key,
@@ -242,21 +298,25 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as a period (or `null` if its the default value).
+     * Récupère un paramètre de requête sous forme de période
+     * (ou `null` si c'est la valeur par défaut).
      *
      * @template D of Period|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return Period|D The period (or `null` if its the default value).
+     * @return Period|D La période (ou `null` si c'est la valeur par défaut).
      */
     public function getPeriodQueryParam(string $key, Period|null $default = null): Period|null
     {
         $rawValue = $this->getQueryParam($key, null);
         if ($rawValue !== null && is_array($rawValue)) {
             try {
-                return Period::fromArray($rawValue);
+                $computedPeriod = Period::fromArray($rawValue);
+                if (!$computedPeriod->isInfinite()) {
+                    return $computedPeriod;
+                }
             } catch (\Throwable) {
                 // - Default value.
             }
@@ -265,17 +325,19 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as a raw enum value (or `null` if its the default value).
-     * A raw enum value is a valid value from a list of given values.
+     * Récupère un paramètre de requête sous forme de valeur brute d'énumération
+     * (ou `null` si c'est la valeur par défaut).
+     *
+     * Une valeur brute d'énumération est une valeur valide parmi une liste donnée.
      *
      * @template T of mixed
      * @template D of mixed|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param T[] $enum The raw enum valid values.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param T[]    $enum    Les valeurs valides de l'énumération.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return T|D The raw enum value (or `null` if its the default value).
+     * @return T|D La valeur brute d'énumération (ou `null` si c'est la valeur par défaut).
      */
     public function getRawEnumQueryParam(string $key, array $enum, mixed $default = null): mixed
     {
@@ -286,16 +348,17 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as an enum value (or `null` if its the default value).
+     * Récupère un paramètre de requête sous forme de valeur d'énumération
+     * (ou `null` si c'est la valeur par défaut).
      *
      * @template T of BackedEnum
      * @template D of BackedEnum|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param class-string<T> $enumClass The enum class.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string          $key       La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param class-string<T> $enumClass La classe d'énumération.
+     * @param D               $default   La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return T|D The enum value (or `null` if its the default value).
+     * @return T|D La valeur d'énumération (ou `null` si c'est la valeur par défaut).
      */
     public function getEnumQueryParam(string $key, string $enumClass, BackedEnum|null $default = null): BackedEnum|null
     {
@@ -312,15 +375,17 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve query parameter as an `order by` valid value for a specific model.
+     * Récupère un paramètre de requête sous forme de valeur
+     * valide pour un `order by` d'un modèle donné.
      *
-     * IF the query parameter value is invalid, a call to `getDefaultOrderColumn()`
-     * on the specified model will be done and the returned value will be used as default.
+     * Si le paramètre de requête est invalide, un appel à `getDefaultOrderColumn()`
+     * sur le modèle spécifié sera effectué et la valeur retournée sera utilisée comme
+     * valeur par défaut.
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param string $modelClass The model for which the `order byù column should be retrieved.
+     * @param string $key        La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param string $modelClass Le modèle pour lequel la colonne `order by` doit être récupérée.
      *
-     * @return string|null The name of the column (or `null` if its the default returned by the model).
+     * @return string|null Le nom de la colonne (ou `null` si c'est la valeur par défaut retournée par le modèle).
      */
     public function getOrderByQueryParam(string $key, string $modelClass): string|null
     {
@@ -340,17 +405,19 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve body parameter as a raw enum value (or `null` if its the default value).
-     * A raw enum value is a valid value from a list of given values.
+     * Récupère un champ dans le corps de la requête sous forme de valeur
+     * brute d'énumération (ou `null` si c'est la valeur par défaut).
+     *
+     * Une valeur brute d'énumération est une valeur valide parmi une liste donnée.
      *
      * @template T of mixed
      * @template D of mixed|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param T[] $enum The raw enum valid values.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param T[]    $enum    Les valeurs valides de l'énumération.
+     * @param D      $default La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return T|D The raw enum value (or `null` if its the default value).
+     * @return T|D La valeur brute d'énumération (ou `null` si c'est la valeur par défaut).
      */
     public function getRawEnumBodyParam(string $key, array $enum, mixed $default = null): mixed
     {
@@ -365,16 +432,17 @@ class Request extends CoreRequest
     }
 
     /**
-     * Retrieve body parameter as an enum value (or `null` if its the default value).
+     * Récupère un champ dans le corps de la requête sous forme de valeur
+     * d'énumération (ou `null` si c'est la valeur par défaut).
      *
      * @template T of BackedEnum
      * @template D of BackedEnum|null
      *
-     * @param string $key The key in which the parameter to retrieve is located.
-     * @param class-string<T> $enumClass The enum class.
-     * @param D $default The default value if the parameter does not exist.
+     * @param string          $key       La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param class-string<T> $enumClass La classe d'énumération.
+     * @param D               $default   La valeur par défaut si le paramètre n'existe pas.
      *
-     * @return T|D The enum value (or `null` if its the default value).
+     * @return T|D La valeur d'énumération (ou `null` si c'est la valeur par défaut).
      */
     public function getEnumBodyParam(string $key, string $enumClass, BackedEnum|null $default = null): BackedEnum|null
     {
@@ -388,5 +456,72 @@ class Request extends CoreRequest
         }
 
         return $enumClass::tryFrom($rawValue) ?? $default;
+    }
+
+    /**
+     * Permet de récupérer l'IP du client si disponible.
+     *
+     * @return ?string L'IP du client.
+     */
+    public function getClientIp(): ?string
+    {
+        return $this->getAttribute('ip');
+    }
+
+    /**
+     * Vérifie si un en-tête HTTP est présent, en tenant compte d'une forme alternative.
+     *
+     * Tente d'abord une vérification directe avec `$this->hasHeader($name)`.
+     * Si la valeur n'est pas trouvée, essaie de retrouver sa forme transformée dans `$_SERVER`
+     * (ex. `X-Guest-Token` devient `HTTP_X_GUEST_TOKEN`).
+     *
+     * @param string $name Le nom de l'en-tête HTTP (sensible à la casse).
+     *
+     * @return bool `true` si l'en-tête est présent sous l'une des deux formes, sinon `false`.
+     */
+    public function hasNormalizedHeader(string $name): bool
+    {
+        if ($this->hasHeader($name)) {
+            return true;
+        }
+
+        $fallbackKey = self::getAlternativeHeaderName($name);
+        return $this->hasHeader($fallbackKey);
+    }
+
+    /**
+     * Récupère la valeur d'un en-tête HTTP de manière normalisée.
+     *
+     * Tente d'abord de lire le header via la méthode standard `$request->getHeaderLine($name)`.
+     * Si la valeur n'est pas trouvée, essaie de retrouver sa forme transformée dans `$_SERVER`
+     * (ex. `X-Guest-Token` devient `HTTP_X_GUEST_TOKEN`).
+     *
+     * @see \Slim\Psr7\Request::getHeaderLine()
+     *
+     * @param string $name Le nom de l'en-tête HTTP (sensible à la casse).
+     *
+     * @return string La valeur de l'en-tête si trouvée, sinon une chaîne vide.
+     */
+    public function getNormalizedHeaderLine(string $name): string
+    {
+        if ($this->hasHeader($name)) {
+            return $this->getHeaderLine($name);
+        }
+
+        $fallbackKey = self::getAlternativeHeaderName($name);
+        return $this->getHeaderLine($fallbackKey);
+    }
+
+    /**
+     * Génère le nom d'un en-tête HTTP tel qu'il apparaîtrait dans `$_SERVER`.
+     * (par exemple `X-Guest-Token` retournera `HTTP_X_GUEST_TOKEN`)
+     *
+     * @param string $name Le nom original de l'en-tête.
+     *
+     * @return string Le nom transformé au format `$_SERVER`.
+     */
+    private static function getAlternativeHeaderName(string $name): string
+    {
+        return sprintf('HTTP_%s', strtoupper(Str::snake($name)));
     }
 }

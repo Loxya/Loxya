@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace Loxya\Services;
 
 use Brick\Math\BigDecimal as Decimal;
+use League\MimeTypeDetection\FinfoMimeTypeDetector;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\Feature;
 use Loxya\Support\Assert;
-use Loxya\Support\BaseUri;
 use Loxya\Support\Period;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ResponseInterface;
@@ -57,6 +57,7 @@ final class View
         $this->view->getEnvironment()->addGlobal('env', Config::getEnv());
         $this->view->getEnvironment()->addGlobal('locale', $i18n->getLocale());
         $this->view->getEnvironment()->addGlobal('lang', $i18n->getLanguage());
+        $this->view->getEnvironment()->addGlobal('organization', Config::get('companyData'));
 
         //
         // - Extensions
@@ -94,6 +95,9 @@ final class View
         // - Filters
         //
 
+        $this->view->getEnvironment()->addFilter(
+            new TwigFilter('image64', $this->createBase64Image()),
+        );
         $this->view->getEnvironment()->addFilter(
             new TwigFilter('ucfirst', $this->ucfirstFilter()),
         );
@@ -193,30 +197,48 @@ final class View
         );
     }
 
+    private function createBase64Image(): callable
+    {
+        return static function (string $path) {
+            $fullPath = sprintf('%s/%s', rtrim(PUBLIC_FOLDER, '/'), ltrim($path, '/'));
+
+            $file = new \SplFileObject($fullPath);
+            $file->rewind();
+
+            $data = '';
+            while (!$file->eof()) {
+                $data .= $file->fgets();
+            }
+
+            $mimeType = (new FinfoMimeTypeDetector())->detectMimeTypeFromPath($fullPath);
+            if ($mimeType === null) {
+                throw new \RuntimeException("Unable to detect the file's mime type.");
+            }
+
+            return explode('/', $mimeType, 2)[0] === 'text'
+                ? sprintf('data:%s,%s', $mimeType, rawurlencode($data))
+                : sprintf('data:%s;base64,%s', $mimeType, base64_encode($data));
+        };
+    }
+
     private function getClientAsset(): callable
     {
-        $baseUri = Config::getEnv() === 'development'
-            ? 'http://localhost:8081'
-            : Config::getBaseUri()->getPath();
-
-        $basePath = (string) (new BaseUri($baseUri))->withPath('/webclient');
-        return static fn ($path) => (
-            vsprintf('%s/%s?v=%s', [
-                rtrim($basePath, '/'),
-                ltrim($path, '/'),
-                Config::getVersion(),
-            ])
+        return fn ($path) => $this->getAsset()(
+            sprintf('/webclient/%s', ltrim($path, '/')),
         );
     }
 
     private function getAsset(): callable
     {
-        $basePath = Config::getBaseUri()->getPath();
-        return static fn ($path) => (
-            vsprintf('%s/%s?v=%s', [
-                rtrim($basePath, '/'),
+        $baseUri = Config::getBaseUri();
+
+        return static fn (string $path, bool $full = false) => (
+            vsprintf('%s/%s%s', [
+                rtrim($full === true ? (string) $baseUri : $baseUri->getPath(), '/'),
                 ltrim($path, '/'),
-                Config::getVersion(),
+                Config::getEnv() !== 'test'
+                    ? sprintf('?v=%s', Config::getVersion())
+                    : '',
             ])
         );
     }
@@ -264,14 +286,18 @@ final class View
     private function formatPeriodFilter(): callable
     {
         return function (Environment $env, Period $period, string $format = 'short', ?string $locale = null): string {
-            $formatDate = static function (\DateTimeInterface $date, bool $withTime) use ($env, $format, $locale) {
-                $intlExtension = new IntlExtension();
+            $formatDate = static function (\DateTimeInterface|null $date, bool $withTime) use ($env, $format, $locale) {
+                if ($date === null) {
+                    return '?';
+                }
 
+                $intlExtension = new IntlExtension();
                 $dateFormat = match ($format) {
                     'minimalist' => 'medium',
                     'sentence' => 'short',
                     default => $format,
                 };
+
                 $formattedDate = $intlExtension->formatDate(
                     $env,
                     $date,
@@ -299,7 +325,7 @@ final class View
             };
 
             if ($period->isFullDays()) {
-                $isOneDayPeriod = $period->asDays() === 1;
+                $isOneDayPeriod = !$period->isInfinite() && $period->asDays() === 1;
                 if ($isOneDayPeriod) {
                     $formattedDate = $formatDate($period->getStartDate(), false);
                     return match ($format) {
@@ -311,23 +337,23 @@ final class View
 
                 $formattedDates = [
                     $formatDate($period->getStartDate(), false),
-                    $formatDate($period->getEndDate()->subDay(), false),
+                    $formatDate($period->getEndDate()?->subDay(), false),
                 ];
-                return match ($format) {
-                    'minimalist' => vsprintf('%s ⇒ %s', $formattedDates),
-                    'sentence' => $this->i18n->translate('period-in-sentence', $formattedDates),
-                    default => $this->i18n->translate('from-date-to-date', $formattedDates),
-                };
+            } else {
+                $formattedDates = [
+                    $formatDate($period->getStartDate(), true),
+                    $formatDate($period->getEndDate(), true),
+                ];
             }
 
-            $formattedDates = [
-                $formatDate($period->getStartDate(), true),
-                $formatDate($period->getEndDate(), true),
-            ];
             return match ($format) {
                 'minimalist' => vsprintf('%s ⇒ %s', $formattedDates),
-                'sentence' => $this->i18n->translate('period-in-sentence', $formattedDates),
-                default => $this->i18n->translate('from-date-to-date', $formattedDates),
+                'sentence' => !$period->isInfinite()
+                    ? $this->i18n->translate('period-in-sentence', $formattedDates)
+                    : $this->i18n->translate('period-in-sentence-no-end', $formattedDates),
+                default => !$period->isInfinite()
+                    ? $this->i18n->translate('from-date-to-date', $formattedDates)
+                    : $this->i18n->translate('from-date-to-unknown', $formattedDates),
             };
         };
     }
@@ -342,33 +368,20 @@ final class View
             ?string $locale = null,
         ): string {
             Assert::inArray($part, ['start', 'end'], 'Invalid period part.');
+            Assert::true(
+                $part !== 'end' || !$period->isInfinite(),
+                'Unable to format the end part of an infinite period.',
+            );
 
             $formatDate = static function (\DateTimeInterface $date, bool $withTime) use ($env, $format, $locale) {
                 $intlExtension = new IntlExtension();
 
-                $formattedDate = $intlExtension->formatDate(
-                    $env,
-                    $date,
-                    $format,
-                    '',
-                    null,
-                    'gregorian',
-                    $locale,
-                );
+                $formattedDate = $intlExtension->formatDate($env, $date, $format, '', null, 'gregorian', $locale);
                 if (!$withTime) {
                     return $formattedDate;
                 }
 
-                $formattedTime = $intlExtension->formatTime(
-                    $env,
-                    $date,
-                    'medium',
-                    'HH:mm',
-                    null,
-                    'gregorian',
-                    $locale,
-                );
-
+                $formattedTime = $intlExtension->formatTime($env, $date, 'medium', 'HH:mm', null, 'gregorian', $locale);
                 return sprintf('%s - %s', $formattedDate, $formattedTime);
             };
 

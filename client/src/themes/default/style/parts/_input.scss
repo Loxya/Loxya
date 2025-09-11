@@ -22,7 +22,7 @@ textarea {
     &:-webkit-autofill:focus {
         -webkit-text-fill-color: $input-autofill-text-color;
         box-shadow: 0 0 0 1000px $input-autofill-background-color inset;
-        transition: background-color 50000ms ease-in-out 0;
+        transition: background-color 50000ms ease-in-out 0ms;
     }
 
     &:focus {

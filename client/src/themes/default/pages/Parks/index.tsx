@@ -2,15 +2,14 @@ import './index.scss';
 import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
-import HttpCode from 'status-code-enum';
+import { HttpCode, RequestError } from '@/globals/requester';
 import isTruthy from '@/utils/isTruthy';
 import apiParks from '@/stores/api/parks';
 import config from '@/globals/config';
 import { confirm } from '@/utils/alert';
 import formatAddress from '@/utils/formatAddress';
 import mergeDifference from '@/utils/mergeDifference';
-import { defineComponent } from '@vue/composition-api';
-import { isRequestErrorStatusCode } from '@/utils/errors';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import Page from '@/themes/default/components/Page';
 import Fragment from '@/components/Fragment';
@@ -49,7 +48,7 @@ type Data = {
 
 type InstanceProperties = {
     refreshTableDebounced: (
-        | DebouncedMethod<typeof Parks, 'refresh'>
+        | DebouncedMethod<typeof Parks, 'refreshTable'>
         | undefined
     ),
 };
@@ -164,7 +163,7 @@ const Parks = defineComponent({
                         <TotalAmount park={park} />
                     ),
                 },
-                !isTrashDisplayed && {
+                (!isTrashDisplayed) && {
                     key: 'events',
                     title: __('events'),
                     class: 'Parks__cell Parks__cell--events',
@@ -174,7 +173,12 @@ const Parks = defineComponent({
                         }
 
                         return (
-                            <Link to={{ name: 'schedule', query: { park: id } }}>
+                            <Link
+                                to={{
+                                    name: 'schedule',
+                                    query: { park: id.toString() },
+                                }}
+                            >
                                 {__('page.parks.display-events-for-park')}
                             </Link>
                         );
@@ -209,7 +213,10 @@ const Parks = defineComponent({
                                 <Dropdown>
                                     <Button
                                         type="edit"
-                                        to={{ name: 'edit-park', params: { id } }}
+                                        to={{
+                                            name: 'edit-park',
+                                            params: { id: id.toString() },
+                                        }}
                                     >
                                         {__('action-edit')}
                                     </Button>
@@ -244,12 +251,9 @@ const Parks = defineComponent({
     watch: {
         filters: {
             handler() {
-                // @ts-expect-error -- `this` fait bien référence au component.
-                this.refreshTableDebounced();
+                this.refreshTableDebounced!();
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     persistFilters(FILTERS_PERSISTENCE_KEY, this.filters);
                 }
             },
@@ -379,7 +383,7 @@ const Parks = defineComponent({
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
                 return data;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     this.refreshTable();
                     return undefined;
                 }

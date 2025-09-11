@@ -4,6 +4,58 @@ Tous les changements notables sur le projet sont documentés dans ce fichier.
 
 Ce projet adhère au principe du [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.0 (2025-09-11)
+
+- Affiche la période de mobilisation dans la fenêtre de détails de l'événement
+  (onglet "information"), si elle est différente de la période d'exploitation.
+- Vous pouvez dorénavant anti-dater les inventaires de retour, pour acter le retour
+  du matériel d'un événement à une date antérieure.
+- Il est désormais possible de configurer la politique de gestion des retours sur manuel.  
+  Dans ce mode, le matériel d'un événement n'est plus automatiquement considéré comme retourné 
+  à la fin de sa mobilisation. C'est l'inventaire de retour qui fait foi : tant qu'il n'est pas 
+  terminé, le matériel reste marqué comme non retourné, et donc absent du stock courant.  
+  L'événement concerné sera alors affiché comme en retard tant que son inventaire de retour 
+  n'aura pas été terminé.  
+  ⚠️ Attention, quelques points sont à prendre en compte :
+  - Ce mode nécessite une réalisation rigoureuse des inventaires de retour. 
+    Sans cela, du matériel restera bloqué indéfiniment et les événements continueront à 
+    apparaître sur le planning, leur fin effective ne pouvant plus être déterminée vu le retard.
+  - Ce mode peut entraîner des pénuries sur les événements suivants ceux en retard (le matériel 
+    n'étant pas revenu à temps). L'inventaire de départ de ces événements ne pourra alors pas 
+    être effectué tant que les pénuries ne sont pas résolues — ce comportement reste inchangé.
+  - Si vous passez du mode automatique au mode manuel, cela peut faire apparaître des pénuries 
+    sur des événements passés, notamment si les inventaires de retour des événements précédents 
+    n'ont pas été réalisés. La nouvelle fonctionnalité permettant de spécifier une date antérieure 
+    lors d'un inventaire de retour vous permettra de régulariser les retours en retard qui ne 
+    l'étaient pas réellement.
+  N'hésitez pas à venir vers nous si vous disposez d'un abonnement à l'une de nos offres : 
+  nous pourrons vous accompagner dans la transition entre les deux modes de la meilleure manière.
+- Un nouveau niveau d'accès "Supervision" a été ajouté, donnant les mêmes droits que l'accès "Administration"
+  sauf celui de gérer les utilisateurs, les parcs de matériel et les paramètres du logiciel. Il permet
+  toutefois de gérer les tags, les catégories et les sous-catégories de matériel.
+- Le niveau d'accès "Gestion" a été renommé en "Opération" (opérateur). Les droits de ce niveau d'accès
+  ne changent pas.
+- Ajout de la réinitialisation de mot de passe en autonomie via un formulaire accessible depuis la page de connexion.  
+  Par mesure de sécurité, l'application ne révèle jamais si l'adresse saisie dans la demande de réinitialisation 
+  est associée à un compte : un message indiquant l'envoi d'un code sera affiché dans tous les cas. Veuillez aussi 
+  noter que la réinitialisation du mot de passe des administrateurs n'est pas possible via ce moyen. 
+  Veuillez continuer à nous contacter si vous êtes dans ce cas.
+- Les paramètres suivants ont été ajoutés pour personnaliser l'affichage des devis et des factures :
+  - Texte personnalisé (avec un titre si besoin), à afficher au-dessus de la signature des devis, et
+    en dessous du tableau des totaux dans les factures.
+  - Affichage ou non de la description de l'événement (en haut de la première page).
+  - Affichage ou non de la période de mobilisation (en haut de la première page).
+  - Affichage ou non de la valeur totale de remplacement (en haut de la première page).
+  - Affichage ou non des totaux des caractéristiques spéciales en bas de la dernière page.
+  - Affichage ou non des photos du matériel (en miniatures) dans la liste.
+  - Affichage ou non des descriptions du matériel dans la liste.
+  - Affichage ou non des valeurs de remplacement du matériel dans la liste.
+  - Affichage ou non des prix unitaires du matériel dans la liste.
+- Dans les fiches de sorties, la période de mobilisation (dates d'enlèvement et de retour prévues)
+  est affichée en haut de la première page (uniquement dans le cas où elle est différente de la
+  période de l'événement).
+- Les factures avec un montant total négatif contiennent maintenant le terme "Avoir" (#529).
+
 ## 1.1.2 (2025-05-02)
 
 - Corrige les champs de recherche qui perdaient le terme recherché au changement de page.

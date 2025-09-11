@@ -5,8 +5,8 @@ import data from '@fixtures/countries';
 describe('Countries Api', () => {
     describe('all()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.default() });
-            expect(await apiCountries.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(data.default());
+            await expect(apiCountries.all()).resolves.toMatchSnapshot();
         });
     });
 });

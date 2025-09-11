@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import config from '@/globals/config';
 import formatBytes from '@/utils/formatBytes';
 import Button from '@/themes/default/components/Button';
@@ -9,11 +9,19 @@ import { getIconFromFile } from '../../../_utils';
 import { FileError } from '../_utils';
 
 import type { Upload as UploadType } from '../index';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /** L'object représentant l'upload en cours. */
     upload: UploadType,
+
+    /**
+     * Fonction appelée lorsque l'annulation de l'envoi a
+     * été demandée par l'utilisateur.
+     *
+     * @param uid - Uid de l'upload annulé.
+     */
+    onCancel?(uid: UploadType['uid']): void,
 };
 
 /** Affiche l'état d'un fichier en cours d'upload. */
@@ -23,6 +31,11 @@ const FileManagerUpload = defineComponent({
         upload: {
             type: Object as PropType<Required<Props>['upload']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
+            default: undefined,
         },
     },
     emits: ['cancel'],

@@ -6,8 +6,7 @@ namespace Loxya\Tests;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Loxya\App;
 use Loxya\Errors\Enums\ApiErrorCode;
-use Loxya\Kernel;
-use Loxya\Services\Auth;
+use Slim\HttpCache\Cache as HttpCache;
 
 abstract class ApiTestCase extends TestCase
 {
@@ -23,15 +22,7 @@ abstract class ApiTestCase extends TestCase
         $this->client = new ApiTestClient($this->app);
 
         // - Configuration spécifique aux tests.
-        $this->app->add(new \Slim\HttpCache\Cache('private', 0));
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        Auth::reset();
-        Kernel::reset();
+        $this->app->add(new HttpCache('private', 0));
     }
 
     // ------------------------------------------------------

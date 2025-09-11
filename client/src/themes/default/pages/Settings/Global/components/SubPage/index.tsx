@@ -1,9 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import IconMessage from '@/themes/default/components/IconMessage';
 
-import type { VNode } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /** Le titre de la sous-page. */
@@ -26,7 +25,7 @@ type Props = {
      * Les éventuelles actions contextuelles de la page.
      * (sous forme de nœuds vue dans un tableau)
      */
-    actions?: VNode[],
+    actions?: JSX.Element[],
 };
 
 /** Sous-page des paramètres globaux. */

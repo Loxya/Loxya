@@ -1,7 +1,7 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /** Le titre de l'onglet. */

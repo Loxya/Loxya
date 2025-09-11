@@ -7,7 +7,7 @@ import stringCompare from '@/utils/stringCompare';
  * La comparaison utilisent les règles de la locale courante, en ignorant la
  * ponctuation et la casse.
  *
- * @see {@link stringCompare} - Pour en savoir plus sur l’algorithme de comparaison.
+ * @see {@link stringCompare} - Pour en savoir plus sur l'algorithme de comparaison.
  *
  * @param haystack - La chaîne dans laquelle on souhaite chercher.
  * @param needle - La chaîne que l'on recherche.

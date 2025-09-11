@@ -1,3 +1,4 @@
+welcome: 'Welcome!'
 hello-name: 'Hello {name}!'
 action-add: Add
 action-edit: Edit
@@ -61,6 +62,9 @@ n-persons:
 name-and-n-others:
     - '{name} and {count} other'
     - '{name} and {count} others'
+initially-planned-period: Initially {period}
+overdue-since: Overdue since {duration}
+late-return-on: Returned on {date} ({duration} late)
 add-comment: Add a comment
 modify-comment: Modify comment
 save: Save
@@ -84,9 +88,10 @@ other: Other
 documents: Documents
 billing: Billing
 history: History
-special-attributes: Special attributes
+properties: Properties
 schedule: Schedule
 pseudo: Pseudo
+email-address: E-mail address
 email-address-or-pseudo: E-mail address or Pseudo
 password: Password
 first-name: First name
@@ -96,6 +101,7 @@ nickname: Nickname
 company: Company
 person: Person
 legal-name: Legal name
+registration-id: Registration number
 contact-details: Contact details
 email: E-mail
 phone: Phone
@@ -109,7 +115,8 @@ access: Access
 group: Group
 groups:
     administration: Administration
-    management: Management
+    supervision: Supervision
+    operation: Operation
     readonly-planning-general: General schedule consultation
     readonly-planning-self: Own schedule consultation
 owner: Owner
@@ -213,6 +220,7 @@ into: into
 event-managed-by: Managed by {name}
 in-progress: in progress
 invoice: Invoice
+invoices: Invoices
 estimate: Estimate
 estimates: Estimates
 missing-beneficiary: Missing beneficiary
@@ -365,3 +373,4 @@ quick-creation:
         has-missing-materials: This event has missing materials.
         needs-its-return-inventory: It's necessary to make the return inventory of this event!
         has-not-returned-materials: This event has some not-returned materials.
+        overdue: The return of the equipment for this event is overdue.

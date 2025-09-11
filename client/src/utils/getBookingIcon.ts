@@ -1,5 +1,6 @@
 import DateTime from '@/utils/datetime';
 import { BookingEntity } from '@/stores/api/bookings';
+import config, { ReturnPolicy } from '@/globals/config';
 
 import type { BookingExcerpt, BookingSummary } from '@/stores/api/bookings';
 import type { EventDetails } from '@/stores/api/events';
@@ -20,9 +21,9 @@ function getBookingIconCore(context: BookingContext, now: DateTime): string | nu
 function getBookingIconCore(context: BookingContext, now: DateTime): string | null {
     const { isExcerpt, booking, type } = context;
     const isPast = booking.mobilization_period.isBefore(now);
-    const isFuture = !booking.mobilization_period.isBeforeOrDuring(now);
     const {
         is_archived: isArchived,
+        has_materials: hasMaterials,
         is_return_inventory_done: isReturnInventoryDone,
         has_not_returned_materials: hasNotReturnedMaterials,
     } = booking;
@@ -37,9 +38,22 @@ function getBookingIconCore(context: BookingContext, now: DateTime): string | nu
         return true;
     })();
 
-    // - Si le booking est à venir et qu'il manque du matériel.
+    const hasUnassignedMandatoryPosition: boolean | null = (() => {
+        if (type === BookingEntity.EVENT) {
+            return booking.has_unassigned_mandatory_positions;
+        }
+        if (type === BOOKING_INTERNAL_TYPE && booking.entity === BookingEntity.EVENT) {
+            return booking.has_unassigned_mandatory_positions;
+        }
+        return null;
+    })();
+    if (!isPast && hasUnassignedMandatoryPosition) {
+        return 'exclamation-triangle';
+    }
+
+    // - Si le booking est en cours ou à venir et qu'il manque du matériel.
     //   (ou qu'on si on a pas encore l'info. car c'est un extrait, on retourne `null`)
-    if (isFuture) {
+    if (!isPast) {
         if (isExcerpt) {
             return null;
         }
@@ -49,9 +63,18 @@ function getBookingIconCore(context: BookingContext, now: DateTime): string | nu
         }
     }
 
-    // - Si le booking est passé et qu'il a du matériel manquant.
-    if (isPast && !isArchived && hasNotReturnedMaterials) {
-        return 'exclamation-triangle';
+    if (isPast && !isArchived) {
+        // - Si le booking est passé et qu'il a du matériel manquant.
+        if (hasNotReturnedMaterials) {
+            return 'exclamation-triangle';
+        }
+
+        // - Si on est en mode manuel, que le booking est passé et
+        //   que l'inventaire de retour n'est pas fait.
+        const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
+        if (useManualReturn && !isReturnInventoryDone && hasMaterials) {
+            return 'exclamation-triangle';
+        }
     }
 
     if (isArchived) {
@@ -70,7 +93,7 @@ function getBookingIconCore(context: BookingContext, now: DateTime): string | nu
     // - C'est un booking passé, confirmé et non archivé.
     // => Si son inventaire de retour est fait, il est complet vu un guard plus haut = Icône "Ok".
     // => Si son inventaire de retour n'est pas fait = Icône "En attente / retard".
-    return isReturnInventoryDone ? 'check' : 'clock';
+    return isReturnInventoryDone || !hasMaterials ? 'check' : 'clock';
 }
 
 //

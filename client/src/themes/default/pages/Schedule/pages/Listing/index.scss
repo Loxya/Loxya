@@ -14,23 +14,13 @@
     }
 
     &__table {
+        $sub-clock: &;
+
         &__row {
             cursor: pointer;
 
-            &:hover > #{$block}__cell {
-                background-color: color.adjust(globals.$bg-color-table-td, $lightness: 5%);
-            }
-
             &--with-warning {
-                > #{$block}__cell {
-                    background-color: color.adjust(globals.$text-danger-color, $alpha: -0.7);
-                }
-
-                &:hover > #{$block}__cell {
-                    background-color: color.adjust(globals.$text-danger-color, $alpha: -0.6);
-                }
-
-                #{$block}__cell--icon {
+                #{$sub-clock}__cell--icon {
                     color: globals.$text-danger-color;
                 }
             }
@@ -93,6 +83,21 @@
             &:not(:last-child)::after {
                 content: ',';
             }
+        }
+    }
+
+    &__overdue {
+        overflow: hidden;
+        color: globals.$text-soft-color;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        @include globals.icon('hourglass', 'regular') {
+            margin-right: globals.$spacing-thin;
+        }
+
+        &--ongoing {
+            color: color.adjust(globals.$text-danger-color, $lightness: 5%);
         }
     }
 

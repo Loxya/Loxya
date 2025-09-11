@@ -1,0 +1,508 @@
+diff --git a/node_modules/vue2-datepicker/index.esm.js b/node_modules/vue2-datepicker/index.esm.js
+index ad89f7b..c846be2 100644
+--- a/node_modules/vue2-datepicker/index.esm.js
++++ b/node_modules/vue2-datepicker/index.esm.js
+@@ -781,6 +781,11 @@ var __vue_render__ = function __vue_render__() {
+     }
+   }, [_vm.visible ? _c('div', {
+     class: _vm.prefixClass + "-datepicker-main " + _vm.prefixClass + "-datepicker-popup",
++    on: {
++      "click": function (e) {
++        e.stopImmediatePropagation();
++      }
++    },
+     style: {
+       top: _vm.top,
+       left: _vm.left,
+@@ -2077,7 +2082,16 @@ var CalendarRange = {
+       default: 'mx'
+     }
+   },
+-  props: _objectSpread2({}, CalendarPanel.props),
++  props: _objectSpread2({}, CalendarPanel.props, {
++    readonly: {
++        type: [Boolean, String],
++        default: false,
++        validator: (value) => (
++          typeof value === 'boolean' ||
++          ['start', 'end'].includes(value)
++        ),
++    },
++  }),
+   data: function data() {
+     return {
+       innerValue: [],
+@@ -2125,7 +2139,29 @@ var CalendarRange = {
+           startValue = _this$innerValue[0],
+           endValue = _this$innerValue[1];
+ 
+-      if (isValidDate(startValue) && !isValidDate(endValue)) {
++      const isValidStart = isValidDate(startValue);
++      const isValidEnd = isValidDate(endValue);
++
++      if (this.readonly !== false) {
++        if (isValidStart || isValidEnd) {
++            if (this.readonly === 'start') {
++                if (!isValidStart || startValue.getTime() > date.getTime()) {
++                    return;
++                }
++                this.innerValue = [startValue, date];
++            }
++            if (this.readonly === 'end') {
++                if (!isValidEnd || date.getTime() > endValue.getTime()) {
++                    return;
++                }
++                this.innerValue = [date, endValue];
++            }
++            this.emitDate(this.innerValue, type);
++        }
++        return;
++      }
++
++      if (isValidStart && !isValidEnd) {
+         if (startValue.getTime() > date.getTime()) {
+           this.innerValue = [date, startValue];
+         } else {
+@@ -2133,9 +2169,10 @@ var CalendarRange = {
+         }
+ 
+         this.emitDate(this.innerValue, type);
+-      } else {
+-        this.innerValue = [date, new Date(NaN)];
++        return;
+       }
++
++      this.innerValue = [date, new Date(NaN)];
+     },
+     onDateMouseEnter: function onDateMouseEnter(cell) {
+       this.hoveredValue = cell;
+@@ -2187,6 +2224,30 @@ var CalendarRange = {
+     },
+     getRangeClasses: function getRangeClasses(cellDate, currentDates, classnames) {
+       var classes = [].concat(this.getClasses(cellDate, currentDates, classnames));
++
++      if (classnames.includes('active') && this.readonly !== false) {
++        if (this.readonly === true) {
++          classes = classes.concat('readonly');
++        }
++        if (this.readonly === 'start' || this.readonly === 'end') {
++          const normalizedInnerValues = this.innerValue.map((value) => (
++            isValidDate(value) ? new Date(value).setHours(0, 0, 0, 0) : null
++          ));
++
++          const readonlyValue = normalizedInnerValues[this.readonly === 'start' ? 0 : 1];
++          const otherValue = normalizedInnerValues[this.readonly === 'start' ? 1 : 0];
++          const cellValue = cellDate.getTime();
++
++          if (
++            readonlyValue !== null &&
++            cellValue === readonlyValue &&
++            (otherValue === null || cellValue !== otherValue)
++          ) {
++            classes = classes.concat('readonly');
++          }
++        }
++      }
++
+       if (/disabled|active/.test(classnames)) return classes;
+ 
+       var inRange = function inRange(data, range) {
+@@ -2210,6 +2271,9 @@ var CalendarRange = {
+       };
+ 
+       if (currentDates.length === 2 && inRange(cellDate, currentDates)) {
++        if (this.readonly === true) {
++            classes = classes.concat('readonly-in-range');
++        }
+         return classes.concat('in-range');
+       }
+ 
+@@ -2730,6 +2794,10 @@ var script$7 = {
+   },
+   props: {
+     date: Date,
++    type: {
++        type: String,
++        default: undefined,
++    },
+     options: {
+       type: [Object, Function],
+       default: function _default() {
+@@ -2753,7 +2821,12 @@ var script$7 = {
+       var options = this.options;
+ 
+       if (typeof options === 'function') {
+-        return options() || [];
++        var selectedDate = new Date(this.date);
++        return (
++            this.type !== undefined
++                ? options(selectedDate, this.type)
++                : options(selectedDate)
++        ) || [];
+       }
+ 
+       var start = parseOption(options.start);
+@@ -2879,6 +2952,10 @@ var script$8 = {
+         return date;
+       }
+     },
++    type: {
++      type: String,
++      default: undefined,
++    },
+     format: {
+       default: 'HH:mm:ss'
+     },
+@@ -2936,7 +3013,11 @@ var script$8 = {
+     scrollDuration: {
+       type: Number,
+       default: 100
+-    }
++    },
++    readonly: {
++      type: Boolean,
++      default: false,
++    },
+   },
+   data: function data() {
+     return {
+@@ -3001,6 +3082,10 @@ var script$8 = {
+       return this.isDisabledTime(value) && this.isDisabledTime(value.setHours(minHour, 0, 0, 0)) && this.isDisabledTime(value.setHours(maxHour, 59, 59, 999));
+     },
+     isDisabled: function isDisabled(date, type) {
++      if (this.readonly) {
++        return new Date(date).getTime() !== this.innerValue.getTime();
++      }
++
+       if (type === 'hour') {
+         return this.isDisabledHour(date);
+       }
+@@ -3016,6 +3101,10 @@ var script$8 = {
+       return this.isDisabledTime(date);
+     },
+     handleSelect: function handleSelect(value, type) {
++      if (this.readonly) {
++        return;
++      }
++
+       var date = new Date(value);
+ 
+       if (!this.isDisabled(value, type)) {
+@@ -3037,7 +3126,13 @@ var script$8 = {
+       }
+ 
+       if (cellDate.getTime() === this.innerValue.getTime()) {
+-        return 'active';
++        const classes = ['active'];
++
++        if (this.readonly) {
++            classes.push('readonly');
++        }
++
++        return classes.join(' ');
+       }
+ 
+       return '';
+@@ -3073,6 +3168,7 @@ var __vue_render__$b = function __vue_render__() {
+   }, [_vm.timePickerOptions ? _c('list-options', {
+     attrs: {
+       "date": _vm.innerValue,
++      "type": _vm.type,
+       "get-classes": _vm.getClasses,
+       "options": _vm.timePickerOptions,
+       "format": _vm.innerForamt
+@@ -3129,7 +3225,16 @@ var TimeRange = {
+       default: 'mx'
+     }
+   },
+-  props: _objectSpread2({}, __vue_component__$b.props),
++  props: _objectSpread2({}, __vue_component__$b.props, {
++    readonly: {
++        type: [Boolean, String],
++        default: false,
++        validator: (value) => (
++          typeof value === 'boolean' ||
++          ['start', 'end'].includes(value)
++        ),
++    },
++  }),
+   data: function data() {
+     return {
+       startValue: new Date(NaN),
+@@ -3160,6 +3265,10 @@ var TimeRange = {
+       this.$emit('select', date, type === 'time' ? 'time-range' : type, index);
+     },
+     handleSelectStart: function handleSelectStart(date, type) {
++      if ([true, 'start'].includes(this.readonly)) {
++        return;
++      }
++
+       this.startValue = date; // check the NaN
+ 
+       if (!(this.endValue.getTime() >= date.getTime())) {
+@@ -3169,6 +3278,10 @@ var TimeRange = {
+       this.emitChange(type, 0);
+     },
+     handleSelectEnd: function handleSelectEnd(date, type) {
++      if ([true, 'end'].includes(this.readonly)) {
++        return;
++      }
++
+       // check the NaN
+       this.endValue = date;
+ 
+@@ -3179,9 +3292,15 @@ var TimeRange = {
+       this.emitChange(type, 1);
+     },
+     disabledStartTime: function disabledStartTime(date) {
++      if ([true, 'start'].includes(this.readonly)) {
++        return date.getTime() !== this.startValue.getTime();
++      }
+       return this.disabledTime(date, 0);
+     },
+     disabledEndTime: function disabledEndTime(date) {
++      if ([true, 'end'].includes(this.readonly)) {
++        return date.getTime() !== this.endValue.getTime();
++      }
+       return date.getTime() < this.startValue.getTime() || this.disabledTime(date, 1);
+     }
+   },
+@@ -3189,10 +3308,13 @@ var TimeRange = {
+     var h = arguments[0];
+     var defaultValues = Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue, this.defaultValue];
+     var prefixClass = this.prefixClass;
++
+     return h("div", {
+       "class": "".concat(prefixClass, "-range-wrapper")
+     }, [h(__vue_component__$b, {
+       "props": _objectSpread2({}, _objectSpread2({}, this.$props, {
++        type: 'start',
++        readonly: [true, 'start'].includes(this.readonly),
+         value: this.startValue,
+         defaultValue: defaultValues[0],
+         disabledTime: this.disabledStartTime
+@@ -3202,6 +3324,8 @@ var TimeRange = {
+       }))
+     }), h(__vue_component__$b, {
+       "props": _objectSpread2({}, _objectSpread2({}, this.$props, {
++        type: 'end',
++        readonly: [true, 'end'].includes(this.readonly),
+         value: this.endValue,
+         defaultValue: defaultValues[1],
+         disabledTime: this.disabledEndTime
+@@ -3353,8 +3477,73 @@ var DatetimeRange = {
+         this.openTimePanel();
+       }
+ 
+-      var defaultValues = Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue, this.defaultValue];
++      var findNextValidTime = function (date, direction) {
++        var step = 60000 * (_this.showMinute ? _this.minuteStep : 60);
++
++        if (direction === 'desc') {
++          var unix = new Date(date).setMinutes(0, 0, 0) + (60000 * 60);
++          while (unix > date.getTime()) {
++            unix -= step;
++          }
++
++          var unixStartOfDay = new Date(date).setHours(0, 0, 0, 0);
++          if (unix < unixStartOfDay) {
++            return null;
++          }
++
++          for (var currentUnix = unix; currentUnix >= unixStartOfDay; currentUnix -= step) {
++            var candidate = new Date(currentUnix);
++            if (!_this.disabledTime(candidate)) {
++              return candidate;
++            }
++          }
++
++          return null;
++        }
++
++        var unix = new Date(date).setMinutes(0, 0, 0);
++        while (unix < date.getTime()) {
++          unix += step;
++        }
++
++        var unixEndOfDay = new Date(date).setHours(23, 59, 0, 0);
++        if (unix > unixEndOfDay) {
++          return null;
++        }
++
++        for (var currentUnix = unix; currentUnix <= unixEndOfDay; currentUnix += step) {
++          var candidate = new Date(currentUnix);
++          if (!_this.disabledTime(candidate)) {
++            return candidate;
++          }
++        }
++
++        return null;
++      };
++
++      var defaultValues = Array.isArray(this.defaultValue)
++        ? this.defaultValue
++        : [this.defaultValue, this.defaultValue];
++
+       var datetimes = dates.map(function (date, i) {
++        if (type === 'date') {
++          var isStartDate = i === 0;
++          const _date = new Date(date);
++          if (isStartDate) {
++            _date.setHours(0, 0, 0, 0);
++            const newStart = findNextValidTime(_date, 'asc');
++            if (newStart !== null) {
++              return newStart;
++            }
++          } else {
++            _date.setHours(23, 59, 59, 0);
++            const newEnd = findNextValidTime(_date, 'desc');
++            if (newEnd !== null) {
++              return newEnd;
++            }
++          }
++        }
++
+         var time = isValidRangeDate(_this.value) ? _this.value[i] : defaultValues[i];
+         return assignTime(date, time);
+       });
+@@ -3364,13 +3553,19 @@ var DatetimeRange = {
+       }
+ 
+       if (datetimes.some(this.disabledTime)) {
+-        datetimes = dates.map(function (date, i) {
+-          return assignTime(date, defaultValues[i]);
+-        });
++        const newStart = findNextValidTime(datetimes[0], 'asc');
++        const newEnd = findNextValidTime(datetimes[1], 'desc');
++        if (newStart !== null && newEnd !== null) {
++          datetimes = [newStart, newEnd];
++        } else {
++          datetimes = dates.map(function (date, i) {
++            return assignTime(date, defaultValues[i]);
++          });
+ 
+-        if (datetimes.some(this.disabledTime)) {
+-          this.currentValue = datetimes;
+-          return;
++          if (datetimes.some(this.disabledTime)) {
++            this.currentValue = datetimes;
++            return;
++          }
+         }
+       }
+ 
+@@ -3474,6 +3669,14 @@ var DatePicker = {
+       type: Boolean,
+       default: false
+     },
++    readonly: {
++        type: [Boolean, String],
++        default: false,
++        validator: (value) => (
++          typeof value === 'boolean' ||
++          ['start', 'end'].includes(value)
++        )
++    },
+     clearable: {
+       type: Boolean,
+       default: true
+@@ -3541,8 +3744,15 @@ var DatePicker = {
+     };
+   },
+   computed: {
++    normalizedReadonly() {
++        if (typeof this.readonly === 'boolean') {
++            return this.readonly;
++        }
++        return this.range ? this.readonly : true;
++    },
+     popupVisible: function popupVisible() {
+-      return !this.disabled && (typeof this.open === 'boolean' ? this.open : this.defaultOpen);
++      const isDisabled = this.disabled || this.normalizedReadonly === true;
++      return !isDisabled && (typeof this.open === 'boolean' ? this.open : this.defaultOpen);
+     },
+     innerRangeSeparator: function innerRangeSeparator() {
+       return this.rangeSeparator || (this.multiple ? ',' : ' ~ ');
+@@ -3597,7 +3807,13 @@ var DatePicker = {
+       return this.formatDate(this.innerValue);
+     },
+     showClearIcon: function showClearIcon() {
+-      return !this.disabled && this.clearable && this.text && this.mouseInInput;
++      return (
++        !this.disabled &&
++        !this.normalizedReadonly &&
++        this.clearable &&
++        this.text &&
++        this.mouseInInput
++      );
+     },
+     locale: function locale() {
+       if (isObject(this.lang)) {
+@@ -3630,6 +3846,9 @@ var DatePicker = {
+     if (_typeof(this.format) === 'object') {
+       console.warn("[vue2-datepicker]: The prop `format` don't support Object any more. You can use the new prop `formatter` to replace it");
+     }
++    if (typeof this.readonly !== 'boolean' && !this.range) {
++      console.warn("[vue2-datepicker]: The prop `readonly` should be passed as boolean when used with a non-range datepicker.");
++    }
+   },
+   methods: {
+     handleMouseEnter: function handleMouseEnter() {
+@@ -3784,6 +4003,10 @@ var DatePicker = {
+       }
+     },
+     clear: function clear() {
++      if (this.normalizedReadonly !== false) {
++        return;
++      }
++
+       this.emitValue(this.range ? [null, null] : null);
+       this.$emit('clear');
+     },
+@@ -3808,7 +4031,10 @@ var DatePicker = {
+       }
+     },
+     openPopup: function openPopup(evt) {
+-      if (this.popupVisible || this.disabled) return;
++      const isDisabled = this.disabled || this.normalizedReadonly === true;
++      if (this.popupVisible || isDisabled) {
++        return;
++      }
+       this.defaultOpen = true;
+       this.$emit('open', evt);
+       this.$emit('update:open', true);
+@@ -3914,8 +4140,8 @@ var DatePicker = {
+         autocomplete: 'off',
+         value: this.text,
+         class: this.inputClass || "".concat(this.prefixClass, "-input"),
+-        readonly: !this.editable,
+-        disabled: this.disabled,
++        readonly: !this.editable || this.normalizedReadonly !== false,
++        disabled: this.disabled || this.normalizedReadonly === true,
+         placeholder: this.placeholder
+       }, this.inputAttr);
+ 
+@@ -4044,13 +4270,21 @@ var DatePicker = {
+     var h = arguments[0];
+     var prefixClass = this.prefixClass,
+         inline = this.inline,
+-        disabled = this.disabled;
++        disabled = this.disabled,
++        readonly = this.normalizedReadonly;
+     var sidedar = this.hasSlot('sidebar') || this.shortcuts.length ? this.renderSidebar() : null;
+     var content = h("div", {
+       "class": "".concat(prefixClass, "-datepicker-content")
+     }, [this.hasSlot('header') ? this.renderHeader() : null, this.renderContent(), this.hasSlot('footer') || this.confirm ? this.renderFooter() : null]);
+     return h("div", {
+-      "class": (_class = {}, _defineProperty(_class, "".concat(prefixClass, "-datepicker"), true), _defineProperty(_class, "".concat(prefixClass, "-datepicker-range"), this.range), _defineProperty(_class, "".concat(prefixClass, "-datepicker-inline"), inline), _defineProperty(_class, "disabled", disabled), _class)
++      "class": (
++        _class = {},
++        _defineProperty(_class, "".concat(prefixClass, "-datepicker"), true),
++        _defineProperty(_class, "".concat(prefixClass, "-datepicker-range"), this.range),
++        _defineProperty(_class, "".concat(prefixClass, "-datepicker-inline"), inline),
++        _defineProperty(_class, "disabled", disabled || readonly === true),
++        _class
++      )
+     }, [!inline ? this.renderInput() : null, !inline ? h(__vue_component__, {
+       "ref": "popup",
+       "class": this.popupClass,

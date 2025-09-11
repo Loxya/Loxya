@@ -1,7 +1,7 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Action } from '@/themes/default/components/StateMessage';
 
 type Props = {
@@ -30,7 +30,7 @@ type Props = {
 };
 
 /**
- * Un élément d’interface permettant d'indiquer l'absence de données.
+ * Un élément d'interface permettant d'indiquer l'absence de données.
  * (que ce soit dans une liste, une page, ou autre)
  */
 const EmptyMessage = defineComponent({

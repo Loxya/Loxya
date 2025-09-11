@@ -2,7 +2,7 @@ import './index.scss';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 import Decimal from 'decimal.js';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { ClientTable, Variant as TableVariant } from '@/themes/default/components/Table';
 import QuantityInput from '@/themes/default/components/QuantityInput';
 import EmptyMessage from '@/themes/default/components/EmptyMessage';
@@ -12,9 +12,8 @@ import Select from '@/themes/default/components/Select';
 import Input from '@/themes/default/components/Input';
 import formatAmount from '@/utils/formatAmount';
 
-import type { CreateElement } from 'vue';
+import type { CreateElement, PropType } from 'vue';
 import type Currency from '@/utils/currency';
-import type { PropType } from '@vue/composition-api';
 import type { ExtraBillingTaxData } from '@/stores/api/bookings';
 import type { Columns } from '@/themes/default/components/Table/Client';
 import type { BillingExtra, RawExtraBillingData, Tax } from '../../_types';
@@ -36,8 +35,38 @@ type Props = {
 
     /** Les éventuelles erreurs de validation liées aux extras. */
     errors?: Record<number, any> | string[],
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à ajouter
+     * une ligne d'extra.
+     */
+    onAdd?(): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande à supprimer
+     * une ligne d'extra.
+     *
+     * @param extraId - L'identifiant interne de l'extra à supprimer.
+     */
+    onRemove?(extraId: RawExtraBillingData['_id']): void,
+
+    /**
+     * Fonction appelée lorsque les données d'une ligne extra changent.
+     *
+     * @param updatedExtra - Les données de la ligne, mises à jour.
+     */
+    onChange?(updatedExtra: RawExtraBillingData): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande la
+     * resynchronisation des données d'une ligne d'extra.
+     *
+     * @param extraId - L'identifiant interne de l'extra à resynchroniser.
+     */
+    onRequestResync?(extraId: RawExtraBillingData['_id']): void,
 };
 
+/** La liste des lignes extras dans l'éditeur de facture. */
 const InvoiceEditorExtras = defineComponent({
     name: 'InvoiceEditorExtras',
     props: {
@@ -61,11 +90,31 @@ const InvoiceEditorExtras = defineComponent({
             type: [Array, Object] as PropType<Props['errors']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onAdd: {
+            type: Function as PropType<Props['onAdd']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRemove: {
+            type: Function as PropType<Props['onRemove']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRequestResync: {
+            type: Function as PropType<Props['onRequestResync']>,
+            default: undefined,
+        },
     },
     emits: [
         'add',
-        'change',
         'remove',
+        'change',
         'requestResync',
     ],
     computed: {
@@ -114,7 +163,7 @@ const InvoiceEditorExtras = defineComponent({
                         return (
                             <Input
                                 type="text"
-                                v-model={extra.description}
+                                value={extra.description}
                                 invalid={!!validationError}
                                 onInput={(newValue: string) => {
                                     handleChangeDescription(extra._id, newValue);
@@ -165,9 +214,8 @@ const InvoiceEditorExtras = defineComponent({
                     ],
                     render: (h: CreateElement, extra: BillingExtra) => (
                         <QuantityInput
-                            min={1}
-                            max={65_000}
                             value={extra.quantity}
+                            limit={{ min: 1, max: 65_000 }}
                             onChange={(newValue: number) => {
                                 handleChangeQuantity(extra._id, newValue);
                             }}
@@ -307,8 +355,10 @@ const InvoiceEditorExtras = defineComponent({
                 return;
             }
 
-            const value = Decimal.min(Decimal.max(rawValue, -1_000_000_000_000 + 1), 1_000_000_000_000 - 1)
-                .toDecimalPlaces(2, Decimal.ROUND_DOWN);
+            const value = markRaw(
+                Decimal.min(Decimal.max(rawValue, -1_000_000_000_000 + 1), 1_000_000_000_000 - 1)
+                    .toDecimalPlaces(2, Decimal.ROUND_DOWN),
+            );
 
             this.$emit('change', { ...datum, unit_price: value });
         },
@@ -325,8 +375,10 @@ const InvoiceEditorExtras = defineComponent({
                 return;
             }
 
-            const value = Decimal.min(Decimal.max(rawValue, -1_000_000_000_000 + 1), 1_000_000_000_000 - 1)
-                .toDecimalPlaces(2, Decimal.ROUND_DOWN);
+            const value = markRaw(
+                Decimal.min(Decimal.max(rawValue, -1_000_000_000_000 + 1), 1_000_000_000_000 - 1)
+                    .toDecimalPlaces(2, Decimal.ROUND_DOWN),
+            );
 
             this.$emit('change', { ...datum, unit_price: value });
         },

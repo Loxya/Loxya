@@ -24,6 +24,42 @@ class Arr extends ArrCore
     }
 
     /**
+     * Vérifie si au moins un élément du tableau satisfait le callback donné.
+     *
+     * @param array    $array    Le tableau à tester.
+     * @param callable $callback Un callback recevant la valeur et la clé, qui doit retourner un booléen.
+     *
+     * @return bool `true` si au moins une valeur satisfait la condition, sinon `false`.
+     */
+    public static function some(array $array, callable $callback): bool
+    {
+        foreach ($array as $key => $value) {
+            if ($callback($value, $key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Vérifie si tous les éléments du tableau satisfont le callback donné.
+     *
+     * @param array    $array    Le tableau à tester.
+     * @param callable $callback Un callback recevant la valeur et la clé, qui doit retourner un booléen.
+     *
+     * @return bool `true` si toutes les valeurs satisfont la condition, sinon `false`.
+     */
+    public static function every(array $array, callable $callback): bool
+    {
+        foreach ($array as $key => $value) {
+            if (!$callback($value, $key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Permet de compléter un tableau avec des valeurs par défaut si celui-ci ne les contient pas.
      *
      * @example

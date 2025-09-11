@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Beneficiaries Api all() parse the returned data correctly 1`] = `
 {
@@ -19,6 +19,7 @@ exports[`Beneficiaries Api all() parse the returned data correctly 1`] = `
         "note": "Just for tests",
         "phone": "+4123456789",
         "postal_code": "1234",
+        "registration_id": null,
         "street": "1, company st.",
       },
       "company_id": 1,
@@ -28,7 +29,7 @@ exports[`Beneficiaries Api all() parse the returned data correctly 1`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -48,7 +49,7 @@ exports[`Beneficiaries Api all() parse the returned data correctly 1`] = `
       "company_id": null,
       "country": null,
       "country_id": null,
-      "email": "tester2@robertmanager.net",
+      "email": "tester2@loxya.com",
       "first_name": "Roger",
       "full_address": null,
       "full_name": "Roger Rabbit",
@@ -118,7 +119,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
   "data": [
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -144,6 +145,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
             "note": "Just for tests",
             "phone": "+4123456789",
             "postal_code": "1234",
+            "registration_id": null,
             "street": "1, company st.",
           },
           "company_id": 1,
@@ -153,7 +155,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
             "name": "France",
           },
           "country_id": 1,
-          "email": "tester@robertmanager.net",
+          "email": "tester@loxya.com",
           "first_name": "Jean",
           "full_address": "1, somewhere av.
 1234 Megacity",
@@ -176,6 +178,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": null,
       "created_at": /* DateTime Instance => */ "2018-12-01 12:50:45",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": false,
       "has_unassigned_mandatory_positions": false,
       "id": 1,
@@ -185,10 +188,10 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "is_return_inventory_done": true,
       "location": "Gap",
       "manager": {
-        "email": "tester2@robertmanager.net",
+        "email": "tester2@loxya.com",
         "first_name": "Roger",
         "full_name": "Roger Rabbit",
-        "group": "management",
+        "group": "operation",
         "id": 2,
         "last_name": "Rabbit",
         "phone": null,
@@ -207,6 +210,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "parks": [
         1,
       ],
+      "return_inventory_datetime": null,
       "technicians": [
         {
           "event_id": 1,
@@ -224,7 +228,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
           "technician": {
             "country": null,
             "country_id": null,
-            "email": "tester2@robertmanager.net",
+            "email": "tester2@loxya.com",
             "first_name": "Roger",
             "full_address": null,
             "full_name": "Roger Rabbit",
@@ -300,7 +304,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -337,6 +341,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": /* Color Instance => */ "#ffba49",
       "created_at": /* DateTime Instance => */ "2018-12-16 12:50:45",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": true,
       "has_unassigned_mandatory_positions": true,
       "id": 2,
@@ -346,7 +351,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "is_return_inventory_done": true,
       "location": "Lyon",
       "manager": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -368,12 +373,13 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "parks": [
         1,
       ],
+      "return_inventory_datetime": /* DateTime Instance => */ "2018-12-20 14:30:00",
       "technicians": [],
       "title": "Second événement",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -390,6 +396,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": null,
       "created_at": /* DateTime Instance => */ "2018-12-14 12:20:00",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": null,
       "id": 3,
@@ -412,12 +419,13 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "parks": [
         1,
       ],
+      "return_inventory_datetime": /* DateTime Instance => */ "2018-12-16 15:42:00",
       "technicians": [],
       "title": "Avant-premier événement",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -434,6 +442,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": /* Color Instance => */ "#ef5b5b",
       "created_at": /* DateTime Instance => */ "2019-01-01 20:12:00",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 4,
@@ -457,12 +466,13 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
         1,
         2,
       ],
+      "return_inventory_datetime": null,
       "technicians": [],
       "title": "Concert X",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -488,6 +498,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
             "note": "Just for tests",
             "phone": "+4123456789",
             "postal_code": "1234",
+            "registration_id": null,
             "street": "1, company st.",
           },
           "company_id": 1,
@@ -497,7 +508,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
             "name": "France",
           },
           "country_id": 1,
-          "email": "tester@robertmanager.net",
+          "email": "tester@loxya.com",
           "first_name": "Jean",
           "full_address": "1, somewhere av.
 1234 Megacity",
@@ -519,6 +530,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": null,
       "created_at": /* DateTime Instance => */ "2019-12-25 14:59:40",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 5,
@@ -541,12 +553,13 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "parks": [
         1,
       ],
+      "return_inventory_datetime": null,
       "technicians": [],
       "title": "Kermesse de l'école des trois cailloux",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -560,6 +573,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": /* Color Instance => */ "#ef5b5b",
       "created_at": /* DateTime Instance => */ "2019-02-01 12:00:00",
       "entity": "event",
+      "has_materials": false,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 6,
@@ -580,12 +594,13 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
         "start": "2019-03-15",
       },
       "parks": [],
+      "return_inventory_datetime": null,
       "technicians": [],
       "title": "Un événement sans inspiration",
     },
     {
       "author": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -603,6 +618,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "color": null,
       "created_at": /* DateTime Instance => */ "2022-05-29 18:00:00",
       "entity": "event",
+      "has_materials": true,
       "has_not_returned_materials": null,
       "has_unassigned_mandatory_positions": false,
       "id": 7,
@@ -612,7 +628,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
       "is_return_inventory_done": false,
       "location": "Machin-le-chateau",
       "manager": {
-        "email": "tester@robertmanager.net",
+        "email": "tester@loxya.com",
         "first_name": "Jean",
         "full_name": "Jean Fountain",
         "group": "administration",
@@ -635,6 +651,7 @@ exports[`Beneficiaries Api bookings() parse the returned data correctly 1`] = `
         1,
         2,
       ],
+      "return_inventory_datetime": null,
       "technicians": [
         {
           "event_id": 7,
@@ -711,6 +728,7 @@ exports[`Beneficiaries Api create() parse the returned data correctly (with #1) 
     "note": "Just for tests",
     "phone": "+4123456789",
     "postal_code": "1234",
+    "registration_id": null,
     "street": "1, company st.",
   },
   "company_id": 1,
@@ -720,7 +738,7 @@ exports[`Beneficiaries Api create() parse the returned data correctly (with #1) 
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -737,7 +755,7 @@ exports[`Beneficiaries Api create() parse the returned data correctly (with #1) 
   },
   "street": "1, somewhere av.",
   "user": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -756,7 +774,7 @@ exports[`Beneficiaries Api create() parse the returned data correctly (with #2) 
   "company_id": null,
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
@@ -772,10 +790,10 @@ exports[`Beneficiaries Api create() parse the returned data correctly (with #2) 
   },
   "street": null,
   "user": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -920,6 +938,7 @@ exports[`Beneficiaries Api one() parse the returned data correctly (with #1) 1`]
     "note": "Just for tests",
     "phone": "+4123456789",
     "postal_code": "1234",
+    "registration_id": null,
     "street": "1, company st.",
   },
   "company_id": 1,
@@ -929,7 +948,7 @@ exports[`Beneficiaries Api one() parse the returned data correctly (with #1) 1`]
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -946,7 +965,7 @@ exports[`Beneficiaries Api one() parse the returned data correctly (with #1) 1`]
   },
   "street": "1, somewhere av.",
   "user": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -965,7 +984,7 @@ exports[`Beneficiaries Api one() parse the returned data correctly (with #2) 1`]
   "company_id": null,
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
@@ -981,10 +1000,10 @@ exports[`Beneficiaries Api one() parse the returned data correctly (with #2) 1`]
   },
   "street": null,
   "user": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -1064,6 +1083,7 @@ exports[`Beneficiaries Api restore() parse the returned data correctly (with #1)
     "note": "Just for tests",
     "phone": "+4123456789",
     "postal_code": "1234",
+    "registration_id": null,
     "street": "1, company st.",
   },
   "company_id": 1,
@@ -1073,7 +1093,7 @@ exports[`Beneficiaries Api restore() parse the returned data correctly (with #1)
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -1090,7 +1110,7 @@ exports[`Beneficiaries Api restore() parse the returned data correctly (with #1)
   },
   "street": "1, somewhere av.",
   "user": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -1109,7 +1129,7 @@ exports[`Beneficiaries Api restore() parse the returned data correctly (with #2)
   "company_id": null,
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
@@ -1125,10 +1145,10 @@ exports[`Beneficiaries Api restore() parse the returned data correctly (with #2)
   },
   "street": null,
   "user": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,
@@ -1208,6 +1228,7 @@ exports[`Beneficiaries Api update() parse the returned data correctly (with #1) 
     "note": "Just for tests",
     "phone": "+4123456789",
     "postal_code": "1234",
+    "registration_id": null,
     "street": "1, company st.",
   },
   "company_id": 1,
@@ -1217,7 +1238,7 @@ exports[`Beneficiaries Api update() parse the returned data correctly (with #1) 
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -1234,7 +1255,7 @@ exports[`Beneficiaries Api update() parse the returned data correctly (with #1) 
   },
   "street": "1, somewhere av.",
   "user": {
-    "email": "tester@robertmanager.net",
+    "email": "tester@loxya.com",
     "first_name": "Jean",
     "full_name": "Jean Fountain",
     "group": "administration",
@@ -1253,7 +1274,7 @@ exports[`Beneficiaries Api update() parse the returned data correctly (with #2) 
   "company_id": null,
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
@@ -1269,10 +1290,10 @@ exports[`Beneficiaries Api update() parse the returned data correctly (with #2) 
   },
   "street": null,
   "user": {
-    "email": "tester2@robertmanager.net",
+    "email": "tester2@loxya.com",
     "first_name": "Roger",
     "full_name": "Roger Rabbit",
-    "group": "management",
+    "group": "operation",
     "id": 2,
     "last_name": "Rabbit",
     "phone": null,

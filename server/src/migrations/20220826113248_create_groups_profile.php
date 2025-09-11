@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
-use Cake\Database\Query\SelectQuery;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -16,8 +12,7 @@ final class CreateGroupsProfile extends AbstractMigration
         $defaultTags = Config::get('legacy.defaultTags', []);
 
         // - Tag "Bénéficiaire".
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $beneficiaryTag = $qb
             ->select(['id', 'name'])
             ->from(sprintf('%stags', $prefix))
@@ -25,8 +20,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->execute()->fetch('assoc');
 
         // - Tag "Technicien".
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $technicianTag = $qb
             ->select(['id', 'name'])
             ->from(sprintf('%stags', $prefix))
@@ -66,8 +60,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->create();
 
         if ($beneficiaryTag) {
-            /** @var SelectQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+            $qb = $this->getSelectBuilder();
             $personsData = $qb
                 ->select([
                     'p.id',
@@ -104,8 +97,7 @@ final class CreateGroupsProfile extends AbstractMigration
             }
         }
 
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $personBeneficiaryMap = array_column(
             $qb
                 ->select(['id', 'person_id'])
@@ -131,8 +123,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->update();
 
         foreach ($personBeneficiaryMap as $personId => $beneficiaryId) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_beneficiaries', $prefix))
                 ->set(['beneficiary_id' => $beneficiaryId])
@@ -177,8 +168,7 @@ final class CreateGroupsProfile extends AbstractMigration
                 ->update();
 
             foreach ($personBeneficiaryMap as $personId => $beneficiaryId) {
-                /** @var UpdateQuery $qb */
-                $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+                $qb = $this->getUpdateBuilder();
                 $qb
                     ->update(sprintf('%s%s', $prefix, $billTableName))
                     ->set(['beneficiary_id' => $beneficiaryId])
@@ -224,8 +214,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->create();
 
         if ($technicianTag) {
-            /** @var SelectQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+            $qb = $this->getSelectBuilder();
             $personsData = $qb
                 ->select([
                     'p.id',
@@ -260,8 +249,7 @@ final class CreateGroupsProfile extends AbstractMigration
             }
         }
 
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $personTechnicianMap = array_column(
             $qb
                 ->select(['id', 'person_id'])
@@ -294,8 +282,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->update();
 
         foreach ($personTechnicianMap as $personId => $technicianId) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_technicians', $prefix))
                 ->where(['person_id' => $personId])
@@ -347,8 +334,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->update();
 
         if ($beneficiaryTag || $technicianTag) {
-            /** @var DeleteQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+            $qb = $this->getDeleteBuilder();
             $qb
                 ->delete(sprintf('%stags', $prefix))
                 ->where(static fn ($exp) => (
@@ -382,8 +368,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->saveData();
 
         // - Id du tag "Bénéficiaire".
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $beneficiaryTagId = $qb
             ->select(['id'])
             ->from(sprintf('%stags', $prefix))
@@ -391,8 +376,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->execute()->fetch('assoc')['id'];
 
         // - Id du tag "Technicien".
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $technicianTagId = $qb
             ->select(['id'])
             ->from(sprintf('%stags', $prefix))
@@ -441,8 +425,7 @@ final class CreateGroupsProfile extends AbstractMigration
         // - Bénéficiaires
         //
 
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $beneficiariesData = $qb
             ->select([
                 'id',
@@ -457,8 +440,7 @@ final class CreateGroupsProfile extends AbstractMigration
 
         $personBeneficiaryMap = [];
         foreach ($beneficiariesData as $beneficiaryData) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%spersons', $prefix))
                 ->set('reference', $beneficiaryData['reference'])
@@ -500,8 +482,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->update();
 
         foreach ($personBeneficiaryMap as $personId => $beneficiaryId) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_beneficiaries', $prefix))
                 ->set(['person_id' => $personId])
@@ -546,8 +527,7 @@ final class CreateGroupsProfile extends AbstractMigration
                 ->update();
 
             foreach ($personBeneficiaryMap as $personId => $beneficiaryId) {
-                /** @var UpdateQuery $qb */
-                $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+                $qb = $this->getUpdateBuilder();
                 $qb
                     ->update(sprintf('%s%s', $prefix, $billTableName))
                     ->set(['beneficiary_id' => $personId])
@@ -578,8 +558,7 @@ final class CreateGroupsProfile extends AbstractMigration
         // - Techniciens
         //
 
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $techniciansData = $qb
             ->select([
                 'id',
@@ -593,8 +572,7 @@ final class CreateGroupsProfile extends AbstractMigration
 
         $personTechnicianMap = [];
         foreach ($techniciansData as $technicianData) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%spersons', $prefix))
                 ->where(['id' => $technicianData['person_id']])
@@ -642,8 +620,7 @@ final class CreateGroupsProfile extends AbstractMigration
             ->update();
 
         foreach ($personTechnicianMap as $personId => $technicianId) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevent_technicians', $prefix))
                 ->set(['technician_id' => $personId])

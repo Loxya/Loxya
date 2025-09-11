@@ -14,6 +14,7 @@ final class CompaniesTest extends ApiTestCase
             [
                 'id' => 1,
                 'legal_name' => 'Testing, Inc',
+                'registration_id' => null,
                 'street' => '1, company st.',
                 'postal_code' => '1234',
                 'locality' => 'Megacity',
@@ -26,6 +27,7 @@ final class CompaniesTest extends ApiTestCase
             [
                 'id' => 2,
                 'legal_name' => 'Obscure',
+                'registration_id' => '123456789',
                 'street' => null,
                 'postal_code' => null,
                 'locality' => null,
@@ -65,6 +67,7 @@ final class CompaniesTest extends ApiTestCase
         $this->assertResponseData([
             'id' => 1,
             'legal_name' => 'Testing, Inc',
+            'registration_id' => null,
             'street' => '1, company st.',
             'postal_code' => '1234',
             'locality' => 'Megacity',
@@ -90,6 +93,7 @@ final class CompaniesTest extends ApiTestCase
                 [
                     'id' => 1,
                     'legal_name' => 'Testing, Inc',
+                    'registration_id' => null,
                     'street' => '1, company st.',
                     'postal_code' => '1234',
                     'locality' => 'Megacity',
@@ -121,8 +125,7 @@ final class CompaniesTest extends ApiTestCase
     public function testCreateCompanyDuplicate(): void
     {
         $this->client->post('/api/companies', [
-            'id' => null,
-            'legal_name' => 'Testing, Inc',
+            'registration_id' => '123456789',
         ]);
         $this->assertApiValidationError();
     }
@@ -131,6 +134,7 @@ final class CompaniesTest extends ApiTestCase
     {
         $data = [
             'legal_name' => 'test company',
+            'registration_id' => '574 122 444',
             'street' => 'Somewhere street, 123',
             'postal_code' => '75000',
             'locality' => 'Paris',
@@ -142,6 +146,7 @@ final class CompaniesTest extends ApiTestCase
         $this->assertResponseData([
             'id' => 3,
             'legal_name' => 'test company',
+            'registration_id' => '574122444',
             'street' => 'Somewhere street, 123',
             'postal_code' => '75000',
             'locality' => 'Paris',

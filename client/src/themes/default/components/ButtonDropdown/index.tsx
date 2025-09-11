@@ -1,11 +1,13 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import ClickOutside from 'vue-click-outside';
 import invariant from 'invariant';
+import { defineComponent } from 'vue';
+import ClickOutside from 'vue-click-outside';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
+import type { Location } from 'vue-router';
+import type { Type } from '@/themes/default/components/Button';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
 type Action = {
@@ -13,7 +15,7 @@ type Action = {
     label: string,
 
     /** Le type de bouton d'action secondaire à utiliser. */
-    type?: string,
+    type?: Type,
 
     /**
      * Si l'action secondaire est un lien, la cible du lien sous forme de chaîne,
@@ -56,17 +58,19 @@ type Action = {
     icon?: string | `${string}:${Required<IconProps>['variant']}`,
 
     /**
-     * Fonction à utiliser lors d'un clic sur le bouton d'action secondaire.
-     *
-     * N'est utile que quand l'action secondaire n'est pas un lien.
-     */
-    onClick?(e: MouseEvent): void,
-
-    /**
      * Action supplémentaire éventuelle, qui sera affichée sur la même ligne
      * que l'action secondaire, à droite.
      */
     secondary?: Action,
+
+    /**
+     * Fonction à utiliser lors d'un clic sur le bouton d'action secondaire.
+     *
+     * N'est utile que quand l'action secondaire n'est pas un lien.
+     *
+     * @param event - L'événement d'origine.
+     */
+    onClick?(event: MouseEvent): void,
 };
 
 type Props = {
@@ -145,7 +149,7 @@ type Data = {
  *
  * Le bouton principal peut être soit un lien (externe ou non), soit un button.
  * Dans le premier cas, il faut passer les props `to` et éventuellement `external`
- *  ou `download, et dans le second cas il suffit d'utiliser l'événement `onClick`.
+ * ou `download, et dans le second cas il suffit d'utiliser l'événement `onClick`.
  *
  * Pour les actions secondaires, chaque item de la liste `actions` doit être du
  * type `Action` (voir documentation).
@@ -186,7 +190,17 @@ const ButtonDropdown = defineComponent({
             ),
         },
     },
-    emits: ['click'],
+    setup(props) {
+        invariant(
+            !props.download || !props.external,
+            'The `external` prop. must not be set when the `download` prop. is true.',
+        );
+        invariant(
+            (!props.download && !props.external) || typeof props.to === 'string',
+            'The `to` props. must be a string when the props `download` or `external` are used.',
+        );
+        return {};
+    },
     data: (): Data => ({
         isOpen: false,
     }),
@@ -198,12 +212,6 @@ const ButtonDropdown = defineComponent({
 
             return this.external ?? false;
         },
-    },
-    created() {
-        invariant(
-            this.download !== true || this.external === undefined,
-            'The `external` prop. must not be set when the `download` prop. is true.',
-        );
     },
     methods: {
         // ------------------------------------------------------
@@ -220,13 +228,11 @@ const ButtonDropdown = defineComponent({
             this.isOpen = !this.isOpen;
         },
 
-        handleClick(e: MouseEvent) {
+        handleClick() {
             if (this.disabled) {
                 return;
             }
-
             this.isOpen = false;
-            this.$emit('click', e);
         },
     },
     render() {
@@ -288,15 +294,18 @@ const ButtonDropdown = defineComponent({
                             </Button>
                             {!!action.secondary && (
                                 <Button
+                                    class={[
+                                        'ButtonDropdown__action-button',
+                                        'ButtonDropdown__action-button--secondary',
+                                    ]}
                                     type={action.secondary.type}
                                     to={action.secondary.target}
                                     icon={action.secondary.icon}
                                     download={action.secondary.download}
                                     external={action.secondary.external}
                                     onClick={action.secondary.onClick ?? (() => {})}
+                                    tooltip={action.secondary.label}
                                     disabled={disabled}
-                                    v-tooltip={action.secondary.label}
-                                    class="ButtonDropdown__action-button ButtonDropdown__action-button--secondary"
                                 />
                             )}
                         </li>

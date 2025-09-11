@@ -27,11 +27,12 @@ interface AuthenticatorInterface
      *
      * @param Request $request La requête courante.
      *
-     * @return User|null L'utilisateur s'il a pu être authentifié, `null` sinon.
+     * @return User|null L'utilisateur s'il a pu
+     *                               être authentifié, `null` sinon.
      *
      * @throws \LogicException Si l'authentifieur n'est pas activé (@see {@link self::isEnabled()}).
      */
-    public function getUser(Request $request): ?User;
+    public function getUser(Request $request): User|null;
 
     /**
      * Permet de supprimer les données d'identification persistées actuelles.

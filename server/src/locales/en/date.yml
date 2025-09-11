@@ -1,5 +1,7 @@
 on-date: "on %s"
 from-date-to-date: "from %s to %s"
+from-date-to-unknown: "from %s onwards"
 
 date-in-sentence: "the %s"
 period-in-sentence: "the period from %s to %s"
+period-in-sentence-no-end: "the period from %s onwards"

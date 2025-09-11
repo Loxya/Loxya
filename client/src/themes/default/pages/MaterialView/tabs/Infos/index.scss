@@ -87,25 +87,32 @@
         }
     }
 
-    &__attribute {
-        display: flex;
-        margin: 0 0 globals.$spacing-small;
-        gap: globals.$spacing-thin;
-
-        &__name {
+    &__properties {
+        &__list {
             @extend %reset-dl;
-
-            @include globals.icon('cog') {
-                margin-right: globals.$spacing-thin;
-            }
         }
 
-        &__value {
-            @extend %reset-dd;
+        &__item {
+            display: flex;
+            gap: globals.$spacing-thin;
 
-            flex: 1;
-            font-weight: 600;
-            white-space: pre-wrap;
+            &__name {
+                @include globals.icon('cog') {
+                    margin-right: globals.$spacing-thin;
+                }
+            }
+
+            &__value {
+                @extend %reset-dd;
+
+                flex: 1;
+                font-weight: 600;
+                white-space: pre-wrap;
+            }
+
+            & + & {
+                margin-top: globals.$spacing-small;
+            }
         }
     }
 

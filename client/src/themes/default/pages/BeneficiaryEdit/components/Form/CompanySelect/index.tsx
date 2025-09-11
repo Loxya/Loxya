@@ -1,6 +1,6 @@
 import './index.scss';
 import debounce from 'lodash/debounce';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import formatOptions from '@/utils/formatOptions';
 import Select from '@/themes/default/components/Select';
@@ -8,13 +8,20 @@ import Button from '@/themes/default/components/Button';
 import apiCompanies from '@/stores/api/companies';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Company } from '@/stores/api/companies';
 import type { Options } from '@/utils/formatOptions';
 
 type Props = {
     /** La société sélectionnée par défaut. */
     defaultCompany?: Company | null,
+
+    /**
+     * Fonction appelée lorsque la société sélectionnée change.
+     *
+     * @param id - Identifiant de la société sélectionnée, ou `null` si aucune.
+     */
+    onChange?(id: Company['id'] | null): void,
 };
 
 type InstanceProperties = {
@@ -37,6 +44,11 @@ const BeneficiaryEditCompanySelect = defineComponent({
             type: Object as PropType<Required<Props>['defaultCompany']>,
             default: null,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['change'],
     setup: (): InstanceProperties => ({
@@ -52,7 +64,13 @@ const BeneficiaryEditCompanySelect = defineComponent({
     },
     computed: {
         options(): Options<Company> {
-            const formatLabel = (company: Company): string => company.legal_name;
+            const formatLabel = (company: Company): string => {
+                let label = company.legal_name;
+                if ((company.registration_id ?? '').length > 0) {
+                    label += ` (${company.registration_id!})`;
+                }
+                return label;
+            };
             return formatOptions<Company>(this.companies, formatLabel);
         },
     },
@@ -87,7 +105,7 @@ const BeneficiaryEditCompanySelect = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async search(search: string) {
+        async search(search: string): Promise<void> {
             try {
                 const { data } = await apiCompanies.all({ search, limit: 20 });
                 this.companies = data;
@@ -127,7 +145,7 @@ const BeneficiaryEditCompanySelect = defineComponent({
                         type="default"
                         to={{
                             name: 'edit-company',
-                            params: { id: value },
+                            params: { id: value.toString() },
                         }}
                     >
                         {__('action-edit')}

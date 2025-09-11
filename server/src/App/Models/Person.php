@@ -13,7 +13,7 @@ use Loxya\Config\Enums\Feature;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Une personne.
@@ -50,11 +50,11 @@ final class Person extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'user_id' => V::custom([$this, 'checkUserId']),
-            'first_name' => V::notEmpty()->alnum(static::EXTRA_CHARS)->length(2, 35),
-            'last_name' => V::notEmpty()->alnum(static::EXTRA_CHARS)->length(2, 35),
-            'email' => V::optional(V::email()->length(null, 191)),
+            'first_name' => V::notEmpty()->nameLike()->length(2, 35),
+            'last_name' => V::notEmpty()->nameLike()->length(2, 35),
+            'email' => V::optional(V::email()->length(5, 191)),
             'phone' => V::optional(V::phone()),
             'street' => V::optional(V::length(null, 191)),
             'postal_code' => V::optional(V::length(null, 10)),

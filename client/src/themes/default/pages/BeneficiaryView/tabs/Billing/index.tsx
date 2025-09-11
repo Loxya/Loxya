@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
@@ -7,7 +7,7 @@ import EmptyMessage from '@/themes/default/components/EmptyMessage';
 import Invoices from './Invoices';
 import Estimates from './Estimates';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { BeneficiaryDetails } from '@/stores/api/beneficiaries';
 import type { Estimate as EstimateType } from '@/stores/api/estimates';
 import type { Invoice as InvoiceType } from '@/stores/api/invoices';

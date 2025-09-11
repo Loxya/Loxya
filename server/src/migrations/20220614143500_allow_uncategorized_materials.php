@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\SelectQuery;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -37,8 +34,7 @@ final class AllowUncategorizedMaterials extends AbstractMigration
         $categories = $this->table('categories');
         $categories->insert(['name' => $noCategoryName])->saveData();
 
-        /** @var SelectQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_SELECT);
+        $qb = $this->getSelectBuilder();
         $category = $qb
             ->select(['id'])
             ->from(sprintf('%scategories', $prefix))
@@ -50,8 +46,7 @@ final class AllowUncategorizedMaterials extends AbstractMigration
             ->dropForeignKey('category_id', 'fk_materials_category')
             ->save();
 
-        /** @var UpdateQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+        $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%smaterials', $prefix))
             ->set('category_id', $category['id'])

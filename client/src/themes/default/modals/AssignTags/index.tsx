@@ -1,10 +1,10 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Select from '@/themes/default/components/Select';
 import Button from '@/themes/default/components/Button';
 
 import type { Tag } from '@/stores/api/tags';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 
 type Props = {
@@ -149,9 +149,12 @@ const AssignTags = defineComponent({
                     <p class="AssignTags__help">{__('choose-tags-below')}</p>
                     <div class="AssignTags__form">
                         <Select
-                            v-model={this.values}
+                            value={this.values}
                             options={tagsOptions}
                             class="AssignTags__form__select"
+                            onInput={(value: number[]) => {
+                                this.values = value;
+                            }}
                             multiple
                         />
                         <Button

@@ -2,9 +2,8 @@ import './index.scss';
 import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
-import HttpCode from 'status-code-enum';
-import { defineComponent } from '@vue/composition-api';
-import { isRequestErrorStatusCode } from '@/utils/errors';
+import { HttpCode, RequestError } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import isTruthy from '@/utils/isTruthy';
 import Fragment from '@/components/Fragment';
@@ -44,7 +43,7 @@ type Data = {
 
 type InstanceProperties = {
     refreshTableDebounced: (
-        | DebouncedMethod<typeof Beneficiaries, 'refresh'>
+        | DebouncedMethod<typeof Beneficiaries, 'refreshTable'>
         | undefined
     ),
 };
@@ -137,8 +136,22 @@ const Beneficiaries = defineComponent({
                         }
 
                         return (
-                            <Link to={{ name: 'edit-company', params: { id: company.id } }}>
-                                {company.legal_name}
+                            <Link
+                                to={{
+                                    name: 'edit-company',
+                                    params: { id: company.id.toString() },
+                                }}
+                            >
+                                <span class="Beneficiaries__company">
+                                    <span class="Beneficiaries__company__legal-name">
+                                        {company.legal_name}
+                                    </span>
+                                    {(company.registration_id ?? '').length > 0 && (
+                                        <span class="Beneficiaries__company__registration-id">
+                                            {company.registration_id}
+                                        </span>
+                                    )}
+                                </span>
                             </Link>
                         );
                     },
@@ -235,14 +248,17 @@ const Beneficiaries = defineComponent({
                             <Fragment>
                                 <Button
                                     icon="eye"
-                                    to={{ name: 'view-beneficiary', params: { id } }}
+                                    to={{
+                                        name: 'view-beneficiary',
+                                        params: { id: id.toString() },
+                                    }}
                                 />
                                 <Dropdown>
                                     <Button
                                         type="edit"
                                         to={{
                                             name: 'edit-beneficiary',
-                                            params: { id },
+                                            params: { id: id.toString() },
                                         }}
                                     >
                                         {__('action-edit')}
@@ -266,12 +282,9 @@ const Beneficiaries = defineComponent({
     watch: {
         filters: {
             handler() {
-                // @ts-expect-error -- `this` fait bien référence au component.
-                this.refreshTableDebounced();
+                this.refreshTableDebounced!();
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 if (this.shouldPersistSearch) {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     persistFilters(FILTERS_PERSISTENCE_KEY, this.filters);
                 }
             },
@@ -409,7 +422,7 @@ const Beneficiaries = defineComponent({
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
                 return data;
             } catch (error) {
-                if (isRequestErrorStatusCode(error, HttpCode.ClientErrorRangeNotSatisfiable)) {
+                if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     this.refreshTable();
                     return undefined;
                 }

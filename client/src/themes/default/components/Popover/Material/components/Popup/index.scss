@@ -9,7 +9,7 @@
     max-height: 300px;
     border-radius: globals.$border-radius-large;
     background-color: globals.$bg-color-body;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgb(0 0 0 / 50%);
 
     //
     // - Layout
@@ -118,30 +118,30 @@
         }
     }
 
-    &__attributes {
+    &__properties {
+        @extend %reset-dl;
+
         display: flex;
         flex-direction: column;
         gap: globals.$spacing-thin;
-    }
 
-    &__attribute {
-        display: flex;
-        margin: 0;
-        gap: globals.$spacing-thin;
+        &__item {
+            display: flex;
+            margin: 0;
+            gap: globals.$spacing-thin;
 
-        &__name {
-            @extend %reset-dl;
-
-            @include globals.icon('cog') {
-                margin-right: globals.$spacing-thin;
+            &__name {
+                @include globals.icon('cog') {
+                    margin-right: globals.$spacing-thin;
+                }
             }
-        }
 
-        &__value {
-            @extend %reset-dd;
+            &__value {
+                @extend %reset-dd;
 
-            flex: 1;
-            font-weight: 600;
+                flex: 1;
+                font-weight: 600;
+            }
         }
     }
 

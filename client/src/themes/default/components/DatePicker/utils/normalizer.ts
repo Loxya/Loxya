@@ -1,3 +1,4 @@
+import { markRaw } from 'vue';
 import invariant from 'invariant';
 import DateTime, { DateTimeRoundingMethod } from '@/utils/datetime';
 import Period from '@/utils/period';
@@ -123,10 +124,10 @@ export function normalizeCoreValue(value: CoreValue, type: Type, isRange: boolea
             if (value.length !== 2 || value[0] === null || value[1] === null) {
                 return null;
             }
-            return new Period(value[0], value[1], isFullDays);
+            return markRaw(new Period(value[0], value[1], isFullDays));
         }
 
-        return new Period(value, value, isFullDays);
+        return markRaw(new Period(value, value, isFullDays));
     }
 
     const flatValue = Array.isArray(value)
@@ -137,9 +138,11 @@ export function normalizeCoreValue(value: CoreValue, type: Type, isRange: boolea
         return null;
     }
 
-    return type === Type.DATETIME
-        ? new DateTime(flatValue)
-        : new Day(flatValue);
+    return markRaw(
+        type === Type.DATETIME
+            ? new DateTime(flatValue)
+            : new Day(flatValue),
+    );
 }
 
 /**
@@ -181,9 +184,11 @@ export function convertValueType(
         );
 
         const isFullDays = type === Type.DATE;
-        return isFullDays !== value.isFullDays
-            ? value.setFullDays(isFullDays, true)
-            : value;
+        return markRaw(
+            isFullDays !== value.isFullDays
+                ? value.setFullDays(isFullDays, true)
+                : value,
+        );
     }
 
     invariant(
@@ -193,12 +198,15 @@ export function convertValueType(
     );
 
     if (type === Type.DATE) {
-        return new Day(value as DateTime);
+        return markRaw(new Day(value as DateTime));
     }
 
     const normalizedValue = value instanceof Day
         ? value.toDateTime().set('hour', 12)
         : value;
 
-    return normalizedValue.roundMinutes(withoutMinutes ? 60 : MINUTES_STEP);
+    return markRaw(
+        normalizedValue
+            .roundMinutes(withoutMinutes ? 60 : MINUTES_STEP),
+    );
 }

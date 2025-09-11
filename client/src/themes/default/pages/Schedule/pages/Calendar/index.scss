@@ -55,7 +55,7 @@
         }
     }
 
-    @media (max-height: 700px) {
+    @media (height <= 700px) {
         &__footer {
             display: none;
         }

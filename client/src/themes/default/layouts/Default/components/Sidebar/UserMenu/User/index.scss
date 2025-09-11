@@ -54,6 +54,7 @@
             width: 100%;
             min-width: 0;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         &__name {
@@ -66,7 +67,7 @@
         }
 
         &:hover {
-            background-color: rgba(globals.$primary-color, 0.1);
+            background-color: rgb(globals.$primary-color, 0.1);
         }
 
         //
@@ -96,7 +97,7 @@
     &--active,
     &--dropdown-open {
         #{$block}__main {
-            background-color: rgba(globals.$primary-color, 0.1);
+            background-color: rgb(globals.$primary-color, 0.1);
             color: globals.$link-active-color;
 
             &__email {

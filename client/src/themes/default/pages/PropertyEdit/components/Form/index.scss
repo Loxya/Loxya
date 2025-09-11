@@ -1,0 +1,49 @@
+@use '~@/themes/default/style/globals';
+@use 'sass:color';
+
+.PropertyEditForm {
+    $block: &;
+
+    &__type {
+        max-width: 300px;
+    }
+
+    &__config {
+        margin: globals.$spacing-medium 0;
+    }
+
+    &__unit,
+    &__max-length {
+        max-width: 180px;
+    }
+
+    &__entities,
+    &__categories {
+        &__choices {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        &__item {
+            display: inline-block;
+            padding: globals.$spacing-small globals.$spacing-medium;
+            border-radius: 15px;
+            background-color: #4b4b4b;
+            color: globals.$text-light-color;
+            cursor: pointer;
+            transition: all 300ms;
+
+            &--selected,
+            &--selected:hover,
+            &--selected:focus {
+                background-color: globals.$primary-color;
+                color: #fff;
+            }
+        }
+
+        &__help {
+            font-style: italic;
+        }
+    }
+}

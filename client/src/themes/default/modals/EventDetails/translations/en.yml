@@ -17,7 +17,17 @@ inventory-unavailable-help: >-
 infos:
     beneficiary-phone: "Phone:"
     beneficiary-email: "Email:"
-    manager: "Project manager\_:"
+    created-by: "Created by: {author}"
+    request-date: "Request date: {date}"
+    manager: "Project manager: {manager}"
+    mobilization-period: "Mobilization period: {period}"
+    initially-planned-period: Initially {period}
+    overdue-since: Overdue since {duration}
+    late-return-on: Returned on {date} ({duration} late)
+    with-technicians: "With\_:"
+    warning-overdue: |
+        The return of the equipment for this event is overdue.
+        It should have been returned before the {date} ({duration} ago).
 
 materials:
     problems-on-returned-materials: Problems on returned materials
@@ -53,10 +63,6 @@ estimates:
         deleted: The estimate has been deleted.
         confirm-delete: Do you really want to delete this estimate?
 
-    modals:
-        create:
-            # warning-event-has-invoice: 'Warning, this event already have an invoice!'
-
 invoices:
     previous-invoices: Previous invoices
     no-invoice-help: There is no invoice yet.
@@ -68,6 +74,7 @@ invoices:
     contact-someone-to-create-invoice: >-
         If needed, contact a member of the team and ask them to edit the invoice.
     create-invoice: Create an invoice...
+    confirm-create: Do you confirm you want to generate a new invoice now?
     regenerate-help: >-
         You can create a new invoice by clicking the button below.
     create-new-invoice: Create a new invoice...
@@ -75,12 +82,12 @@ invoices:
     invoice-created: Invoice created.
 
     item:
-        title: 'Invoice n° {number}, generated on {date}'
-        download: Download the invoice
-
-    modals:
-        create:
-            # warning-no-estimate-before-billing: 'Warning, this event does not have any estimate!'
+        title:
+            invoice: "Invoice No.\_{number}, generated on {date}"
+            credit-note: "Credit note No.\_{number}, generated on {date}"
+        download:
+            invoice: Download the Invoice
+            credit-note: Download the Credit note
 
 documents:
     confirm-permanently-delete: Do you really want to permanently delete this document?

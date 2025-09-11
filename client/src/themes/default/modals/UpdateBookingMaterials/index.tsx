@@ -1,6 +1,6 @@
 import './index.scss';
-import axios from 'axios';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import { debounce } from 'lodash';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import { ApiErrorCode } from '@/stores/api/@codes';
@@ -11,7 +11,7 @@ import MaterialsSelector, {
 } from '@/themes/default/components/MaterialsSelector';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Booking } from '@/stores/api/bookings';
 import type { SelectedMaterial } from '@/themes/default/components/MaterialsSelector';
 
@@ -63,14 +63,14 @@ const UpdateBookingMaterialsModal = defineComponent({
     },
     computed: {
         modalTitle(): string {
-            const { $t: __, booking } = this;
+            const { __, booking } = this;
 
             if (booking.entity === BookingEntity.EVENT) {
                 const { title } = booking;
-                return __('modal.update-booking-materials.title-event', { title });
+                return __('title-event', { title });
             }
 
-            return __('modal.update-booking-materials.title');
+            return __('title');
         },
     },
     created() {
@@ -98,12 +98,12 @@ const UpdateBookingMaterialsModal = defineComponent({
         },
 
         async handleGlobalChange() {
-            const { $t: __, booking } = this;
+            const { __, booking } = this;
 
             try {
                 this.booking = await apiBookings.one(booking.entity, booking.id);
             } catch {
-                this.$toasted.error(__('errors.unexpected-while-fetching'));
+                this.$toasted.error(__('global.errors.unexpected-while-fetching'));
             }
         },
 
@@ -122,7 +122,7 @@ const UpdateBookingMaterialsModal = defineComponent({
         // ------------------------------------------------------
 
         async save() {
-            const { $t: __, isSaving, booking } = this;
+            const { __, isSaving, booking } = this;
             if (isSaving) {
                 return;
             }
@@ -137,24 +137,30 @@ const UpdateBookingMaterialsModal = defineComponent({
             try {
                 await apiBookings.updateMaterials(entity, id, materials);
 
-                this.$toasted.success(__('modal.update-booking-materials.materials-saved'));
+                this.$toasted.success(__('materials-saved'));
                 this.$emit('close');
             } catch (error) {
                 this.isSaving = false;
-                if (axios.isAxiosError(error)) {
-                    const { code } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN };
-                    if (code === ApiErrorCode.EMPTY_PAYLOAD) {
-                        this.$toasted.error(__('modal.update-booking-materials.list-cannot-be-empty'));
-                        return;
-                    }
+
+                if (error instanceof RequestError && error.code === ApiErrorCode.EMPTY_PAYLOAD) {
+                    this.$toasted.error(__('list-cannot-be-empty'));
+                    return;
                 }
-                this.$toasted.error(__('errors.unexpected-while-saving'));
+                this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
+        },
+
+        __(key: string, params?: Record<string, number | string>, count?: number): string {
+            key = !key.startsWith('global.')
+                ? `modal.update-booking-materials.${key}`
+                : key.replace(/^global\./, '');
+
+            return this.$t(key, params, count);
         },
     },
     render() {
         const {
-            $t: __,
+            __,
             modalTitle,
             handleClose,
             materials,
@@ -181,7 +187,7 @@ const UpdateBookingMaterialsModal = defineComponent({
                 </header>
                 <div class="UpdateBookingMaterialsModal__body">
                     <MaterialsSelector
-                        booking={booking}
+                        bookable={booking}
                         defaultValues={materials}
                         onReady={handleReady}
                         onChange={handleChange}
@@ -196,7 +202,7 @@ const UpdateBookingMaterialsModal = defineComponent({
                             onClick={handleSave}
                             loading={isSaving}
                         >
-                            {__('save')}
+                            {__('global.save')}
                         </Button>
                     </footer>
                 )}

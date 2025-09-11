@@ -1,14 +1,14 @@
 import './index.scss';
 import config from '@/globals/config';
 import throttle from 'lodash/throttle';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import { Group } from '@/stores/api/groups';
 import apiEvents from '@/stores/api/events';
 import Notepad from '@/themes/default/components/Notepad';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails, EventTechnician } from '@/stores/api/events';
 import type { DebouncedMethod } from 'lodash';
 import type { Session } from '@/stores/api/session';
@@ -24,6 +24,14 @@ const MAX_AUTOMATIC_SAVE_ATTEMPTS: number = 2;
 type Props = {
     /** L'événement dont on souhaite afficher l'onglet des notes. */
     event: EventDetails,
+
+    /**
+     * Fonction appelée lorsque l'événement a été mise à jour
+     * après que la note ai été modifiée.
+     *
+     * @param event - L'événement, mise à jour.
+     */
+    onUpdated?(event: EventDetails): void,
 };
 
 enum SaveMode {
@@ -54,6 +62,11 @@ const EventDetailsNote = defineComponent({
             type: Object as PropType<Required<Props>['event']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpdated: {
+            type: Function as PropType<Props['onUpdated']>,
+            default: undefined,
+        },
     },
     emits: ['updated'],
     setup: (): InstanceProperties => ({
@@ -72,7 +85,8 @@ const EventDetailsNote = defineComponent({
         isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
 

@@ -1,0 +1,17 @@
+.ResetPasswordPageFinalizeStep {
+    &__title {
+        margin: 0 0 15px;
+        font-size: 1.8rem;
+    }
+
+    &__instruction {
+        margin: 0 0 20px;
+        font-size: 14px;
+    }
+
+    &__form {
+        &__action {
+            margin-top: 20px;
+        }
+    }
+}

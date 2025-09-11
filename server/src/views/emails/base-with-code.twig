@@ -1,0 +1,31 @@
+{% extends 'emails/base-frame.twig' %}
+
+{% block head %}
+    {{ parent() }}
+
+    <style type="text/css" rel="stylesheet" media="all">
+        .code {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            font-size: 26px;
+            font-weight: bold;
+        }
+        .code__letter {
+            display: inline-block;
+            padding: 12px;
+            margin: 0 5px;
+            background-color: #e9f5ff;
+            color: #0056b3;
+            letter-spacing: 2px;
+            border-radius: 4px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .code__letter {
+                background-color: #444;
+                color: #66aaff;
+            }
+        }
+    </style>
+{% endblock %}

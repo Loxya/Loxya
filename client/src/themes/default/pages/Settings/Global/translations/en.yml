@@ -302,7 +302,8 @@ degressive-rates:
                         Currently, this degressive rate does not apply any degressivity.
                     add: Add a tier
                     fields:
-                        from_day: From day
+                        from_day: From a duration of
+                        days: day(s)
                         is-rate:
                             options:
                                 rate: Rate
@@ -312,3 +313,23 @@ degressive-rates:
                             addons:
                                 rate: "%"
                                 fixed: ""
+
+estimates-invoices:
+    title: Content of estimates and invoices
+    help: Here you can customize the content of the estimates and invoices.
+
+    details: Details
+    display-booking-description: "Display the event description?"
+    display-mobilization-period: "Display the pickup and return dates?"
+    display-total-replacement-price: "Display the total replacement values?"
+    display-totalisable-attributes: "Display the totals of material's special attributes? (under the materials list)"
+    material-list: Material list
+    display-pictures: "Display pictures (thumbnails)?"
+    display-descriptions: "Display descriptions?"
+    display-replacement-prices: "Display replacement values?"
+    display-unit-prices: "Display unit prices and subtotals?"
+    estimates-custom-text: Custom text for estimates (above the signature)
+    invoices-custom-text: Custom text for invoices (below the totals)
+    custom-text-title: Text title
+    custom-text-content: Text content
+    saved: The settings for estimates and invoices have been successfully saved.

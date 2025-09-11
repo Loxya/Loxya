@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Palier de tarif dégressif.
@@ -34,7 +34,7 @@ final class DegressiveRateTier extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'degressive_rate_id' => V::custom([$this, 'checkDegressiveRateId']),
             'from_day' => V::custom([$this, 'checkFromDay']),
             'is_rate' => V::boolType(),

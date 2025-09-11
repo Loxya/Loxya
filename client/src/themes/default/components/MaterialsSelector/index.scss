@@ -43,7 +43,7 @@
     // - Responsive
     //
 
-    @media (min-width: 1500px) {
+    @media (width >= 1500px) {
         &__header {
             flex-direction: row;
             align-items: center;

@@ -7,7 +7,7 @@
     outline: none;
     border-radius: globals.$border-radius-normal globals.$border-radius-normal 0 0;
     background-image:
-        linear-gradient(rgba(0, 0, 0, 0), #000),
+        linear-gradient(rgb(0 0 0 / 0%), #000),
         linear-gradient(90deg, #fff, hsl(var(--ColorPickerGradient--hue), 100%, 50%));
     cursor: pointer;
 

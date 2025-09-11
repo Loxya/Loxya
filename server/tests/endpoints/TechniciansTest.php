@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Loxya\Models\Technician;
 use Loxya\Support\Arr;
-use Loxya\Support\Filesystem\UploadedFile;
+use Loxya\Support\File\UploadedFile;
 
 final class TechniciansTest extends ApiTestCase
 {
@@ -22,7 +22,7 @@ final class TechniciansTest extends ApiTestCase
                 'last_name' => 'Rabbit',
                 'full_name' => 'Roger Rabbit',
                 'nickname' => 'Riri',
-                'email' => 'tester2@robertmanager.net',
+                'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
                 'postal_code' => null,
@@ -351,7 +351,7 @@ final class TechniciansTest extends ApiTestCase
             'nickname' => 'ilestvraimeeeentrèslongcesurnom',
         ]);
         $this->assertApiValidationError([
-            'nickname' => "30 max. characters.",
+            'nickname' => "Max. 30 characters.",
             'first_name' => "This field contains some unauthorized characters.",
             'last_name' => "This field is mandatory.",
             'email' => "This email address is invalid.",
@@ -362,7 +362,7 @@ final class TechniciansTest extends ApiTestCase
             'first_name' => 'Tester',
             'last_name' => 'Tagger',
             'nickname' => 'TagZz',
-            'email' => 'tester2@robertmanager.net',
+            'email' => 'tester2@loxya.com',
             'phone' => 'notAphoneNumber',
         ]);
         $this->assertApiValidationError([
@@ -483,7 +483,7 @@ final class TechniciansTest extends ApiTestCase
 
     public function testAttachDocument(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         $createUploadedFile = static function (string $from) {
             $tmpFile = tmpfile();

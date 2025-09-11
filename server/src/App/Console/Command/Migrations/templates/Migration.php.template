@@ -7,15 +7,10 @@ final class $className extends $baseClassName
 {
     public function up(): void
     {
-        $table = $this->table('');
+        $table = $this->table('', ['signed' => true]);
         $table
             ->addColumn('')
-            ->addColumn('created_at', 'datetime', [
-                'null' => false,
-                'update' => '',
-                'default' => 'CURRENT_TIMESTAMP',
-            ])
-            ->addColumn('updated_at', 'datetime', ['null' => true])
+            ->addTimestamps()
             ->create();
     }
 

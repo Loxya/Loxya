@@ -56,7 +56,7 @@ final class BookingExtraController extends BaseController
         }
 
         $currencyChanged = $booking->currency !== Config::get('currency');
-        if ($currencyChanged && in_array('taxes', $selection)) {
+        if ($currencyChanged && in_array('taxes', $selection, true)) {
             $canResyncTaxes = (new Collection($bookingExtra->liveTax?->asFlatArray() ?? []))
                 ->every('is_rate', true);
 
@@ -69,7 +69,7 @@ final class BookingExtraController extends BaseController
             }
         }
 
-        if (in_array('taxes', $selection)) {
+        if (in_array('taxes', $selection, true)) {
             $bookingExtra->taxes = $bookingExtra->liveTax?->asFlatArray();
         }
 

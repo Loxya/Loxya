@@ -86,11 +86,11 @@ const hasBillingChanged = (before: BillingData, after: BillingData): boolean => 
                 }
 
                 if ('taxes' in beforeExtra && 'taxes' in afterExtra) {
-                    if (beforeExtra.taxes.length !== afterExtra.taxes.length) {
+                    if (beforeExtra.taxes!.length !== afterExtra.taxes!.length) {
                         return true;
                     }
 
-                    const hasTaxesChanged = afterExtra.taxes.some(
+                    const hasTaxesChanged = afterExtra.taxes!.some(
                         (afterTax: ExtraBillingTaxData) => {
                             const beforeTax = beforeExtra.taxes!.find(
                                 (_beforeTax: ExtraBillingTaxData) => (

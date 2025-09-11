@@ -43,12 +43,12 @@ export type SubCategoryEdit = Omit<SubCategoryCreate, 'category_id'>;
 
 const create = async (data: SubCategoryCreate): Promise<SubCategory> => {
     const response = await requester.post('/subcategories', data);
-    return SubCategorySchema.parse(response.data);
+    return SubCategorySchema.parse(response);
 };
 
 const update = async (id: SubCategory['id'], data: SubCategoryEdit): Promise<SubCategory> => {
     const response = await requester.put(`/subcategories/${id}`, data);
-    return SubCategorySchema.parse(response.data);
+    return SubCategorySchema.parse(response);
 };
 
 const remove = async (id: SubCategory['id']): Promise<void> => {

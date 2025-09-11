@@ -7,3 +7,10 @@ from-date-to-date: "du\_{from} au\_{to}"
 # - Formats "dans une phrase".
 date-in-sentence: 'le {date}'
 period-in-sentence: 'la période du {from} au {to}'
+
+# - Durées
+durations:
+    days: ['1 jour', '{count} jours']
+    hours: ['1 heure', '{count} heures']
+    minutes: ['1 minute', '{count} minutes']
+    seconds: ['1 seconde', '{count} secondes']

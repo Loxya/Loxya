@@ -69,4 +69,15 @@
             }
         }
     }
+
+    &__company {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+
+        &__registration-id {
+            color: globals.$text-soft-color;
+            font-size: 0.9rem;
+        }
+    }
 }

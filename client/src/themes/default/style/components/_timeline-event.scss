@@ -1,4 +1,4 @@
-/* stylelint-disable scss/no-global-function-names */
+@use 'sass:color';
 
 .timeline-event {
     $block: &;
@@ -32,8 +32,12 @@
         --background-color: #{$calendar-event-past-color} !important;
         --color: $calendar-event-past-text-color !important;
 
+        &#{$block}--ongoing-overdue {
+            --color: #fff !important;
+        }
+
         &.vis-selected {
-            background-color: adjust-color($calendar-event-past-color, $lightness: 10%) !important;
+            background-color: color.adjust($calendar-event-past-color, $lightness: 10%) !important;
         }
     }
 
@@ -42,7 +46,7 @@
         --color: $calendar-event-no-return-inventory-text-color !important;
 
         &.vis-selected {
-            $background-color: adjust-color($calendar-event-no-return-inventory-color, $lightness: 10%);
+            $background-color: color.adjust($calendar-event-no-return-inventory-color, $lightness: 10%);
 
             --background-color: #{$background-color} !important;
         }
@@ -53,7 +57,7 @@
         --color: $calendar-event-archived-text-color !important;
 
         &.vis-selected {
-            $background-color: adjust-color($calendar-event-archived-color, $lightness: 5%);
+            $background-color: color.adjust($calendar-event-archived-color, $lightness: 5%);
 
             --background-color: #{$background-color} !important;
         }
@@ -66,11 +70,11 @@
             background-image:
                 linear-gradient(
                     45deg,
-                    rgba(255, 255, 255, 0.1) 25%,
+                    rgb(255 255 255 / 10%) 25%,
                     transparent 25%,
                     transparent 50%,
-                    rgba(255, 255, 255, 0.1) 50%,
-                    rgba(255, 255, 255, 0.1) 75%,
+                    rgb(255 255 255 / 10%) 50%,
+                    rgb(255 255 255 / 10%) 75%,
                     transparent 75%,
                     transparent
                 );

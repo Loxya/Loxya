@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Option from './Option';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { OptionData } from './Option';
 
 type Props = {
@@ -11,6 +11,13 @@ type Props = {
 
     /** La valeur de l'option sélectionnée. */
     value: string | number | null,
+
+    /**
+     * Fonction appelée lorsque l'option active change.
+     *
+     * @param selectedValue - La nouvelle option à activer.
+     */
+    onChange?(selectedValue: string | number): void,
 };
 
 /**
@@ -31,6 +38,11 @@ const MultiSwitch = defineComponent({
                 ['string', 'number'].includes(typeof value) ||
                 value === null
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],

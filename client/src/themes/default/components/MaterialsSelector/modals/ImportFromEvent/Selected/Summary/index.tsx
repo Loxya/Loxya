@@ -1,9 +1,9 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import groupByCategories, { SortBy } from './utils/groupByCategories';
 import Category from './components/Category';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { EmbeddedMaterialsByCategory } from './utils/groupByCategories';
 import type { CategoryDetails } from '@/stores/api/categories';
@@ -65,7 +65,7 @@ const ImportFromEventSelectedSummary = defineComponent({
             sortedMaterials.map(
                 (category: EmbeddedMaterialsByCategory) => (
                     <Category
-                        key={category.id}
+                        key={category.id ?? undefined}
                         data={category}
                         withBilling={withBilling}
                     />

@@ -1,31 +1,42 @@
-{% if showLogo and company.logo is not empty %}
+{%- if showLogo and company.logo is not empty ~%}
 <img src="{{ baseUrl }}/img/{{ company.logo }}" style="width: 75mm;" />
-{% endif %}
-<p class="size12 strong">
+{%- endif ~%}
+<div class="spaceBottom2 size12 strong">
+    {%- if company.name is not empty ~%}
     {{ company.name }}<br />
+    {%- endif -%}
+    {%- if company.street is not empty ~%}
     {{ company.street }}<br />
+    {%- endif ~%}
+    {%- if company.zipCode is not empty or company.locality is not empty ~%}
     {{ company.zipCode }} {{ company.locality }}<br />
+    {%- endif ~%}
+    {%- if company.country.name is not empty ~%}
     {{ company.country.name }}
-</p>
-{% if showLegalNumbers -%}
-<p>
-    {%- for legalNumber in company.legalNumbers -%}
-        {%- if legalNumber.value is not empty -%}
-        {{- legalNumber.name }}: {{ legalNumber.value }}<br />
-        {%- endif -%}
-    {%- endfor -%}
-</p>
-{% endif -%}
-{% if company.phone is not empty or company.email is not empty -%}
-<p>
-    {%- if company.phone is not empty -%}
-    {{- __('phone', company.phone) }}<br />
+    {%- endif ~%}
+</div>
+{%- if showLegalNumbers ~%}
+<div class="spaceBottom2">
+{%- for legalNumber in company.legalNumbers -%}
+    {%- if legalNumber.value is not empty ~%}
+    {{- legalNumber.name }}: {{ legalNumber.value }}{% if not loop.last %}<br />{% endif %}
     {%- endif -%}
-    {%- if company.email is not empty -%}
-    {{- __('email', company.email) -}}
-    {%- endif -%}
-</p>
-{% endif -%}
-{% if showLegalNumbers and company.vatNumber is not empty -%}
-<p>{{ __('vat-number', company.vatNumber) }}</p>
-{% endif %}
+{%- endfor ~%}
+</div>
+{%- endif -%}
+{%- if company.phone is not empty or company.email is not empty or company.website is not empty ~%}
+<div class="spaceBottom2">
+    {%- if company.phone is not empty ~%}
+    {{ __('phone', company.phone) }}<br />
+    {%- endif ~%}
+    {%- if company.email is not empty ~%}
+    {{ __('email', company.email) -}}<br />
+    {%- endif ~%}
+    {%- if company.website is not empty ~%}
+    <a href="{{ company.website }}">{{ company.website }}</a>
+    {%- endif ~%}
+</div>
+{%- endif -%}
+{%- if showLegalNumbers and company.vatNumber is not empty ~%}
+<div class="spaceBottom2">{{ __('vat-number', company.vatNumber) }}</div>
+{%- endif -%}

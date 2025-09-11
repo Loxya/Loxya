@@ -1,0 +1,441 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Properties Api all() parse the returned data correctly 1`] = `
+[
+  {
+    "categories": [
+      {
+        "id": 2,
+        "name": "Lumière",
+      },
+      {
+        "id": 1,
+        "name": "Son",
+      },
+    ],
+    "entities": [
+      "material",
+    ],
+    "id": 1,
+    "is_totalisable": true,
+    "name": "Poids",
+    "type": "float",
+    "unit": "kg",
+  },
+  {
+    "categories": [],
+    "entities": [
+      "material",
+    ],
+    "id": 2,
+    "max_length": null,
+    "name": "Couleur",
+    "type": "string",
+  },
+  {
+    "categories": [
+      {
+        "id": 2,
+        "name": "Lumière",
+      },
+      {
+        "id": 1,
+        "name": "Son",
+      },
+    ],
+    "entities": [
+      "material",
+    ],
+    "id": 3,
+    "is_totalisable": true,
+    "name": "Puissance",
+    "type": "integer",
+    "unit": "W",
+  },
+  {
+    "categories": [],
+    "entities": [
+      "material",
+    ],
+    "id": 4,
+    "name": "Conforme",
+    "type": "boolean",
+  },
+  {
+    "categories": [],
+    "entities": [
+      "material",
+    ],
+    "id": 5,
+    "name": "Date d'achat",
+    "type": "date",
+  },
+  {
+    "categories": [],
+    "entities": [
+      "material",
+    ],
+    "id": 6,
+    "is_totalisable": true,
+    "name": "Prix d'achat",
+    "type": "float",
+    "unit": "€",
+  },
+  {
+    "categories": [],
+    "entities": [
+      "material",
+    ],
+    "id": 7,
+    "name": "Lieu d'usage",
+    "options": [
+      "Intérieur",
+      "Extérieur",
+      "Polyvalent",
+    ],
+    "type": "list",
+  },
+]
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #1) 1`] = `
+{
+  "categories": [
+    {
+      "id": 2,
+      "name": "Lumière",
+    },
+    {
+      "id": 1,
+      "name": "Son",
+    },
+  ],
+  "entities": [
+    "material",
+  ],
+  "id": 1,
+  "is_totalisable": true,
+  "name": "Poids",
+  "type": "float",
+  "unit": "kg",
+}
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #2) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 2,
+  "max_length": null,
+  "name": "Couleur",
+  "type": "string",
+}
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #3) 1`] = `
+{
+  "categories": [
+    {
+      "id": 2,
+      "name": "Lumière",
+    },
+    {
+      "id": 1,
+      "name": "Son",
+    },
+  ],
+  "entities": [
+    "material",
+  ],
+  "id": 3,
+  "is_totalisable": true,
+  "name": "Puissance",
+  "type": "integer",
+  "unit": "W",
+}
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #4) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 4,
+  "name": "Conforme",
+  "type": "boolean",
+}
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #5) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 5,
+  "name": "Date d'achat",
+  "type": "date",
+}
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #6) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 6,
+  "is_totalisable": true,
+  "name": "Prix d'achat",
+  "type": "float",
+  "unit": "€",
+}
+`;
+
+exports[`Properties Api create() parse the returned data correctly (with #7) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 7,
+  "name": "Lieu d'usage",
+  "options": [
+    "Intérieur",
+    "Extérieur",
+    "Polyvalent",
+  ],
+  "type": "list",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #1) 1`] = `
+{
+  "categories": [
+    {
+      "id": 2,
+      "name": "Lumière",
+    },
+    {
+      "id": 1,
+      "name": "Son",
+    },
+  ],
+  "entities": [
+    "material",
+  ],
+  "id": 1,
+  "is_totalisable": true,
+  "name": "Poids",
+  "type": "float",
+  "unit": "kg",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #2) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 2,
+  "max_length": null,
+  "name": "Couleur",
+  "type": "string",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #3) 1`] = `
+{
+  "categories": [
+    {
+      "id": 2,
+      "name": "Lumière",
+    },
+    {
+      "id": 1,
+      "name": "Son",
+    },
+  ],
+  "entities": [
+    "material",
+  ],
+  "id": 3,
+  "is_totalisable": true,
+  "name": "Puissance",
+  "type": "integer",
+  "unit": "W",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #4) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 4,
+  "name": "Conforme",
+  "type": "boolean",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #5) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 5,
+  "name": "Date d'achat",
+  "type": "date",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #6) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 6,
+  "is_totalisable": true,
+  "name": "Prix d'achat",
+  "type": "float",
+  "unit": "€",
+}
+`;
+
+exports[`Properties Api one() parse the returned data correctly (with #7) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 7,
+  "name": "Lieu d'usage",
+  "options": [
+    "Intérieur",
+    "Extérieur",
+    "Polyvalent",
+  ],
+  "type": "list",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #1) 1`] = `
+{
+  "categories": [
+    {
+      "id": 2,
+      "name": "Lumière",
+    },
+    {
+      "id": 1,
+      "name": "Son",
+    },
+  ],
+  "entities": [
+    "material",
+  ],
+  "id": 1,
+  "is_totalisable": true,
+  "name": "Poids",
+  "type": "float",
+  "unit": "kg",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #2) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 2,
+  "max_length": null,
+  "name": "Couleur",
+  "type": "string",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #3) 1`] = `
+{
+  "categories": [
+    {
+      "id": 2,
+      "name": "Lumière",
+    },
+    {
+      "id": 1,
+      "name": "Son",
+    },
+  ],
+  "entities": [
+    "material",
+  ],
+  "id": 3,
+  "is_totalisable": true,
+  "name": "Puissance",
+  "type": "integer",
+  "unit": "W",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #4) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 4,
+  "name": "Conforme",
+  "type": "boolean",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #5) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 5,
+  "name": "Date d'achat",
+  "type": "date",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #6) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 6,
+  "is_totalisable": true,
+  "name": "Prix d'achat",
+  "type": "float",
+  "unit": "€",
+}
+`;
+
+exports[`Properties Api update() parse the returned data correctly (with #7) 1`] = `
+{
+  "categories": [],
+  "entities": [
+    "material",
+  ],
+  "id": 7,
+  "name": "Lieu d'usage",
+  "options": [
+    "Intérieur",
+    "Extérieur",
+    "Polyvalent",
+  ],
+  "type": "list",
+}
+`;

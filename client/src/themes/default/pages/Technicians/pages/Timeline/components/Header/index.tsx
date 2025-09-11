@@ -1,6 +1,6 @@
 import './index.scss';
 import Day from '@/utils/day';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import { TechniciansViewMode } from '@/stores/api/users';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
@@ -9,7 +9,7 @@ import ViewModeSwitch from '../../../../components/ViewModeSwitch';
 import FiltersPanel, { FiltersSchema } from '../Filters';
 
 import type { Filters } from '../Filters';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 
 type Props = {
     /** La date sur laquelle le planning des techniciens est actuellement centré. */
@@ -20,6 +20,26 @@ type Props = {
 
     /** Le planning ou la page sont t'ils en cours de chargement ? */
     isLoading?: boolean,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande
+     * l'actualisation des données.
+     */
+    onRefresh?(): void,
+
+    /**
+     * Fonction appelée lorsque les filtres ont changés.
+     *
+     * @param filters - Les nouveaux filtres du calendrier.
+     */
+    onFiltersChange?(filters: Filters): void,
+
+    /**
+     * Fonction appelée lorsque la date de référence (= "centrale") a changé.
+     *
+     * @param date - La nouvelle date "centrale".
+     */
+    onChangeCenterDate?(date: Raw<Day>): void,
 };
 
 /** Header de la page de planning des techniciens. */
@@ -43,6 +63,21 @@ const TechniciansPlanningHeader = defineComponent({
         isLoading: {
             type: Boolean as PropType<Required<Props>['isLoading']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRefresh: {
+            type: Function as PropType<Props['onRefresh']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onFiltersChange: {
+            type: Function as PropType<Props['onFiltersChange']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChangeCenterDate: {
+            type: Function as PropType<Props['onChangeCenterDate']>,
+            default: undefined,
         },
     },
     emits: [
@@ -69,12 +104,12 @@ const TechniciansPlanningHeader = defineComponent({
             this.$emit('refresh');
         },
 
-        handleChangeCenterDate(newDate: Day) {
-            this.$emit('changeCenterDate', newDate);
+        handleChangeCenterDate(newDate: Day | null) {
+            this.$emit('changeCenterDate', markRaw(newDate ?? Day.today()));
         },
 
         handleSetTodayDate() {
-            this.$emit('changeCenterDate', Day.today());
+            this.$emit('changeCenterDate', markRaw(Day.today()));
         },
 
         handleFiltersChange(newFilters: Filters) {

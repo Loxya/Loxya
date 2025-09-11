@@ -1,24 +1,15 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import invariant from 'invariant';
+import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { CustomRouterLinkProps, Location } from 'vue-router';
 
-export type MenuLinkItem = {
-    ident: string,
-    icon: string,
-    to?: string | Location,
-    onClick?(): void,
-    external?: boolean,
-    exact?: boolean,
-    counter?: number,
-};
-
-type Props = {
-    /** Le nom du lien, utilisé comme clé de traduction. */
-    ident: string,
+export type Props = {
+    /** Le label du lien. */
+    label: string,
 
     /**
      * La cible du lien sous forme de chaîne ou d'objet `Location` compatible avec Vue-Router.
@@ -49,14 +40,21 @@ type Props = {
      * l'URL comme exacte lors du check du lien actif.
      */
     exact?: boolean,
+
+    /**
+     * Fonction appelée lorsque l'élément a été cliqué.
+     *
+     * @param event - L'événement d'origine.
+     */
+    onClick?(event: MouseEvent): void,
 };
 
-/** Item du menu principal de la barre latérale. */
+/** Élément du menu principal de la barre latérale. */
 const DefaultLayoutSidebarMainMenuItem = defineComponent({
     name: 'DefaultLayoutSidebarMainMenuItem',
     props: {
-        ident: {
-            type: String as PropType<Required<Props>['ident']>,
+        label: {
+            type: String as PropType<Props['label']>,
             required: true,
         },
         to: {
@@ -79,15 +77,27 @@ const DefaultLayoutSidebarMainMenuItem = defineComponent({
             type: Boolean as PropType<Required<Props>['exact']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
+        },
     },
     emits: ['click'],
+    setup(props) {
+        invariant(
+            !props.external || typeof props.to === 'string',
+            'The `to` props. must be a string when the prop `external` is used.',
+        );
+        return {};
+    },
     methods: {
         handleClick(event: MouseEvent) {
             this.$emit('click', event);
         },
     },
     render() {
-        const { $t: __, ident, to, handleClick, external, icon, counter, exact } = this;
+        const { label, to, handleClick, external, icon, counter, exact } = this;
 
         const content = (
             <Fragment>
@@ -103,19 +113,19 @@ const DefaultLayoutSidebarMainMenuItem = defineComponent({
                     )}
                 </span>
                 <span class="DefaultLayoutSidebarMainMenuItem__text">
-                    {__(`layout.default.menu.${ident}`)}
+                    {label}
                 </span>
             </Fragment>
         );
 
         if (to) {
             if (external) {
-                const isOutside = typeof to === 'string' && to.includes('://');
-
+                // Note: `to` est assuré d'être une string ici vu l'assertion dans le setup.
+                const isOutside = (to as string).includes('://');
                 return (
                     <li class="DefaultLayoutSidebarMainMenuItem">
                         <a
-                            href={to}
+                            href={to as string}
                             target={isOutside ? '_blank' : undefined}
                             rel={isOutside ? 'noreferrer noopener' : undefined}
                             class="DefaultLayoutSidebarMainMenuItem__link"

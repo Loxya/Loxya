@@ -1,13 +1,13 @@
 import './index.scss';
-import axios from 'axios';
-import { defineComponent } from '@vue/composition-api';
+import { RequestError } from '@/globals/requester';
+import { defineComponent } from 'vue';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiTags from '@/stores/api/tags';
 import FormField from '@/themes/default/components/FormField';
 import Button from '@/themes/default/components/Button';
 
 import type { Tag, TagEdit } from '@/stores/api/tags';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -101,13 +101,13 @@ const EditTag = defineComponent({
             } catch (error) {
                 this.isSaving = false;
 
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the tag`, error);
                 this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
         },
@@ -147,8 +147,11 @@ const EditTag = defineComponent({
                             type="text"
                             label={__('tag-name')}
                             class="EditTag__form__input-name"
-                            v-model={this.name}
+                            value={this.name}
                             error={validationErrors?.name}
+                            onInput={(value: string) => {
+                                this.name = value;
+                            }}
                             required
                         />
                     </form>

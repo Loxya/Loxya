@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Loxya\Config;
 
-use BackedEnum;
 use Loxya\Config\Enums\BillingMode;
+use Loxya\Config\Enums\ReturnPolicy;
 use Loxya\Support\Arr;
 use Loxya\Support\BaseUri;
 use Monolog\Level as LogLevel;
@@ -21,7 +21,7 @@ final class Config
      * Utilisez le fichier `settings.json` pour surcharger les valeurs de certaines
      * des options ci-dessous, ou mieux encore, utilisez l'assistant d'installation.
      */
-    public const DEFAULT_SETTINGS = [
+    private const DEFAULT_SETTINGS = [
         /** Code ISO 4217 de la devise utilisée dans l'application. */
         'currency' => 'EUR',
 
@@ -41,13 +41,31 @@ final class Config
         'httpAuthHeader' => 'Authorization',
         'sessionExpireHours' => 12,
         'maxItemsPerPage' => 100,
+
+        /**
+         * Période maximale (en jours) pendant laquelle
+         * les données peuvent être récupérées.
+         */
+        'maxFetchPeriod' => 3 * 30,
+
+        /** La documentation d'API doit-elle être activée ? */
+        'enableApiDocs' => true,
+
         /**
          * Nombre de requêtes simultanées maximum pour la
          * récupération du matériel manquant.
          */
         'maxConcurrentFetches' => 2,
+
+        /** Langue par défaut de l'application (`en` ou `fr`). */
         'defaultLang' => 'fr',
+
+        /** Politique de retour des événements et réservations. */
+        'returnPolicy' => ReturnPolicy::AUTO,
+
+        /** Mode de facturation de l'application. */
         'billingMode' => BillingMode::PARTIAL,
+
         'healthcheck' => false,
         'instanceId' => null,
         'proxy' => [
@@ -64,7 +82,6 @@ final class Config
             'cookie' => 'auth',
         ],
         'db' => [
-            'driver' => 'mysql',
             'host' => 'localhost',
             'port' => 3306,
             'database' => 'loxya',
@@ -91,6 +108,7 @@ final class Config
             'country' => 'FR',
             'phone' => '',
             'email' => '',
+            'website' => '',
             'legalNumbers' => [
                 [
                     'name' => 'SIRET',
@@ -168,6 +186,7 @@ final class Config
         'httpAuthHeader' => 'string',
         'sessionExpireHours' => 'int',
         'maxItemsPerPage' => 'int',
+        'returnPolicy' => ReturnPolicy::class,
         'billingMode' => BillingMode::class,
         'defaultLang' => 'string',
         'currency' => 'string',
@@ -218,11 +237,31 @@ final class Config
     {
         $config = static::customConfigExists()
             ? static::retrieveCustomConfig()
-            : static::DEFAULT_SETTINGS;
+            : static::getDefault();
 
         return $key !== null
             ? (Arr::get($config, $key) ?? $default)
             : $config;
+    }
+
+    /**
+     * Permet de récupérer la configuration par défaut complète ou bien la valeur d'une clé.
+     *
+     * @param ?string $key La clé de configuration par défaut dont on souhaite récupérer la valeur.
+     *                     Peut aussi contenir un chemin "dot-style" (e.g; `key.sub-key`)
+     *                     pour récupérer les clés "profondes".
+     *
+     * @return mixed Si un chemin / une clé a été fournie: La valeur de la clé si elle est
+     *               spécifier ou `null` sinon. Si aucune clé n'a été fournie,
+     *               tout la configuration par défaut sera retournée.
+     */
+    public static function getDefault(?string $key = null): mixed
+    {
+        $defaults = self::DEFAULT_SETTINGS;
+
+        return $key !== null
+            ? Arr::get($defaults, $key)
+            : $defaults;
     }
 
     public static function getEnv(bool $envOnly = false)
@@ -247,7 +286,10 @@ final class Config
 
     public static function getDbConfig(array $options = []): array
     {
-        $options = array_merge(['noCharset' => false], $options);
+        $options = Arr::defaults($options, [
+            'noDatabase' => false,
+            'noCharset' => false,
+        ]);
 
         $dbConfig = self::get('db');
 
@@ -269,18 +311,21 @@ final class Config
 
         // - Si on est dans un environnement de test, on utilise la base de test.
         if (static::getEnv() === 'test') {
-            $dbConfig['testDatabase'] ??= sprintf('%s_test', $dbConfig['database']);
+            $dbConfig['testDatabase'] ??= sprintf('%s-test', $dbConfig['database']);
             $dbConfig['database'] = $dbConfig['testDatabase'];
         }
 
+        $dbConfig['driver'] = 'mysql';
         $dbConfig['dsn'] = sprintf(
-            '%s:host=%s;port=%s;dbname=%s',
+            '%s:host=%s;port=%s',
             $dbConfig['driver'],
             $dbConfig['host'],
             $dbConfig['port'],
-            $dbConfig['database'],
         );
 
+        if (!$options['noDatabase']) {
+            $dbConfig['dsn'] .= sprintf(';dbname=%s', $dbConfig['database']);
+        }
         if (!$options['noCharset']) {
             $dbConfig['dsn'] .= sprintf(';charset=%s', $dbConfig['charset']);
         }
@@ -288,9 +333,9 @@ final class Config
         return $dbConfig;
     }
 
-    public static function getPDO(): \PDO
+    public static function getPDO(bool $withDatabase = true): \PDO
     {
-        $dbConfig = self::getDbConfig();
+        $dbConfig = self::getDbConfig(['noDatabase' => !$withDatabase]);
         try {
             return new \PDO(
                 $dbConfig['dsn'],
@@ -405,6 +450,8 @@ final class Config
             }
 
             if (is_a($type, \BackedEnum::class, true)) {
+                /** @var class-string<\BackedEnum> $type */
+
                 $enumValue = is_string($customConfig[$field])
                     ? $type::tryFrom($customConfig[$field])
                     : $customConfig[$field];
@@ -416,7 +463,7 @@ final class Config
                     ));
                 }
 
-                /** @var BackedEnum $enumValue */
+                /** @var \BackedEnum $enumValue */
                 $customConfig[$field] = $enumValue->value;
                 continue;
             }
@@ -489,6 +536,6 @@ final class Config
             }
         }
 
-        return array_replace_recursive(self::DEFAULT_SETTINGS, $settings);
+        return array_replace_recursive(self::getDefault(), $settings);
     }
 }

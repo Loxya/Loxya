@@ -1,0 +1,100 @@
+@use '~@/themes/default/style/globals';
+
+.Properties {
+    height: 100%;
+
+    &__table {
+        height: 100%;
+
+        &__cell {
+            &--entities,
+            &--categories,
+            &--is-totalisable {
+                display: none;
+            }
+
+            &--name {
+                width: 300px;
+            }
+
+            &--type {
+                width: 300px;
+            }
+
+            &--is-totalisable {
+                width: 120px;
+
+                // - Important pour surcharger la définition du <th> de `.VueTables`.
+                // stylelint-disable-next-line declaration-no-important
+                text-align: center !important;
+            }
+
+            //
+            // - Responsive
+            //
+
+            @media (min-width: globals.$screen-tablet) {
+                &--entities {
+                    display: table-cell;
+                }
+            }
+
+            @media (min-width: globals.$screen-desktop) {
+                &--is-totalisable {
+                    display: table-cell;
+                }
+            }
+
+            @media (min-width: globals.$screen-big-desktop) {
+                &--categories {
+                    display: table-cell;
+                }
+            }
+        }
+    }
+
+    &__item {
+        &__name {
+            font-weight: 700;
+        }
+
+        &__type {
+            &__configs {
+                margin: 0;
+                color: globals.$text-soft-color;
+                font-style: italic;
+
+                &__item {
+                    @extend %reset-dl;
+
+                    display: inline;
+
+                    &__key,
+                    &__value {
+                        display: inline;
+                    }
+
+                    &__key {
+                        margin-right: globals.$spacing-thin;
+                    }
+
+                    &__value {
+                        @extend %reset-dd;
+                    }
+
+                    & + &::before {
+                        content: '•';
+                        margin: 0 0.5rem;
+                    }
+                }
+            }
+        }
+
+        &__categories {
+            &--empty {
+                color: globals.$text-light-color;
+                font-style: italic;
+            }
+        }
+    }
+}

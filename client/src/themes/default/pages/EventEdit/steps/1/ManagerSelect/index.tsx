@@ -1,4 +1,4 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import debounce from 'lodash/debounce';
 import VueSelect from 'vue-select';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
@@ -6,7 +6,7 @@ import formatOptions from '@/utils/formatOptions';
 import apiUsers from '@/stores/api/users';
 
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Options, Option } from '@/utils/formatOptions';
 import type { User } from '@/stores/api/users';
 
@@ -16,6 +16,13 @@ type Props = {
      * de la liste de sélection du chef de projet.
      */
     defaultValue?: User | null,
+
+    /**
+     * Fonction appelée lorsque le chef de projet sélectionné change.
+     *
+     * @param id - Identifiant de l'utilisateur sélectionné, ou `null` si aucun.
+     */
+    onChange?(id: User['id'] | null): void,
 };
 
 type InstanceProperties = {
@@ -33,13 +40,18 @@ type Data = {
 /** Longueur minimale du texte lors d'une recherche. */
 const MIN_SEARCH_CHARACTERS = 2;
 
-/** Champ de formulaire de sélection d'un préparateur. */
+/** Champ de formulaire de sélection du chef de projet. */
 const EventEditStepInfosManagerSelect = defineComponent({
     name: 'EventEditStepInfosManagerSelect',
     props: {
         defaultValue: {
             type: Object as PropType<Required<Props>['defaultValue']>,
             default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],

@@ -1,6 +1,7 @@
 import './index.scss';
 import invariant from 'invariant';
-import { defineComponent } from '@vue/composition-api';
+import { confirm } from '@/utils/alert';
+import { defineComponent } from 'vue';
 import apiEvents from '@/stores/api/events';
 import { Group } from '@/stores/api/groups';
 import Fragment from '@/components/Fragment';
@@ -9,13 +10,20 @@ import Button from '@/themes/default/components/Button';
 import Link from '@/themes/default/components/Link';
 import Invoice, { InvoiceLayout } from './components/Invoice';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Invoice as InvoiceType } from '@/stores/api/invoices';
 
 type Props = {
     /** L'événement dont on souhaite gérer les factures. */
     event: EventDetails<true>,
+
+    /**
+     * Fonction appelée lorsqu'une facture a été créée.
+     *
+     * @param invoice - La facture nouvellement créé.
+     */
+    onCreated?(invoice: InvoiceType): void,
 };
 
 type Data = {
@@ -33,6 +41,11 @@ const EventDetailsInvoices = defineComponent({
                 event.is_billable &&
                 event.materials.length > 0
             ),
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCreated: {
+            type: Function as PropType<Props['onCreated']>,
+            default: undefined,
         },
     },
     emits: ['created'],
@@ -66,7 +79,8 @@ const EventDetailsInvoices = defineComponent({
         userCanEdit(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
-                Group.MANAGEMENT,
+                Group.SUPERVISION,
+                Group.OPERATION,
             ]);
         },
     },
@@ -87,9 +101,14 @@ const EventDetailsInvoices = defineComponent({
             if (this.isCreating) {
                 return;
             }
-
-            this.isCreating = true;
             const { __, event: { id } } = this;
+
+            // - Confirmation.
+            const isConfirmed = await confirm(__('confirm-create'));
+            if (!isConfirmed) {
+                return;
+            }
+            this.isCreating = true;
 
             try {
                 const invoice = await apiEvents.createInvoice(id);
@@ -173,7 +192,7 @@ const EventDetailsInvoices = defineComponent({
             return (
                 <Fragment>
                     <div class="EventDetailsInvoices__current-invoice">
-                        <Invoice invoice={invoice} />
+                        <Invoice invoice={invoice!} />
                     </div>
                     {(hasBeneficiary && userCanEdit) && (
                         <div class="EventDetailsInvoices__regenerate">
@@ -183,7 +202,6 @@ const EventDetailsInvoices = defineComponent({
                             <Link
                                 icon="sync"
                                 class="EventDetailsInvoices__regenerate__link"
-                                loading={isCreating}
                                 onClick={handleCreate}
                             >
                                 {__('create-new-invoice')}

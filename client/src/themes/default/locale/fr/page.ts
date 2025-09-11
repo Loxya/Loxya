@@ -13,8 +13,8 @@ export default {
     'materials': require('@/themes/default/pages/Materials/translations/fr.yml'),
     'material-edit': require('@/themes/default/pages/MaterialEdit/translations/fr.yml'),
     'material-view': require('@/themes/default/pages/MaterialView/translations/fr.yml'),
-    'attributes': require('@/themes/default/pages/Attributes/translations/fr.yml'),
-    'attribute-edit': require('@/themes/default/pages/AttributeEdit/translations/fr.yml'),
+    'properties': require('@/themes/default/pages/Properties/translations/fr.yml'),
+    'property-edit': require('@/themes/default/pages/PropertyEdit/translations/fr.yml'),
     'technicians': require('@/themes/default/pages/Technicians/translations/fr.yml'),
     'technician-edit': require('@/themes/default/pages/TechnicianEdit/translations/fr.yml'),
     'technician-view': require('@/themes/default/pages/TechnicianView/translations/fr.yml'),
@@ -23,4 +23,5 @@ export default {
     'park': require('@/themes/default/pages/ParkEdit/translations/fr.yml'),
     'settings': require('@/themes/default/pages/Settings/Global/translations/fr.yml'),
     'user-settings': require('@/themes/default/pages/Settings/User/translations/fr.yml'),
+    'reset-password': require('@/themes/default/pages/ResetPassword/translations/fr.yml'),
 };

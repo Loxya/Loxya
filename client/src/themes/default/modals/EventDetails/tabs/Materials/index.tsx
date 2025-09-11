@@ -1,12 +1,11 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import { BookingEntity } from '@/stores/api/bookings';
+import { defineComponent } from 'vue';
 import MaterialsSorted from '@/themes/default/components/MaterialsSorted';
-import MissingMaterials from '@/themes/default/components/MissingMaterials';
+import MissingMaterials, { BookableEntity } from '@/themes/default/components/MissingMaterials';
 import Totals from '@/themes/default/components/Totals';
 import ReturnSummary from './ReturnSummary';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails, EventExtra } from '@/stores/api/events';
 
 type Props = {
@@ -47,7 +46,7 @@ const EventDetailsMaterials = defineComponent({
                 )}
                 {(!isReturnInventoryDone && hasMissingMaterials) && (
                     <MissingMaterials
-                        booking={{ entity: BookingEntity.EVENT, ...event }}
+                        bookable={{ entity: BookableEntity.EVENT, ...event }}
                         class="EventDetailsMaterials__missing"
                     />
                 )}

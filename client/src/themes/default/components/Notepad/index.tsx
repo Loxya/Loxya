@@ -1,7 +1,7 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -31,13 +31,30 @@ type Props = {
      * (cette prop. est incompatible avec la prop. `readonly`)
      */
     disabled?: boolean,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onInput?(newValue: string): void,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     */
+    onChange?(newValue: string): void,
 };
 
-// @vue/component
+/**
+ * champ de saisie multi-ligne avec une
+ * interface type "bloc-note".
+ */
 const Notepad = defineComponent({
     name: 'Notepad',
     inject: {
-        'input.disabled': { default: { value: false } },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -56,6 +73,16 @@ const Notepad = defineComponent({
             type: Boolean as PropType<Required<Props>['disabled']>,
             default: false,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change'],
     computed: {
@@ -66,7 +93,7 @@ const Notepad = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
     },
     mounted() {
@@ -78,7 +105,7 @@ const Notepad = defineComponent({
         }
     },
     methods: {
-        handleInput(e: InputEvent) {
+        handleInput(e: Event) {
             const { value } = e.target as HTMLTextAreaElement;
             if (this.inheritedDisabled) {
                 return;

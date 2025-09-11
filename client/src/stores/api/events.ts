@@ -12,8 +12,10 @@ import {
     BeneficiarySchema,
 } from './beneficiaries';
 
+import type { Raw } from 'vue';
 import type Color from '@/utils/color';
 import type Period from '@/utils/period';
+import type DateTime from '@/utils/datetime';
 import type { ZodRawShape } from 'zod';
 import type { CountedData } from './@types';
 import type { SchemaInfer } from '@/utils/validation';
@@ -25,7 +27,7 @@ import type { Material } from './materials';
 import type { Technician } from './technicians';
 import type { Role } from './roles';
 import type { Beneficiary } from './beneficiaries';
-import type { AxiosRequestConfig as RequestConfig } from 'axios';
+import type { RequestConfig } from '@/globals/requester';
 
 // ------------------------------------------------------
 // -
@@ -157,8 +159,10 @@ export const EventSchema = EventSummarySchema.extend({
     is_archived: z.boolean(),
     is_departure_inventory_done: z.boolean(),
     is_return_inventory_done: z.boolean(),
+    return_inventory_datetime: z.datetime().nullable(),
     materials_count: z.number().nonnegative(),
-    note: z.string().nullable(),
+    has_materials: z.boolean(),
+    note: z.string().nullable().optional(),
     created_at: z.datetime(),
     updated_at: z.datetime().nullable(),
 });
@@ -171,6 +175,7 @@ export const createEventDetailsSchema = <T extends ZodRawShape>(augmentation: T)
             is_archived: true,
             is_departure_inventory_done: true,
             is_return_inventory_done: true,
+            return_inventory_datetime: true,
         })
         .extend({
             total_replacement: z.decimal(),
@@ -295,11 +300,11 @@ export type EventTaxTotal = SchemaInfer<typeof EventTaxTotalSchema>;
 
 export type EventEdit = {
     title: string,
-    operation_period: Period | null,
-    mobilization_period: Period | null,
+    operation_period: Raw<Period> | null,
+    mobilization_period: Raw<Period> | null,
     location: string | null,
     description: string | null,
-    color: Color | null,
+    color: Raw<Color> | null,
     is_billable: boolean,
     is_confirmed: boolean,
     beneficiaries?: Array<Beneficiary['id']>,
@@ -308,8 +313,8 @@ export type EventEdit = {
 };
 
 type EventDuplicatePayload = {
-    operation_period: Period | null,
-    mobilization_period: Period | null,
+    operation_period: Raw<Period> | null,
+    mobilization_period: Raw<Period> | null,
     keepBillingData?: boolean,
 };
 
@@ -328,7 +333,7 @@ type EventDepartureInventoryMaterial = {
 type EventDepartureInventory = EventDepartureInventoryMaterial[];
 
 export type EventAssignmentEdit = Nullable<{
-    period: Period,
+    period: Raw<Period>,
     role_id: Role['id'] | null,
     technician_id: Technician['id'],
 }>;
@@ -356,97 +361,97 @@ type GetAllParams = {
 
 const all = async (params: GetAllParams = {}): Promise<CountedData<EventSummary[]>> => {
     const response = await requester.get('/events', { params });
-    return withCountedEnvelope(EventSummarySchema).parse(response.data);
+    return withCountedEnvelope(EventSummarySchema).parse(response);
 };
 
 const one = async (id: Event['id']): Promise<EventDetails> => {
     const response = await requester.get(`/events/${id}`);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const missingMaterials = async (id: Event['id']): Promise<EventMaterialWithQuantityMissing[]> => {
     const response = await requester.get(`/events/${id}/missing-materials`);
-    return EventMaterialWithQuantityMissingSchema.array().parse(response.data);
+    return EventMaterialWithQuantityMissingSchema.array().parse(response);
 };
 
 const setConfirmed = async (id: Event['id'], isConfirmed: boolean): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}`, { is_confirmed: isConfirmed });
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const archive = async (id: Event['id']): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}/archive`);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const unarchive = async (id: Event['id']): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}/unarchive`);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const updateDepartureInventory = async (id: Event['id'], inventory: EventDepartureInventory): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}/departure`, inventory);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const finishDepartureInventory = async (id: Event['id'], inventory: EventDepartureInventory): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}/departure/finish`, inventory);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const cancelDepartureInventory = async (id: Event['id']): Promise<EventDetails> => {
     const response = await requester.delete(`/events/${id}/departure`);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const updateReturnInventory = async (id: Event['id'], inventory: EventReturnInventory): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}/return`, inventory);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
-const finishReturnInventory = async (id: Event['id'], inventory: EventReturnInventory): Promise<EventDetails> => {
-    const response = await requester.put(`/events/${id}/return/finish`, inventory);
-    return EventDetailsSchema.parse(response.data);
+const finishReturnInventory = async (id: Event['id'], date?: DateTime, inventory?: EventReturnInventory): Promise<EventDetails> => {
+    const response = await requester.put(`/events/${id}/return/finish`, { date, inventory });
+    return EventDetailsSchema.parse(response);
 };
 
 const cancelReturnInventory = async (id: Event['id']): Promise<EventDetails> => {
     const response = await requester.delete(`/events/${id}/return`);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const createInvoice = async (id: Event['id']): Promise<Invoice> => {
     const response = await requester.post(`/events/${id}/invoices`);
-    return InvoiceSchema.parse(response.data);
+    return InvoiceSchema.parse(response);
 };
 
 const createEstimate = async (id: Event['id']): Promise<Estimate> => {
     const response = await requester.post(`/events/${id}/estimates`);
-    return EstimateSchema.parse(response.data);
+    return EstimateSchema.parse(response);
 };
 
 const create = async (data: EventEdit): Promise<EventDetails> => {
     const response = await requester.post(`/events`, data);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const update = async (id: Event['id'], data: Partial<EventEdit>): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}`, data);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const updateNote = async (id: Event['id'], note: Event['note']): Promise<EventDetails> => {
     const response = await requester.put(`/events/${id}/note`, { note });
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const createAssignment = async (id: Event['id'], data: EventAssignmentEdit): Promise<EventTechnician> => {
     const response = await requester.post(`/events/${id}/assignments`, data);
-    return EventTechnicianSchema.parse(response.data);
+    return EventTechnicianSchema.parse(response);
 };
 
 const updateAssignment = async (id: Event['id'], assignmentId: EventTechnician['id'], data: EventAssignmentEdit): Promise<EventTechnician> => {
     const response = await requester.put(`/events/${id}/assignments/${assignmentId}`, data);
-    return EventTechnicianSchema.parse(response.data);
+    return EventTechnicianSchema.parse(response);
 };
 
 const deleteAssignment = async (id: Event['id'], assignmentId: EventTechnician['id']): Promise<void> => {
@@ -455,7 +460,7 @@ const deleteAssignment = async (id: Event['id'], assignmentId: EventTechnician['
 
 const createPosition = async (id: Event['id'], data: EventPositionEdit): Promise<EventPosition> => {
     const response = await requester.post(`/events/${id}/positions`, data);
-    return EventPositionSchema.parse(response.data);
+    return EventPositionSchema.parse(response);
 };
 
 const deletePosition = async (id: Event['id'], positionId: EventPosition['id']): Promise<void> => {
@@ -464,7 +469,7 @@ const deletePosition = async (id: Event['id'], positionId: EventPosition['id']):
 
 const duplicate = async (id: Event['id'], data: EventDuplicatePayload): Promise<EventDetails> => {
     const response = await requester.post(`/events/${id}/duplicate`, data);
-    return EventDetailsSchema.parse(response.data);
+    return EventDetailsSchema.parse(response);
 };
 
 const remove = async (id: Event['id']): Promise<void> => {
@@ -473,13 +478,13 @@ const remove = async (id: Event['id']): Promise<void> => {
 
 const documents = async (id: Event['id']): Promise<Document[]> => {
     const response = await requester.get(`/events/${id}/documents`);
-    return DocumentSchema.array().parse(response.data);
+    return DocumentSchema.array().parse(response);
 };
 
 const attachDocument = async (id: Event['id'], file: File, options: RequestConfig = {}): Promise<Document> => {
     const formData = new FormData(); formData.append('file', file);
     const response = await requester.post(`/events/${id}/documents`, formData, options);
-    return DocumentSchema.parse(response.data);
+    return DocumentSchema.parse(response);
 };
 
 export default {

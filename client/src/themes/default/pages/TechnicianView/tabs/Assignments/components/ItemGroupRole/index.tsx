@@ -1,16 +1,31 @@
 import './index.scss';
 import DateTime from '@/utils/datetime';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import Decimal from 'decimal.js';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { TechnicianEvent } from '@/stores/api/technicians';
 import type { AssignmentGroupRole } from '../../_types';
 
 type Props = {
     /** Le groupe d'assignations à afficher. */
     data: AssignmentGroupRole,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur clique sur une assignation.
+     *
+     * @param id - Identifiant de l'assignation cliquée.
+     */
+    onClick?(id: TechnicianEvent['id']): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur demande l'ouverture
+     * de la page de l'assignation.
+     *
+     * @param id - Identifiant de l'assignation à ouvrir.
+     */
+    onOpenClick?(id: TechnicianEvent['id']): void,
 };
 
 type InstanceProperties = {
@@ -18,7 +33,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    now: DateTime,
+    now: Raw<DateTime>,
     isOpen: boolean,
 };
 
@@ -30,13 +45,23 @@ const TechnicianViewAssignmentItemGroupRole = defineComponent({
             type: Object as PropType<Props['data']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClick: {
+            type: Function as PropType<Props['onClick']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onOpenClick: {
+            type: Function as PropType<Props['onOpenClick']>,
+            default: undefined,
+        },
     },
     emits: ['click', 'openClick'],
     setup: (): InstanceProperties => ({
         nowTimer: undefined,
     }),
     data: (): Data => ({
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
         isOpen: false,
     }),
     computed: {
@@ -57,7 +82,7 @@ const TechnicianViewAssignmentItemGroupRole = defineComponent({
     },
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {

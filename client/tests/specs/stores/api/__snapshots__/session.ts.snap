@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Session Api create() parse the returned data correctly (with #1) 1`] = `
 {
@@ -12,7 +12,7 @@ exports[`Session Api create() parse the returned data correctly (with #1) 1`] = 
   "default_technicians_view": "listing",
   "disable_contextual_popovers": true,
   "disable_search_persistence": false,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -27,6 +27,7 @@ exports[`Session Api create() parse the returned data correctly (with #1) 1`] = 
   "pseudo": "test1",
   "street": "1, somewhere av.",
   "token": "__FAKE-TOKEN__",
+  "type": "user",
 }
 `;
 
@@ -35,14 +36,14 @@ exports[`Session Api create() parse the returned data correctly (with #2) 1`] = 
   "country": null,
   "country_id": null,
   "default_bookings_view": "calendar",
-  "default_technicians_view": "listing",
+  "default_technicians_view": "timeline",
   "disable_contextual_popovers": true,
   "disable_search_persistence": true,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
-  "group": "management",
+  "group": "operation",
   "id": 2,
   "language": "fr",
   "last_name": "Rabbit",
@@ -52,6 +53,7 @@ exports[`Session Api create() parse the returned data correctly (with #2) 1`] = 
   "pseudo": "test2",
   "street": null,
   "token": "__FAKE-TOKEN__",
+  "type": "user",
 }
 `;
 
@@ -63,12 +65,12 @@ exports[`Session Api create() parse the returned data correctly (with #3) 1`] = 
   "default_technicians_view": "listing",
   "disable_contextual_popovers": false,
   "disable_search_persistence": false,
-  "email": "nobody@robertmanager.net",
+  "email": "nobody@loxya.com",
   "first_name": "?",
   "full_address": "156 bis, avenue des tests poussés
 88080 Wazzaville",
   "full_name": "?",
-  "group": "management",
+  "group": "operation",
   "id": 3,
   "language": "fr",
   "last_name": "?",
@@ -78,6 +80,7 @@ exports[`Session Api create() parse the returned data correctly (with #3) 1`] = 
   "pseudo": "nobody",
   "street": "156 bis, avenue des tests poussés",
   "token": "__FAKE-TOKEN__",
+  "type": "user",
 }
 `;
 
@@ -93,7 +96,7 @@ exports[`Session Api create() parse the returned data correctly (with #4) 1`] = 
   "default_technicians_view": "listing",
   "disable_contextual_popovers": false,
   "disable_search_persistence": false,
-  "email": "visitor@robertmanager.net",
+  "email": "visitor@loxya.com",
   "first_name": "Henry",
   "full_address": null,
   "full_name": "Henry Berluc",
@@ -107,6 +110,7 @@ exports[`Session Api create() parse the returned data correctly (with #4) 1`] = 
   "pseudo": "TheVisitor",
   "street": null,
   "token": "__FAKE-TOKEN__",
+  "type": "user",
 }
 `;
 
@@ -118,7 +122,7 @@ exports[`Session Api create() parse the returned data correctly (with #5) 1`] = 
   "default_technicians_view": "timeline",
   "disable_contextual_popovers": false,
   "disable_search_persistence": false,
-  "email": "external@robertmanager.net",
+  "email": "external@loxya.com",
   "first_name": "Caroline",
   "full_address": null,
   "full_name": "Caroline Farol",
@@ -132,10 +136,11 @@ exports[`Session Api create() parse the returned data correctly (with #5) 1`] = 
   "pseudo": "caroline",
   "street": null,
   "token": "__FAKE-TOKEN__",
+  "type": "user",
 }
 `;
 
-exports[`Session Api get() parse the returned data correctly (with #1) 1`] = `
+exports[`Session Api get() parse the returned data correctly when its a user (with #1) 1`] = `
 {
   "country": {
     "code": "FR",
@@ -147,7 +152,7 @@ exports[`Session Api get() parse the returned data correctly (with #1) 1`] = `
   "default_technicians_view": "listing",
   "disable_contextual_popovers": true,
   "disable_search_persistence": false,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -161,22 +166,53 @@ exports[`Session Api get() parse the returned data correctly (with #1) 1`] = `
   "postal_code": "1234",
   "pseudo": "test1",
   "street": "1, somewhere av.",
+  "type": "user",
 }
 `;
 
-exports[`Session Api get() parse the returned data correctly (with #2) 1`] = `
+exports[`Session Api get() parse the returned data correctly when its a user (with #1) 2`] = `
+{
+  "country": {
+    "code": "FR",
+    "id": 1,
+    "name": "France",
+  },
+  "country_id": 1,
+  "default_bookings_view": "calendar",
+  "default_technicians_view": "listing",
+  "disable_contextual_popovers": true,
+  "disable_search_persistence": false,
+  "email": "tester@loxya.com",
+  "first_name": "Jean",
+  "full_address": "1, somewhere av.
+1234 Megacity",
+  "full_name": "Jean Fountain",
+  "group": "administration",
+  "id": 1,
+  "language": "en",
+  "last_name": "Fountain",
+  "locality": "Megacity",
+  "phone": null,
+  "postal_code": "1234",
+  "pseudo": "test1",
+  "street": "1, somewhere av.",
+  "type": "user",
+}
+`;
+
+exports[`Session Api get() parse the returned data correctly when its a user (with #2) 1`] = `
 {
   "country": null,
   "country_id": null,
   "default_bookings_view": "calendar",
-  "default_technicians_view": "listing",
+  "default_technicians_view": "timeline",
   "disable_contextual_popovers": true,
   "disable_search_persistence": true,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
-  "group": "management",
+  "group": "operation",
   "id": 2,
   "language": "fr",
   "last_name": "Rabbit",
@@ -185,10 +221,36 @@ exports[`Session Api get() parse the returned data correctly (with #2) 1`] = `
   "postal_code": null,
   "pseudo": "test2",
   "street": null,
+  "type": "user",
 }
 `;
 
-exports[`Session Api get() parse the returned data correctly (with #3) 1`] = `
+exports[`Session Api get() parse the returned data correctly when its a user (with #2) 2`] = `
+{
+  "country": null,
+  "country_id": null,
+  "default_bookings_view": "calendar",
+  "default_technicians_view": "timeline",
+  "disable_contextual_popovers": true,
+  "disable_search_persistence": true,
+  "email": "tester2@loxya.com",
+  "first_name": "Roger",
+  "full_address": null,
+  "full_name": "Roger Rabbit",
+  "group": "operation",
+  "id": 2,
+  "language": "fr",
+  "last_name": "Rabbit",
+  "locality": null,
+  "phone": null,
+  "postal_code": null,
+  "pseudo": "test2",
+  "street": null,
+  "type": "user",
+}
+`;
+
+exports[`Session Api get() parse the returned data correctly when its a user (with #3) 1`] = `
 {
   "country": null,
   "country_id": null,
@@ -196,12 +258,12 @@ exports[`Session Api get() parse the returned data correctly (with #3) 1`] = `
   "default_technicians_view": "listing",
   "disable_contextual_popovers": false,
   "disable_search_persistence": false,
-  "email": "nobody@robertmanager.net",
+  "email": "nobody@loxya.com",
   "first_name": "?",
   "full_address": "156 bis, avenue des tests poussés
 88080 Wazzaville",
   "full_name": "?",
-  "group": "management",
+  "group": "operation",
   "id": 3,
   "language": "fr",
   "last_name": "?",
@@ -210,10 +272,37 @@ exports[`Session Api get() parse the returned data correctly (with #3) 1`] = `
   "postal_code": "88080",
   "pseudo": "nobody",
   "street": "156 bis, avenue des tests poussés",
+  "type": "user",
 }
 `;
 
-exports[`Session Api get() parse the returned data correctly (with #4) 1`] = `
+exports[`Session Api get() parse the returned data correctly when its a user (with #3) 2`] = `
+{
+  "country": null,
+  "country_id": null,
+  "default_bookings_view": "listing",
+  "default_technicians_view": "listing",
+  "disable_contextual_popovers": false,
+  "disable_search_persistence": false,
+  "email": "nobody@loxya.com",
+  "first_name": "?",
+  "full_address": "156 bis, avenue des tests poussés
+88080 Wazzaville",
+  "full_name": "?",
+  "group": "operation",
+  "id": 3,
+  "language": "fr",
+  "last_name": "?",
+  "locality": "Wazzaville",
+  "phone": null,
+  "postal_code": "88080",
+  "pseudo": "nobody",
+  "street": "156 bis, avenue des tests poussés",
+  "type": "user",
+}
+`;
+
+exports[`Session Api get() parse the returned data correctly when its a user (with #4) 1`] = `
 {
   "country": {
     "code": "CH",
@@ -225,7 +314,7 @@ exports[`Session Api get() parse the returned data correctly (with #4) 1`] = `
   "default_technicians_view": "listing",
   "disable_contextual_popovers": false,
   "disable_search_persistence": false,
-  "email": "visitor@robertmanager.net",
+  "email": "visitor@loxya.com",
   "first_name": "Henry",
   "full_address": null,
   "full_name": "Henry Berluc",
@@ -238,10 +327,40 @@ exports[`Session Api get() parse the returned data correctly (with #4) 1`] = `
   "postal_code": null,
   "pseudo": "TheVisitor",
   "street": null,
+  "type": "user",
 }
 `;
 
-exports[`Session Api get() parse the returned data correctly (with #5) 1`] = `
+exports[`Session Api get() parse the returned data correctly when its a user (with #4) 2`] = `
+{
+  "country": {
+    "code": "CH",
+    "id": 2,
+    "name": "Suisse",
+  },
+  "country_id": 2,
+  "default_bookings_view": "calendar",
+  "default_technicians_view": "listing",
+  "disable_contextual_popovers": false,
+  "disable_search_persistence": false,
+  "email": "visitor@loxya.com",
+  "first_name": "Henry",
+  "full_address": null,
+  "full_name": "Henry Berluc",
+  "group": "readonly-planning-general",
+  "id": 4,
+  "language": "fr",
+  "last_name": "Berluc",
+  "locality": null,
+  "phone": "+33724000000",
+  "postal_code": null,
+  "pseudo": "TheVisitor",
+  "street": null,
+  "type": "user",
+}
+`;
+
+exports[`Session Api get() parse the returned data correctly when its a user (with #5) 1`] = `
 {
   "country": null,
   "country_id": null,
@@ -249,7 +368,7 @@ exports[`Session Api get() parse the returned data correctly (with #5) 1`] = `
   "default_technicians_view": "timeline",
   "disable_contextual_popovers": false,
   "disable_search_persistence": false,
-  "email": "external@robertmanager.net",
+  "email": "external@loxya.com",
   "first_name": "Caroline",
   "full_address": null,
   "full_name": "Caroline Farol",
@@ -262,5 +381,31 @@ exports[`Session Api get() parse the returned data correctly (with #5) 1`] = `
   "postal_code": null,
   "pseudo": "caroline",
   "street": null,
+  "type": "user",
+}
+`;
+
+exports[`Session Api get() parse the returned data correctly when its a user (with #5) 2`] = `
+{
+  "country": null,
+  "country_id": null,
+  "default_bookings_view": "calendar",
+  "default_technicians_view": "timeline",
+  "disable_contextual_popovers": false,
+  "disable_search_persistence": false,
+  "email": "external@loxya.com",
+  "first_name": "Caroline",
+  "full_address": null,
+  "full_name": "Caroline Farol",
+  "group": "readonly-planning-general",
+  "id": 5,
+  "language": "en",
+  "last_name": "Farol",
+  "locality": null,
+  "phone": "+33786325500",
+  "postal_code": null,
+  "pseudo": "caroline",
+  "street": null,
+  "type": "user",
 }
 `;

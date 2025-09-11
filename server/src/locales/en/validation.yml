@@ -52,11 +52,11 @@
 "{{name}} must not be a valid Roman numeral":
     "Must not be a valid Roman numeral."
 
-"{{name}} must exists":
-    "Must exists."
+"{{name}} must exist":
+    "Must exist."
 
-"{{name}} must not exists":
-    "Must not exists."
+"{{name}} must not exist":
+    "Must not exist."
 
 "{{name}} must contain only letters (a-z)":
     "This field must contain only letters."
@@ -191,10 +191,10 @@
     "Must not be an executable file."
 
 "{{name}} must be an instance of {{instanceName}}":
-    "Must be an instance of {{instanceName}}."
+    "This field is invalid."
 
 "{{name}} must not be an instance of {{instanceName}}":
-    "Must not be an instance of {{instanceName}}."
+    "This field is invalid."
 
 "{{name}} must be between {{minValue}} and {{maxValue}}":
     "The value must be between {{minValue}} and {{maxValue}}."
@@ -290,10 +290,10 @@
     "ust not be a valid date."
 
 "{{name}} must be present":
-    "Key {{name}} must be present."
+    "This field should be specified."
 
 "{{name}} must not be present":
-    "Key {{name}} must not be present."
+    "This field should not be specified."
 
 "{{name}} must be a valid CNPJ number":
     "Must be a valid CNPJ number."
@@ -313,11 +313,11 @@
 "{{name}} must not start with {{startValue}}":
     "Must not start with {{startValue}}."
 
-"{{name}} is not considered as \"False\"":
-    "Is not considered as \"False\"."
+"{{name}} must evaluate to `false`":
+    "This field is invalid."
 
-"{{name}} is considered as \"False\"":
-    "Is considered as \"False\"."
+"{{name}} must not evaluate to `false`":
+    "This field is invalid."
 
 "{{name}} must be {{type}}":
     "Must be {{type}}."
@@ -428,7 +428,7 @@
     "Must not be a subdivision code of {{countryName}}."
 
 "{{name}} is always invalid":
-    "This field is always invalid."
+    "This field should not be specified."
 
 "{{name}} is not valid":
     "This field is invalid."
@@ -524,7 +524,7 @@
     "This field is invalid."
 
 "{{name}} must not be valid":
-    "Must not be valid."
+    "This field is invalid."
 
 "At least one of these rules must pass for {{name}}":
     "One of the following rules must be verified:"
@@ -604,11 +604,11 @@
 "{{name}} must not contain the value {{containsValue}}":
     "Must not contain the value {{containsValue}}."
 
-"{{name}} is not considered as \"Yes\"":
-    "Is not considered as \"Yes\"."
+"{{name}} must be similar to \"Yes\"":
+    "This field is invalid."
 
-"{{name}} is considered as \"Yes\"":
-    "Is considered as \"Yes\"."
+"{{name}} must not be similar to \"Yes\"":
+    "This field is invalid."
 
 "{{name}} must be an infinite number":
     "Must be an infinite number."
@@ -671,10 +671,16 @@
     "This field must not contain numbers."
 
 "{{name}} must be of type integer":
-    "Must be of type integer."
+    "This field must contain an integer."
 
 "{{name}} must not be of type integer":
-    "Must not be of type integer."
+    "This field must not contain an integer."
+
+"{{name}} must be of type float":
+    "This field must contain a decimal number."
+
+"{{name}} must not be of type float":
+    "This field must not contain a decimal number."
 
 "{{name}} must be positive":
     "Must be positive."
@@ -706,11 +712,11 @@
 "{{name}} must not contain control characters or {{additionalChars}}":
     "Must not contain control characters or \"{{additionalChars}}\"."
 
-"{{name}} is not considered as \"No\"":
-    "Is not considered as \"No\"."
+"{{name}} must be similar to \"No\"":
+    "This field is invalid."
 
-"{{name}} is considered as \"No\"":
-    "Is considered as \"No\"."
+"{{name}} must not be similar to \"No\"":
+    "This field is invalid."
 
 "{{name}} must be multiple of {{multipleOf}}":
     "Must be multiple of {{multipleOf}}."
@@ -796,12 +802,6 @@
 "{{name}} must not be negative":
     "Must not be negative."
 
-"{{name}} must be of type float":
-    "Must be of type float."
-
-"{{name}} must not be of type float":
-    "Must not be of type float."
-
 "{{name}} must be a finite number":
     "Must be a finite number."
 
@@ -815,28 +815,28 @@
     "Must not be a valid country."
 
 "{{name}} must have a length between {{minValue}} and {{maxValue}}":
-    "{{minValue}} min. characters, {{maxValue}} max. characters."
+    "Min. {{minValue}} characters, max. {{maxValue}} characters."
 
 "{{name}} must have a length greater than {{minValue}}":
-    "{{minValue}} min. characters."
+    "Min. {{minValue}} characters."
 
 "{{name}} must have a length lower than {{maxValue}}":
-    "{{maxValue}} max. characters."
+    "Max. {{maxValue}} characters."
 
 "{{name}} must not have a length between {{minValue}} and {{maxValue}}":
-    "{{maxValue}} min. characters, or {{minValue}} max. characters."
+    "Min. {{maxValue}} characters, or max. {{minValue}} characters."
 
 "{{name}} must not have a length greater than {{minValue}}":
-    "{{minValue}} max. characters."
+    "Max. {{minValue}} characters."
 
 "{{name}} must have a length greater than or equal to {{minValue}}":
-    "{{minValue}} min. characters."
+    "Min. {{minValue}} characters."
 
 "{{name}} must not have a length lower than {{maxValue}}":
-    "{{maxValue}} min. characters."
+    "Min. {{maxValue}} characters."
 
 "{{name}} must have a length lower than or equal to {{maxValue}}":
-    "{{maxValue}} max. characters."
+    "Max. {{maxValue}} characters."
 
 "{{name}} must have a length of {{maxValue}}":
     "{{maxValue}} characters expected."
@@ -845,10 +845,10 @@
     "Must not have a length of {{maxValue}} characters."
 
 "{{name}} must not have a length greater than or equal to {{minValue}}":
-    "{{minValue}} max. characters."
+    "Max. {{minValue}} characters."
 
 "{{name}} must not have a length lower than or equal to {{maxValue}}":
-    "{{maxValue}} max. characters."
+    "Max. {{maxValue}} characters."
 
 "{{name}} must be {{age}} years or less":
     "Must be {{age}} years or less."
@@ -875,22 +875,22 @@
     "Must not end with {{endValue}}."
 
 "{{name}} must be a valid JSON string":
-    "Must be a valid JSON string."
+    "This field is invalid."
 
 "{{name}} must not be a valid JSON string":
-    "Must not be a valid JSON string."
+    "This field is invalid."
 
-"{{name}} is not considered as \"True\"":
-    "Is not considered as \"True\"."
+"{{name}} must evaluate to `true`":
+    "This field is invalid."
 
-"{{name}} is considered as \"True\"":
-    "Is considered as \"True\"."
+"{{name}} must not evaluate to `true`":
+    "This field is invalid."
 
 "{{name}} must be in {{haystack}}":
-    "Must be in {{haystack}}."
+    "This field is invalid."
 
 "{{name}} must not be in {{haystack}}":
-    "Must not be in {{haystack}}."
+    "This field is invalid."
 
 "{{name}} must be a factor of {{dividend}}":
     "Must be a factor of {{dividend}}."
@@ -1090,6 +1090,9 @@
 mandatory-field:
     "This field is mandatory."
 
+invalid-field:
+    "This field is invalid."
+
 invalid-date:
     "This date is invalid."
 
@@ -1098,6 +1101,9 @@ invalid-period:
 
 invalid-value:
     "This value is invalid."
+
+invalid-name-like:
+    "This field contains some unauthorized characters."
 
 invalid-positive-amount:
     "This amount is invalid, it must be positive and with a maximum of two decimal places."
@@ -1176,12 +1182,6 @@ event-cannot-be-archived:
 
 reservation-cannot-be-archived:
     "A reservation cannot be archived if its return inventory is not done!"
-
-reservation-status-cannot-be-changed:
-    "Once assigned, the status of a reservation cannot be changed."
-
-pending-reservation-cannot-be-archived:
-    "A pending reservation cannot be archived!"
 
 field-contains-invalid-values:
     "This field contains invalid values."
@@ -1277,8 +1277,8 @@ invoice-number-already-in-use:
 category-name-already-in-use:
     "A category already exists with this name."
 
-company-legal-name-already-in-use:
-    "A company already exists with this legal name."
+email-not-available:
+    "This email address is not available."
 
 document-already-in-use-for-this-material:
     "A document with the same name already exists for this material."
@@ -1313,9 +1313,6 @@ tag-name-already-in-use:
 user-pseudo-already-in-use:
     "This pseudo is already in use."
 
-user-email-already-in-use:
-    "This email is already in use."
-
 role-name-already-in-use:
     "This role already exists."
 
@@ -1345,6 +1342,12 @@ location-does-not-exist-in-selected-park:
 
 list-name-already-in-use:
     "A list with this name already exists."
+
+invalid-email-domain:
+    "This email address is not accepted."
+
+wrong-code:
+    "This code is incorrect."
 
 #
 # - Upload messages

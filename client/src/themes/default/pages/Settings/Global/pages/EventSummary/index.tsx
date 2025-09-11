@@ -1,6 +1,6 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import axios from 'axios';
+import { defineComponent } from 'vue';
+import { RequestError } from '@/globals/requester';
 import cloneDeep from 'lodash/cloneDeep';
 import apiSettings, { MaterialDisplayMode } from '@/stores/api/settings';
 import { ApiErrorCode } from '@/stores/api/@codes';
@@ -86,12 +86,9 @@ const EventSummaryGlobalSettings = defineComponent({
                 this.$store.dispatch('settings/fetch');
                 this.$toasted.success(__('page.settings.event-summary.saved'));
             } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    const { code, details } = error.response?.data?.error || { code: ApiErrorCode.UNKNOWN, details: {} };
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        return;
-                    }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
                 }
                 this.$toasted.error(__('errors.unexpected-while-saving'));
             } finally {

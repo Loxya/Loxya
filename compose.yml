@@ -1,0 +1,75 @@
+# ===============================================================
+#
+#                     - ⚠️ ATTENTION -
+#           !!! Ne pas utiliser en production !!!
+#         Cette configuration est destinée uniquement
+#              à un usage en développement local.
+#
+# ===============================================================
+
+name: loxya-dev
+
+services:
+    # - Loxya
+    loxya:
+        container_name: loxya-app
+        build:
+            context: ./.docker
+            target: app-dev
+        env_file: .env
+        restart: always
+        environment:
+            DB_HOST: db
+            DB_USER: root
+            DB_PASS: root
+        ports:
+            - "${DOCKER_LOXYA_PORT:-80}:80"
+        networks:
+            - loxya-db-network
+            - loxya-network
+        volumes:
+            - .:/opt/loxya
+        depends_on:
+            - db
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+
+    # - Database
+    db:
+        container_name: loxya-db
+        image: mysql:8
+        command:
+            - --mysql-native-password=ON
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+        env_file: .env
+        restart: always
+        environment:
+            MYSQL_DATABASE: loxya
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "${DOCKER_MYSQL_PORT:-3306}:3306"
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - loxya-db-network
+
+    # - Maildev
+    maildev:
+        container_name: loxya-maildev
+        image: maildev/maildev
+        env_file: .env
+        restart: always
+        environment:
+            TZ: Europe/Paris
+        ports:
+            - "${DOCKER_MAILDEV_PORT:-1080}:1080"
+        networks:
+            - loxya-network
+
+networks:
+    loxya-network:
+    loxya-db-network:
+
+volumes:
+    db-data:

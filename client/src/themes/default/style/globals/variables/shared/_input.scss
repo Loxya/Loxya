@@ -8,7 +8,7 @@ $input-line-height: 1.4;
 $input-padding-horizontal: 13px;
 $input-padding-vertical: 11px;
 
-$input-background-color: hsl(253deg, 4%, 23%);
+$input-background-color: hsl(253deg 4% 23%);
 $input-background-color-emphasis: color.adjust($input-background-color, $lightness: -7%);
 $input-text-color: #fff;
 

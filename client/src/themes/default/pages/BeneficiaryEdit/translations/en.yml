@@ -10,4 +10,5 @@ help-reference: >-
 type-to-search-company: Enter a company name...
 user-account: User account
 existing-user-help: "To modify or delete the user linked to this beneficiary, go to the \"Users\" section."
+
 saved: Beneficiary saved.

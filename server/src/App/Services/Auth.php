@@ -5,9 +5,10 @@ namespace Loxya\Services;
 
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Support\Collection;
-use Loxya\Config\Acl;
 use Loxya\Config\Config;
+use Loxya\Events\LoginEvent;
 use Loxya\Http\Request;
+use Loxya\Middlewares\Acl;
 use Loxya\Models\Enums\Group;
 use Loxya\Models\User;
 use Loxya\Services\Auth\Contracts\AuthenticatorInterface;
@@ -16,13 +17,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Exception\HttpUnauthorizedException;
 use Slim\Psr7\Response;
+use Slim\Routing\RouteContext;
 
 final class Auth
 {
+    private static User|null $user = null;
+
     /** @var Collection<array-key, AuthenticatorInterface> */
     private Collection $authenticators;
-
-    private static ?User $user = null;
 
     /**
      * Constructeur.
@@ -37,11 +39,11 @@ final class Auth
     public function middleware(Request $request, RequestHandler $handler)
     {
         if (!$this->needsAuthentication($request)) {
-            $this->retrieveUser($request);
+            $this->authenticate($request);
             return $handler->handle($request);
         }
 
-        if (!$this->retrieveUser($request)) {
+        if (!$this->authenticate($request)) {
             return $this->unauthenticated($request, $handler);
         }
 
@@ -137,7 +139,7 @@ final class Auth
     // -
     // ------------------------------------------------------
 
-    public static function user(): ?User
+    public static function user(): User|null
     {
         return static::$user;
     }
@@ -151,18 +153,18 @@ final class Auth
     {
         $groups = (array) $groups;
 
-        if (!static::isAuthenticated()) {
-            // - Si on est en mode CLI, on considère que le process
-            //   courant a un accès administrateur.
-            if (!isCli()) {
-                return false;
-            }
-            $userGroup = Group::ADMINISTRATION;
-        } else {
-            $userGroup = static::user()->group;
+        if (static::isAuthenticated()) {
+            return in_array(static::user()->group, $groups, true);
         }
 
-        return in_array($userGroup, (array) $groups, true);
+        // - S'il n'est pas connecté, il fait partie du groupe des anonymes.
+        if (in_array(Group::ANONYMOUS, $groups, true)) {
+            return true;
+        }
+
+        // - Si on est en mode CLI, on considère que le process
+        //   courant a un accès administrateur.
+        return isCli() && in_array(Group::ADMINISTRATION, $groups, true);
     }
 
     public static function reset(): void
@@ -184,57 +186,76 @@ final class Auth
             return false;
         }
 
-        // - Si ce n'est pas une route publique, c'est une route protégée.
-        return !$request->match(Acl::PUBLIC_ROUTES);
+        $route = RouteContext::fromRequest($request)->getRoute();
+        return $route && !Acl::isRouteAllowed(null, $route);
     }
 
-    protected function retrieveUser(Request $request): bool
+    protected function authenticate(Request $request): User|null
     {
-        if (static::user()) {
-            return true;
+        if (static::isAuthenticated()) {
+            return static::user();
         }
 
-        // - Si on est en mode "test", on "fake" identifie l'utilisateur.
-        if (Config::getEnv() === 'test') {
-            static::$user = User::find(1);
+        // - On met les instances de JWT en premier.
+        $authenticators = (new Collection($this->authenticators))
+            ->sort(static function (AuthenticatorInterface $a, AuthenticatorInterface $b) {
+                $aIsJwt = $a instanceof Auth\JWT;
+                $bIsJwt = $b instanceof Auth\JWT;
+
+                return $aIsJwt !== $bIsJwt ? ($aIsJwt ? -1 : 1) : 0;
+            });
+
+        // - On utilise les authenticators pour identifier l'utilisateur.
+        $auth = null;
+        foreach ($authenticators as $authenticator) {
+            if (!$authenticator->isEnabled()) {
+                continue;
+            }
+
+            $foundUser = $authenticator->getUser($request);
+            if ($foundUser === null) {
+                continue;
+            }
+
+            // - Si l'utilisateur est trouvé, on s'arrête là.
+            if ($foundUser instanceof User) {
+                $auth = [
+                    'user' => $foundUser,
+                    'authenticator' => $authenticator,
+                ];
+                break;
+            }
+        }
+
+        if ($auth !== null) {
+            static::$user = $auth['user'];
 
             // - L'utilisateur identifié a changé, on demande l'actualisation
             //   de la langue détecté par l'i18n car la valeur a pu changer...
             container('i18n')->refreshLanguage();
 
-            return true;
-        }
+            // - Si on est dans un contexte stateful et que ce n'est pas l'authentification JWT qui
+            //   a identifié, alors l'utilisateur vient d'être identifié par un tiers...
+            if (!$request->isApi() && !($auth['authenticator'] instanceof Auth\JWT)) {
+                // - ... On persiste donc l'authentification de l'utilisateur pour que
+                //       celui-ci puisse être connu par le front-end.
+                Auth\JWT::registerSessionToken($request, $auth['user']);
 
-        // - On utilise les authenticators pour identifier l'utilisateur.
-        foreach ($this->authenticators as $auth) {
-            if (!$auth->isEnabled()) {
-                continue;
-            }
-
-            $user = $auth->getUser($request);
-            if (!empty($user) && $user instanceof User) {
-                static::$user = $user;
-
-                // - L'utilisateur identifié a changé, on demande l'actualisation
-                //   de la langue détecté par l'i18n car la valeur a pu changer...
-                container('i18n')->refreshLanguage();
-
-                // - Si on est dans un contexte stateful, on persiste l'utilisateur pour que ceci puisse être connu du front-end.
-                //   (sauf si c'est déjà l'authentification JWT qui a identifié l'utilisateur de manière stateful)
-                if (!$request->isApi() && !($auth instanceof Auth\JWT)) {
-                    Auth\JWT::registerSessionToken($user);
+                // - ... On trigger aussi l'event de login si c'est une connexion.
+                if ($auth['user'] instanceof User) {
+                    LoginEvent::dispatch($auth['user']);
                 }
-
-                return true;
             }
+
+            return $auth['user'];
         }
 
-        return false;
+        return null;
     }
 
     protected function unauthenticated(Request $request, RequestHandler $handler): ResponseInterface
     {
-        $isLoginRequest = $request->match(['/login']);
+        $isLoginRequest = $request->match(['/login', '/auth']);
         if ($isLoginRequest) {
             return $handler->handle($request);
         }

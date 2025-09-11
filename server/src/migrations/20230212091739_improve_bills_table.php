@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\UpdateQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -290,8 +288,7 @@ final class ImproveBillsTable extends AbstractMigration
             unset($invoiceData['materials']);
 
             // - Factures.
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sinvoices', $prefix))
                 ->set($invoiceData)
@@ -641,8 +638,7 @@ final class ImproveBillsTable extends AbstractMigration
             unset($estimateData['materials']);
 
             // - Devis.
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimates', $prefix))
                 ->set($estimateData)
@@ -829,8 +825,7 @@ final class ImproveBillsTable extends AbstractMigration
             ->update();
 
         foreach ($billsMaterialsData as $billId => $materialsData) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sbills', $prefix))
                 ->set('materials', $materialsData)
@@ -935,8 +930,7 @@ final class ImproveBillsTable extends AbstractMigration
             ->update();
 
         foreach ($estimatesMaterialsData as $estimateId => $materialsData) {
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimates', $prefix))
                 ->set('materials', $materialsData)

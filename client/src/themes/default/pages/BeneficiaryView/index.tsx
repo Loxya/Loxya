@@ -1,15 +1,16 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import axios from 'axios';
-import HttpCode from 'status-code-enum';
+import { defineComponent } from 'vue';
 import config, { BillingMode } from '@/globals/config';
 import parseInteger from '@/utils/parseInteger';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
+import { RequestError, HttpCode } from '@/globals/requester';
 import Page from '@/themes/default/components/Page';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import { Tabs, Tab } from '@/themes/default/components/Tabs';
 import Button from '@/themes/default/components/Button';
+
+// - Tabs
 import Infos from './tabs/Infos';
 import Billing from './tabs/Billing';
 import Borrowings from './tabs/Borrowings';
@@ -28,7 +29,7 @@ type Data = {
     isLoading: boolean,
     isFetched: boolean,
     selectedTabIndex: number,
-    criticalError: string | null,
+    criticalError: ErrorType | null,
 };
 
 /** Page de détails d'un bénéficiaire. */
@@ -70,7 +71,14 @@ const BeneficiaryView = defineComponent({
             switch (tabsIndexes[selectedTabIndex]) {
                 case TabName.INFO: {
                     return [
-                        <Button type="edit" to={{ name: 'edit-beneficiary', params: { id } }} collapsible>
+                        <Button
+                            type="edit"
+                            to={{
+                                name: 'edit-beneficiary',
+                                params: { id: id.toString() },
+                            }}
+                            collapsible
+                        >
                             {__('action-edit')}
                         </Button>,
                     ];
@@ -117,16 +125,14 @@ const BeneficiaryView = defineComponent({
                 this.selectTabFromRouting();
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving beneficiary #${this.id} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving beneficiary #${this.id} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             } finally {
                 this.isLoading = false;
             }
@@ -160,23 +166,23 @@ const BeneficiaryView = defineComponent({
             <Page name="beneficiary-view" title={pageTitle} loading={isLoading}>
                 <div class="BeneficiaryView">
                     <Tabs
+                        actions={tabsActions}
                         defaultIndex={selectedTabIndex}
                         onChanged={handleTabChanged}
-                        actions={tabsActions}
                     >
                         <Tab title={__('informations')} icon="info-circle">
-                            <Infos beneficiary={beneficiary} />
+                            <Infos beneficiary={beneficiary!} />
                         </Tab>
                         {withBilling && (
                             <Tab title={__('page.beneficiary-view.billing.title')} icon="file-invoice">
-                                <Billing beneficiary={beneficiary} />
+                                <Billing beneficiary={beneficiary!} />
                             </Tab>
                         )}
                         <Tab
                             title={__('page.beneficiary-view.borrowings.title', { count: stats.borrowings })}
                             icon="calendar-alt"
                         >
-                            <Borrowings beneficiary={beneficiary} />
+                            <Borrowings beneficiary={beneficiary!} />
                         </Tab>
                     </Tabs>
                 </div>

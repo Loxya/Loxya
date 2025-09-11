@@ -1,4 +1,5 @@
 import { BookingEntity } from '@/stores/api/bookings';
+import config, { ReturnPolicy } from '@/globals/config';
 
 import type DateTime from '@/utils/datetime';
 import type { BookingContext } from '../_types';
@@ -14,9 +15,9 @@ const getTimelineBookingStatuses = (
     const { isExcerpt, booking } = context;
     const isOngoing = now.isBetween(booking.mobilization_period);
     const isPast = booking.mobilization_period.isBefore(now);
-    const isFuture = !booking.mobilization_period.isBeforeOrDuring(now);
     const {
         is_archived: isArchived,
+        has_materials: hasMaterials,
         is_return_inventory_done: isReturnInventoryDone,
         has_not_returned_materials: hasNotReturnedMaterials,
     } = booking;
@@ -84,17 +85,22 @@ const getTimelineBookingStatuses = (
         });
     }
 
-    if (isFuture && !isExcerpt && booking.has_missing_materials) {
+    if (!isPast && !isExcerpt && booking.has_missing_materials) {
         statuses.push({
             icon: 'exclamation-triangle',
             label: getStatusText('has-missing-materials'),
         });
     }
 
-    if (isPast && !isReturnInventoryDone) {
+    if (isPast && !isReturnInventoryDone && hasMaterials) {
+        const useManualReturn = config.returnPolicy === ReturnPolicy.MANUAL;
         statuses.push({
             icon: 'exclamation-triangle',
-            label: getStatusText('needs-its-return-inventory'),
+            label: getStatusText(
+                !useManualReturn
+                    ? 'needs-its-return-inventory'
+                    : 'overdue',
+            ),
         });
     }
 

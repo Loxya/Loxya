@@ -105,9 +105,8 @@
             #{$block}__label {
                 text-align: right;
 
-                /* stylelint-disable declaration-no-important, order/properties-order -- Pour surcharger la mise en forme verticale */
+                // stylelint-disable-next-line declaration-no-important, order/properties-order -- Pour surcharger la mise en forme verticale
                 padding: 3px globals.$input-padding-horizontal 0 0 !important;
-                /* stylelint-enable declaration-no-important */
             }
 
             // - Si le switch est en mode vertical, on ne met pas le label
@@ -118,6 +117,13 @@
             }
         }
 
+        &--radio {
+            #{$block}__label {
+                // stylelint-disable-next-line declaration-no-important -- Pour surcharger la mise en forme verticale
+                padding: 0 globals.$input-padding-horizontal 0 0 !important;
+            }
+        }
+
         &:not(&--vertical) {
             display: flex;
             flex-flow: row wrap;
@@ -125,9 +131,9 @@
 
             #{$block}__label {
                 flex: 0 0 var(--label-width);
+                align-self: flex-start;
                 padding: 0.76rem globals.$input-padding-horizontal;
                 text-align: right;
-                align-self: flex-start;
             }
         }
     }

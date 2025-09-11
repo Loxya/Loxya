@@ -1,0 +1,62 @@
+title: Modify property "{name}"
+title-simple: Modify property
+title-create: New property
+
+name: Name of the property
+define-entities: "Property scope:"
+define-entities-help: At least one value must be selected.
+type: Data type
+type-not-modifiable: The data type cannot be changed.
+unit: Unit of measure to display
+max-length: Maximum text length
+
+totalisable:
+    label: "Is totalisable\_?"
+    help: |
+        Allows the property to be used in the totals under
+        the material list of release sheets.
+
+list-choices:
+    label: Choices
+    warning-edit: |
+        Warning: modifying the choices (other than reordering them) while they are
+        in use on material will result in the loss of the associated values.
+
+limit-to-categories:
+    label: "Limit property to categories:"
+    help: If no category is selected, there will be no limitation.
+
+period-precision:
+    label: Dates Precision
+    options:
+        free: Free
+        daily: Full days
+        hourly: Hourly
+    warning-edit: |
+        Warning: changing the date precision will affect
+        the periods already entered in the materials.
+
+entities:
+    material: Material
+
+types:
+    string: Text
+    text: Multi-line text
+    integer: Integer number
+    float: Decimal number
+    boolean: Boolean (Yes/No)
+    list: List of choices
+    period: Period (start and end date)
+    date: Date
+
+confirm-update-entities: >-
+    Some scope values of the property have been removed. If you save these changes,
+    the existing values affected by the property's scope will be removed. Do you
+    really want to continue?
+confirm-update-categories: >-
+    The categories limiting the property has changed. If you save these changes,
+    all the existing values of this property will be removed. Do you
+    really want to continue?
+yes-update: Yes, update the property
+
+saved: Property saved.

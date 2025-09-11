@@ -1,3 +1,4 @@
+import type { Raw } from 'vue';
 import type Period from '@/utils/period';
 import type DateTime from '@/utils/datetime';
 import type Day from '@/utils/day';
@@ -20,10 +21,10 @@ export type DisableDateFunction = (date: DateTime, granularity: 'day' | 'minute'
 export type Value<T extends Type = Type, R extends boolean = boolean> = (
     | (
         R extends true
-            ? Period<T extends Type.DATE ? true : false>
+            ? Raw<Period<T extends Type.DATE ? true : false>>
             : T extends Type.DATETIME
-                ? DateTime
-                : Day
+                ? Raw<DateTime>
+                : Raw<Day>
     )
     | null
 );

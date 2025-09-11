@@ -1,18 +1,18 @@
 import './index.scss';
 import pick from 'lodash/pick';
+import Decimal from 'decimal.js';
 import cloneDeep from 'lodash/cloneDeep';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import config, { BillingMode } from '@/globals/config';
-import apiAttributes, { AttributeEntity, AttributeType } from '@/stores/api/attributes';
+import apiProperties, { PropertyEntity } from '@/stores/api/properties';
 import formatOptions from '@/utils/formatOptions';
 import parseInteger from '@/utils/parseInteger';
 import Fieldset from '@/themes/default/components/Fieldset';
 import FormField from '@/themes/default/components/FormField';
 import Button from '@/themes/default/components/Button';
-import Decimal from 'decimal.js';
+import PropertyField from './PropertyField';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
 import type { Settings } from '@/stores/api/settings';
 import type { Options } from '@/utils/formatOptions';
 import type { Category, CategoryDetails } from '@/stores/api/categories';
@@ -21,10 +21,10 @@ import type { Tax } from '@/stores/api/taxes';
 import type { SubCategory } from '@/stores/api/subcategories';
 import type { DegressiveRate } from '@/stores/api/degressive-rates';
 import type {
-    Attribute,
-    AttributeDetails,
-    AttributeWithValue,
-} from '@/stores/api/attributes';
+    Property,
+    PropertyDetails,
+    PropertyWithValue,
+} from '@/stores/api/properties';
 import type {
     MaterialDetails as Material,
     MaterialEdit as MaterialEditCore,
@@ -38,18 +38,31 @@ type Props = {
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Record<string, string>,
+    errors?: Record<string, string> | null,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur soumet les changements.
+     *
+     * @param data - Les données soumises.
+     */
+    onSubmit?(data: MaterialEditCore): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur manifeste
+     * son souhait d'annuler l'edition.
+     */
+    onCancel?(): void,
 };
 
 type MaterialEdit = (
-    & Omit<MaterialEditCore, 'attributes'>
-    & { attributes: Record<Attribute['id'], AttributeWithValue['value']> }
+    & Omit<MaterialEditCore, 'properties'>
+    & { properties: Record<Property['id'], PropertyWithValue['value']> }
 );
 
 type Data = {
     data: MaterialEdit,
     criticalError: Error | null,
-    allAttributes: AttributeDetails[],
+    allProperties: PropertyDetails[],
 };
 
 const getDefaults = (
@@ -72,7 +85,7 @@ const getDefaults = (
         is_hidden_on_bill: false,
         is_discountable: true,
         note: null,
-        attributes: [],
+        properties: [],
     };
 
     return {
@@ -80,8 +93,8 @@ const getDefaults = (
         ...pick(savedData ?? {}, Object.keys(BASE_DEFAULTS)),
         rental_price: savedData?.rental_price?.toString() ?? null,
         replacement_price: savedData?.replacement_price?.toString() ?? null,
-        attributes: Object.fromEntries((savedData?.attributes ?? []).map(
-            ({ id, value }: AttributeWithValue) => [id, value],
+        properties: Object.fromEntries((savedData?.properties ?? []).map(
+            ({ id, value }: PropertyWithValue) => [id, value],
         )),
     };
 };
@@ -105,6 +118,16 @@ const MaterialEditForm = defineComponent({
             type: Object as PropType<Required<Props>['errors']>,
             default: null,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
+            default: undefined,
+        },
     },
     emits: ['submit', 'cancel'],
     data(): Data {
@@ -113,7 +136,7 @@ const MaterialEditForm = defineComponent({
         return {
             data: getDefaults(this.savedData, settings),
             criticalError: null,
-            allAttributes: [],
+            allProperties: [],
         };
     },
     computed: {
@@ -197,7 +220,7 @@ const MaterialEditForm = defineComponent({
         this.$store.dispatch('categories/fetch');
         this.$store.dispatch('degressiveRates/fetch');
 
-        this.fetchAttributes();
+        this.fetchProperties();
 
         // - Focus sur le champ nom si création.
         if (this.isNew) {
@@ -235,8 +258,8 @@ const MaterialEditForm = defineComponent({
 
             const data: MaterialEditCore = {
                 ...rawData,
-                attributes: Object.entries(rawData.attributes)
-                    .map(([id, value]: [string, AttributeWithValue['value']]) => (
+                properties: Object.entries(rawData.properties)
+                    .map(([id, value]: [string, PropertyWithValue['value']]) => (
                         { id: parseInt(id, 10), value }
                     )),
             };
@@ -250,7 +273,7 @@ const MaterialEditForm = defineComponent({
         handleCategoryChange() {
             this.data.sub_category_id = null;
 
-            this.fetchAttributes();
+            this.fetchProperties();
         },
 
         handleRentalPriceChange(newValue: string | null) {
@@ -263,8 +286,8 @@ const MaterialEditForm = defineComponent({
             }
         },
 
-        handleAttributeChange(id: Attribute['id'], newValue: AttributeWithValue['value']) {
-            this.$set(this.data.attributes, id, newValue);
+        handlePropertyChange(id: Property['id'], newValue: PropertyWithValue['value']) {
+            this.$set(this.data.properties, id, newValue);
         },
 
         // ------------------------------------------------------
@@ -273,7 +296,7 @@ const MaterialEditForm = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async fetchAttributes() {
+        async fetchProperties() {
             const categoryId: Category['id'] | 'none' = (
                 this.data.category_id || this.data.category_id === 0
                     ? this.data.category_id
@@ -281,55 +304,20 @@ const MaterialEditForm = defineComponent({
             ) ?? 'none';
 
             try {
-                this.allAttributes = await apiAttributes.all(categoryId, AttributeEntity.MATERIAL);
+                this.allProperties = await apiProperties.all(categoryId, PropertyEntity.MATERIAL);
 
-                // - Supprime les données d'attributs obsolètes dans les données du formulaire.
-                Object.keys(this.data.attributes).forEach((id: string) => {
-                    const stillExists = this.allAttributes
-                        .some((attr: AttributeDetails) => attr.id === parseInt(id, 10));
+                // - Supprime les données de caractéristique obsolètes dans les données du formulaire.
+                Object.keys(this.data.properties).forEach((id: string) => {
+                    const stillExists = this.allProperties
+                        .some((attr: PropertyDetails) => attr.id === parseInt(id, 10));
 
                     if (!stillExists) {
-                        this.$delete(this.data.attributes, id);
+                        this.$delete(this.data.properties, id);
                     }
                 });
             } catch {
-                this.allAttributes = [];
-                this.criticalError = new Error('Unable to retrieve the list of special attributes.');
-            }
-        },
-
-        getAttributeInputType(attributeType: Attribute['type']) {
-            switch (attributeType) {
-                case AttributeType.INTEGER:
-                case AttributeType.FLOAT: {
-                    return 'number';
-                }
-                case AttributeType.BOOLEAN: {
-                    return 'switch';
-                }
-                case AttributeType.DATE: {
-                    return 'date';
-                }
-                case AttributeType.TEXT: {
-                    return 'textarea';
-                }
-                default: {
-                    return 'text';
-                }
-            }
-        },
-
-        getAttributeInputStep(attributeType: Attribute['type']) {
-            switch (attributeType) {
-                case AttributeType.INTEGER: {
-                    return 1;
-                }
-                case AttributeType.FLOAT: {
-                    return 0.001;
-                }
-                default: {
-                    return undefined;
-                }
+                this.allProperties = [];
+                this.criticalError = new Error('Unable to retrieve the list of special properties.');
             }
         },
     },
@@ -348,15 +336,13 @@ const MaterialEditForm = defineComponent({
             showParksSelector,
             showSubCategories,
             showBilling,
-            allAttributes,
+            allProperties,
             currentRentalPrice,
             handleSubmit,
             handleCancel,
             handleCategoryChange,
             handleRentalPriceChange,
-            handleAttributeChange,
-            getAttributeInputType,
-            getAttributeInputStep,
+            handlePropertyChange,
         } = this;
 
         if (criticalError !== null) {
@@ -524,20 +510,13 @@ const MaterialEditForm = defineComponent({
                         v-model={data.replacement_price}
                         error={errors?.replacement_price}
                     />
-                    {allAttributes.map((attribute: AttributeDetails) => (
-                        <FormField
-                            key={attribute.id}
-                            label={attribute.name}
-                            type={getAttributeInputType(attribute.type)}
-                            step={getAttributeInputStep(attribute.type)}
-                            addon={
-                                attribute.type === AttributeType.INTEGER || attribute.type === AttributeType.FLOAT
-                                    ? attribute.unit
-                                    : undefined
-                            }
-                            value={data.attributes[attribute.id] ?? null}
-                            onInput={(value: AttributeWithValue['value']) => {
-                                handleAttributeChange(attribute.id, value);
+                    {allProperties.map((property: PropertyDetails) => (
+                        <PropertyField
+                            key={property.id}
+                            property={property}
+                            value={data.properties[property.id] ?? null}
+                            onChange={(value: PropertyWithValue['value']) => {
+                                handlePropertyChange(property.id, value);
                             }}
                         />
                     ))}

@@ -1,5 +1,6 @@
 @use 'sass:color';
 @use 'sass:string';
+@use 'sass:meta';
 
 //
 // - Functions
@@ -14,7 +15,7 @@
 /// @return {String} La couleur, encodée.
 ///
 @function color-encode($color) {
-    @if type-of($color) == 'color' and str-index(#{$color}, '#') == 1 {
+    @if meta.type-of($color) == 'color' and string.index(#{$color}, '#') == 1 {
         $hex: string.slice(color.ie-hex-str($color), 4);
         $string: string.unquote('#{$hex}');
         @return '%23' + $string;

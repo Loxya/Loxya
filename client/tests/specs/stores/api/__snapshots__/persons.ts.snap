@@ -10,7 +10,7 @@ exports[`Persons Api all() parse the returned data correctly 1`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_address": "1, somewhere av.
 1234 Megacity",
@@ -26,7 +26,7 @@ exports[`Persons Api all() parse the returned data correctly 1`] = `
     {
       "country": null,
       "country_id": null,
-      "email": "tester2@robertmanager.net",
+      "email": "tester2@loxya.com",
       "first_name": "Roger",
       "full_address": null,
       "full_name": "Roger Rabbit",
@@ -95,7 +95,7 @@ exports[`Persons Api all() parse the returned data correctly 1`] = `
         "name": "France",
       },
       "country_id": 1,
-      "email": "visitor@robertmanager.net",
+      "email": "visitor@loxya.com",
       "first_name": "Henry",
       "full_address": "30 avenue du chateau
 75000 Paris",
@@ -111,7 +111,7 @@ exports[`Persons Api all() parse the returned data correctly 1`] = `
     {
       "country": null,
       "country_id": null,
-      "email": "external@robertmanager.net",
+      "email": "external@loxya.com",
       "first_name": "Caroline",
       "full_address": null,
       "full_name": "Caroline Farol",

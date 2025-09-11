@@ -1,9 +1,9 @@
 import './index.scss';
 import Fragment from '@/components/Fragment';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import formatAmount from '@/utils/formatAmount';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails, EventTaxTotal } from '@/stores/api/events';
 import type {
     Booking as BookingCore,

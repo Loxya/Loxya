@@ -72,7 +72,15 @@
 
     &__company {
         &__name {
+            display: flex;
+            flex-direction: column;
             margin: 0;
+
+            &__registration-id {
+                color: globals.$text-soft-color;
+                font-size: 0.95rem;
+                font-weight: 400;
+            }
         }
 
         &__address {

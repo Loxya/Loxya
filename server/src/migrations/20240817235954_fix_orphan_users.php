@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\InsertQuery;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
 
@@ -23,8 +21,7 @@ final class FixOrphanUsers extends AbstractMigration
             $prefix,
         ));
         foreach ($data as $datum) {
-            /** @var InsertQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_INSERT);
+            $qb = $this->getInsertBuilder();
             $qb
                 ->insert(['user_id', 'first_name', 'last_name'])
                 ->into(sprintf('%spersons', $prefix))

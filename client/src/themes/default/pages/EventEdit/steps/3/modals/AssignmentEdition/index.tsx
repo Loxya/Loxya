@@ -1,18 +1,18 @@
 import './index.scss';
-import axios from 'axios';
 import apiEvents from '@/stores/api/events';
 import apiRoles from '@/stores/api/roles';
 import stringCompare from '@/utils/stringCompare';
 import formatOptions from '@/utils/formatOptions';
 import { confirm } from '@/utils/alert';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { ApiErrorCode } from '@/stores/api/@codes';
+import { RequestError } from '@/globals/requester';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
 
 import type Period from '@/utils/period';
 import type DateTime from '@/utils/datetime';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 import type { DisableDateFunction } from '@/themes/default/components/DatePicker';
 import type { Role } from '@/stores/api/roles';
@@ -186,7 +186,7 @@ const EventEditStepTechniciansAssignmentEdition = defineComponent({
             }
         },
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();
@@ -221,19 +221,16 @@ const EventEditStepTechniciansAssignmentEdition = defineComponent({
                 this.$toasted.success(__('assignation-saved'));
                 this.$emit('close', updatedAssignment);
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the assignment`, error);
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                    } else {
-                        this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                    }
-                }
                 this.isSaving = false;
+
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the assignment`, error);
+                this.$toasted.error(__('global.errors.unexpected-while-saving'));
             }
         },
 

@@ -7,10 +7,11 @@ import { UserSchema } from './users';
 import { RoleSchema } from './roles';
 import { withPaginationEnvelope } from './@schema';
 
+import type { Raw } from 'vue';
 import type Period from '@/utils/period';
 import type { Event } from './events';
 import type { SchemaInfer } from '@/utils/validation';
-import type { AxiosRequestConfig as RequestConfig } from 'axios';
+import type { RequestConfig } from '@/globals/requester';
 import type { PaginatedData, SortableParams, PaginationParams } from './@types';
 import type { Document } from './documents';
 import type { Role } from './roles';
@@ -104,7 +105,7 @@ export type TechnicianEdit = {
 
 export type Filters = Nullable<{
     search?: string | string[],
-    availabilityPeriod?: Period,
+    availabilityPeriod?: Raw<Period>,
     role?: Role['id'],
 }>;
 
@@ -140,12 +141,12 @@ const all = async ({ availabilityPeriod, ...otherParams }: GetAllParams = {}): P
         ...availabilityPeriod?.toQueryParams('availabilityPeriod'),
     });
     const response = await requester.get('/technicians', { params });
-    return withPaginationEnvelope(TechnicianSchema).parse(response.data);
+    return withPaginationEnvelope(TechnicianSchema).parse(response);
 };
 
 const allWhileEvent = async (eventId: Event['id'], params?: GetAllWhileEventParams): Promise<TechnicianWithEvents[]> => {
     const response = await requester.get(`/technicians/while-event/${eventId}`, { params });
-    return TechnicianWithEventsSchema.array().parse(response.data);
+    return TechnicianWithEventsSchema.array().parse(response);
 };
 
 async function allWithAssignments(params: GetAllWithAssignmentsParams): Promise<TechnicianWithEvents[]>;
@@ -155,28 +156,28 @@ async function allWithAssignments({ period, ...params }: GetAllWithAssignmentsPa
     const response = await requester.get('/technicians/with-assignments', { params: normalizedParams });
 
     return normalizedParams.paginated
-        ? withPaginationEnvelope(TechnicianWithEventsSchema).parse(response.data)
-        : TechnicianWithEventsSchema.array().parse(response.data);
+        ? withPaginationEnvelope(TechnicianWithEventsSchema).parse(response)
+        : TechnicianWithEventsSchema.array().parse(response);
 }
 
 const one = async (id: Technician['id']): Promise<TechnicianDetails> => {
     const response = await requester.get(`/technicians/${id}`);
-    return TechnicianDetailsSchema.parse(response.data);
+    return TechnicianDetailsSchema.parse(response);
 };
 
 const create = async (data: TechnicianEdit): Promise<TechnicianDetails> => {
     const response = await requester.post('/technicians', data);
-    return TechnicianDetailsSchema.parse(response.data);
+    return TechnicianDetailsSchema.parse(response);
 };
 
 const update = async (id: Technician['id'], data: TechnicianEdit): Promise<TechnicianDetails> => {
     const response = await requester.put(`/technicians/${id}`, data);
-    return TechnicianDetailsSchema.parse(response.data);
+    return TechnicianDetailsSchema.parse(response);
 };
 
 const restore = async (id: Technician['id']): Promise<TechnicianDetails> => {
     const response = await requester.put(`/technicians/restore/${id}`);
-    return TechnicianDetailsSchema.parse(response.data);
+    return TechnicianDetailsSchema.parse(response);
 };
 
 const remove = async (id: Technician['id']): Promise<void> => {
@@ -185,18 +186,18 @@ const remove = async (id: Technician['id']): Promise<void> => {
 
 const assignments = async (id: Technician['id']): Promise<TechnicianEvent[]> => {
     const response = await requester.get(`/technicians/${id}/events`);
-    return TechnicianEventSchema.array().parse(response.data);
+    return TechnicianEventSchema.array().parse(response);
 };
 
 const documents = async (id: Technician['id']): Promise<Document[]> => {
     const response = await requester.get(`/technicians/${id}/documents`);
-    return DocumentSchema.array().parse(response.data);
+    return DocumentSchema.array().parse(response);
 };
 
 const attachDocument = async (id: Technician['id'], file: File, options: RequestConfig = {}): Promise<Document> => {
     const formData = new FormData(); formData.append('file', file);
     const response = await requester.post(`/technicians/${id}/documents`, formData, options);
-    return DocumentSchema.parse(response.data);
+    return DocumentSchema.parse(response);
 };
 
 export default {

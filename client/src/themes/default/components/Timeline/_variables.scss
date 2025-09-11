@@ -6,7 +6,7 @@ $separator-color: globals.$calendar-separator-color;
 $border-radius: globals.$border-radius-large;
 
 $header-background-color: #262527;
-$header-box-shadow: 0 0 5px rgba(#000, 0.25);
+$header-box-shadow: 0 0 5px rgb(0 0 0 / 25%);
 $header-text-color: globals.$text-soft-color;
 
 //
@@ -28,12 +28,12 @@ $item-border-radius: globals.$border-radius-large;
 //
 
 $range-item-background-color: globals.$calendar-event-normal-color;
-$range-item-box-shadow: 1px 2px 3px rgba(#000, 0.5);
+$range-item-box-shadow: 1px 2px 3px rgb(0 0 0 / 50%);
 $range-item-text-color: globals.$calendar-event-normal-text-color;
 
 //
 // -- Éléments de type "background".
 //
 
-$background-item-background-color: rgba(31, 31, 31, 0.6);
-$background-item-text-color: rgba(255, 255, 255, 0.5);
+$background-item-background-color: rgb(31 31 31 / 60%);
+$background-item-text-color: rgb(255 255 255 / 50%);

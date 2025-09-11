@@ -1,10 +1,11 @@
 import './index.scss';
 import Day from '@/utils/day';
+import config from '@/globals/config';
 import Period, { PeriodReadableFormat } from '@/utils/period';
 import DateTime from '@/utils/datetime';
 import truncate from 'lodash/truncate';
 import parseInteger from '@/utils/parseInteger';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
 import showModal from '@/utils/showModal';
 import EventDetails, { TabIndex as EventDetailsTab } from '@/themes/default/modals/EventDetails';
@@ -16,8 +17,7 @@ import Item from './components/Item';
 import ItemGroupEvent from './components/ItemGroupEvent';
 import ItemGroupRole from './components/ItemGroupRole';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type Color from '@/utils/color';
 import type { Technician, TechnicianEvent } from '@/stores/api/technicians';
 import type { TimelineClickEvent, TimelineItem } from '@/themes/default/components/Timeline';
@@ -47,10 +47,10 @@ type InstanceProperties = {
 
 type Data = {
     assignments: TechnicianEvent[],
-    defaultShownPeriod: Period,
+    defaultShownPeriod: Raw<Period>,
     hasCriticalError: boolean,
     isFetched: boolean,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 /**
@@ -63,7 +63,7 @@ const MIN_ZOOM = DateTime.duration(1, 'hour');
  * Interval de temps maximum affiché dans la timeline.
  * (Il ne sera pas possible de dé-zoomer au delà de cette limite)
  */
-const MAX_ZOOM = DateTime.duration(60, 'days');
+const MAX_ZOOM = DateTime.duration(config.maxFetchPeriod, 'days');
 
 /** Onglet de la liste des assignations du technicien. */
 const TechnicianViewAssignments = defineComponent({
@@ -85,14 +85,14 @@ const TechnicianViewAssignments = defineComponent({
     }),
     data: (): Data => ({
         assignments: [],
-        defaultShownPeriod: new Period(
+        defaultShownPeriod: markRaw(new Period(
             Day.today().subDay(7),
             Day.today().addDay(7),
             true,
-        ),
+        )),
         hasCriticalError: false,
         isFetched: false,
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         timelineAssignments(): TimelineItem[] {
@@ -193,7 +193,7 @@ const TechnicianViewAssignments = defineComponent({
         this.fetchData();
 
         // - Actualise le timestamp courant toutes les 60 secondes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 60_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {

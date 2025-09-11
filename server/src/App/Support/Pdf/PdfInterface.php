@@ -21,4 +21,6 @@ interface PdfInterface
     public function asResponse(Response $response): ResponseInterface;
 
     public function asResponseHtml(Response $response): ResponseInterface;
+
+    public function asMailAttachment(): array;
 }

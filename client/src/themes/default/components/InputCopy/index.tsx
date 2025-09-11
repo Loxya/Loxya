@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Button from '@/themes/default/components/Button';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /** La valeur qui doit être proposée à la copie. */
@@ -84,7 +84,7 @@ const InputCopy = defineComponent({
                     type="text"
                     value={value}
                     onFocus={handleFocus}
-                    readOnly
+                    readonly
                 />
                 <div class="InputCopy__button-wrapper">
                     <Button class="InputCopy__button" onClick={handleCopy}>

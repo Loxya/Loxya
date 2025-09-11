@@ -12,44 +12,44 @@ describe('Materials Api', () => {
             const paginatedData = withPaginationEnvelope(allData);
 
             // - Avec pagination (1).
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiMaterials.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiMaterials.all()).resolves.toMatchSnapshot();
 
             // - Avec pagination (2).
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiMaterials.all({ paginated: true })).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiMaterials.all({ paginated: true })).resolves.toMatchSnapshot();
 
             // - Sans pagination.
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: allData });
-            expect(await apiMaterials.all({ paginated: false })).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(allData);
+            await expect(apiMaterials.all({ paginated: false })).resolves.toMatchSnapshot();
         });
     });
 
     describe('allWhileEvent()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.withContext() });
-            expect(await apiMaterials.allWhileEvent(1)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(data.withContext());
+            await expect(apiMaterials.allWhileEvent(1)).resolves.toMatchSnapshot();
         });
     });
 
     describe('one()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: datum });
-            expect(await apiMaterials.one(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(datum);
+            await expect(apiMaterials.one(datum.id)).resolves.toMatchSnapshot();
         });
     });
 
     describe('create()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
-            expect(await apiMaterials.create({} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
+            await expect(apiMaterials.create({} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('update()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiMaterials.update(datum.id, {} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiMaterials.update(datum.id, {} as any)).resolves.toMatchSnapshot();
         });
     });
 
@@ -63,30 +63,30 @@ describe('Materials Api', () => {
                     },
                 })),
             );
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiMaterials.bookings(1)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiMaterials.bookings(1)).resolves.toMatchSnapshot();
         });
     });
 
     describe('documents()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: documents.default() });
-            expect(await apiMaterials.documents(1)).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(documents.default());
+            await expect(apiMaterials.documents(1)).resolves.toMatchSnapshot();
         });
     });
 
     describe('attachDocument()', () => {
         it.each(documents.default())('parse the returned data correctly (with document #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
             const fakeFile = new File(['__TEST__'], 'my-document.txt', { type: 'text/plain' });
-            expect(await apiMaterials.attachDocument(1, fakeFile)).toMatchSnapshot();
+            await expect(apiMaterials.attachDocument(1, fakeFile)).resolves.toMatchSnapshot();
         });
     });
 
     describe('restore()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiMaterials.restore(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiMaterials.restore(datum.id)).resolves.toMatchSnapshot();
         });
     });
 });

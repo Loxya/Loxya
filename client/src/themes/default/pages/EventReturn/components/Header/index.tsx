@@ -1,12 +1,12 @@
 import './index.scss';
 import Day, { DayReadableFormat } from '@/utils/day';
 import { DateTimeReadableFormat } from '@/utils/datetime';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import MultiSwitch from '@/themes/default/components/MultiSwitch';
 import { DisplayGroup } from '../Inventory';
 
 import type DateTime from '@/utils/datetime';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 
@@ -19,6 +19,13 @@ type Props = {
 
     /** Doit-on afficher le sélecteur d'affichage par groupe ? */
     showDisplayGroupSelector: boolean,
+
+    /**
+     * Fonction appelée lorsque l'affichage par groupe a changé.
+     *
+     * @param newGroup - Le nouvel affichage par groupe sélectionné
+     */
+    onDisplayGroupChange?(newGroup: DisplayGroup): void,
 };
 
 /** Header de la page d'inventaire de retour d'événement. */
@@ -40,6 +47,11 @@ const EventReturnHeader = defineComponent({
         showDisplayGroupSelector: {
             type: Boolean as PropType<Required<Props>['showDisplayGroupSelector']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDisplayGroupChange: {
+            type: Function as PropType<Props['onDisplayGroupChange']>,
+            default: undefined,
         },
     },
     emits: ['displayGroupChange'],

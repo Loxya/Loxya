@@ -1,0 +1,82 @@
+return-to-login: Return to login
+
+errors:
+    reset-session-expired: |
+        The password reset session has expired.
+        Please restart the process.
+
+    resend-too-soon:
+        with-delay:
+            A reset code was recently sent.
+            Please wait {time} before retrying.
+        without-delay:
+            A reset code was recently sent.
+            Please wait a few minutes before retrying.
+
+steps:
+    informations:
+        title: Password reset
+        continue: Continue
+        introduction:
+            Enter the email address associated with your account,
+            we'll send you a code to reset your password.
+
+        errors:
+            mandatory-email: This field is mandatory.
+            invalid-email: This email address is invalid.
+
+    verification:
+        without-ongoing:
+            instructions:
+                obsolete: |
+                    The previously sent password reset code is no longer valid.
+
+                    You can request a new one below.
+
+                too-many-attempts: |
+                    Too many incorrect attempts have been made.
+                    Please request a new code to continue.
+
+            action:
+                without-delay: "Resend code now"
+                with-delay: "Resend code ({seconds}s)"
+
+        with-ongoing:
+            instructions:
+                Please enter the verification code you received by
+                email at <highlight>{email}</highlight>.
+
+            action-resend:
+                without-delay: Haven't received the code? Click here to request a new one.
+                with-delay: "Haven't received the code? Click here to request a new one (available in {seconds}s)"
+
+        verified:
+            instructions:
+                Your request has been verified. You can now choose a new
+                password by clicking the button below.
+
+            action: Choose a new password
+
+        errors:
+            wrong-code: The specified code is invalid.
+
+    finalization:
+        title: New Password
+
+        password-modified: |
+            Your password has been successfully changed.
+            You can now log in using your new password.
+
+        introduction: |
+            Use the form below to set your new password.
+            You will then be able to log in with it.
+
+        fields:
+            password: New Password
+            password-confirmation: Password Confirmation
+
+        errors:
+            mandatory-field: This field is mandatory.
+            invalid-confirmation: The confirmation does not match.
+
+        action: Change Password

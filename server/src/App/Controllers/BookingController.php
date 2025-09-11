@@ -7,6 +7,7 @@ use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Loxya\Config\Config;
 use Loxya\Errors\Enums\ApiErrorCode;
 use Loxya\Errors\Exception\ApiBadRequestException;
 use Loxya\Errors\Exception\HttpUnprocessableEntityException;
@@ -19,12 +20,10 @@ use Loxya\Support\Database\QueryAggregator;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpException;
-use Slim\Exception\HttpNotFoundException;
 use Slim\Http\Response;
 
 final class BookingController extends BaseController
 {
-    public const MAX_GET_ALL_PERIOD = 3.5 * 30; // - En jours
     public const MAX_GET_ALL_PER_PAGE = 30;
 
     public const BOOKING_TYPES = [
@@ -44,20 +43,15 @@ final class BookingController extends BaseController
 
     public function getAll(Request $request, Response $response): ResponseInterface
     {
-        if ($request->getBooleanQueryParam('paginated', true)) {
-            return $this->getAllPaginated($request, $response);
-        }
-
-        return $this->getAllInPeriod($request, $response);
+        return $request->getBooleanQueryParam('paginated', true)
+            ? $this->getAllPaginated($request, $response)
+            : $this->getAllInPeriod($request, $response);
     }
 
     public function getOneSummary(Request $request, Response $response): ResponseInterface
     {
+        $entity = $request->getRawEnumAttribute('entity', array_keys(self::BOOKING_TYPES));
         $id = $request->getIntegerAttribute('id');
-        $entity = $request->getAttribute('entity');
-        if (!array_key_exists($entity, self::BOOKING_TYPES)) {
-            throw new HttpNotFoundException($request, "Booking type (entity) not recognized.");
-        }
 
         /** @var Event $booking */
         $booking = self::BOOKING_TYPES[$entity]::findOrFail($id);
@@ -78,11 +72,8 @@ final class BookingController extends BaseController
 
     public function getOne(Request $request, Response $response): ResponseInterface
     {
+        $entity = $request->getRawEnumAttribute('entity', array_keys(self::BOOKING_TYPES));
         $id = $request->getIntegerAttribute('id');
-        $entity = $request->getAttribute('entity');
-        if (!array_key_exists($entity, self::BOOKING_TYPES)) {
-            throw new HttpNotFoundException($request, "Booking type (entity) not recognized.");
-        }
 
         /** @var Event $booking */
         $booking = self::BOOKING_TYPES[$entity]::findOrFail($id);
@@ -93,11 +84,8 @@ final class BookingController extends BaseController
 
     public function updateMaterials(Request $request, Response $response): ResponseInterface
     {
+        $entity = $request->getRawEnumAttribute('entity', array_keys(self::BOOKING_TYPES));
         $id = $request->getIntegerAttribute('id');
-        $entity = $request->getAttribute('entity');
-        if (!array_key_exists($entity, self::BOOKING_TYPES)) {
-            throw new HttpNotFoundException($request, "Booking type (entity) not recognized.");
-        }
 
         /** @var Event $booking */
         $booking = self::BOOKING_TYPES[$entity]::findOrFail($id);
@@ -125,11 +113,8 @@ final class BookingController extends BaseController
 
     public function updateBilling(Request $request, Response $response): ResponseInterface
     {
+        $entity = $request->getRawEnumAttribute('entity', array_keys(self::BOOKING_TYPES));
         $id = $request->getIntegerAttribute('id');
-        $entity = $request->getAttribute('entity');
-        if (!array_key_exists($entity, self::BOOKING_TYPES)) {
-            throw new HttpNotFoundException($request, "Booking type (entity) not recognized.");
-        }
 
         /** @var Event $booking */
         $booking = self::BOOKING_TYPES[$entity]::findOrFail($id);
@@ -201,7 +186,7 @@ final class BookingController extends BaseController
                     static fn ($builder) => $builder->search($search),
                 )
                 ->when($period !== null, static fn (Builder $builder) => (
-                    $builder->inPeriod($period)
+                    $builder->inPeriod($period, withOverdue: true)
                 ))
                 ->when($endingToday, static fn (Builder $builder) => (
                     $builder->endingToday()
@@ -245,11 +230,12 @@ final class BookingController extends BaseController
         }
 
         // - Limitation de la période récupérable.
-        $maxEndDate = $period->getStartDate()->addDays(self::MAX_GET_ALL_PERIOD);
+        $maxPeriodDuration = Config::get('maxFetchPeriod', 3 * 30) + 15;
+        $maxEndDate = $period->getStartDate()->addDays($maxPeriodDuration);
         if ($period->getEndDate()->isAfter($maxEndDate)) {
             throw new HttpException(
                 $request,
-                sprintf('The retrieval period for bookings may not exceed %s days.', self::MAX_GET_ALL_PERIOD),
+                sprintf('The retrieval period for bookings may not exceed %s days.', $maxPeriodDuration),
                 StatusCode::STATUS_RANGE_NOT_SATISFIABLE,
             );
         }
@@ -257,7 +243,7 @@ final class BookingController extends BaseController
         $query = new QueryAggregator([
             // - Événements.
             Event::class => (
-                Event::inPeriod($period)
+                Event::inPeriod($period, withOverdue: true)
                     ->with(['materials', 'beneficiaries', 'technicians'])
             ),
         ]);

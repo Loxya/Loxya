@@ -1,12 +1,12 @@
 import './index.scss';
-import axios from 'axios';
 import DateTime from '@/utils/datetime';
 import parseInteger from '@/utils/parseInteger';
-import { defineComponent } from '@vue/composition-api';
-import HttpCode from 'status-code-enum';
+import { defineComponent, markRaw } from 'vue';
+import { RequestError, HttpCode } from '@/globals/requester';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import { ReturnInventoryMode } from '@/stores/api/settings';
 import apiEvents from '@/stores/api/events';
+import showModal from '@/utils/showModal';
 import { confirm } from '@/utils/alert';
 import Page from '@/themes/default/components/Page';
 import Loading from '@/themes/default/components/Loading';
@@ -16,7 +16,10 @@ import Inventory, { InventoryErrorsSchema, DisplayGroup } from './components/Inv
 import Header from './components/Header';
 import Footer from './components/Footer';
 
-import type { ComponentRef } from 'vue';
+// - Modales
+import FinishPrompt from './modals/FinishPrompt';
+
+import type { ComponentRef, Raw } from 'vue';
 import type { Settings } from '@/stores/api/settings';
 import type {
     EventDetails,
@@ -38,12 +41,12 @@ type Data = (
         id: EventDetails['id'],
         inventory: InventoryData,
         displayGroup: DisplayGroup,
-        criticalError: string | null,
+        criticalError: ErrorType | null,
         isSaved: boolean,
         isSaving: boolean,
         isCancelling: boolean,
         inventoryErrors: InventoryMaterialError[] | null,
-        now: DateTime,
+        now: Raw<DateTime>,
     }
     & (
         | { isFetched: false, event: null }
@@ -69,7 +72,7 @@ const EventReturn = defineComponent({
             isCancelling: false,
             criticalError: null,
             inventoryErrors: null,
-            now: DateTime.now(),
+            now: markRaw(DateTime.now()),
         };
     },
     computed: {
@@ -199,7 +202,7 @@ const EventReturn = defineComponent({
         this.fetchData();
 
         // - Actualise le timestamp courant toutes les minutes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 10_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -238,8 +241,6 @@ const EventReturn = defineComponent({
         },
 
         async handleTerminate() {
-            const { __ } = this;
-
             if (!this.canTerminate) {
                 return;
             }
@@ -248,18 +249,19 @@ const EventReturn = defineComponent({
                 ({ broken }: InventoryMaterial) => broken > 0,
             );
 
-            const isConfirmed = await confirm({
-                title: __('confirm-terminate-title'),
-                confirmButtonText: __('global.terminate-inventory'),
-                text: hasBroken
-                    ? __('confirm-terminate-text-with-broken')
-                    : __('confirm-terminate-text'),
-            });
-            if (!isConfirmed) {
+            const returnDate: DateTime | null | undefined = (
+                await showModal(this.$modal, FinishPrompt, {
+                    event: this.event,
+                    hasBroken,
+                })
+            );
+
+            // - Si l'action est annulée dans la modale, on ne fait rien.
+            if (returnDate === undefined) {
                 return;
             }
 
-            await this.save(true);
+            await this.save(returnDate ?? true);
         },
 
         async handleCancel() {
@@ -302,31 +304,33 @@ const EventReturn = defineComponent({
                 this.setEvent(await apiEvents.one(this.id));
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving event #${this.id} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving event #${this.id} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
 
-        async save(finish: boolean = false) {
+        async save(finish: boolean | DateTime = false) {
             if (this.isSaving) {
                 return;
             }
             this.isSaving = true;
             const { __, inventory } = this;
 
-            const doRequest = (): Promise<EventDetails> => (
-                finish
-                    ? apiEvents.finishReturnInventory(this.id, inventory)
-                    : apiEvents.updateReturnInventory(this.id, inventory)
-            );
+            const doRequest = (): Promise<EventDetails> => {
+                const shouldFinish = finish !== false;
+                if (!shouldFinish) {
+                    return apiEvents.updateReturnInventory(this.id, inventory);
+                }
+
+                const finishDate = finish !== true ? finish : undefined;
+                return apiEvents.finishReturnInventory(this.id, finishDate, inventory);
+            };
 
             try {
                 this.setEvent(await doRequest());
@@ -334,22 +338,18 @@ const EventReturn = defineComponent({
                 this.inventoryErrors = null;
                 this.$toasted.success(__('saved'));
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the event #${this.id} return inventory`, error);
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        const inventoryErrors = InventoryErrorsSchema.safeParse(details);
-                        if (inventoryErrors.success) {
-                            this.inventoryErrors = inventoryErrors.data;
-                            (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
-                            return;
-                        }
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    const inventoryErrors = InventoryErrorsSchema.safeParse(error.details);
+                    if (inventoryErrors.success) {
+                        this.inventoryErrors = inventoryErrors.data;
+                        (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
+                        return;
                     }
-                    this.$toasted.error(__('global.errors.unexpected-while-saving'));
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the event #${this.id} return inventory`, error);
+                this.$toasted.error(__('global.errors.unexpected-while-saving'));
             } finally {
                 this.isSaving = false;
             }

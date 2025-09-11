@@ -7,22 +7,22 @@ describe('Users Api', () => {
     describe('all()', () => {
         it('parse the returned data correctly', async () => {
             const paginatedData = withPaginationEnvelope(data.default());
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: paginatedData });
-            expect(await apiUsers.all()).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiUsers.all()).resolves.toMatchSnapshot();
         });
     });
 
     describe('one()', () => {
         it('parse the returned data correctly', async () => {
             // - Avec lui-même.
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.details(1) });
-            expect(await apiUsers.one('self')).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(data.details(1));
+            await expect(apiUsers.one('self')).resolves.toMatchSnapshot();
 
             // - Avec les autres utilisateurs.
             await Promise.all(
                 data.details().map(async (datum: any) => {
-                    jest.spyOn(requester, 'get').mockResolvedValue({ data: datum });
-                    expect(await apiUsers.one(datum.id)).toMatchSnapshot();
+                    jest.spyOn(requester, 'get').mockResolvedValue(datum);
+                    await expect(apiUsers.one(datum.id)).resolves.toMatchSnapshot();
                 }),
             );
         });
@@ -30,15 +30,15 @@ describe('Users Api', () => {
 
     describe('create()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'post').mockResolvedValue({ data: datum });
-            expect(await apiUsers.create({} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'post').mockResolvedValue(datum);
+            await expect(apiUsers.create({} as any)).resolves.toMatchSnapshot();
         });
     });
 
     describe('update()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: data.details(1) });
-            expect(await apiUsers.update('self', {} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(data.details(1));
+            await expect(apiUsers.update('self', {} as any)).resolves.toMatchSnapshot();
 
             // - Avec les autres utilisateurs.
             await Promise.all(
@@ -47,8 +47,8 @@ describe('Users Api', () => {
                         return;
                     }
 
-                    jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-                    expect(await apiUsers.update(datum.id, {} as any)).toMatchSnapshot();
+                    jest.spyOn(requester, 'put').mockResolvedValue(datum);
+                    await expect(apiUsers.update(datum.id, {} as any)).resolves.toMatchSnapshot();
                 }),
             );
         });
@@ -57,14 +57,14 @@ describe('Users Api', () => {
     describe('getSettings()', () => {
         it('parse the returned data correctly', async () => {
             // - Avec lui-même.
-            jest.spyOn(requester, 'get').mockResolvedValue({ data: data.settings(1) });
-            expect(await apiUsers.getSettings('self')).toMatchSnapshot();
+            jest.spyOn(requester, 'get').mockResolvedValue(data.settings(1));
+            await expect(apiUsers.getSettings('self')).resolves.toMatchSnapshot();
 
             // - Avec les autres utilisateurs.
             await Promise.all(
                 data.settings().map(async (datum: any) => {
-                    jest.spyOn(requester, 'get').mockResolvedValue({ data: datum });
-                    expect(await apiUsers.getSettings(datum.id)).toMatchSnapshot();
+                    jest.spyOn(requester, 'get').mockResolvedValue(datum);
+                    await expect(apiUsers.getSettings(datum.id)).resolves.toMatchSnapshot();
                 }),
             );
         });
@@ -72,8 +72,8 @@ describe('Users Api', () => {
 
     describe('updateSettings()', () => {
         it('parse the returned data correctly', async () => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: data.settings(1) });
-            expect(await apiUsers.updateSettings('self', {} as any)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(data.settings(1));
+            await expect(apiUsers.updateSettings('self', {} as any)).resolves.toMatchSnapshot();
 
             // - Avec les autres utilisateurs.
             await Promise.all(
@@ -82,8 +82,8 @@ describe('Users Api', () => {
                         return;
                     }
 
-                    jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-                    expect(await apiUsers.updateSettings(datum.id, {} as any)).toMatchSnapshot();
+                    jest.spyOn(requester, 'put').mockResolvedValue(datum);
+                    await expect(apiUsers.updateSettings(datum.id, {} as any)).resolves.toMatchSnapshot();
                 }),
             );
         });
@@ -91,8 +91,8 @@ describe('Users Api', () => {
 
     describe('restore()', () => {
         it.each(data.details())('parse the returned data correctly (with #$id)', async (datum: any) => {
-            jest.spyOn(requester, 'put').mockResolvedValue({ data: datum });
-            expect(await apiUsers.restore(datum.id)).toMatchSnapshot();
+            jest.spyOn(requester, 'put').mockResolvedValue(datum);
+            await expect(apiUsers.restore(datum.id)).resolves.toMatchSnapshot();
         });
     });
 });

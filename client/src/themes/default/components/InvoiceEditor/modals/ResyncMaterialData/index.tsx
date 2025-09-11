@@ -1,13 +1,13 @@
 import './index.scss';
 import formatAmount from '@/utils/formatAmount';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiBookings from '@/stores/api/bookings';
 import Fragment from '@/components/Fragment';
 import Button from '@/themes/default/components/Button';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 
 import type Decimal from 'decimal.js';
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Booking } from '@/stores/api/bookings';
 import type { BillingMaterial, PriceDetails, Tax } from '../../_types';
 
@@ -17,6 +17,14 @@ type Props = {
 
     /** Matériel dont on veut resynchroniser les données. */
     material: BillingMaterial,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur souhaite fermer la fenêtre modale.
+     *
+     * @param updatedMaterial - La ligne de matériel mise à jour.
+     *                          (uniquement si l'utilisateur n'a pas fermé la modale sans modifier)
+     */
+    onClose?(updatedMaterial?: BillingMaterial): void,
 };
 
 const RESYNCHRONIZABLE_FIELDS = [
@@ -54,6 +62,11 @@ const InvoiceEditorResyncMaterialDataModal = defineComponent({
             type: Object as PropType<Props['material']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
+        },
     },
     emits: ['close'],
     data: (): Data => ({
@@ -76,7 +89,7 @@ const InvoiceEditorResyncMaterialDataModal = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();

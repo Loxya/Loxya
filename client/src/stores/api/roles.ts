@@ -41,17 +41,17 @@ export type RoleEdit = RoleCreate;
 
 const all = async (): Promise<Role[]> => {
     const response = await requester.get('/roles');
-    return RoleSchema.array().parse(response.data);
+    return RoleSchema.array().parse(response);
 };
 
 const create = async (data: RoleCreate): Promise<Role> => {
     const response = await requester.post('/roles', data);
-    return RoleSchema.parse(response.data);
+    return RoleSchema.parse(response);
 };
 
 const update = async (id: Role['id'], data: RoleEdit): Promise<Role> => {
     const response = await requester.put(`/roles/${id}`, data);
-    return RoleSchema.parse(response.data);
+    return RoleSchema.parse(response);
 };
 
 const remove = async (id: Role['id']): Promise<void> => {

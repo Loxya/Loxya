@@ -70,14 +70,14 @@ final class BookingMaterialController extends BaseController
         }
 
         $currencyChanged = $booking->currency !== Config::get('currency');
-        if ($currencyChanged && in_array('unit_price', $selection)) {
+        if ($currencyChanged && in_array('unit_price', $selection, true)) {
             throw new HttpBadRequestException(
                 $request,
                 "Resynchronization of the unit price is not possible when " .
                 "the booking currency differ from the global one.",
             );
         }
-        if ($currencyChanged && in_array('taxes', $selection)) {
+        if ($currencyChanged && in_array('taxes', $selection, true)) {
             $canResyncTaxes = (new Collection($material->tax?->asFlatArray() ?? []))
                 ->every('is_rate', true);
 
@@ -95,9 +95,8 @@ final class BookingMaterialController extends BaseController
             'reference' => 'reference',
             'unit_price' => 'rental_price',
         ];
-
         foreach ($attributes as $attribute => $materialAttribute) {
-            if (in_array($attribute, $selection)) {
+            if (in_array($attribute, $selection, true)) {
                 $bookingMaterial->setAttribute(
                     $attribute,
                     $material->getAttribute($materialAttribute),
@@ -105,7 +104,7 @@ final class BookingMaterialController extends BaseController
             }
         }
 
-        if (in_array('degressive_rate', $selection)) {
+        if (in_array('degressive_rate', $selection, true)) {
             $durationDays = $booking->operation_period->asDays();
             $degressiveRate = $material->degressive_rate?->computeForDays($durationDays)
                 // - Pas de dégressivité.
@@ -114,7 +113,7 @@ final class BookingMaterialController extends BaseController
             $bookingMaterial->degressive_rate = $degressiveRate;
         }
 
-        if (in_array('taxes', $selection)) {
+        if (in_array('taxes', $selection, true)) {
             $bookingMaterial->taxes = $material->tax?->asFlatArray();
         }
 

@@ -10,4 +10,5 @@ help-reference: >-
 type-to-search-company: Entrez le nom d'une société...
 user-account: Compte utilisateur
 existing-user-help: "Pour modifier ou supprimer l'utilisateur lié à ce bénéficiaire, rendez-vous dans la partie «\_Utilisateurs\_»."
+
 saved: Bénéficiaire sauvegardé.

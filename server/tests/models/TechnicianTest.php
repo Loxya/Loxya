@@ -43,7 +43,7 @@ final class TechnicianTest extends TestCase
             'first_name' => 'Roger',
             'last_name' => 'Rabbit',
             'nickname' => 'Riri',
-            'email' => 'tester2@robertmanager.net',
+            'email' => 'tester2@loxya.com',
             'phone' => null,
             'street' => null,
             'postal_code' => null,
@@ -61,7 +61,7 @@ final class TechnicianTest extends TestCase
             'person' => [
                 'first_name' => 'Roger',
                 'last_name' => 'Rabbit',
-                'email' => 'tester2@robertmanager.net',
+                'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
                 'postal_code' => null,
@@ -69,7 +69,7 @@ final class TechnicianTest extends TestCase
                 'country_id' => null,
             ],
             'user' => [
-                'email' => 'tester2@robertmanager.net',
+                'email' => 'tester2@loxya.com',
                 'pseudo' => 'robbie',
                 'password' => '123abc',
             ],
@@ -91,7 +91,7 @@ final class TechnicianTest extends TestCase
                 'country_id' => null,
             ],
             'user' => [
-                'email' => 'tester2@robertmanager.org',
+                'email' => 'tester2@loxya.com',
                 'pseudo' => 'roger',
                 'password' => 'test-mpd',
             ],

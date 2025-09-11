@@ -6,12 +6,13 @@ namespace Loxya\Tests;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Loxya\Http\Enums\AppContext;
 use Loxya\Models\User;
+use Loxya\Services\Auth;
 
 final class SessionTest extends ApiTestCase
 {
     public function testGetSelf(): void
     {
-        // - Test auth with e-mail address
+        // - Test avec un utilisateur "normal".
         $this->client->get('/api/session');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData(UsersTest::data(1, User::SERIALIZE_SESSION));
@@ -19,6 +20,8 @@ final class SessionTest extends ApiTestCase
 
     public function testLoginBadData(): void
     {
+        Auth\Test::$user = null;
+
         // - Sans aucune données.
         $this->client->post('/api/session');
         $this->assertStatusCode(StatusCode::STATUS_BAD_REQUEST);
@@ -49,17 +52,19 @@ final class SessionTest extends ApiTestCase
 
         // - Avec un mot de passe invalide.
         $this->client->post('/api/session', [
-            'identifier' => 'tester@robertmanager.net',
+            'identifier' => 'tester@loxya.com',
             'password' => 'wrongPassword',
         ]);
         $this->assertStatusCode(StatusCode::STATUS_UNAUTHORIZED);
         $this->assertApiErrorMessage("Wrong credentials provided.");
     }
 
-    public function testAuthOK(): void
+    public function testLoginSuccess(): void
     {
+        Auth\Test::$user = null;
+
         // - Test d'authentification avec différents types d'identifiants.
-        foreach (['tester@robertmanager.net', 'test1'] as $identifier) {
+        foreach (['tester@loxya.com', 'test1'] as $identifier) {
             $this->client->post('/api/session', [
                 'identifier' => $identifier,
                 'password' => 'testing-pw',

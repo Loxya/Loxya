@@ -1,5 +1,5 @@
 {% for parkName, parkMaterials in materialsSorted %}
-<h2 class="{{ not loop.first ? 'changePage' : '' }}">
+<h2 {{ not loop.first ? 'class="changePage"' : '' }}>
     {{ __('materials-park-name', parkName) }}
 </h2>
 <table class="listing-table">

@@ -1,22 +1,22 @@
 import './index.scss';
 import formatAmount from '@/utils/formatAmount';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import getUnsyncedData from '../../utils/getUnsyncedData';
-import apiBookings from '@/stores/api/bookings';
+import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import isMaterialResyncable from '../../utils/isMaterialResyncable';
 import Fragment from '@/components/Fragment';
 import Button from '@/themes/default/components/Button';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 
 import type Decimal from 'decimal.js';
-import type { Booking, MaterialResynchronizableField } from '@/stores/api/bookings';
-import type { PropType } from '@vue/composition-api';
-import type { SourceMaterial } from '../../_types';
+import type { MaterialResynchronizableField } from '@/stores/api/bookings';
+import type { PropType } from 'vue';
+import type { Bookable, EmbeddedMaterial, SourceMaterial } from '../../_types';
 import type { UnsyncedData, UnsyncedDataValue } from '../../utils/getUnsyncedData';
 
 type Props = {
-    /** Le booking (événement, réservation ou demande de réservation). */
-    booking: Booking,
+    /** Le bookable ({@see {@link Bookable}}). */
+    bookable: Bookable,
 
     /** Matériel dont on veut resynchroniser les données. */
     material: SourceMaterial,
@@ -42,8 +42,8 @@ const ResyncMaterialDataModal = defineComponent({
         clickToClose: false,
     },
     props: {
-        booking: {
-            type: Object as PropType<Props['booking']>,
+        bookable: {
+            type: Object as PropType<Props['bookable']>,
             required: true,
         },
         material: {
@@ -93,7 +93,7 @@ const ResyncMaterialDataModal = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSubmit(e: SubmitEvent) {
+        handleSubmit(e: Event) {
             e?.preventDefault();
 
             this.save();
@@ -140,16 +140,17 @@ const ResyncMaterialDataModal = defineComponent({
                 return;
             }
 
-            const { __, booking, material, selection } = this;
+            const { __, bookable, material, selection } = this;
             this.isSaving = true;
 
             try {
-                const updatedMaterial = await apiBookings.resynchronizeMaterial(
-                    booking.entity,
-                    booking.id,
+                const updatedMaterial: EmbeddedMaterial = await apiBookings.resynchronizeMaterial(
+                    BookingEntity.EVENT,
+                    bookable.id,
                     material.id,
                     selection,
                 );
+
                 this.$toasted.success(__('selected-data-resynchronized'));
                 this.$emit('close', updatedMaterial);
             } catch {
@@ -281,9 +282,9 @@ const ResyncMaterialDataModal = defineComponent({
                     <div class="ResyncMaterialDataModal__footer">
                         <Button
                             type="primary"
-                            onClick={handleSubmit}
                             loading={isSaving}
                             disabled={!hasSelected}
+                            onClick={handleSubmit}
                         >
                             {__('resynchronize-data')}
                         </Button>

@@ -1,10 +1,10 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import formatAttributeValue from '@/utils/formatAttributeValue';
+import { defineComponent } from 'vue';
+import formatCustomFieldValue from '@/utils/formatCustomFieldValue';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { Material } from '@/stores/api/materials';
-import type { AttributeWithValue } from '@/stores/api/attributes';
+import type { PropertyWithValue } from '@/stores/api/properties';
 
 type Props = {
     /** Le matériel dont on veut afficher les détails. */
@@ -37,7 +37,7 @@ const MaterialPopoverPopup = defineComponent({
             return (
                 (material.description ?? '').length > 0 ||
                 (material.note ?? '').length > 0 ||
-                material.attributes.length > 0 ||
+                material.properties.length > 0 ||
                 !material.is_discountable
             );
         },
@@ -68,7 +68,7 @@ const MaterialPopoverPopup = defineComponent({
             reference,
             description,
             note,
-            attributes,
+            properties,
             is_discountable: isDiscountable,
         } = material;
 
@@ -102,19 +102,19 @@ const MaterialPopoverPopup = defineComponent({
                                     {description}
                                 </p>
                             )}
-                            {attributes.length > 0 && (
-                                <div class="MaterialPopoverPopup__attributes">
-                                    {attributes.map((attribute: AttributeWithValue) => (
-                                        <dl key={attribute.id} class="MaterialPopoverPopup__attribute">
-                                            <dt class="MaterialPopoverPopup__attribute__name">
-                                                {__('global.label-colon', { label: attribute.name })}
+                            {properties.length > 0 && (
+                                <dl class="MaterialPopoverPopup__properties">
+                                    {properties.map((property: PropertyWithValue) => (
+                                        <div key={property.id} class="MaterialPopoverPopup__properties__item">
+                                            <dt class="MaterialPopoverPopup__properties__item__name">
+                                                {__('global.label-colon', { label: property.name })}
                                             </dt>
-                                            <dd class="MaterialPopoverPopup__attribute__value">
-                                                {formatAttributeValue(this.$t, attribute)}
+                                            <dd class="MaterialPopoverPopup__properties__item__value">
+                                                {formatCustomFieldValue(this.$t, property)}
                                             </dd>
-                                        </dl>
+                                        </div>
                                     ))}
-                                </div>
+                                </dl>
                             )}
                             {!isDiscountable && (
                                 <p class="MaterialPopoverPopup__not-discountable">

@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import VueSelect from 'vue-select';
 import debounce from 'lodash/debounce';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
@@ -10,9 +10,8 @@ import Fragment from '@/components/Fragment';
 import IconMessage from '@/themes/default/components/IconMessage';
 import FormField from '@/themes/default/components/FormField';
 
-import type { ComponentRef } from 'vue';
+import type { ComponentRef, PropType } from 'vue';
 import type { DebouncedMethod } from 'lodash';
-import type { PropType } from '@vue/composition-api';
 import type { Option, Options } from '@/utils/formatOptions';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 
@@ -27,6 +26,13 @@ type Props = {
      *       uniquement de fournir une liste de départ.
      */
     defaultValues?: Beneficiary[],
+
+    /**
+     * Fonction appelée lorsque la liste des bénéficiaires a été modifiée.
+     *
+     * @param ids - Liste des identifiants des bénéficiaires sélectionnés.
+     */
+    onChange?(ids: Array<Beneficiary['id']>): void,
 };
 
 type InstanceProperties = {
@@ -64,6 +70,11 @@ const EventEditStepBeneficiariesSelect = defineComponent({
             type: Array as PropType<Required<Props>['defaultValues']>,
             default: () => [],
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['change'],
     setup: (): InstanceProperties => ({
@@ -97,9 +108,7 @@ const EventEditStepBeneficiariesSelect = defineComponent({
                     return;
                 }
 
-                // @ts-expect-error -- `this` fait bien référence au component.
                 this.$nextTick(() => {
-                    // @ts-expect-error -- `this` fait bien référence au component.
                     const $input = this.$refs.input as ComponentRef<typeof VueSelect>;
                     $input?.searchEl?.focus();
                 });

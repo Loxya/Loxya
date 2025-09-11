@@ -1,0 +1,73 @@
+@use '~@/themes/default/style/globals';
+
+.CheckboxesOption {
+    $block: &;
+
+    display: flex;
+    align-items: center;
+    padding: 0.55rem 0.78rem;
+    border-radius: 2px;
+    background-color: globals.$interactive-element-default-background-color;
+    color: globals.$color-base-button;
+    font-size: 1rem;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: all 300ms;
+    user-select: none;
+    gap: globals.$spacing-thin;
+
+    @include globals.icon('square', 'regular') {
+        width: 1.1em;
+        height: 1.1em;
+        font-size: 1.1em;
+        line-height: 1.15;
+    }
+
+    &__input {
+        display: none;
+    }
+
+    //
+    // - States
+    //
+
+    &--active {
+        background-color: globals.$primary-color;
+        color: #fff;
+
+        @include globals.icon('check-square') {
+            width: 1.1em;
+            height: 1.1em;
+            font-size: 1.1em;
+            line-height: 1.15;
+        }
+    }
+
+    //
+    // - Variantes
+    //
+
+    &--critical {
+        background-color: globals.$interactive-element-success-background-color;
+        color: #fff;
+
+        @include globals.icon('check') {
+            width: 1.1em;
+            height: 1.1em;
+            font-size: 1.1em;
+            line-height: 1.15;
+        }
+
+        &#{$block}--active {
+            background-color: globals.$interactive-element-danger-background-color;
+            color: #fff;
+
+            @include globals.icon('ban') {
+                width: 1.1em;
+                height: 1.1em;
+                font-size: 1.1em;
+                line-height: 1.15;
+            }
+        }
+    }
+}

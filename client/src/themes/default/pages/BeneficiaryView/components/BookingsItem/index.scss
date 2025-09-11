@@ -28,6 +28,7 @@
         margin: 0 25px 0 15px;
 
         &__icon {
+            min-width: 18px;
             margin-right: 15px;
             font-size: 1.2rem;
             text-align: center;
@@ -78,6 +79,17 @@
                 }
             }
         }
+
+        &__overdue-summary {
+            overflow: hidden;
+            color: color.adjust(globals.$text-base-color, $lightness: -5%);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            @include globals.icon('hourglass', 'regular') {
+                margin-right: globals.$spacing-thin;
+            }
+        }
     }
 
     &__readable-state {
@@ -95,6 +107,7 @@
     //
 
     &--current,
+    &--overdue,
     &--future {
         color: globals.$text-base-color;
         opacity: 1;
@@ -127,6 +140,20 @@
 
         &:hover {
             background-color: color.adjust(globals.$bg-color-highlighted-item, $lightness: 3%);
+        }
+    }
+
+    &--overdue {
+        background-color: globals.$bg-color-highlighted-item-danger;
+
+        #{$block}__readable-state {
+            @include globals.icon('hourglass-end') {
+                margin-right: 0.5rem;
+            }
+        }
+
+        &:hover {
+            background-color: color.adjust(globals.$bg-color-highlighted-item-danger, $lightness: 3%);
         }
     }
 

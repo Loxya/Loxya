@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { confirm } from '@/utils/alert';
 import Icon from '@/themes/default/components/Icon';
 

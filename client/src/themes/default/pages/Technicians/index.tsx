@@ -1,5 +1,5 @@
 import config from '@/globals/config';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 
 /** Pages des techniciens (calendrier et liste). */
 const Technicians = defineComponent({

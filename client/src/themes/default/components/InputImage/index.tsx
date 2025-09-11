@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import config from '@/globals/config';
 import formatBytes from '@/utils/formatBytes';
 import Button from '@/themes/default/components/Button';
@@ -7,8 +7,7 @@ import Loading from '@/themes/default/components/Loading';
 import Progressbar from '@/themes/default/components/Progressbar';
 import PlaceholderImage from './assets/placeholder.svg?inline';
 
-import type { PropType } from '@vue/composition-api';
-import type { VNode } from 'vue';
+import type { PropType, Raw } from 'vue';
 
 type Props = {
     /**
@@ -33,6 +32,13 @@ type Props = {
      * @default false
      */
     uploading?: boolean | number,
+
+    /**
+     * Fonction appelée lorsque l'image sélectionnée a changé.
+     *
+     * @param value - Nouvelle valeur du champ (fichier ou `null`).
+     */
+    onChange?(value: Raw<File> | null): void,
 };
 
 /** Un champ de formulaire d'upload d'une image. */
@@ -46,6 +52,11 @@ const InputImage = defineComponent({
         uploading: {
             type: [Boolean, Number] as PropType<Required<Props>['uploading']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
         },
     },
     emits: ['change'],
@@ -95,7 +106,7 @@ const InputImage = defineComponent({
                 return;
             }
 
-            const file = files[0];
+            const file = markRaw(files[0]);
             const { type, size } = file;
             const { $t: __ } = this;
 
@@ -132,11 +143,11 @@ const InputImage = defineComponent({
             handleRemove,
         } = this;
 
-        const renderPreviewContent = (): VNode => {
+        const renderPreviewContent = (): JSX.Element => {
             if (isEmpty) {
                 return <PlaceholderImage class="InputImage__preview__placeholder" />;
             }
-            return <img src={imageSrc} class="InputImage__preview__image" alt="" />;
+            return <img src={imageSrc!} class="InputImage__preview__image" alt="" />;
         };
 
         const className = ['InputImage', {

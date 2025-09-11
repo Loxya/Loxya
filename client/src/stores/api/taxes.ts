@@ -70,17 +70,17 @@ export type TaxEdit = {
 
 const all = async (): Promise<Tax[]> => {
     const response = await requester.get('/taxes');
-    return TaxSchema.array().parse(response.data);
+    return TaxSchema.array().parse(response);
 };
 
 const create = async (data: TaxEdit): Promise<Tax> => {
     const response = await requester.post('/taxes', data);
-    return TaxSchema.parse(response.data);
+    return TaxSchema.parse(response);
 };
 
 const update = async (id: Tax['id'], data: TaxEdit): Promise<Tax> => {
     const response = await requester.put(`/taxes/${id}`, data);
-    return TaxSchema.parse(response.data);
+    return TaxSchema.parse(response);
 };
 
 const remove = async (id: Tax['id']): Promise<void> => {

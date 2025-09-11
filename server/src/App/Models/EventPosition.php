@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Loxya\Config\Enums\Feature;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Un poste de technicien dans un événement.
@@ -38,7 +38,7 @@ final class EventPosition extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'event_id' => V::custom([$this, 'checkEventId']),
             'role_id' => V::custom([$this, 'checkRoleId']),
             'is_mandatory' => V::boolType(),
@@ -55,7 +55,7 @@ final class EventPosition extends BaseModel implements Serializable
     {
         V::nullable(V::intVal())->check($value);
 
-        // - L'identifiant de l’événement n'est pas encore défini, on skip.
+        // - L'identifiant de l'événement n'est pas encore défini, on skip.
         if (!$this->exists && $value === null) {
             return true;
         }

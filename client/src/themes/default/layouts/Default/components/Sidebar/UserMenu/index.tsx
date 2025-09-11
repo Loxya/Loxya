@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { Group } from '@/stores/api/groups';
 import Icon from '@/themes/default/components/Icon';
 import User from './User';
@@ -13,14 +13,18 @@ const DefaultLayoutSidebarUserMenu = defineComponent({
         isAdmin(): boolean {
             return this.$store.getters['auth/is'](Group.ADMINISTRATION);
         },
+
+        isSupervisor(): boolean {
+            return this.$store.getters['auth/is'](Group.SUPERVISION);
+        },
     },
     render() {
-        const { $t: __, isAdmin } = this;
+        const { $t: __, isAdmin, isSupervisor } = this;
 
         return (
             <div class="DefaultLayoutSidebarUserMenu">
                 <ul class="DefaultLayoutSidebarUserMenu__nav">
-                    {isAdmin && (
+                    {(isAdmin || isSupervisor) && (
                         <router-link to="/settings" exact custom>
                             {({ href, navigate, isActive }: CustomRouterLinkProps) => (
                                 <li

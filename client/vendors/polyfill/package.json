@@ -1,0 +1,9 @@
+{
+    "name": "@loxya/polyfill",
+    "version": "0.1.0",
+    "private": true,
+    "exports": "./index.js",
+    "dependencies": {
+        "core-js": "~3.45.1"
+    }
+}

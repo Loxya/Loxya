@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use Cake\Database\Query;
-use Cake\Database\Query\DeleteQuery;
-use Cake\Database\Query\UpdateQuery;
 use Illuminate\Support\Carbon;
 use Loxya\Config\Config;
 use Phinx\Migration\AbstractMigration;
@@ -58,8 +55,7 @@ final class AddHourlyEventSupport extends AbstractMigration
                 ->startOfDay()
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevents', $prefix))
                 ->set('start_date', $startDate)
@@ -97,8 +93,7 @@ final class AddHourlyEventSupport extends AbstractMigration
                 ->startOfDay()
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimates', $prefix))
                 ->set('booking_start_date', $startDate)
@@ -136,8 +131,7 @@ final class AddHourlyEventSupport extends AbstractMigration
                 ->startOfDay()
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sinvoices', $prefix))
                 ->set('booking_start_date', $startDate)
@@ -181,8 +175,7 @@ final class AddHourlyEventSupport extends AbstractMigration
                 ->startOfDay()
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sreservations', $prefix))
                 ->set('start_date', $startDate)
@@ -221,8 +214,7 @@ final class AddHourlyEventSupport extends AbstractMigration
                 ->startOfDay()
                 ->format('Y-m-d H:i:s');
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%scarts', $prefix))
                 ->set('reservation_start_date', $startDate)
@@ -240,8 +232,7 @@ final class AddHourlyEventSupport extends AbstractMigration
         // - Settings.
         //
 
-        /** @var DeleteQuery $qb */
-        $qb = $this->getQueryBuilder(Query::TYPE_DELETE);
+        $qb = $this->getDeleteBuilder();
         $qb
             ->delete(sprintf('%ssettings', $prefix))
             ->where(static fn ($exp) => (
@@ -271,12 +262,11 @@ final class AddHourlyEventSupport extends AbstractMigration
                     static fn (Carbon $date) => $date->isStartOfDay(),
                     static fn (Carbon $date) => (
                         $date->sub(new \DateInterval('P1D'))
-                    )
+                    ),
                 )
                 ->setTime(23, 59, 59);
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sevents', $prefix))
                 ->set('start_date', $startDate->format('Y-m-d H:i:s'))
@@ -304,12 +294,11 @@ final class AddHourlyEventSupport extends AbstractMigration
                     static fn (Carbon $date) => $date->isStartOfDay(),
                     static fn (Carbon $date) => (
                         $date->sub(new \DateInterval('P1D'))
-                    )
+                    ),
                 )
                 ->setTime(23, 59, 59);
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sestimates', $prefix))
                 ->set('booking_start_date', $startDate->format('Y-m-d H:i:s'))
@@ -337,12 +326,11 @@ final class AddHourlyEventSupport extends AbstractMigration
                     static fn (Carbon $date) => $date->isStartOfDay(),
                     static fn (Carbon $date) => (
                         $date->sub(new \DateInterval('P1D'))
-                    )
+                    ),
                 )
                 ->setTime(23, 59, 59);
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sinvoices', $prefix))
                 ->set('booking_start_date', $startDate->format('Y-m-d H:i:s'))
@@ -376,12 +364,11 @@ final class AddHourlyEventSupport extends AbstractMigration
                     static fn (Carbon $date) => $date->isStartOfDay(),
                     static fn (Carbon $date) => (
                         $date->sub(new \DateInterval('P1D'))
-                    )
+                    ),
                 )
                 ->setTime(23, 59, 59);
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%sreservations', $prefix))
                 ->set('start_date', $startDate->format('Y-m-d'))
@@ -414,12 +401,11 @@ final class AddHourlyEventSupport extends AbstractMigration
                     static fn (Carbon $date) => $date->isStartOfDay(),
                     static fn (Carbon $date) => (
                         $date->sub(new \DateInterval('P1D'))
-                    )
+                    ),
                 )
                 ->setTime(23, 59, 59);
 
-            /** @var UpdateQuery $qb */
-            $qb = $this->getQueryBuilder(Query::TYPE_UPDATE);
+            $qb = $this->getUpdateBuilder();
             $qb
                 ->update(sprintf('%scarts', $prefix))
                 ->set('reservation_start_date', $startDate->format('Y-m-d'))

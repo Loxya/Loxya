@@ -8,23 +8,30 @@ use Loxya\Errors\Enums\ApiErrorCode;
 
 class ApiException extends \RuntimeException
 {
+    /** Le code HTTP associé à l'erreur d'API. */
+    protected int $statusCode = StatusCode::STATUS_INTERNAL_SERVER_ERROR;
+
+    /** Le code d'erreur d'API (code métier). */
     private ApiErrorCode $apiCode;
-    private int $statusCode;
+
+    /** Le tableau des méta-données associées à l'erreur. */
+    private array $metadata;
 
     /**
-     * @param ApiErrorCode $code Le code d'erreur d'API.
-     * @param string|null $message L'éventuel message à joindre à l'erreur.
-     * @param int $statusCode Le code HTTP à utiliser avec cette erreur.
+     * @param ApiErrorCode $code     Le code d'erreur d'API.
+     * @param string|null  $message  Un message personnalisé à joindre à l'erreur.
+     * @param array        $metadata Des éventuelles méta-données à joindre à l'erreur.
      */
-    public function __construct(
-        ApiErrorCode $code,
-        ?string $message = null,
-        int $statusCode = StatusCode::STATUS_INTERNAL_SERVER_ERROR,
-    ) {
+    public function __construct(ApiErrorCode $code, ?string $message = null, array $metadata = [])
+    {
         $this->apiCode = $code;
-        $this->statusCode = $statusCode;
+        $this->metadata = $metadata;
 
-        parent::__construct($message ?? '', $code->value);
+        if ($message !== null) {
+            $this->message = $message;
+        }
+
+        parent::__construct($this->message, $code->value);
     }
 
     /**
@@ -45,5 +52,17 @@ class ApiException extends \RuntimeException
     public function getApiCode(): ApiErrorCode
     {
         return $this->apiCode;
+    }
+
+    /**
+     * Retourne les méta-données liées à l'erreur API.
+     *
+     * ATTENTION: Ces données seront exposées publiquement (retour API).
+     *
+     * @return array Les méta-données liées à l'erreur API.
+     */
+    public function getMetadata(): array
+    {
+        return $this->metadata;
     }
 }

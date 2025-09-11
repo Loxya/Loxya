@@ -9,7 +9,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Traits\Serializer;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Heures d'ouverture globale.
@@ -31,8 +31,8 @@ final class OpeningHour extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
-            'weekday' => V::custom([$this, 'checkOpeningHour']),
+        $this->validation = fn () => [
+            'weekday' => V::custom([$this, 'checkWeekDay']),
             'start_time' => V::custom([$this, 'checkStartTime']),
             'end_time' => V::custom([$this, 'checkEndTime']),
         ];
@@ -44,7 +44,7 @@ final class OpeningHour extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkOpeningHour($value)
+    public function checkWeekDay($value)
     {
         return V::create()
             ->intVal()
@@ -80,7 +80,7 @@ final class OpeningHour extends BaseModel implements Serializable
         }
 
         $weekdayRaw = $this->getAttributeUnsafeValue('weekday');
-        if (!$this->validation['weekday']->validate($weekdayRaw)) {
+        if (!($this->validation)()['weekday']->validate($weekdayRaw)) {
             return true;
         }
 
@@ -124,7 +124,7 @@ final class OpeningHour extends BaseModel implements Serializable
         }
 
         $weekdayRaw = $this->getAttributeUnsafeValue('weekday');
-        if (!$this->validation['weekday']->validate($weekdayRaw)) {
+        if (!($this->validation)()['weekday']->validate($weekdayRaw)) {
             return true;
         }
 
@@ -173,7 +173,7 @@ final class OpeningHour extends BaseModel implements Serializable
     /**
      * Permet de savoir si l'établissement est ouvert à la date donnée.
      *
-     * Si l’établissement ouvre ne serait-ce qu'une heure, l'établissement
+     * Si l'établissement ouvre ne serait-ce qu'une heure, l'établissement
      * est considéré comme ouvrant à la date donnée.
      *
      * @param CarbonInterface $date La date pour laquelle on veut vérifier l'ouverture.

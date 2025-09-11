@@ -13,12 +13,18 @@
                     showLogo: true,
                 })
             -}}
+            {%- if event.manager -%}
+                <h3 class="spaceBottom1">{{ __('manager', event.manager.full_name) }}</h3>
+                {%~ if event.manager.email -%}
+                <p class="spaceBottom2 size10">{{ event.manager.email }}</p>
+                {%- endif -%}
+            {%- endif -%}
         </td>
         <td class="half">
             <h1 class="box center spaceBottom5">{{ __('release-sheet') }}</h1>
             <h2>{{ event.title }}</h2>
             <h3>{{ event.operation_period|format_period('short', locale=locale)|ucfirst }}</h3>
-            {% if beneficiaries is not empty -%}
+            {%- if beneficiaries is not empty ~%}
             <table class="layout-table">
                 <tr>
                     <td class="third">
@@ -26,12 +32,12 @@
                     </td>
                     <td>
                         <p class="size12 spaceBottom5">
-                            {{ include('blocks/beneficiary.twig', { beneficiary: beneficiaries[0] }) }}
+                            {{- include('blocks/beneficiary.twig', { beneficiary: beneficiaries[0] }) ~}}
                         </p>
                     </td>
                 </tr>
             </table>
-            {% endif -%}
+            {%- endif ~%}
         </td>
     </tr>
 </table>
@@ -39,68 +45,74 @@
 <table class="layout-table">
     <tr>
         {%-
-            set classNameCol = isFeatureEnabled(constant('\\Loxya\\Config\\Enums\\Feature::TECHNICIANS'))
+            set classNameCol = isFeatureEnabled(enum('Loxya\\Config\\Enums\\Feature').TECHNICIANS)
                 ? (beneficiaries|length > 1 ? 'third' : 'half')
                 : (beneficiaries|length > 1 ? 'half' : '')
         ~%}
         <td class="{{ classNameCol }} size11">
-            {%- if event.location -%}
-                <h3>{{ __('location', event.location) }}</h3>
-            {%- endif -%}
-            {%- if event.is_confirmed -%}
-                <p class="lighter">{{ __('this-event-is-confirmed') }}</p>
-            {% endif %}
-            {%- if event.total_replacement -%}
-                <p class="lighter">
-                    {{-
-                        __('total-replacement-amount', [
-                            event.total_replacement|format_currency(event.currency, locale=locale),
-                        ])
-                    -}}
-                </p>
-            {%- endif -%}
+            {%- if event.location ~%}
+            <h3>{{ __('location', event.location) }}</h3>
+            {%- endif ~%}
+            {%- if event.is_confirmed ~%}
+            <p class="lighter">{{ __('this-event-is-confirmed') }}</p>
+            {%- endif ~%}
+            {%- if event.total_replacement ~%}
+            <p class="lighter">
+                {{-
+                    __('total-replacement-amount', [
+                        event.total_replacement|format_currency(event.currency, locale=locale),
+                    ])
+                -}}
+            </p>
+            {%- endif ~%}
             <p class="lighter">
                 {{- __('printed-on-date', [now|format_date('long', locale=locale)]) -}}
             </p>
+            {%- if showMobilizationPeriod ~%}
+            <p>
+                {{ __('pickup-date', [event.mobilization_period|format_period_start('full', locale=locale)]) }}<br />
+                {{ __('return-date', [event.mobilization_period|format_period_end('full', locale=locale)]) ~}}
+            </p>
+            {%- endif ~%}
         </td>
-        {%- if isFeatureEnabled(constant('\\Loxya\\Config\\Enums\\Feature::TECHNICIANS')) ~%}
+        {%- if isFeatureEnabled(enum('Loxya\\Config\\Enums\\Feature').TECHNICIANS) ~%}
         <td class="{{ beneficiaries|length > 1 ? 'third' : 'half' }}">
-            {%- if technicians is not empty -%}
-                <h3>{{ __('technicians') }}</h3>
-                <ul class="spaceBottom5">
-                    {% for technician in technicians -%}
-                    <li class="spaceBottom2">
-                        {{ technician['name'] -}}
-                        {%- if technician['phone'] is not empty -%}
-                            <span class="lighter"> - {{ technician['phone'] }}</span>
-                        {%- endif -%}
-                        {%- for assignment in technician['assignments'] -%}
-                            <br />
-                            <span class="lighter size8">
-                                {{- assignment.period|format_period('minimalist', locale=locale)|ucfirst -}}
-                            </span>
-                            {%- if assignment.position is not empty -%}
-                                <span class="lighter size8">&#32;-&#32;{{ assignment.position }}</span>
-                            {%- endif -%}
-                        {%- endfor -%}
-                    </li>
-                    {% endfor -%}
-                </ul>
-            {%- endif -%}
+            {%- if technicians is not empty ~%}
+            <h3>{{ __('technicians') }}</h3>
+            <ul class="spaceBottom5">
+                {%- for technician in technicians ~%}
+                <li class="spaceBottom2">
+                    {{ technician['name'] }}
+                    {%- if technician['phone'] is not empty ~%}
+                    <span class="lighter"> - {{ technician['phone'] }}</span>
+                    {%- endif ~%}
+                    {%- for assignment in technician['assignments'] -%}
+                    <br />
+                    <span class="lighter size8">
+                        {{- assignment.period|format_period('minimalist', locale=locale) -}}
+                        {%- if assignment.position is not empty ~%}
+                        − {{ assignment.position }}
+                        {%- endif ~%}
+                    </span>
+                    {%- endfor ~%}
+                </li>
+                {%- endfor ~%}
+            </ul>
+            {%- endif ~%}
         </td>
-        {%- endif -%}
-        {%- if beneficiaries|length > 1 -%}
-        <td class="{{ isFeatureEnabled(constant('\\Loxya\\Config\\Enums\\Feature::TECHNICIANS')) ? 'third' : 'half' }}">
+        {%- endif ~%}
+        {%- if beneficiaries|length > 1 ~%}
+        <td class="{{ isFeatureEnabled(enum('Loxya\\Config\\Enums\\Feature').TECHNICIANS) ? 'third' : 'half' }}">
             <h3>{{ __('other-beneficiaries') }}</h3>
             <ul class="spaceBottom5">
-                {%- for otherBeneficiary in beneficiaries|slice(1) -%}
+                {%- for otherBeneficiary in beneficiaries|slice(1) ~%}
                 <li class="spaceBottom2">
-                    {{- include('blocks/beneficiary.twig', { beneficiary: otherBeneficiary }) -}}
+                    {{- include('blocks/beneficiary.twig', { beneficiary: otherBeneficiary }) ~}}
                 </li>
-                {%- endfor -%}
+                {%- endfor ~%}
             </ul>
         </td>
-        {%- endif -%}
+        {%- endif ~%}
     </tr>
 </table>
 
@@ -115,25 +127,25 @@
 {{ include('blocks/materials/event-summary-by-parks.twig') }}
 {% endif %}
 
-{% if totalisableAttributes is not empty %}
-<h2>{{ __('material-attributes-totals') }}</h2>
+{% if totalisableProperties is not empty %}
+<h2>{{ __('properties-totals') }}</h2>
 <table class="half spaceBottom5 size8">
     <tbody>
-        {% for attribute in totalisableAttributes -%}
+        {% for property in totalisableProperties -%}
         <tr>
-            <td>{{ attribute.name }}</td>
-            <td>{{ attribute.value|format_number(locale=locale) }}&nbsp;{{ attribute.unit }}</td>
+            <td>{{ property.name }}</td>
+            <td>{{ property.value|format_number(locale=locale) }}&nbsp;{{ property.unit }}</td>
         </tr>
-        {% endfor -%}
+        {%- endfor ~%}
     </tbody>
 </table>
 {% endif %}
 
 {% if customText and customText.content is not empty %}
 <div class="vspace2 spaceBottom5">
-    {% if customText.title is not empty -%}
+    {%- if customText.title is not empty ~%}
     <h2>{{ customText.title }}</h2>
-    {% endif -%}
+    {%- endif ~%}
     <p>{{ customText.content|nl2br }}</p>
 </div>
 {% endif %}

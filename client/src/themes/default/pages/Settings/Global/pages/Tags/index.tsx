@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiTags from '@/stores/api/tags';
 import { confirm } from '@/utils/alert';
 import showModal from '@/utils/showModal';

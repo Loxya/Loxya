@@ -83,6 +83,14 @@
         }
     }
 
+    &__location {
+        display: none;
+        width: 160px;
+        color: globals.$text-soft-color;
+        font-size: 0.95rem;
+        text-align: center;
+    }
+
     &__awaited-quantity {
         display: none;
         justify-content: flex-end;
@@ -127,10 +135,10 @@
 
     &--complete {
         #{$block}__inventory {
-            background: rgba(globals.$text-success-color, 0.25);
+            background: rgb(globals.$text-success-color, 0.25);
 
             &__error {
-                border-top-color: rgba(globals.$text-success-color, 0.1);
+                border-top-color: rgb(globals.$text-success-color, 0.1);
             }
         }
 
@@ -142,10 +150,10 @@
 
     &--warning {
         #{$block}__inventory {
-            background: rgba(globals.$text-warning-color, 0.25);
+            background: rgb(globals.$text-warning-color, 0.25);
 
             &__error {
-                border-top-color: rgba(globals.$text-warning-color, 0.1);
+                border-top-color: rgb(globals.$text-warning-color, 0.1);
             }
         }
 
@@ -162,10 +170,10 @@
 
     &--error {
         #{$block}__inventory {
-            background: rgba(globals.$text-danger-color, 0.25);
+            background: rgb(globals.$text-danger-color, 0.25);
 
             &__error {
-                border-top-color: rgba(globals.$text-danger-color, 0.1);
+                border-top-color: rgb(globals.$text-danger-color, 0.1);
             }
         }
 
@@ -188,6 +196,10 @@
     @media (min-width: globals.$screen-desktop) {
         &__awaited-quantity {
             width: 170px;
+        }
+
+        &__location {
+            display: block;
         }
     }
 }

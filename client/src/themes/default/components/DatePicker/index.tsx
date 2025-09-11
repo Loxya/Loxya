@@ -3,7 +3,7 @@ import Day from '@/utils/day';
 import warning from 'warning';
 import Period from '@/utils/period';
 import DateTime from '@/utils/datetime';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, markRaw } from 'vue';
 import CoreDatePicker from 'vue2-datepicker';
 import Fragment from '@/components/Fragment';
 import Switch from '@/themes/default/components/SwitchToggle';
@@ -19,7 +19,7 @@ import {
     MINUTES_STEP,
 } from './utils/normalizer';
 
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type {
     Formatter,
     Translations,
@@ -36,7 +36,11 @@ import type {
     DisableDateFunction,
 } from './_types';
 
-type Props<T extends Type = Type, IsRange extends boolean = boolean> = {
+type Props<
+    T extends Type = Type,
+    IsRange extends boolean = boolean,
+    WithFullDaysToggle extends boolean = boolean,
+> = {
     /**
      * Le nom du champ (attribut `[name]`).
      *
@@ -53,7 +57,7 @@ type Props<T extends Type = Type, IsRange extends boolean = boolean> = {
      *
      * @default Type.DATE
      */
-    type?: T,
+    type?: T | `${T}`,
 
     /**
      * Mode "période".
@@ -83,7 +87,7 @@ type Props<T extends Type = Type, IsRange extends boolean = boolean> = {
      *
      * @default false
      */
-    withFullDaysToggle?: boolean,
+    withFullDaysToggle?: WithFullDaysToggle,
 
     /**
      * Active l'affichage des "snippets" / raccourcis de sélection de période.
@@ -143,6 +147,28 @@ type Props<T extends Type = Type, IsRange extends boolean = boolean> = {
 
     /** Le champ peut-il être vidé ? */
     clearable?: boolean,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     * @param isFullDays - Est-ce que la période est en jours entiers ?
+     *                     (Note: uniquement passé si `withFullDaysToggle` est à `true`)
+     */
+    onInput?: WithFullDaysToggle extends true
+        ? (newValue: Value<T, IsRange>, isFullDays: boolean) => void
+        : (newValue: Value<T, IsRange>) => void,
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du champ.
+     * @param isFullDays - Est-ce que la période est en jours entiers ?
+     *                     (Note: uniquement passé si `withFullDaysToggle` est à `true`)
+     */
+    onChange?: WithFullDaysToggle extends true
+        ? (newValue: Value<T, IsRange>, isFullDays: boolean) => void
+        : (newValue: Value<T, IsRange>) => void,
 };
 
 type InstanceProperties = {
@@ -151,7 +177,7 @@ type InstanceProperties = {
 
 type Data = {
     showTimePanel: boolean,
-    now: DateTime,
+    now: Raw<DateTime>,
 };
 
 const FORMATTER: Formatter = {
@@ -172,8 +198,8 @@ const PICKER_TRANSLATIONS: Record<string, Translations> = {
 const DatePicker = defineComponent({
     name: 'DatePicker',
     inject: {
-        'input.invalid': { default: { value: false } },
-        'input.disabled': { default: { value: false } },
+        'input.invalid': { default: false },
+        'input.disabled': { default: false },
     },
     props: {
         name: {
@@ -246,14 +272,28 @@ const DatePicker = defineComponent({
             type: String as PropType<Props['placeholder']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onInput: {
+            type: Function as PropType<Props['onInput']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
     },
     emits: ['input', 'change'],
-    setup: (): InstanceProperties => ({
-        nowTimer: undefined,
-    }),
+    setup(props): InstanceProperties {
+        warning(
+            typeof props.readonly === 'boolean' || props.range,
+            'The prop `readonly` should be passed as boolean when used with a non-range `<Datepicker />`.',
+        );
+        return { nowTimer: undefined };
+    },
     data: (): Data => ({
         showTimePanel: false,
-        now: DateTime.now(),
+        now: markRaw(DateTime.now()),
     }),
     computed: {
         isFullDays(): boolean {
@@ -263,7 +303,7 @@ const DatePicker = defineComponent({
         normalizedValue(): Value {
             return normalizeInputValue(
                 this.value,
-                this.type,
+                this.type as Type,
                 this.range,
                 this.withoutMinutes,
             );
@@ -292,7 +332,7 @@ const DatePicker = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'].value;
+            return this['input.invalid'];
         },
 
         inheritedDisabled(): boolean {
@@ -302,7 +342,7 @@ const DatePicker = defineComponent({
 
             // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
             // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'].value;
+            return this['input.disabled'];
         },
 
         normalizedReadonly(): boolean | 'start' | 'end' {
@@ -495,15 +535,9 @@ const DatePicker = defineComponent({
             ));
         },
     },
-    created() {
-        warning(
-            typeof this.readonly === 'boolean' || this.range,
-            'The prop `readonly` should be passed as boolean when used with a non-range `<Datepicker />`.',
-        );
-    },
     mounted() {
         // - Actualise le timestamp courant toutes les 10 secondes.
-        this.nowTimer = setInterval(() => { this.now = DateTime.now(); }, 10_000);
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
         if (this.nowTimer) {
@@ -524,7 +558,7 @@ const DatePicker = defineComponent({
 
             const normalizedValue = normalizeCoreValue(
                 newValue,
-                this.type,
+                this.type as Type,
                 this.range,
             );
 
@@ -771,7 +805,18 @@ const DatePicker = defineComponent({
     },
 });
 
+//
+// - Exports
+//
+
+type DatePickerGeneric = <
+    T extends Type = Type.DATE,
+    IsRange extends boolean = false,
+    WithFullDaysToggle extends boolean = false,
+>(props: Props<T, IsRange, WithFullDaysToggle>) => JSX.Element;
+
+export type DatePickerRef = ComponentRef<typeof DatePicker>;
 export type { Value, DisableDateFunction };
 
 export { Type };
-export default DatePicker;
+export default DatePicker as any as DatePickerGeneric;

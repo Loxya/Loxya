@@ -1,8 +1,8 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 
 type Props = {
     /** La valeur actuelle du champ de quantité. */
@@ -15,6 +15,13 @@ type Props = {
      * permet de définir les limites minimum et maximum ({ min, max }).
      */
     limit?: number | { min?: number, max?: number },
+
+    /**
+     * Fonction appelée lorsque la valeur du champ change.
+     *
+     * @param newValue - La nouvelle valeur du bloc-note.
+     */
+    onChange?(newValue: number): void,
 };
 
 /**
@@ -30,6 +37,11 @@ const QuantityInput = defineComponent({
         },
         limit: {
             type: [Number, Object] as PropType<Props['limit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onChange: {
+            type: Function as PropType<Props['onChange']>,
             default: undefined,
         },
     },

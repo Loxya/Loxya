@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Loxya\Models\Beneficiary;
 use Loxya\Models\Event;
 use Loxya\Models\Invoice;
+use Loxya\Models\Setting;
 use Loxya\Models\User;
 use Loxya\Services\I18n;
 use Loxya\Support\Pdf\Pdf;
@@ -29,7 +30,6 @@ final class InvoiceTest extends TestCase
                         'name' => 'VAT',
                         'is_rate' => true,
                         'value' => '-5.00',
-
                         'total' => '-1000000000000.00',
                     ],
                 ],
@@ -129,7 +129,7 @@ final class InvoiceTest extends TestCase
 
     public function testCreateFromEvent(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         // - Avec un événement au jour entier.
         $event = tap(Event::findOrFail(2), static function ($event) {
@@ -144,6 +144,7 @@ final class InvoiceTest extends TestCase
             'booking_type' => Event::TYPE,
             'booking_id' => 2,
             'booking_title' => 'Second événement',
+            'booking_reference' => null,
             'booking_start_date' => '2018-12-18 00:00:00',
             'booking_end_date' => '2018-12-20 00:00:00',
             'booking_is_full_days' => true,
@@ -258,6 +259,24 @@ final class InvoiceTest extends TestCase
             'total_replacement' => '58899.80',
             'currency' => 'EUR',
             'author_id' => 1,
+            'metadata' => [
+                'properties' => [
+                    [
+                        'id' => 1,
+                        'name' => 'Poids',
+                        'type' => 'float',
+                        'unit' => 'kg',
+                        'value' => 113.9,
+                    ],
+                    [
+                        'id' => 3,
+                        'name' => 'Puissance',
+                        'type' => 'integer',
+                        'unit' => 'W',
+                        'value' => 2620,
+                    ],
+                ],
+            ],
             'created_at' => '2022-10-22 18:42:36',
             'updated_at' => '2022-10-22 18:42:36',
             'deleted_at' => null,
@@ -278,6 +297,7 @@ final class InvoiceTest extends TestCase
             'booking_type' => Event::TYPE,
             'booking_id' => 1,
             'booking_title' => 'Premier événement',
+            'booking_reference' => null,
             'booking_start_date' => '2018-12-17 10:00:00',
             'booking_end_date' => '2018-12-18 18:00:00',
             'booking_is_full_days' => false,
@@ -386,6 +406,24 @@ final class InvoiceTest extends TestCase
             'total_replacement' => '19408.90',
             'currency' => 'EUR',
             'author_id' => 2,
+            'metadata' => [
+                'properties' => [
+                    [
+                        'id' => 1,
+                        'name' => 'Poids',
+                        'type' => 'float',
+                        'unit' => 'kg',
+                        'value' => '41.85',
+                    ],
+                    [
+                        'id' => 3,
+                        'name' => 'Puissance',
+                        'type' => 'integer',
+                        'unit' => 'W',
+                        'value' => '945',
+                    ],
+                ],
+            ],
             'created_at' => '2022-10-22 18:42:36',
             'updated_at' => '2022-10-22 18:42:36',
             'deleted_at' => null,
@@ -396,7 +434,7 @@ final class InvoiceTest extends TestCase
 
     public function testToPdf(): void
     {
-        Carbon::setTestNow(Carbon::create(2022, 10, 22, 18, 42, 36));
+        static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
         // - Test simple.
         $invoice = Invoice::findOrFail(1);
@@ -421,6 +459,25 @@ final class InvoiceTest extends TestCase
         $invoice = Invoice::createFromBooking(Event::findOrFail(2), User::findOrFail(2));
         $result = $invoice->toPdf(new I18n('en'));
         $this->assertInstanceOf(Pdf::class, $result);
+        $this->assertMatchesHtmlSnapshot($result->getHtml());
+
+        // - Avec des paramètres d'affichage différents.
+        Setting::bulkEdit([
+            'invoices.customText.title' => 'Test',
+            'invoices.customText.content' => 'Un texte personnalisé modifié.',
+            'invoices.showBookingDescription' => true,
+            'invoices.showMobilizationPeriod' => true,
+            'invoices.showTotalReplacementPrice' => true,
+            'invoices.showTotalisableProperties' => true,
+            'invoices.showPictures' => true,
+            'invoices.showDescriptions' => true,
+            'invoices.showReplacementPrices' => false,
+            'invoices.showUnitPrices' => false,
+        ]);
+
+        $result = Invoice::findOrFail(1)->toPdf(new I18n('fr'));
+        $this->assertInstanceOf(Pdf::class, $result);
+        $this->assertSame('facture-testing-corp-2020-00001-jean-fountain.pdf', $result->getName());
         $this->assertMatchesHtmlSnapshot($result->getHtml());
     }
 

@@ -7,10 +7,13 @@ use Brick\Math\BigDecimal as Decimal;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MissingAttributeException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Expression;
 use Loxya\Errors\Exception\ValidationException;
 use Loxya\Support\Arr;
+use Loxya\Support\Assert;
 use Respect\Validation\Exceptions\AllOfException;
 use Respect\Validation\Exceptions\AnyOfException;
+use Respect\Validation\Exceptions\KeyException;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\NotEmptyException;
 use Respect\Validation\Exceptions\OneOfException;
@@ -22,7 +25,7 @@ use Respect\Validation\Exceptions\OneOfException;
  * @method static firstOrNew(array $attributes = [], array $values = [])
  * @method static firstOrFail($columns = ['*'])
  * @method static firstOrCreate(array $attributes, array $values = [])
- * @method static firstOr($columns = ['*'], \Closure $callback = null)
+ * @method static firstOr($columns = ['*'], ?\Closure $callback = null)
  * @method static firstWhere($column, $operator = null, $value = null, $boolean = 'and')
  * @method static updateOrCreate(array $attributes, array $values = [])
  *
@@ -44,7 +47,7 @@ use Respect\Validation\Exceptions\OneOfException;
  * @method static static firstOrNew(array $attributes = [], array $values = [])
  * @method static static firstOrFail($columns = ['*'])
  * @method static static firstOrCreate(array $attributes, array $values = [])
- * @method static static firstOr($columns = ['*'], \Closure $callback = null)
+ * @method static static firstOr($columns = ['*'], ?\Closure $callback = null)
  * @method static static firstWhere($column, $operator = null, $value = null, $boolean = 'and')
  * @method static static updateOrCreate(array $attributes, array $values = [])
  * @method static \Illuminate\Database\Eloquent\Collection|static[] get($columns = ['*'])
@@ -53,15 +56,14 @@ use Respect\Validation\Exceptions\OneOfException;
  * @method static static|null first($columns = ['*'])
  * @method static int count(string $columns = '*')
  *
- * @method static Builder|static customOrderBy(string $column, ?string $direction = 'asc')
+ * @method static Builder|static customOrderBy(string $column, string $direction = 'asc')
+ * @method static Builder|static whereDatetimeRoundedMinutes(string $column, string $operator, string|\DateTimeInterface $value, int $precision = 15, string $rounding = 'round')
  */
 abstract class BaseModel extends Model
 {
     private $columns;
 
-    protected $validation;
-
-    protected const EXTRA_CHARS = "-_.' ÇçàÀâÂäÄåÅèÈéÉêÊëËíÍìÌîÎïÏòÒóÓôÔöÖðÐõÕøØúÚùÙûÛüÜýÝÿŸŷŶøØæÆœŒñÑßÞ";
+    protected \Closure $validation;
 
     // ------------------------------------------------------
     // -
@@ -160,9 +162,20 @@ abstract class BaseModel extends Model
         }
     }
 
+    public function __clone()
+    {
+        // - On rebind les règles de validation sur la nouvelle instance.
+        $this->validation = $this->validation->bindTo($this, $this);
+    }
+
     public function toArray()
     {
         return $this->attributesToArray();
+    }
+
+    protected function asJson($value)
+    {
+        return json_encode($value, \JSON_PRESERVE_ZERO_FRACTION);
     }
 
     protected function mutateAttributeForArray($key, $value)
@@ -238,7 +251,7 @@ abstract class BaseModel extends Model
     public function validationErrors(): array
     {
         /** @var array<string, \Respect\Validation\Rules\AbstractRule> $rules */
-        $rules = $this->validation;
+        $rules = ($this->validation)();
         if (empty($rules)) {
             throw new \RuntimeException("Validation rules cannot be empty.");
         }
@@ -250,12 +263,13 @@ abstract class BaseModel extends Model
         );
 
         foreach ($data as $field => $value) {
-            if (is_array($value) && Arr::isAssoc($value)) {
+            $castType = $this->getCasts()[$field] ?? null;
+            if (is_array($value) && $castType === null && Arr::isAssoc($value)) {
                 unset($data[$field]);
             }
         }
 
-        $getFormattedErrorMessage = static function (NestedValidationException $exception) {
+        $getErrorMessage = static function (NestedValidationException $exception) use (&$getErrorMessage) {
             $messages = $exception->getMessages();
             if (count($messages) === 1) {
                 return current($messages);
@@ -278,7 +292,20 @@ abstract class BaseModel extends Model
                         ]);
 
                     case AllOfException::class:
-                        $messages = array_slice($messages, 1);
+                        $messages = [];
+                        foreach ($rootException->getChildren() as $child) {
+                            if ($child instanceof KeyException) {
+                                $messages[$child->getParam('reference')] = $getErrorMessage($child);
+                            } else {
+                                $messages[] = $child->getMessage();
+                            }
+                        }
+
+                        if (Arr::isAssoc($messages)) {
+                            return $messages;
+                        }
+
+                        $messages = array_slice(array_values($messages), 1);
                         break;
                 }
             }
@@ -295,7 +322,7 @@ abstract class BaseModel extends Model
             try {
                 $rule->setName($field)->assert($data[$field] ?? null);
             } catch (NestedValidationException $e) {
-                $errors[$field] = $getFormattedErrorMessage($e);
+                $errors[$field] = $getErrorMessage($e);
             }
         }
 
@@ -328,6 +355,43 @@ abstract class BaseModel extends Model
             throw new \InvalidArgumentException("Invalid order field.");
         }
         return $query->orderBy($column, $direction);
+    }
+
+    public function scopeWhereDatetimeRoundedMinutes(
+        Builder $query,
+        string $column,
+        string $operator,
+        string|\DateTimeInterface $value,
+        int $precision = 15,
+        string $rounding = 'round',
+    ): Builder {
+        Assert::greaterThan($precision, 0, 'Invalid precision, must be superior to 0.');
+        Assert::lessThanEq($precision, 60, 'Invalid precision, must be inferior or equal to 60.');
+        Assert::true(60 % $precision === 0, 'Invalid precision, must be a divisor of 60.');
+        Assert::oneOf(strtolower($rounding), ['floor', 'round', 'ceil']);
+
+        // - On récupère l'heure "de base", et on y ajoute le temps nécessaire
+        //   pour atteindre la précision choisie :
+        //   - 1. On récupère l'heure de base (e.g. 14:35:40 => 14:00:00)
+        //   - 2. On récupère le temps (minutes, secondes) en minutes (e.g. `35:40` => `35.666...`)
+        //   - 3. On divise ceci par la précision et on arrondi suivant le rounding choisi.
+        //        (e.g. `35.666` pour 15 de précision => ROUND('2.3777...') => `2`)
+        //   - 4. On multiplie par la précision en minutes (e.g. `2` * 15 => `30`)
+        //   - 5. On convertie ça en secondes et on récupère un TIME correspond.
+        //        (e.g. `30` minutes => `1800` secondes => `00:30:00`)
+        //   - 6. On ajoute ce temps à l'heure de base.
+        //        (e.g. `14:00:00` + `00:30:00` => `14:30:00`)
+        $rawColumn = new Expression(vsprintf(
+            'ADDTIME(
+                DATE_FORMAT(%1$s, \'%%Y-%%m-%%d %%H:00:00\'),
+                SEC_TO_TIME(
+                    %3$s((MINUTE(%1$s) + (SECOND(%1$s) / 60)) / %2$s) * %2$s * 60
+                )
+            )',
+            [$column, $precision, strtoupper($rounding)],
+        ));
+
+        return $query->where($rawColumn, $operator, $value);
     }
 
     // ------------------------------------------------------

@@ -18,7 +18,7 @@ use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /**
  * Technicien.
@@ -70,7 +70,7 @@ final class Technician extends BaseModel implements Serializable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'person_id' => V::custom([$this, 'checkPersonId']),
             'nickname' => V::optional(V::length(null, 30)),
         ];

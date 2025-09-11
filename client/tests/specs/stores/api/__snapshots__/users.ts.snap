@@ -1,10 +1,10 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Users Api all() parse the returned data correctly 1`] = `
 {
   "data": [
     {
-      "email": "tester@robertmanager.net",
+      "email": "tester@loxya.com",
       "first_name": "Jean",
       "full_name": "Jean Fountain",
       "group": "administration",
@@ -14,27 +14,27 @@ exports[`Users Api all() parse the returned data correctly 1`] = `
       "pseudo": "test1",
     },
     {
-      "email": "tester2@robertmanager.net",
+      "email": "tester2@loxya.com",
       "first_name": "Roger",
       "full_name": "Roger Rabbit",
-      "group": "management",
+      "group": "operation",
       "id": 2,
       "last_name": "Rabbit",
       "phone": null,
       "pseudo": "test2",
     },
     {
-      "email": "nobody@robertmanager.net",
+      "email": "nobody@loxya.com",
       "first_name": "?",
       "full_name": "?",
-      "group": "management",
+      "group": "operation",
       "id": 3,
       "last_name": "?",
       "phone": null,
       "pseudo": "nobody",
     },
     {
-      "email": "visitor@robertmanager.net",
+      "email": "visitor@loxya.com",
       "first_name": "Henry",
       "full_name": "Henry Berluc",
       "group": "readonly-planning-general",
@@ -44,7 +44,7 @@ exports[`Users Api all() parse the returned data correctly 1`] = `
       "pseudo": "TheVisitor",
     },
     {
-      "email": "external@robertmanager.net",
+      "email": "external@loxya.com",
       "first_name": "Caroline",
       "full_name": "Caroline Farol",
       "group": "readonly-planning-general",
@@ -73,7 +73,7 @@ exports[`Users Api create() parse the returned data correctly (with #1) 1`] = `
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -93,11 +93,11 @@ exports[`Users Api create() parse the returned data correctly (with #2) 1`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
-  "group": "management",
+  "group": "operation",
   "id": 2,
   "last_name": "Rabbit",
   "locality": null,
@@ -112,12 +112,12 @@ exports[`Users Api create() parse the returned data correctly (with #3) 1`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "nobody@robertmanager.net",
+  "email": "nobody@loxya.com",
   "first_name": "?",
   "full_address": "156 bis, avenue des tests poussés
 88080 Wazzaville",
   "full_name": "?",
-  "group": "management",
+  "group": "operation",
   "id": 3,
   "last_name": "?",
   "locality": "Wazzaville",
@@ -136,7 +136,7 @@ exports[`Users Api create() parse the returned data correctly (with #4) 1`] = `
     "name": "Suisse",
   },
   "country_id": 2,
-  "email": "visitor@robertmanager.net",
+  "email": "visitor@loxya.com",
   "first_name": "Henry",
   "full_address": null,
   "full_name": "Henry Berluc",
@@ -155,7 +155,7 @@ exports[`Users Api create() parse the returned data correctly (with #5) 1`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "external@robertmanager.net",
+  "email": "external@loxya.com",
   "first_name": "Caroline",
   "full_address": null,
   "full_name": "Caroline Farol",
@@ -193,7 +193,7 @@ exports[`Users Api getSettings() parse the returned data correctly 2`] = `
 exports[`Users Api getSettings() parse the returned data correctly 3`] = `
 {
   "default_bookings_view": "calendar",
-  "default_technicians_view": "listing",
+  "default_technicians_view": "timeline",
   "disable_contextual_popovers": true,
   "disable_search_persistence": true,
   "language": "fr",
@@ -238,7 +238,7 @@ exports[`Users Api one() parse the returned data correctly 1`] = `
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -262,7 +262,7 @@ exports[`Users Api one() parse the returned data correctly 2`] = `
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -282,11 +282,11 @@ exports[`Users Api one() parse the returned data correctly 3`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
-  "group": "management",
+  "group": "operation",
   "id": 2,
   "last_name": "Rabbit",
   "locality": null,
@@ -301,12 +301,12 @@ exports[`Users Api one() parse the returned data correctly 4`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "nobody@robertmanager.net",
+  "email": "nobody@loxya.com",
   "first_name": "?",
   "full_address": "156 bis, avenue des tests poussés
 88080 Wazzaville",
   "full_name": "?",
-  "group": "management",
+  "group": "operation",
   "id": 3,
   "last_name": "?",
   "locality": "Wazzaville",
@@ -325,7 +325,7 @@ exports[`Users Api one() parse the returned data correctly 5`] = `
     "name": "Suisse",
   },
   "country_id": 2,
-  "email": "visitor@robertmanager.net",
+  "email": "visitor@loxya.com",
   "first_name": "Henry",
   "full_address": null,
   "full_name": "Henry Berluc",
@@ -344,7 +344,7 @@ exports[`Users Api one() parse the returned data correctly 6`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "external@robertmanager.net",
+  "email": "external@loxya.com",
   "first_name": "Caroline",
   "full_address": null,
   "full_name": "Caroline Farol",
@@ -367,7 +367,7 @@ exports[`Users Api restore() parse the returned data correctly (with #1) 1`] = `
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -387,11 +387,11 @@ exports[`Users Api restore() parse the returned data correctly (with #2) 1`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
-  "group": "management",
+  "group": "operation",
   "id": 2,
   "last_name": "Rabbit",
   "locality": null,
@@ -406,12 +406,12 @@ exports[`Users Api restore() parse the returned data correctly (with #3) 1`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "nobody@robertmanager.net",
+  "email": "nobody@loxya.com",
   "first_name": "?",
   "full_address": "156 bis, avenue des tests poussés
 88080 Wazzaville",
   "full_name": "?",
-  "group": "management",
+  "group": "operation",
   "id": 3,
   "last_name": "?",
   "locality": "Wazzaville",
@@ -430,7 +430,7 @@ exports[`Users Api restore() parse the returned data correctly (with #4) 1`] = `
     "name": "Suisse",
   },
   "country_id": 2,
-  "email": "visitor@robertmanager.net",
+  "email": "visitor@loxya.com",
   "first_name": "Henry",
   "full_address": null,
   "full_name": "Henry Berluc",
@@ -449,7 +449,7 @@ exports[`Users Api restore() parse the returned data correctly (with #5) 1`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "external@robertmanager.net",
+  "email": "external@loxya.com",
   "first_name": "Caroline",
   "full_address": null,
   "full_name": "Caroline Farol",
@@ -472,7 +472,7 @@ exports[`Users Api update() parse the returned data correctly 1`] = `
     "name": "France",
   },
   "country_id": 1,
-  "email": "tester@robertmanager.net",
+  "email": "tester@loxya.com",
   "first_name": "Jean",
   "full_address": "1, somewhere av.
 1234 Megacity",
@@ -492,11 +492,11 @@ exports[`Users Api update() parse the returned data correctly 2`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "tester2@robertmanager.net",
+  "email": "tester2@loxya.com",
   "first_name": "Roger",
   "full_address": null,
   "full_name": "Roger Rabbit",
-  "group": "management",
+  "group": "operation",
   "id": 2,
   "last_name": "Rabbit",
   "locality": null,
@@ -511,12 +511,12 @@ exports[`Users Api update() parse the returned data correctly 3`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "nobody@robertmanager.net",
+  "email": "nobody@loxya.com",
   "first_name": "?",
   "full_address": "156 bis, avenue des tests poussés
 88080 Wazzaville",
   "full_name": "?",
-  "group": "management",
+  "group": "operation",
   "id": 3,
   "last_name": "?",
   "locality": "Wazzaville",
@@ -535,7 +535,7 @@ exports[`Users Api update() parse the returned data correctly 4`] = `
     "name": "Suisse",
   },
   "country_id": 2,
-  "email": "visitor@robertmanager.net",
+  "email": "visitor@loxya.com",
   "first_name": "Henry",
   "full_address": null,
   "full_name": "Henry Berluc",
@@ -554,7 +554,7 @@ exports[`Users Api update() parse the returned data correctly 5`] = `
 {
   "country": null,
   "country_id": null,
-  "email": "external@robertmanager.net",
+  "email": "external@loxya.com",
   "first_name": "Caroline",
   "full_address": null,
   "full_name": "Caroline Farol",
@@ -592,7 +592,7 @@ exports[`Users Api updateSettings() parse the returned data correctly 2`] = `
 exports[`Users Api updateSettings() parse the returned data correctly 3`] = `
 {
   "default_bookings_view": "calendar",
-  "default_technicians_view": "listing",
+  "default_technicians_view": "timeline",
   "disable_contextual_popovers": true,
   "disable_search_persistence": true,
   "language": "fr",

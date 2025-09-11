@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection as CoreCollection;
 use Loxya\Config\Config;
 use Loxya\Contracts\Pdfable;
 use Loxya\Contracts\Serializable;
@@ -22,8 +23,9 @@ use Loxya\Support\Collections\MaterialsCollection;
 use Loxya\Support\Pdf\Pdf;
 use Loxya\Support\Period;
 use Loxya\Support\Str;
+use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
-use Respect\Validation\Validator as V;
 
 /**
  * Devis.
@@ -34,12 +36,15 @@ use Respect\Validation\Validator as V;
  * @property string $booking_type
  * @property int $booking_id
  * @property-read array $seller
- * @property-read Event|Reservation $booking
+ * @property-read Event $booking
  * @property string|null $booking_title
+ * @property string|null $booking_reference
  * @property CarbonImmutable $booking_start_date
  * @property CarbonImmutable $booking_end_date
  * @property bool $booking_is_full_days
  * @property Period $booking_period
+ * @property-read Period $booking_mobilization_period
+ * @property-read string|null $booking_description
  * @property-read string|null $booking_location
  * @property int $beneficiary_id
  * @property-read Beneficiary $beneficiary
@@ -55,6 +60,7 @@ use Respect\Validation\Validator as V;
  * @property Decimal $total_replacement
  * @property string $currency
  * @property int|null $author_id
+ * @property array $metadata
  * @property-read User|null $author
  * @property-read CarbonImmutable $created_at
  * @property-read CarbonImmutable|null $updated_at
@@ -62,6 +68,7 @@ use Respect\Validation\Validator as V;
  *
  * @property-read Collection<array-key, EstimateMaterial> $materials
  * @property-read Collection<array-key, EstimateExtra> $extras
+ * @property-read Collection<array-key, Property> $totalisable_properties
  */
 final class Estimate extends BaseModel implements Serializable, Pdfable
 {
@@ -76,11 +83,12 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
     {
         parent::__construct($attributes);
 
-        $this->validation = [
+        $this->validation = fn () => [
             'date' => V::notEmpty()->dateTime(),
             'booking_type' => V::custom([$this, 'checkBookingType']),
             'booking_id' => V::custom([$this, 'checkBookingId']),
             'booking_title' => V::nullable(V::length(2, 191)),
+            'booking_reference' => V::nullable(V::stringVal()),
             'booking_start_date' => V::custom([$this, 'checkBookingStartDate']),
             'booking_end_date' => V::custom([$this, 'checkBookingEndDate']),
             'booking_is_full_days' => V::boolType(),
@@ -97,6 +105,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             'total_replacement' => V::custom([$this, 'checkAmount'], false),
             'currency' => V::custom([$this, 'checkCurrency']),
             'author_id' => V::custom([$this, 'checkAuthorId']),
+            'metadata' => V::nullable(V::json()),
         ];
     }
 
@@ -110,9 +119,9 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
     {
         return V::create()
             ->notEmpty()
-            ->anyOf(
-                V::equals(Event::TYPE),
-            )
+            ->in([
+                Event::TYPE,
+            ])
             ->validate($value);
     }
 
@@ -195,7 +204,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         // - L'état "legacy" n'est pas récupérable, on est obligé
         //   de faire une vérification peu précise.
         $isLegacyRaw = $this->getAttributeUnsafeValue('is_legacy');
-        if (!$this->validation['is_legacy']->validate($isLegacyRaw)) {
+        if (!($this->validation)()['is_legacy']->validate($isLegacyRaw)) {
             if ($value === null) {
                 return true;
             }
@@ -221,7 +230,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         // - L'état "legacy" n'est pas récupérable, on est obligé
         //   de faire une vérification peu précise.
         $isLegacyRaw = $this->getAttributeUnsafeValue('is_legacy');
-        if (!$this->validation['is_legacy']->validate($isLegacyRaw)) {
+        if (!($this->validation)()['is_legacy']->validate($isLegacyRaw)) {
             if ($value === null) {
                 return true;
             }
@@ -269,7 +278,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             if (!V::nullable(V::json())->validate($value)) {
                 return false;
             }
-            $value = $value !== null ? json_decode($value, true) : null;
+            $value = $value !== null ? $this->fromJson($value) : null;
         }
 
         if ($value === null) {
@@ -278,7 +287,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
 
         // Note: S'il n'y a pas de taxes, le champ doit être à `null` et non un tableau vide.
         $schema = V::arrayType()->notEmpty()->each(V::custom(static fn ($taxValue) => (
-            new Rule\KeySetStrict(
+            new SchemaStrict(
                 new Rule\Key('name', V::notEmpty()->length(1, 30)),
                 new Rule\Key('is_rate', V::boolType()),
                 new Rule\Key('value', V::custom(static function ($subValue) use ($taxValue) {
@@ -391,6 +400,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         'booking_type' => 'string',
         'booking_id' => 'integer',
         'booking_title' => 'string',
+        'booking_reference' => 'string',
         'booking_start_date' => 'immutable_datetime',
         'booking_end_date' => 'immutable_datetime',
         'booking_is_full_days' => 'boolean',
@@ -407,6 +417,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         'total_replacement' => AsDecimal::class,
         'currency' => 'string',
         'author_id' => 'integer',
+        'metadata' => 'array',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
         'deleted_at' => 'immutable_datetime',
@@ -431,6 +442,18 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         );
     }
 
+    public function getBookingMobilizationPeriodAttribute(): Period
+    {
+        return $this->booking->mobilization_period;
+    }
+
+    public function getBookingDescriptionAttribute(): string|null
+    {
+        return $this->booking instanceof Event
+            ? $this->booking->description
+            : null;
+    }
+
     public function getBookingLocationAttribute(): string|null
     {
         return $this->booking instanceof Event
@@ -444,7 +467,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
 
         return array_replace($company, [
             'country' => ($company['country'] ?? null) !== null
-                ? Country::where('code', $company['country'])->first()
+                ? Country::tryFromCode($company['country'])
                 : null,
         ]);
     }
@@ -479,6 +502,17 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         );
     }
 
+    public function getMetadataAttribute($value): array
+    {
+        return $this->castAttribute('metadata', $value) ?? [];
+    }
+
+    /** @return CoreCollection<array-key, Property> */
+    public function getTotalisablePropertiesAttribute(): CoreCollection
+    {
+        return new CoreCollection($this->metadata['properties'] ?? []);
+    }
+
     // ------------------------------------------------------
     // -
     // -    PDF Related
@@ -499,6 +533,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
 
     protected function getPdfData(): array
     {
+        $settings = Setting::getWithKey('estimates');
         $categories = Category::get()->keyBy('id');
 
         $categoriesTotals = [];
@@ -563,7 +598,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             ->all();
 
         $hasMaterialDiscount = $this->materials->some(
-            static fn ($material) => !$material->discount_rate->isZero()
+            static fn ($material) => !$material->discount_rate->isZero(),
         );
 
         return [
@@ -572,8 +607,12 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             'beneficiary' => $this->beneficiary,
             'currency' => $this->currency,
             'booking' => [
+                'entity' => $this->booking_type,
                 'title' => $this->booking_title,
+                'reference' => $this->booking_reference,
                 'period' => $this->booking_period,
+                'mobilizationPeriod' => $this->booking_mobilization_period,
+                'description' => $this->booking_description,
                 'location' => $this->booking_location,
             ],
             'isLegacy' => $this->is_legacy,
@@ -595,12 +634,26 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
                 $this->total_taxes,
             ),
             'totalWithTaxes' => $this->total_with_taxes,
+            'totalReplacement' => $this->total_replacement,
             'categoriesSubTotals' => $categoriesTotals,
             'materials' => (
                 (new MaterialsCollection($this->materials))
                     ->bySubCategories()
             ),
             'extras' => $this->extras,
+            'totalisableProperties' => $this->totalisable_properties,
+            'customText' => $settings['customText'],
+            'showBookingDescription' => $settings['showBookingDescription'],
+            'showMobilizationPeriod' => (
+                !$this->booking_mobilization_period->isSame($this->booking_period) &&
+                $settings['showMobilizationPeriod']
+            ),
+            'showTotalReplacementPrice' => $settings['showTotalReplacementPrice'],
+            'showTotalisableProperties' => $settings['showTotalisableProperties'],
+            'showPictures' => $settings['showPictures'],
+            'showDescriptions' => $settings['showDescriptions'],
+            'showReplacementPrices' => $settings['showReplacementPrices'],
+            'showUnitPrices' => $settings['showUnitPrices'],
         ];
     }
 
@@ -613,6 +666,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
     protected $fillable = [
         'date',
         'booking_title',
+        'booking_reference',
         'booking_start_date',
         'booking_end_date',
         'booking_is_full_days',
@@ -625,6 +679,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         'total_with_taxes',
         'total_replacement',
         'currency',
+        'metadata',
     ];
 
     public function setBookingPeriodAttribute(mixed $rawPeriod): void
@@ -641,6 +696,13 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         $value = is_array($value) && empty($value) ? null : $value;
         $value = $value !== null ? $this->castAttributeAsJson('total_taxes', $value) : null;
         $this->attributes['total_taxes'] = $value;
+    }
+
+    public function setMetadataAttribute(mixed $value): void
+    {
+        $value = is_array($value) && empty($value) ? null : $value;
+        $value = $value !== null ? $this->castAttributeAsJson('metadata', $value) : null;
+        $this->attributes['metadata'] = $value;
     }
 
     // ------------------------------------------------------
@@ -670,6 +732,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
                 'date' => CarbonImmutable::now(),
 
                 'booking_title' => $booking instanceof Event ? $booking->title : null,
+                'booking_reference' => $booking->reference,
                 'booking_period' => $booking->operation_period,
 
                 // - Remise.
@@ -684,6 +747,15 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
 
                 'total_replacement' => $booking->total_replacement,
                 'currency' => $booking->currency,
+
+                // - Métadonnées.
+                'metadata' => [
+                    'properties' => $booking->totalisable_properties
+                        ->map(static fn (Property $property) => (
+                            $property->serialize(Property::SERIALIZE_SUMMARY)
+                        ))
+                        ->values(),
+                ],
             ]);
             $estimate->booking()->associate($booking);
             $estimate->beneficiary()->associate($beneficiary);

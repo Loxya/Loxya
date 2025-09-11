@@ -1,3 +1,4 @@
+welcome: "Bienvenue\_!"
 hello-name: "Bonjour {name}\_!"
 action-add: Ajouter
 action-edit: Modifier
@@ -15,7 +16,7 @@ action-refresh: Rafraîchir les données
 'yes': Oui
 'no': Non
 color: Couleur
-center-on-today: Centrer sur aujourd’hui
+center-on-today: Centrer sur aujourd'hui
 configure-columns: Configurer les colonnes
 warning: "Attention\_!"
 loading: Chargement en cours...
@@ -61,6 +62,9 @@ n-persons:
 name-and-n-others:
     - '{name} et {count} autre'
     - '{name} et {count} autres'
+initially-planned-period: Initialement {period}
+overdue-since: En retard depuis {duration}
+late-return-on: Retourné le {date} (retard de {duration})
 add-comment: Ajouter un commentaire
 modify-comment: Modifier le commentaire
 save: Sauvegarder
@@ -84,9 +88,10 @@ other: Autre
 documents: Documents
 billing: Facturation
 history: Historique
-special-attributes: Caractéristiques spéciales
+properties: Caractéristiques
 schedule: Agenda
 pseudo: Identifiant
+email-address: Adresse e-mail
 email-address-or-pseudo: Adresse e-mail / Identifiant
 password: Mot de passe
 first-name: Prénom
@@ -96,6 +101,7 @@ nickname: Surnom
 company: Société
 person: Personne
 legal-name: Raison sociale
+registration-id: Numéro d'identification
 contact-details: Coordonnées
 email: E-mail
 phone: Téléphone
@@ -109,7 +115,8 @@ access: Accès
 group: Groupe
 groups:
     administration: Administration
-    management: Gestion
+    supervision: Supervision
+    operation: Opération
     readonly-planning-general: Consultation du planning général
     readonly-planning-self: Consultation de son planning
 owner: Propriétaire
@@ -164,7 +171,6 @@ all-tags: Tous tags confondus
 all-periods: Toutes périodes
 all-states: Tous les états
 all-roles: Tous les rôles
-not-categorized: Non catégorisé
 not-limited: non limité
 open-trash-bin: Afficher la corbeille
 display-not-deleted-items: Afficher les enregistrements non supprimés
@@ -212,6 +218,7 @@ into: dans
 event-managed-by: Supervisé par {name}
 in-progress: en cours
 invoice: Facture
+invoices: Factures
 estimate: Devis
 estimates: Devis
 missing-beneficiary: Bénéficiaire manquant
@@ -325,6 +332,7 @@ material: Matériel
 category: Catégorie
 sub-category: Sous-catégorie
 categories: Catégories
+not-categorized: Non catégorisé
 parks: Parcs
 technician: Technicien
 subject: Sujet
@@ -363,3 +371,4 @@ quick-creation:
         has-missing-materials: Cet événement a du matériel manquant.
         needs-its-return-inventory: "Il faut faire l'inventaire de retour de cet événement\_!"
         has-not-returned-materials: Cet événement a du matériel qui n'a pas été retourné.
+        overdue: Le retour du matériel de cet événement est en retard.

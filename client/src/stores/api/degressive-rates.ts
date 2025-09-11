@@ -55,17 +55,17 @@ export type DegressiveRateEdit = {
 
 const all = async (): Promise<DegressiveRate[]> => {
     const response = await requester.get('/degressive-rates');
-    return DegressiveRateSchema.array().parse(response.data);
+    return DegressiveRateSchema.array().parse(response);
 };
 
 const create = async (data: DegressiveRateEdit): Promise<DegressiveRate> => {
     const response = await requester.post('/degressive-rates', data);
-    return DegressiveRateSchema.parse(response.data);
+    return DegressiveRateSchema.parse(response);
 };
 
 const update = async (id: DegressiveRate['id'], data: DegressiveRateEdit): Promise<DegressiveRate> => {
     const response = await requester.put(`/degressive-rates/${id}`, data);
-    return DegressiveRateSchema.parse(response.data);
+    return DegressiveRateSchema.parse(response);
 };
 
 const remove = async (id: DegressiveRate['id']): Promise<void> => {

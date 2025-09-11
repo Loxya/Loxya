@@ -1,0 +1,7 @@
+@use '~@/themes/default/style/globals';
+
+.Checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: globals.$spacing-thin;
+}

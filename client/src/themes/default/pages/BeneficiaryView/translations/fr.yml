@@ -28,4 +28,7 @@ borrowings:
     nothing-to-show: Ce bénéficiaire n'a effectué aucun emprunt.
     done: Terminé
     currently-mobilized: En cours
+    overdue-since: En retard depuis {duration}
     mobilized-starting-from: Prévu le {date}
+    initially-planned-period: Initialement {period}
+    late-return-on: Retourné le {date} (retard de {duration})

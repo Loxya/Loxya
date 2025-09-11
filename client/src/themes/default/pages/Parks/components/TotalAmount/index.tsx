@@ -1,11 +1,11 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import apiParks from '@/stores/api/parks';
 import Button from '@/themes/default/components/Button';
 import formatAmount from '@/utils/formatAmount';
 
 import type Decimal from 'decimal.js';
-import type { PropType } from '@vue/composition-api';
+import type { PropType, Raw } from 'vue';
 import type { Park } from '@/stores/api/parks';
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 };
 
 type Data = {
-    amount: Decimal | null,
+    amount: Raw<Decimal> | null,
     loading: boolean,
 };
 

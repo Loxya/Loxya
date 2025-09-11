@@ -1,15 +1,16 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { BookableEntity } from '../../_types';
+import { BookingEntity } from '@/stores/api/bookings';
+import { defineComponent } from 'vue';
 import Button from '@/themes/default/components/Button';
 import Loading from '@/themes/default/components/Loading';
 import apiEvents from '@/stores/api/events';
 import Selected from './Selected';
 import Search from './Search';
 
-import type { PropType } from '@vue/composition-api';
-import type { EventDetails } from '@/stores/api/events';
-import type { Booking } from '@/stores/api/bookings';
-import type { SourceMaterial } from '../../_types';
+import type { PropType } from 'vue';
+import type { Event, EventDetails } from '@/stores/api/events';
+import type { Bookable, SourceMaterial } from '../../_types';
 
 type Props = {
     /**
@@ -19,10 +20,10 @@ type Props = {
     materials: SourceMaterial[],
 
     /**
-     * L'éventuel booking dans lequel le matériel de l'événement va être importé.
+     * L'éventuel bookable dans lequel le matériel de l'événement va être importé.
      * Utile notamment pour exclure celui-ci des propositions si c'est un événement.
      */
-    booking?: Booking,
+    bookable?: Bookable,
 
     /** Doit-on afficher les informations liées à la facturation ? */
     withBilling: boolean,
@@ -42,8 +43,8 @@ const ImportFromEvent = defineComponent({
         clickToClose: true,
     },
     props: {
-        booking: {
-            type: Object as PropType<Props['booking']>,
+        bookable: {
+            type: Object as PropType<Props['bookable']>,
             default: undefined,
         },
         materials: {
@@ -60,6 +61,15 @@ const ImportFromEvent = defineComponent({
         selected: null,
         isSelecting: false,
     }),
+    computed: {
+        excludedEventId(): Event['id'] | null {
+            const { bookable } = this;
+            if (!bookable || ![BookingEntity.EVENT, BookableEntity.EVENT].includes(bookable.entity)) {
+                return null;
+            }
+            return bookable.id;
+        },
+    },
     methods: {
         async handleSelect(id: number) {
             const { $t: __ } = this;
@@ -95,7 +105,7 @@ const ImportFromEvent = defineComponent({
     render() {
         const {
             $t: __,
-            booking,
+            excludedEventId,
             materials,
             isSelecting,
             selected,
@@ -144,7 +154,7 @@ const ImportFromEvent = defineComponent({
                 <div class={bodyClassNames}>
                     <div class="ImportFromEvent__search">
                         <Search
-                            exclude={booking?.id ?? null}
+                            exclude={excludedEventId}
                             onSelect={handleSelect}
                         />
                     </div>

@@ -80,7 +80,7 @@ final class Install
             return static::_saveInstallData($installData);
         }
 
-        $stepIndex = array_search($step, self::INSTALL_STEPS);
+        $stepIndex = array_search($step, self::INSTALL_STEPS, true);
         $nextStep = self::INSTALL_STEPS[$stepIndex + 1] ?? 'end';
 
         foreach ($stepData as $key => $value) {
@@ -142,11 +142,13 @@ final class Install
 
     public static function getAllCurrencies(): array
     {
+        // @phpstan-ignore-next-line include.fileNotFound
         return require MIGRATIONS_FOLDER . DS . 'data' . DS . 'currencies.php';
     }
 
     public static function getAllCountries(): array
     {
+        // @phpstan-ignore-next-line include.fileNotFound
         return require MIGRATIONS_FOLDER . DS . 'data' . DS . 'countries.php';
     }
 
@@ -207,7 +209,7 @@ final class Install
             throw new \InvalidArgumentException("Unknown migration command.", 2);
         }
 
-        // - Permet l’exécution des longues migrations.
+        // - Permet l'exécution des longues migrations.
         set_time_limit(3600);
 
         $stream = fopen('php://temp', 'w+');
@@ -227,7 +229,7 @@ final class Install
 
     protected static function _formatPhinxStatusOutput($output)
     {
-        $start = array_search(str_repeat('-', 82), $output);
+        $start = array_search(str_repeat('-', 82), $output, true);
         $lines = array_splice($output, $start + 1);
 
         $status = [];

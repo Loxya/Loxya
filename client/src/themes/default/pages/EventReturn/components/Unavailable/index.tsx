@@ -1,7 +1,7 @@
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 
-import type { PropType } from '@vue/composition-api';
+import type { PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 import type { Action } from '@/themes/default/components/StateMessage';
 

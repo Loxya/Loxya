@@ -16,7 +16,7 @@ final class BookingMaterialsTest extends ApiTestCase
         // - Événements
         //
 
-        Carbon::setTestNow(Carbon::create(2023, 5, 25, 12, 0, 0));
+        static::setNow(Carbon::create(2023, 5, 25, 12, 0, 0));
 
         // - Test avec un événement inexistant.
         $this->client->put('/api/bookings/event/999/materials/1/resynchronize', ['name']);

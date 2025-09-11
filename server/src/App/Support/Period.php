@@ -13,16 +13,16 @@ use Eluceo\iCal\Domain\ValueObject\SingleDay as CalendarSingleDay;
 use Eluceo\iCal\Domain\ValueObject\TimeSpan as CalendarTimeSpan;
 use Illuminate\Contracts\Support\Arrayable;
 use Loxya\Contracts\PeriodInterface;
-use Respect\Validation\Validator as V;
+use Loxya\Support\Validation\Validator as V;
 
 /** Une période. */
-final class Period implements PeriodInterface, Arrayable
+final class Period implements PeriodInterface, Arrayable, \JsonSerializable
 {
     /** La date de début de la période. */
     private CarbonImmutable $start;
 
     /** La date de fin de la période. */
-    private CarbonImmutable $end;
+    private CarbonImmutable|null $end;
 
     /** La période est-t'elle du type "journées entières" ? */
     private bool $isFullDays;
@@ -38,14 +38,14 @@ final class Period implements PeriodInterface, Arrayable
             if ($start instanceof Period) {
                 $isFullDays = $start->isFullDays();
             }
-            $end = clone $start->getEndDate();
-            $start = clone $start->getStartDate();
+            $end = $start->getEndDate() ?? null;
+            $start = $start->getStartDate();
         }
 
-        Assert::notNull($end, 'Missing end date for the period.');
-
         $normalizedStart = CarbonImmutable::parse($start);
-        $normalizedEnd = CarbonImmutable::parse($end);
+        $normalizedEnd = $end !== null
+            ? CarbonImmutable::parse($end)
+            : $end;
 
         if ($isFullDays) {
             $normalizedStart = $normalizedStart->startOfDay();
@@ -53,8 +53,11 @@ final class Period implements PeriodInterface, Arrayable
             // - Si l'heure de la date de fin n'est pas `00:00:00` ou si le format passé ne
             //   contenait pas l'heure, on ajuste la date de fin en lui ajoutant une journée.
             $needsDayAdjustment = (
-                (is_string($end) && date_parse($end)['hour'] === false) ||
-                $normalizedEnd->format('H:i:s') !== '00:00:00'
+                $normalizedEnd !== null &&
+                (
+                    (is_string($end) && date_parse($end)['hour'] === false) ||
+                    $normalizedEnd->format('H:i:s') !== '00:00:00'
+                )
             );
             if ($needsDayAdjustment) {
                 $normalizedEnd = $normalizedEnd
@@ -64,7 +67,7 @@ final class Period implements PeriodInterface, Arrayable
         }
 
         Assert::true(
-            $normalizedEnd->isAfter($normalizedStart),
+            $normalizedEnd === null || $normalizedEnd->gte($normalizedStart),
             'End date should be after start date.',
         );
 
@@ -73,22 +76,12 @@ final class Period implements PeriodInterface, Arrayable
         $this->isFullDays = $isFullDays;
     }
 
-    /**
-     * La date de début de la période.
-     *
-     * @return CarbonImmutable La date de début de la période.
-     */
     public function getStartDate(): CarbonImmutable
     {
         return $this->start;
     }
 
-    /**
-     * La date de fin de la période.
-     *
-     * @return CarbonImmutable La date de fin de la période.
-     */
-    public function getEndDate(): CarbonImmutable
+    public function getEndDate(): CarbonImmutable|null
     {
         return $this->end;
     }
@@ -109,16 +102,23 @@ final class Period implements PeriodInterface, Arrayable
      * Toute journée commencée est comptabilisée (même si la date de fin se termine à 00:01).
      *
      * @return int Le nombre de jours de la période.
+     *
+     * @throws \LogicException If the period is infinite.
      */
     public function asDays(): int
     {
-        $startDate = $this->getStartDate()->startOfDay();
+        if ($this->isInfinite()) {
+            throw new \LogicException('Cannot retrieve the number of days of a infinite period.');
+        }
+
         $endDate = $this->getEndDate();
         if ($endDate->format('H:i:s') !== '00:00:00') {
             $endDate = $endDate
                 ->add(new \DateInterval('P1D'))
                 ->startOfDay();
         }
+
+        $startDate = $this->getStartDate()->startOfDay();
         return max($startDate->diffInDays($endDate), 1);
     }
 
@@ -128,16 +128,23 @@ final class Period implements PeriodInterface, Arrayable
      * Toute heure commencée est comptabilisée (même si l'heure de fin se termine à xx:01).
      *
      * @return int Le nombre d'heure de la période.
+     *
+     * @throws \LogicException If the period is infinite.
      */
     public function asHours(): int
     {
-        $startDate = $this->getStartDate()->startOfHour();
+        if ($this->isInfinite()) {
+            throw new \LogicException('Cannot retrieve the number of hours of a infinite period.');
+        }
+
         $endDate = $this->getEndDate();
         if ($endDate->format('i:s') !== '00:00') {
             $endDate = $endDate
                 ->add(new \DateInterval('PT1H'))
                 ->startOfHour();
         }
+
+        $startDate = $this->getStartDate()->startOfHour();
         return max($startDate->diffInHours($endDate), 1);
     }
 
@@ -148,9 +155,22 @@ final class Period implements PeriodInterface, Arrayable
      */
     public function contain(PeriodInterface $otherPeriod): bool
     {
+        $otherPeriod = new static($otherPeriod);
+
+        // - Si la présente période ne commence pas avant
+        //   l'autre, elle ne peut pas la contenir.
+        if ($this->getStartDate() > $otherPeriod->getStartDate()) {
+            return false;
+        }
+
         return (
-            $this->getStartDate() <= $otherPeriod->getStartDate() &&
-            $this->getEndDate() >= $otherPeriod->getEndDate()
+            // - Si la présente période est infinie, que l'autre le soit aussi ou non,
+            //   vu que la présente période commence avant, elle la contient.
+            $this->isInfinite() ||
+
+            // - Sinon il faut que la date de fin de la présente période soit après
+            //   (ou identique) à la date de fin de l'autre.
+            (!$otherPeriod->isInfinite() && $this->getEndDate() >= $otherPeriod->getEndDate())
         );
     }
 
@@ -161,6 +181,27 @@ final class Period implements PeriodInterface, Arrayable
      */
     public function overlaps(PeriodInterface $otherPeriod): bool
     {
+        $otherPeriod = new static($otherPeriod);
+
+        // - Si les deux périodes sont infinies, elles se chevauchent forcément.
+        if ($this->isInfinite() && $otherPeriod->isInfinite()) {
+            return true;
+        }
+
+        // - Si la présente période est infinie, pour chevaucher l'autre,
+        //   elle doit commencer avant la fin de l'autre.
+        if ($this->isInfinite()) {
+            return $this->getStartDate() < $otherPeriod->getEndDate();
+        }
+
+        // - Si l'autre période est infinie, pour chevaucher que la présente
+        //   période la chevauche, elle doit se terminer après le début de l'autre.
+        if ($otherPeriod->isInfinite()) {
+            return $this->getEndDate() > $otherPeriod->getStartDate();
+        }
+
+        // - Sinon, elle doit commencer avant la fin de l'autre et
+        //   se terminer après son début.
         return (
             $this->getStartDate() < $otherPeriod->getEndDate() &&
             $this->getEndDate() > $otherPeriod->getStartDate()
@@ -170,17 +211,22 @@ final class Period implements PeriodInterface, Arrayable
     /**
      * Fusionne la période courante avec une autre et retourne la période résultante.
      *
-     * @param PeriodInterface $otherPeriod La période avec laquelle il faut fusionner.
+     * @param static $otherPeriod La période avec laquelle il faut fusionner.
      */
-    public function merge(PeriodInterface $otherPeriod): self
+    public function merge(PeriodInterface $otherPeriod): static
     {
+        $otherPeriod = new static($otherPeriod);
+
         $startDate = $this->getStartDate() <= $otherPeriod->getStartDate()
             ? $this->getStartDate()
             : $otherPeriod->getStartDate();
 
-        $endDate = $this->getEndDate() >= $otherPeriod->getEndDate()
-            ? $this->getEndDate()
-            : $otherPeriod->getEndDate();
+        $endDate = null;
+        if (!$this->isInfinite() && !$otherPeriod->isInfinite()) {
+            $endDate = $this->getEndDate() >= $otherPeriod->getEndDate()
+                ? $this->getEndDate()
+                : $otherPeriod->getEndDate();
+        }
 
         return new static($startDate, $endDate);
     }
@@ -194,10 +240,50 @@ final class Period implements PeriodInterface, Arrayable
      */
     public function isSame(PeriodInterface $otherPeriod): bool
     {
-        return (
-            $this->getStartDate()->equalTo($otherPeriod->getStartDate()) &&
-            $this->getEndDate()->equalTo($otherPeriod->getEndDate())
-        );
+        $otherPeriod = new static($otherPeriod);
+
+        // - Si les dates de départ ne sont pas identiques, on ne va pas plus loin.
+        if (!$this->getStartDate()->equalTo($otherPeriod->getStartDate())) {
+            return false;
+        }
+
+        // - Si les deux périodes sont infinies, elles sont identiques,
+        //   sinon on vérifie que les deux dates de fin correspondent.
+        return !$this->isInfinite() && !$otherPeriod->isInfinite()
+            ? $this->getEndDate()->equalTo($otherPeriod->getEndDate())
+            : $this->isInfinite() && $otherPeriod->isInfinite();
+    }
+
+    /**
+     * Permet de déterminer si la période est passée.
+     *
+     * @return bool `true` si la période est passée, `false` sinon.
+     */
+    public function isPast(): bool
+    {
+        // Note: On vérifie que la fin est avant ou maintenant (donc pas dans le future)
+        //       car l'instant que représente `$this->end` est déjà en dehors de la période.
+        return !$this->isInfinite() && !$this->end->isFuture();
+    }
+
+    /**
+     * Permet de déterminer si la période est passée ou en cours.
+     *
+     * @return bool `true` si la période est passée ou en cours, `false` sinon.
+     */
+    public function isPastOrOngoing(): bool
+    {
+        return $this->start->isPast();
+    }
+
+    /**
+     * Indique si la période courante est infinie (pas de date de fin) ou non.
+     *
+     * @return bool `true` si la période est infinie, `false` sinon.
+     */
+    public function isInfinite(): bool
+    {
+        return $this->end === null;
     }
 
     /**
@@ -216,15 +302,50 @@ final class Period implements PeriodInterface, Arrayable
      */
     public function surroundingPeriods(PeriodInterface $otherPeriod): array
     {
+        $otherPeriod = new static($otherPeriod);
+
         $prePeriod = $this->getStartDate()->isBefore($otherPeriod->getStartDate())
             ? new static($this->getStartDate(), $otherPeriod->getStartDate())
             : null;
 
-        $postPeriod = $this->getEndDate()->isAfter($otherPeriod->getEndDate())
-            ? new static($otherPeriod->getEndDate(), $this->getEndDate())
-            : null;
+        $postPeriod = null;
+        if (!$otherPeriod->isInfinite()) {
+            $postPeriod = $this->isInfinite() || $this->getEndDate()->isAfter($otherPeriod->getEndDate())
+                ? new static($otherPeriod->getEndDate(), $this->getEndDate())
+                : null;
+        }
 
         return ['pre' => $prePeriod, 'post' => $postPeriod];
+    }
+
+    /**
+     * Retourne une copie de la période avec la configuration des jours
+     * entiers modifiée en fonction du paramètre passé.
+     *
+     * @param bool $inFullDays La nouvelle période doit-elle être du type "journées entières" ?
+     * @param bool $midday En passant en période à l'heure près, dois-t'on ajuster les heures
+     *                     à midi plutôt que mettre à minuit le jour de début et de fin ?
+     *
+     * @return static Une copie de la présente période avec la configuration "journées entières" modifiée.
+     */
+    public function setFullDays(bool $inFullDays, bool $midday = false): static
+    {
+        if ($inFullDays) {
+            if ($this->isFullDays) {
+                return $this;
+            }
+            return new static($this->start, $this->end, isFullDays: true);
+        }
+
+        if (!$this->isFullDays) {
+            return $this;
+        }
+
+        return new Period(
+            !$midday ? $this->start : $this->start->hour(12),
+            !$midday ? $this->end : $this->end->subDay()->hour(12),
+            isFullDays: false,
+        );
     }
 
     /**
@@ -238,25 +359,31 @@ final class Period implements PeriodInterface, Arrayable
             return [
                 'isFullDays' => true,
                 'start' => $this->getStartDate()->format('Y-m-d'),
-                'end' => $this->getEndDate()->subDay()->format('Y-m-d'),
+                'end' => $this->getEndDate()?->subDay()->format('Y-m-d'),
             ];
         }
 
         return [
             'isFullDays' => false,
             'start' => $this->getStartDate()->format('Y-m-d H:i:s'),
-            'end' => $this->getEndDate()->format('Y-m-d H:i:s'),
+            'end' => $this->getEndDate()?->format('Y-m-d H:i:s'),
         ];
     }
 
     /**
-     * Permet de récupérer la période sous forme d’occurrence compatibles
+     * Permet de récupérer la période sous forme d'occurrence compatibles
      * avec la génération d'un calendrier iCal.
      *
      * @return CalendarOccurrence La période sous forme d'occurrence de calendrier.
+     *
+     * @throws \LogicException Si la période est infinie.
      */
     public function toCalendarOccurrence(): CalendarOccurrence
     {
+        if ($this->isInfinite()) {
+            throw new \LogicException('Cannot convert an infinite period to a calendar occurrence.');
+        }
+
         if ($this->isFullDays()) {
             $isOneDayPeriod = $this->getStartDate()->isSameDay(
                 $this->getEndDate()->subDay(),
@@ -277,6 +404,16 @@ final class Period implements PeriodInterface, Arrayable
             new CalendarDateTime($this->getStartDate(), false),
             new CalendarDateTime($this->getEndDate(), false),
         );
+    }
+
+    /**
+     * Permet de récupérer la période sous forme d'une entité serializable en JSON.
+     *
+     * @return array La période sous forme d'une serializable JSON.
+     */
+    public function jsonSerialize(): mixed
+    {
+        return $this->toArray();
     }
 
     // ------------------------------------------------------
@@ -329,8 +466,11 @@ final class Period implements PeriodInterface, Arrayable
      *
      * @param array $array Le tableau à convertir en période, deux formats sont acceptés:
      *                     - Soit `['start' => '[Date début]', 'end' => '[Date fin]']`.
+     *                     - Soit `['start' => '[Date début]', 'end' => null]`.
      *                     - Soit `['start' => '[Date début]', 'end' => '[Date fin]', 'isFullDays' => true|false]`.
+     *                     - Soit `['start' => '[Date début]', 'end' => null, 'isFullDays' => true|false]`.
      *                     - Soit `['[Date début]', '[Date fin]']`.
+     *                     - Soit `['[Date début]', null]`.
      *
      * @return static La période équivalente aux dates du tableau.
      *
@@ -351,6 +491,7 @@ final class Period implements PeriodInterface, Arrayable
         foreach (['start', 'end'] as $type) {
             $isValid = (
                 $array[$type] instanceof DateTimeInterface ||
+                ($type === 'end' && $array[$type] === null) ||
                 $dateChecker->validate($array[$type])
             );
             if (!$isValid) {
@@ -368,7 +509,10 @@ final class Period implements PeriodInterface, Arrayable
         } else {
             $isFullDays = (
                 (is_string($array['start']) && date_parse($array['start'])['hour'] === false) &&
-                (is_string($array['end']) && date_parse($array['end'])['hour'] === false)
+                (
+                    $array['end'] === null ||
+                    (is_string($array['end']) && date_parse($array['end'])['hour'] === false)
+                )
             );
         }
 

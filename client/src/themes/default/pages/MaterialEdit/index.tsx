@@ -1,7 +1,6 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
-import axios from 'axios';
-import HttpCode from 'status-code-enum';
+import { defineComponent } from 'vue';
+import { RequestError, HttpCode } from '@/globals/requester';
 import parseInteger from '@/utils/parseInteger';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiMaterials from '@/stores/api/materials';
@@ -12,7 +11,7 @@ import CriticalError, { ErrorType } from '@/themes/default/components/CriticalEr
 import Loading from '@/themes/default/components/Loading';
 import Form from './components/Form';
 
-import type { ComponentRef } from 'vue';
+import type { ComponentRef, Raw } from 'vue';
 import type {
     MaterialDetails as Material,
     MaterialEdit as MaterialEditType,
@@ -27,7 +26,7 @@ type Data = {
     saveProgress: number,
     criticalError: ErrorType | null,
     validationErrors: Record<string, string> | null,
-    newPicture: File | null | undefined,
+    newPicture: Raw<File> | null | undefined,
 };
 
 /** Page d'edition d'un matériel. */
@@ -97,7 +96,7 @@ const MaterialEdit = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleChangePicture(newPicture: File | null) {
+        handleChangePicture(newPicture: Raw<File> | null) {
             this.newPicture = newPicture;
         },
 
@@ -126,16 +125,13 @@ const MaterialEdit = defineComponent({
                 this.material = await apiMaterials.one(id!);
                 this.isFetched = true;
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while retrieving material #${id!} data`, error);
-                    this.criticalError = ErrorType.UNKNOWN;
-                } else {
-                    const { status = HttpCode.ServerErrorInternal } = error.response ?? {};
-                    this.criticalError = status === HttpCode.ClientErrorNotFound
-                        ? ErrorType.NOT_FOUND
-                        : ErrorType.UNKNOWN;
+                if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
+                    this.criticalError = ErrorType.NOT_FOUND;
                 }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while retrieving material #${id!} data`, error);
+                this.criticalError = ErrorType.UNKNOWN;
             }
         },
 
@@ -177,20 +173,17 @@ const MaterialEdit = defineComponent({
                     params: { id: material.id.toString() },
                 });
             } catch (error) {
-                if (!axios.isAxiosError(error)) {
-                    // eslint-disable-next-line no-console
-                    console.error(`Error occurred while saving the material`, error);
-                    this.$toasted.error(__('errors.unexpected-while-saving'));
-                } else {
-                    const { code = ApiErrorCode.UNKNOWN, details = {} } = error.response?.data?.error ?? {};
-                    if (code === ApiErrorCode.VALIDATION_FAILED) {
-                        this.validationErrors = { ...details };
-                        (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
-                    } else {
-                        this.$toasted.error(__('errors.unexpected-while-saving'));
-                    }
-                }
                 this.isSaving = false;
+
+                if (error instanceof RequestError && error.code === ApiErrorCode.VALIDATION_FAILED) {
+                    this.validationErrors = { ...error.details };
+                    (this.$refs.page as ComponentRef<typeof Page>)?.scrollToTop();
+                    return;
+                }
+
+                // eslint-disable-next-line no-console
+                console.error(`Error occurred while saving the material`, error);
+                this.$toasted.error(__('errors.unexpected-while-saving'));
             }
         },
     },
@@ -242,8 +235,8 @@ const MaterialEdit = defineComponent({
                         >
                             <InputImage
                                 value={picture}
-                                onChange={handleChangePicture}
                                 uploading={isSaving ? saveProgress : false}
+                                onChange={handleChangePicture}
                             />
                         </FormField>
                     </div>

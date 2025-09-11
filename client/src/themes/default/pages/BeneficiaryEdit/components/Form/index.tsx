@@ -1,5 +1,5 @@
 import './index.scss';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import pick from 'lodash/pick';
 import cloneDeep from 'lodash/cloneDeep';
 import FormField from '@/themes/default/components/FormField';
@@ -7,8 +7,7 @@ import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 import CompanySelect from './CompanySelect';
 
-import type { ComponentRef } from 'vue';
-import type { PropType } from '@vue/composition-api';
+import type { ComponentRef, PropType } from 'vue';
 import type { Options } from '@/utils/formatOptions';
 import type { Country } from '@/stores/api/countries';
 import type { Company } from '@/stores/api/companies';
@@ -25,7 +24,20 @@ type Props = {
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Record<string, string>,
+    errors?: Record<string, string> | null,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur soumet les changements.
+     *
+     * @param data - Les données soumises.
+     */
+    onSubmit?(data: BeneficiaryEdit): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur manifeste
+     * son souhait d'annuler l'edition.
+     */
+    onCancel?(): void,
 };
 
 type Data = {
@@ -66,6 +78,16 @@ const BeneficiaryEditForm = defineComponent({
         errors: {
             type: Object as PropType<Required<Props>['errors']>,
             default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
+            default: undefined,
         },
     },
     emits: ['cancel', 'submit'],

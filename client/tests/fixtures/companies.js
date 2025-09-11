@@ -5,6 +5,7 @@ const data = [
     {
         id: 1,
         legal_name: 'Testing, Inc',
+        registration_id: null,
         street: '1, company st.',
         postal_code: '1234',
         locality: 'Megacity',
@@ -17,6 +18,7 @@ const data = [
     {
         id: 2,
         legal_name: 'Obscure',
+        registration_id: '123456789',
         street: null,
         postal_code: null,
         locality: null,
