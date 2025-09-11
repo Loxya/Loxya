@@ -4,7 +4,7 @@ Tous les changements notables sur le projet sont documentés dans ce fichier.
 
 Ce projet adhère au principe du [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.2.0 (UNRELEASED)
+## 1.2.0 (2025-09-11)
 
 - Affiche la période de mobilisation dans la fenêtre de détails de l'événement
   (onglet "information"), si elle est différente de la période d'exploitation.
