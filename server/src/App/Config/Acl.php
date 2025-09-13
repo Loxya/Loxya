@@ -462,6 +462,9 @@ final class Acl
                 'verifyReset',
                 'finalizeReset',
             ],
+            'Material' => [
+                'getPicture',
+            ],
             'Entry' => [
                 'healthcheck',
                 'default',
