@@ -4,7 +4,7 @@ Tous les changements notables sur le projet sont documentés dans ce fichier.
 
 Ce projet adhère au principe du [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.2.1 (UNRELEASED)
+## 1.2.1 (2025-09-13)
 
 - Corrige l'affichage des images du matériel dans les documents générés par Loxya.
 
