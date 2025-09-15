@@ -186,7 +186,10 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             ->check($value);
 
         $alreadyExists = static::query()
-            ->where('number', $value)
+            ->where([
+                'number' => $value,
+                'billing_company_id' => $this->billing_company_id,
+            ])
             ->when($this->exists, fn(Builder $subQuery) => (
                 $subQuery->where('id', '!=', $this->id)
             ))
@@ -782,7 +785,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
 
         return dbTransaction(static function () use ($booking, $beneficiary, $creator) {
             $invoice = new static([
-                'number' => static::getNextNumber(),
+                'number' => static::getNextNumber(null, $booking->billing_company_id),
                 'date' => CarbonImmutable::now(),
 
                 'booking_title' => $booking instanceof Event ? $booking->title : null,
@@ -859,12 +862,13 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         });
     }
 
-    public static function getLastNumber(?int $year = null): ?string
+    public static function getLastNumber(?int $year = null, ?int $billingCompanyId = null): ?string
     {
         $year = (int) ($year ?? CarbonImmutable::now()->format('Y'));
 
         $invoices = static::selectRaw('number')
             ->whereRaw(sprintf('YEAR(date) = %s', $year))
+            ->where('billing_company_id', $billingCompanyId)
             ->withTrashed()
             ->get();
 
@@ -879,16 +883,20 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         return $last ? $last['invoice']->number : null;
     }
 
-    public static function getNextNumber(?int $year = null): string
+    public static function getNextNumber(?int $year = null, ?int $billingCompanyId = null): ?string
     {
         $year = (int) ($year ?? CarbonImmutable::now()->format('Y'));
 
-        $lastNumber = static::getLastNumber($year);
+        $lastNumber = static::getLastNumber($year, $billingCompanyId);
         if ($lastNumber !== null) {
             $lastNumber = (int) explode('-', $lastNumber)[1];
         }
 
-        return sprintf('%s-%05d', $year, ($lastNumber ?? 0) + 1);
+        $number = sprintf('%s-%05d', $year, ($lastNumber ?? 0) + 1);
+        if ($billingCompanyId !== null) {
+            $number = sprintf('%s:%s', $billingCompanyId, $number);
+        }
+        return $number;
     }
 
     // ------------------------------------------------------

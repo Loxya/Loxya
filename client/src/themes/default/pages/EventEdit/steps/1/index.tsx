@@ -333,7 +333,6 @@ const EventEditStepInfos = defineComponent({
                 label: company.name,
                 value: company.id
             }));
-            console.log(opts);
             return opts;
         },
     },
