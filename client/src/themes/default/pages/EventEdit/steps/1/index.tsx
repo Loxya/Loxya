@@ -23,6 +23,11 @@ import type { ComponentRef, PropType, Raw } from 'vue';
 import type { User } from '@/stores/api/users';
 import type { EventDetails, EventEdit, EventTechnician } from '@/stores/api/events';
 import type { BookingColorWithDefault } from '@/utils/getBookingColor';
+import type { BillingCompany } from '@/stores/api/billing-companies';
+import billingCompanyApi from '@/stores/api/billing-companies';
+import { TechnicianDetailsSchema } from '@/stores/api/technicians';
+import type { Options } from '@/utils/formatOptions';
+import type { Option } from '@/themes/default/components/Select';
 
 type Props = {
     /**
@@ -43,6 +48,7 @@ type EditedData = Pick<EventEdit, (
     | 'color'
     | 'is_billable'
     | 'is_confirmed'
+    | 'billing_company_id'
 )>;
 
 type Data = {
@@ -50,6 +56,7 @@ type Data = {
     shouldSyncPeriods: boolean,
     validationErrors: Record<string, string> | null,
     operationPeriodIsFullDays: boolean,
+    billingCompanies: BillingCompany[],
 };
 
 const DEFAULT_VALUES: EditedData = Object.freeze({
@@ -62,6 +69,7 @@ const DEFAULT_VALUES: EditedData = Object.freeze({
     color: null,
     is_billable: config.billingMode !== BillingMode.NONE,
     is_confirmed: false,
+    billing_company_id: null,
 });
 
 const hasDirtyData = (savedData: EventDetails | null, pendingData: EditedData): boolean => (
@@ -112,6 +120,7 @@ const EventEditStepInfos = defineComponent({
             operation_period: defaultOperationPeriod,
             ...pick(this.event ?? {}, Object.keys(DEFAULT_VALUES)),
             manager_id: this.event?.manager?.id ?? null,
+            billing_company_id: this.event?.billing_company?.id ?? null,
         };
 
         const canSyncPeriods = (
@@ -139,6 +148,7 @@ const EventEditStepInfos = defineComponent({
             operationPeriodIsFullDays: (
                 data.operation_period?.isFullDays ?? true
             ),
+            billingCompanies: [],
         };
     },
     computed: {
@@ -318,6 +328,14 @@ const EventEditStepInfos = defineComponent({
                 period: upperFirst(assignationPeriod.toReadable(this.$t)),
             });
         },
+        billingCompaniesOptions(): Option[] {
+            let opts = this.billingCompanies.map((company): Option => ({
+                label: company.name,
+                value: company.id
+            }));
+            console.log(opts);
+            return opts;
+        },
     },
     watch: {
         event() {
@@ -331,6 +349,7 @@ const EventEditStepInfos = defineComponent({
                 $inputTitle?.focus();
             });
         }
+        this.fetchBillingCompanies();
     },
     methods: {
         // ------------------------------------------------------
@@ -440,6 +459,9 @@ const EventEditStepInfos = defineComponent({
                 this.$emit('stopLoading');
             }
         },
+        async fetchBillingCompanies() {
+            this.billingCompanies = await billingCompanyApi.all();
+        },
 
         __(key: string, params?: Record<string, number | string>, count?: number): string {
             if (!key.startsWith('global.')) {
@@ -476,6 +498,7 @@ const EventEditStepInfos = defineComponent({
             handleChangeManager,
             handleSyncPeriodsChange,
             handleOperationPeriodChange,
+            billingCompaniesOptions,
         } = this;
 
         return (
@@ -607,6 +630,16 @@ const EventEditStepInfos = defineComponent({
                             </FormField>
                         )}
                     </div>
+                    <FormField
+                        label={__('billing-company.label')}
+                        help={__('billing-company.help')}
+                        type="select"
+                        autocomplete="off"
+                        v-model={data.billing_company_id}
+                        options={billingCompaniesOptions}
+                        onChange={handleChange}
+                        error={validationErrors?.billing_company_id}
+                        />
                     {allowBillingToggling && (
                         <div class="EventEditStepInfos__is-billable">
                             <FormField

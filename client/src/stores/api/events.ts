@@ -4,6 +4,7 @@ import { UserSchema } from './users';
 import { MaterialWithContextExcerptSchema } from './materials';
 import { DocumentSchema } from './documents';
 import { TechnicianSchema } from './technicians';
+import { BillingCompanySchema } from './billing-companies';
 import { RoleSchema } from './roles';
 import { withCountedEnvelope } from './@schema';
 import { EstimateSchema } from './estimates';
@@ -162,6 +163,7 @@ export const EventSchema = EventSummarySchema.extend({
     return_inventory_datetime: z.datetime().nullable(),
     materials_count: z.number().nonnegative(),
     has_materials: z.boolean(),
+    billing_company: z.lazy(() => z.nullable(BillingCompanySchema)),
     note: z.string().nullable().optional(),
     created_at: z.datetime(),
     updated_at: z.datetime().nullable(),
@@ -310,6 +312,7 @@ export type EventEdit = {
     beneficiaries?: Array<Beneficiary['id']>,
     manager_id?: User['id'] | null,
     note?: string | null,
+    billing_company_id?: number | null,
 };
 
 type EventDuplicatePayload = {

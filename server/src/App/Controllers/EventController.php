@@ -66,14 +66,14 @@ final class EventController extends BaseController
         $query = Event::query()
             ->when(
                 !empty($search),
-                static fn ($builder) => $builder->search($search),
+                static fn($builder) => $builder->search($search),
             )
-            ->when($exclude !== null, static fn (Builder $subQuery) => (
+            ->when($exclude !== null, static fn(Builder $subQuery) => (
                 $subQuery->where('id', '<>', $exclude)
             ))
             ->orderBy('mobilization_start_date', 'desc')
-            ->whereHas('materials', static fn (Builder $eventMaterialQuery) => (
-                $eventMaterialQuery->whereHas('material', static fn (Builder $materialQuery) => (
+            ->whereHas('materials', static fn(Builder $eventMaterialQuery) => (
+                $eventMaterialQuery->whereHas('material', static fn(Builder $materialQuery) => (
                     $materialQuery->withoutTrashed()
                 ))
             ));
@@ -82,7 +82,7 @@ final class EventController extends BaseController
             'count' => $query->count(),
             'data' => $query
                 ->limit(10)->get()
-                ->map(static fn (Event $event) => (
+                ->map(static fn(Event $event) => (
                     $event->serialize(Event::SERIALIZE_SUMMARY)
                 )),
         ]);
@@ -102,7 +102,7 @@ final class EventController extends BaseController
 
         $missingMaterials = Event::findOrFail($id)
             ->missingMaterials()
-            ->map(static fn (EventMaterial $material) => (
+            ->map(static fn(EventMaterial $material) => (
                 $material->serialize(EventMaterial::SERIALIZE_WITH_QUANTITY_MISSING)
             ));
 

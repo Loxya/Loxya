@@ -20,6 +20,7 @@ infos:
     created-by: "Créé par\_: {author}"
     request-date: "Date de la demande\_: {date}"
     manager: "Chef de projet\_: {manager}"
+    billing-company: "Société de facturation\_: {billingCompany}"
     mobilization-period: "Période de mobilisation\_: {period}"
     initially-planned-period: Initialement {period}
     overdue-since: En retard depuis {duration}
@@ -59,7 +60,7 @@ estimates:
     estimate-created: Le devis a bien été créé.
 
     item:
-        title: 'Devis du {date} à {hour}'
+        title: "Devis du {date} à {hour}"
         deleted: Le devis a été supprimé.
         confirm-delete: "Voulez-vous vraiment supprimer ce devis\_?"
 

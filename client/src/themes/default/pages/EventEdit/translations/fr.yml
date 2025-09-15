@@ -35,6 +35,10 @@ steps:
             help: Un utilisateur chargé de la supervision et du suivi de l'événement.
             placeholder-help: Commencez à écrire pour rechercher un utilisateur...
 
+        billing-company:
+            label: Société de facturation
+            help: Société utilisé pour les informations des devis et factures de cet événement.
+
         readonly-mobilization-period-warning:
             entirely: |
                 Les inventaires de départ et de retour ayant été effectués, il n'est

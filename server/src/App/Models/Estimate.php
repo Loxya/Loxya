@@ -35,7 +35,6 @@ use Respect\Validation\Rules as Rule;
  * @property-read ?string $url
  * @property string $booking_type
  * @property int $booking_id
- * @property-read array $seller
  * @property-read Event $booking
  * @property string|null $booking_title
  * @property string|null $booking_reference
@@ -48,6 +47,8 @@ use Respect\Validation\Rules as Rule;
  * @property-read string|null $booking_location
  * @property int $beneficiary_id
  * @property-read Beneficiary $beneficiary
+ * @property int $billing_company_id
+ * @property-read BillingCompany $billing_company
  * @property bool $is_legacy
  * @property Decimal|null $degressive_rate
  * @property Decimal|null $daily_total
@@ -83,7 +84,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
     {
         parent::__construct($attributes);
 
-        $this->validation = fn () => [
+        $this->validation = fn() => [
             'date' => V::notEmpty()->dateTime(),
             'booking_type' => V::custom([$this, 'checkBookingType']),
             'booking_id' => V::custom([$this, 'checkBookingId']),
@@ -105,6 +106,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             'total_replacement' => V::custom([$this, 'checkAmount'], false),
             'currency' => V::custom([$this, 'checkCurrency']),
             'author_id' => V::custom([$this, 'checkAuthorId']),
+            'billing_company_id' => V::custom([$this, 'checkBillingCompanyId']),
             'metadata' => V::nullable(V::json()),
         ];
     }
@@ -209,7 +211,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
                 return true;
             }
 
-        // - Sinon, seuls les devis legacy sont concernés.
+            // - Sinon, seuls les devis legacy sont concernés.
         } elseif (!$isLegacyRaw) {
             return V::nullType();
         }
@@ -235,7 +237,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
                 return true;
             }
 
-        // - Sinon, seuls les devis legacy sont concernés.
+            // - Sinon, seuls les devis legacy sont concernés.
         } elseif (!$isLegacyRaw) {
             return V::nullType();
         }
@@ -286,7 +288,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         }
 
         // Note: S'il n'y a pas de taxes, le champ doit être à `null` et non un tableau vide.
-        $schema = V::arrayType()->notEmpty()->each(V::custom(static fn ($taxValue) => (
+        $schema = V::arrayType()->notEmpty()->each(V::custom(static fn($taxValue) => (
             new SchemaStrict(
                 new Rule\Key('name', V::notEmpty()->length(1, 30)),
                 new Rule\Key('is_rate', V::boolType()),
@@ -349,6 +351,23 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             ? !$author->trashed()
             : true;
     }
+    public function checkBillingCompanyId($value)
+    {
+        V::nullable(V::intVal())->check($value);
+
+        if ($value === null) {
+            return true;
+        }
+
+        $billingCompany = BillingCompany::withTrashed()->find($value);
+        if (!$billingCompany) {
+            return false;
+        }
+
+        return !$this->exists || $this->isDirty('billing_company_id')
+            ? !$billingCompany->trashed()
+            : true;
+    }
 
     // ------------------------------------------------------
     // -
@@ -385,6 +404,12 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             ->withTrashed();
     }
 
+    public function billingCompany(): BelongsTo
+    {
+        return $this->belongsTo(BillingCompany::class)
+            ->withTrashed();
+    }
+
     // ------------------------------------------------------
     // -
     // -    Mutators
@@ -417,6 +442,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         'total_replacement' => AsDecimal::class,
         'currency' => 'string',
         'author_id' => 'integer',
+        'billing_company_id' => 'integer',
         'metadata' => 'array',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
@@ -461,15 +487,16 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             : null;
     }
 
-    public function getSellerAttribute(): array
+    public function getBillingCompanyAttribute(): BillingCompany|null
     {
-        $company = Config::get('companyData');
+        $company = $this->getRelationValue('billingCompany');
+        if (!is_null($company)) {
+            return $company;
+        }
 
-        return array_replace($company, [
-            'country' => ($company['country'] ?? null) !== null
-                ? Country::tryFromCode($company['country'])
-                : null,
-        ]);
+        // If there's no billing company linked to the invoice event,
+        // we fall back to the global companyData config.
+        return BillingCompany::defaultBillingCompany();
     }
 
     /** @return Collection<array-key, EstimateMaterial> */
@@ -492,7 +519,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
         }
 
         return array_map(
-            static fn ($tax) => array_replace($tax, [
+            static fn($tax) => array_replace($tax, [
                 'value' => Decimal::of($tax['value'])
                     ->toScale($tax['is_rate'] ? 3 : 2),
                 'total' => Decimal::of($tax['total'])
@@ -523,7 +550,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
     {
         $filename = Str::slugify(implode('-', [
             $i18n->translate('estimate'),
-            $this->seller['name'],
+            $this->billing_company->name,
             $this->date->format('Ymd-Hi'),
             $this->beneficiary->full_name,
         ]));
@@ -598,12 +625,12 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             ->all();
 
         $hasMaterialDiscount = $this->materials->some(
-            static fn ($material) => !$material->discount_rate->isZero(),
+            static fn($material) => !$material->discount_rate->isZero(),
         );
 
         return [
             'date' => $this->date,
-            'seller' => $this->seller,
+            'billingCompany' => $this->billing_company,
             'beneficiary' => $this->beneficiary,
             'currency' => $this->currency,
             'booking' => [
@@ -626,7 +653,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             'totalGlobalDiscount' => $this->total_global_discount,
             'totalWithoutTaxes' => $this->total_without_taxes,
             'totalTaxes' => array_map(
-                static fn ($tax) => array_replace($tax, [
+                static fn($tax) => array_replace($tax, [
                     'value' => $tax['is_rate']
                         ? $tax['value']->dividedBy(100, 5)
                         : $tax['value'],
@@ -751,7 +778,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
                 // - Métadonnées.
                 'metadata' => [
                     'properties' => $booking->totalisable_properties
-                        ->map(static fn (Property $property) => (
+                        ->map(static fn(Property $property) => (
                             $property->serialize(Property::SERIALIZE_SUMMARY)
                         ))
                         ->values(),
@@ -760,6 +787,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable
             $estimate->booking()->associate($booking);
             $estimate->beneficiary()->associate($beneficiary);
             $estimate->author()->associate($creator);
+            $estimate->billingCompany()->associate($booking->billing_company);
 
             if (!$estimate->save()) {
                 return false;

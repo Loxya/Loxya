@@ -1,5 +1,9 @@
 {%- if showLogo and company.logo is not empty ~%}
-<img src="{{ baseUrl }}/img/{{ company.logo }}" style="width: 75mm;" />
+<div style="width: 100px;">
+    <div style="max-width: 100px;">
+        <img src="{{ company.logo }}" style="width: 100%" />
+    </div>
+</div>
 {%- endif ~%}
 <div class="spaceBottom2 size12 strong">
     {%- if company.name is not empty ~%}
@@ -17,11 +21,12 @@
 </div>
 {%- if showLegalNumbers ~%}
 <div class="spaceBottom2">
-{%- for legalNumber in company.legalNumbers -%}
-    {%- if legalNumber.value is not empty ~%}
-    {{- legalNumber.name }}: {{ legalNumber.value }}{% if not loop.last %}<br />{% endif %}
-    {%- endif -%}
-{%- endfor ~%}
+{%- if company.code1_value is not empty and company.code1_label is not empty ~%}
+    {{- company.code1_label }}: {{ company.code1_value }} {% if company.code2_value is not empty%}<br />{% endif %}
+{%- endif ~%}
+{%- if company.code2_value is not empty and company.code2_label is not empty ~%}
+    {{- company.code2_label }}: {{ company.code2_value }}
+{%- endif ~%}
 </div>
 {%- endif -%}
 {%- if company.phone is not empty or company.email is not empty or company.website is not empty ~%}
@@ -37,6 +42,6 @@
     {%- endif ~%}
 </div>
 {%- endif -%}
-{%- if showLegalNumbers and company.vatNumber is not empty ~%}
-<div class="spaceBottom2">{{ __('vat-number', company.vatNumber) }}</div>
+{%- if showLegalNumbers and company.vat_number is not empty ~%}
+<div class="spaceBottom2">{{ __('vat-number', company.vat_number) }}</div>
 {%- endif -%}

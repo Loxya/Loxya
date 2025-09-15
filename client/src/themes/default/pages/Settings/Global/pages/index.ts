@@ -4,6 +4,7 @@ import { Group } from '@/stores/api/groups';
 import store from '@/themes/default/globals/store';
 import EventSummarySettings from './EventSummary';
 import CategoriesSettings from './Categories';
+import CompaniesSettings from './Companies';
 import TagsSettings from './Tags';
 import CalendarSettings from './Calendar';
 import InventoriesSettings from './Inventories';
@@ -12,6 +13,7 @@ import DegressiveRatesSettings from './DegressiveRates';
 import EstimatesInvoicesSettings from './EstimatesInvoices';
 
 import type { RouteConfig } from 'vue-router';
+import { component } from 'vue/types/umd';
 
 export type Page = (
     & RouteConfig
@@ -85,6 +87,16 @@ const pages: Array<Page | RouteConfig> = [
             title: 'page.settings.inventories.title',
             requiresGroups: [Group.ADMINISTRATION],
         },
+    },
+    {
+        name: 'global-settings:companies',
+        path: 'companies',
+        component: CompaniesSettings,
+        meta: {
+            icon: 'building',
+            title: 'page.settings.companies.title',
+            requiresGroups: [Group.ADMINISTRATION],
+        }
     },
     config.billingMode !== BillingMode.NONE && {
         name: 'global-settings:taxes',
