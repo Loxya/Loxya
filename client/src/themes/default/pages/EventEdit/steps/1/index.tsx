@@ -3,12 +3,14 @@ import pick from 'lodash/pick';
 import Period from '@/utils/period';
 import upperFirst from 'lodash/upperFirst';
 import { defineComponent, markRaw } from 'vue';
+import formatOptions from '@/utils/formatOptions';
 import { RequestError, HttpCode } from '@/globals/requester';
 import config, { BillingMode } from '@/globals/config';
 import { BookingEntity } from '@/stores/api/bookings';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import { Group } from '@/stores/api/groups';
 import apiEvents from '@/stores/api/events';
+import apiBillingCompany from '@/stores/api/billing-companies';
 import Alert from '@/themes/default/components/Alert';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
@@ -19,15 +21,12 @@ import getBookingColor, {
     getDefaultBookingColor,
 } from '@/utils/getBookingColor';
 
-import type { ComponentRef, PropType, Raw } from 'vue';
 import type { User } from '@/stores/api/users';
+import type { Options } from '@/utils/formatOptions';
+import type { ComponentRef, PropType, Raw } from 'vue';
 import type { EventDetails, EventEdit, EventTechnician } from '@/stores/api/events';
 import type { BookingColorWithDefault } from '@/utils/getBookingColor';
 import type { BillingCompany } from '@/stores/api/billing-companies';
-import billingCompanyApi from '@/stores/api/billing-companies';
-import { TechnicianDetailsSchema } from '@/stores/api/technicians';
-import type { Options } from '@/utils/formatOptions';
-import type { Option } from '@/themes/default/components/Select';
 
 type Props = {
     /**
@@ -328,12 +327,9 @@ const EventEditStepInfos = defineComponent({
                 period: upperFirst(assignationPeriod.toReadable(this.$t)),
             });
         },
-        billingCompaniesOptions(): Option[] {
-            let opts = this.billingCompanies.map((company): Option => ({
-                label: company.name,
-                value: company.id
-            }));
-            return opts;
+
+        billingCompaniesOptions(): Options<BillingCompany> {
+            return formatOptions<BillingCompany>(this.billingCompanies);
         },
     },
     watch: {
@@ -458,8 +454,9 @@ const EventEditStepInfos = defineComponent({
                 this.$emit('stopLoading');
             }
         },
+
         async fetchBillingCompanies() {
-            this.billingCompanies = await billingCompanyApi.all();
+            this.billingCompanies = await apiBillingCompany.all();
         },
 
         __(key: string, params?: Record<string, number | string>, count?: number): string {
@@ -638,7 +635,7 @@ const EventEditStepInfos = defineComponent({
                         options={billingCompaniesOptions}
                         onChange={handleChange}
                         error={validationErrors?.billing_company_id}
-                        />
+                    />
                     {allowBillingToggling && (
                         <div class="EventEditStepInfos__is-billable">
                             <FormField

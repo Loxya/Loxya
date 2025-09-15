@@ -13,7 +13,6 @@ import DegressiveRatesSettings from './DegressiveRates';
 import EstimatesInvoicesSettings from './EstimatesInvoices';
 
 import type { RouteConfig } from 'vue-router';
-import { component } from 'vue/types/umd';
 
 export type Page = (
     & RouteConfig
@@ -96,7 +95,7 @@ const pages: Array<Page | RouteConfig> = [
             icon: 'building',
             title: 'page.settings.companies.title',
             requiresGroups: [Group.ADMINISTRATION],
-        }
+        },
     },
     config.billingMode !== BillingMode.NONE && {
         name: 'global-settings:taxes',

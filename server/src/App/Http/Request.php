@@ -210,7 +210,7 @@ class Request extends CoreRequest
 
         $rawValues = !is_array($rawValues) ? [$rawValues] : $rawValues;
         return array_map(
-            static fn($rawValue) => trim($rawValue),
+            static fn ($rawValue) => trim($rawValue),
             array_filter($rawValues, 'is_string'),
         );
     }
@@ -226,7 +226,7 @@ class Request extends CoreRequest
     {
         return array_filter(
             $this->getStringArrayQueryParam($key),
-            static fn($searchTerm) => mb_strlen($searchTerm) >= 2,
+            static fn ($searchTerm) => mb_strlen($searchTerm) >= 2,
         );
     }
 
@@ -266,7 +266,7 @@ class Request extends CoreRequest
 
         $rawValues = !is_array($rawValues) ? [$rawValues] : $rawValues;
         return array_map(
-            static fn($rawValue) => intval($rawValue),
+            static fn ($rawValue) => intval($rawValue),
             array_filter($rawValues, 'is_numeric'),
         );
     }

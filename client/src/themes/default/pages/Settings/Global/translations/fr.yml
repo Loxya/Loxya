@@ -139,7 +139,8 @@ calendar:
         Une erreur est survenue lors de la re-génération du lien du calendrier public,
         veuillez ré-essayer.
 
-    public-calendar-url-reset-success: "Le lien du calendrier public a bien été re-généré\_! Le nouveau lien est disponible ci-dessus."
+    public-calendar-url-reset-success:
+        "Le lien du calendrier public a bien été re-généré\_! Le nouveau lien est disponible ci-dessus."
 
 inventories:
     title: "Inventaires de départ\_/\_retour"
@@ -353,8 +354,9 @@ companies:
 
     modals:
         #
-        # - Édition d'une entreprise
+        # - Édition d'une société de facturation
         #
+
         company-edition:
             modal-title:
                 new-company: Nouvelle entreprise

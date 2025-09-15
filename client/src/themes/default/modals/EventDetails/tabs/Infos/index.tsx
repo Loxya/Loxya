@@ -275,7 +275,7 @@ const EventDetailsInfos = defineComponent({
                 );
             }
 
-            if(billingCompany) {
+            if (billingCompany) {
                 items.push(
                     <p
                         class={[
@@ -288,8 +288,8 @@ const EventDetailsInfos = defineComponent({
                                 billingCompany: billingCompany.name,
                             })}
                         </span>
-                    </p>
-                )
+                    </p>,
+                );
             }
 
             if (manager !== null) {

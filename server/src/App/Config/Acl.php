@@ -495,7 +495,7 @@ final class Acl
                 'public',
             ],
             'BillingCompany' => [
-                'getLogo'
+                'getLogo',
             ],
         ],
     ];

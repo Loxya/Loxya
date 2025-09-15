@@ -170,7 +170,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         parent::__construct($attributes);
 
-        $this->validation = fn() => [
+        $this->validation = fn () => [
             'title' => V::notEmpty()->length(2, 191),
             'reference' => V::custom([$this, 'checkReference']),
             'color' => V::nullable(V::custom([$this, 'checkColor'])),
@@ -214,7 +214,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         $alreadyExists = static::query()
             ->where('reference', $value)
-            ->when($this->exists, fn(Builder $subQuery) => (
+            ->when($this->exists, fn (Builder $subQuery) => (
                 $subQuery->where('id', '!=', $this->id)
             ))
             ->withTrashed()
@@ -677,7 +677,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     public function getMaterialsCountAttribute(): int
     {
         return $this->materials->sum(
-            static fn(EventMaterial $material) => $material->quantity,
+            static fn (EventMaterial $material) => $material->quantity,
         );
     }
 
@@ -767,7 +767,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     {
         return $this->materials
             ->pluck('category_id')
-            ->filter(static fn($categoryId) => $categoryId !== null)
+            ->filter(static fn ($categoryId) => $categoryId !== null)
             ->unique()
             ->sort(SORT_NUMERIC)
             ->values()
@@ -833,7 +833,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         return $lines
             ->reduce(
-                static fn(Decimal $currentTotal, EventMaterial|EventExtra $line) => (
+                static fn (Decimal $currentTotal, EventMaterial|EventExtra $line) => (
                     // NOTE: On prend bien ici le total AVEC remise de chaque ligne car
                     //       cet attribut retourne le total sans remise GLOBALE uniquement.
                     $currentTotal->plus($line->total_without_taxes)
@@ -900,10 +900,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     $currentTaxAmount = &$currentTaxes[$identifier]['total'];
                     $currentTaxAmount = $currentTaxAmount->plus(
                         !$tax['is_rate']
-                        ? Decimal::of($tax['value'])->multipliedBy($line->quantity)
-                        : $line->total_without_taxes->multipliedBy(
-                            Decimal::of($tax['value'])->dividedBy(100, 5),
-                        ),
+                            ? Decimal::of($tax['value'])->multipliedBy($line->quantity)
+                            : $line->total_without_taxes->multipliedBy(
+                                Decimal::of($tax['value'])->dividedBy(100, 5),
+                            ),
                     );
                 }
 
@@ -960,7 +960,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         return (new CoreCollection($this->total_taxes))
             ->reduce(
-                static fn(Decimal $currentTotal, array $tax) => (
+                static fn (Decimal $currentTotal, array $tax) => (
                     $currentTotal->plus($tax['total'])
                 ),
                 $this->total_without_taxes,
@@ -973,7 +973,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     {
         return $this->materials
             ->reduce(
-                static fn(Decimal $currentTotal, EventMaterial $material) => (
+                static fn (Decimal $currentTotal, EventMaterial $material) => (
                     $currentTotal->plus($material->total_replacement_price ?? Decimal::zero())
                 ),
                 Decimal::zero(),
@@ -1025,7 +1025,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     public function getHasDeletedMaterialsAttribute(): bool
     {
         return $this->materials->some(
-            static fn(EventMaterial $material) => $material->is_deleted,
+            static fn (EventMaterial $material) => $material->is_deleted,
         );
     }
 
@@ -1035,7 +1035,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             return null;
         }
 
-        return $this->positions->some(static fn(EventPosition $position) => (
+        return $this->positions->some(static fn (EventPosition $position) => (
             // Note: `$position->is_assigned` peut être à `null`
             //       si l'information n'est pas disponible.
             $position->is_mandatory && $position->is_assigned === false
@@ -1091,7 +1091,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         }
 
         return $this->materials->every(
-            static fn(EventMaterial $material) => (
+            static fn (EventMaterial $material) => (
                 $material->is_departure_inventory_filled
             ),
         );
@@ -1125,7 +1125,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         }
 
         return $this->materials->every(
-            static fn(EventMaterial $material) => (
+            static fn (EventMaterial $material) => (
                 $material->is_return_inventory_filled
             ),
         );
@@ -1173,7 +1173,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                 }
 
                 return $this->materials->some(
-                    static fn(EventMaterial $material) => (
+                    static fn (EventMaterial $material) => (
                         ($material->quantity - ($material->quantity_returned ?? 0)) > 0
                     ),
                 );
@@ -1200,7 +1200,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         }
 
         return $this->materials->some(
-            static fn(EventMaterial $material) => (
+            static fn (EventMaterial $material) => (
                 ($material->quantity_returned_broken ?? 0) > 0
             ),
         );
@@ -1444,7 +1444,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     public function missingMaterials(): Collection
     {
         return $this->withAvailabilities()->materials
-            ->filter(static fn(EventMaterial $material) => (
+            ->filter(static fn (EventMaterial $material) => (
                 $material->quantity_missing > 0
             ))
             ->sortBy('name')
@@ -1497,9 +1497,9 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             EventTechnician::destroy($outdatedTechnicians);
 
             $errors = $technicians
-                ->filter(static fn($technician) => !$technician->isValid())
+                ->filter(static fn ($technician) => !$technician->isValid())
                 ->keyBy('technician_id')
-                ->map(static fn($technician) => $technician->validationErrors())
+                ->map(static fn ($technician) => $technician->validationErrors())
                 ->all();
 
             if (!empty($errors)) {
@@ -1601,20 +1601,20 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             $quantityDeparted = (
                 $savedEventMaterial?->quantity_departed !== null
-                ? min($savedEventMaterial->quantity_departed, $quantity)
-                : null
+                    ? min($savedEventMaterial->quantity_departed, $quantity)
+                    : null
             );
 
             $quantityReturned = (
                 $savedEventMaterial?->quantity_returned !== null
-                ? min($savedEventMaterial->quantity_returned, $quantity)
-                : ($eventMaterialHasReturnData ? 0 : null)
+                    ? min($savedEventMaterial->quantity_returned, $quantity)
+                    : ($eventMaterialHasReturnData ? 0 : null)
             );
 
             $quantityReturnedBroken = (
                 $savedEventMaterial?->quantity_returned_broken !== null
-                ? min($savedEventMaterial->quantity_returned_broken, $quantity)
-                : ($eventMaterialHasReturnData ? 0 : null)
+                    ? min($savedEventMaterial->quantity_returned_broken, $quantity)
+                    : ($eventMaterialHasReturnData ? 0 : null)
             );
 
             $eventMaterial = ($savedEventMaterial ?? new EventMaterial())->fill([
@@ -1736,8 +1736,8 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             EventExtra::destroy($outdatedLines);
 
             $errors = $extraLines
-                ->filter(static fn($extraLine) => !$extraLine->isValid())
-                ->map(static fn($extraLine) => $extraLine->validationErrors())
+                ->filter(static fn ($extraLine) => !$extraLine->isValid())
+                ->map(static fn ($extraLine) => $extraLine->validationErrors())
                 ->all();
 
             if (!empty($errors)) {
@@ -2359,7 +2359,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             if (isFeatureEnabled(Feature::TECHNICIANS) && $this->positions->isNotEmpty()) {
                 $positions = $this->positions
-                    ->map(static fn(EventPosition $position) => [
+                    ->map(static fn (EventPosition $position) => [
                         'role_id' => $position->role_id,
                         'is_mandatory' => $position->is_mandatory,
                     ])
@@ -2374,7 +2374,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             if ($this->is_billable && $keepBillingData) {
                 $extraLines = $this->extras
-                    ->map(static fn(EventExtra $extraLine) => [
+                    ->map(static fn (EventExtra $extraLine) => [
                         'description' => $extraLine->description,
                         'quantity' => $extraLine->quantity,
                         'unit_price' => $extraLine->unit_price,
@@ -2392,7 +2392,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
     public function withAvailabilities(): static
     {
-        $rawMaterials = $this->materials->map(static fn(EventMaterial $material) => $material->material);
+        $rawMaterials = $this->materials->map(static fn (EventMaterial $material) => $material->material);
         $rawMaterials = Material::allWithAvailabilities($rawMaterials, $this)->keyBy('id');
 
         $materialsWithAvailabilities = $this->materials->map(
@@ -2427,7 +2427,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         if (is_array($term)) {
             $query->where(static function (Builder $subQuery) use ($term) {
                 foreach ($term as $singleTerm) {
-                    $subQuery->orWhere(static fn(Builder $subSubQuery) => (
+                    $subQuery->orWhere(static fn (Builder $subSubQuery) => (
                         $subSubQuery->search($singleTerm)
                     ));
                 }
@@ -2437,21 +2437,21 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         Assert::minLength($term, 2, "The term must contain more than two characters.");
 
         $safeTerm = sprintf('%%%s%%', addcslashes($term, '%_'));
-        return $query->where(static fn(Builder $subQuery) => (
+        return $query->where(static fn (Builder $subQuery) => (
             $subQuery
                 ->orWhere('title', 'LIKE', $safeTerm)
                 ->orWhere('location', 'LIKE', $safeTerm)
-                ->orWhereHas('beneficiaries', static fn(Builder $beneficiariesQuery) => (
+                ->orWhereHas('beneficiaries', static fn (Builder $beneficiariesQuery) => (
                     // - Ici on passe `$term` et non `$safeTerm`, car `Beneficiary::search()`
                     //   se chargera de l'échappement.
                     $beneficiariesQuery->search($term)
                 ))
-                ->orWhereHas('manager', static fn(Builder $managerQuery) => (
+                ->orWhereHas('manager', static fn (Builder $managerQuery) => (
                     // - Ici on passe `$term` et non `$safeTerm`, car `User::search()`
                     //   se chargera de l'échappement.
                     $managerQuery->search($term)
                 ))
-                ->orWhereHas('author', static fn(Builder $authorQuery) => (
+                ->orWhereHas('author', static fn (Builder $authorQuery) => (
                     // - Ici on passe `$term` et non `$safeTerm`, car `User::search()`
                     //   se chargera de l'échappement.
                     $authorQuery->search($term)
@@ -2465,15 +2465,15 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         $now = CarbonImmutable::now();
 
         return $rootQuery
-            ->where(static fn(Builder $query) => (
+            ->where(static fn (Builder $query) => (
                 $query
                     ->where('mobilization_start_date', '<=', $now)
-                    ->where(static fn(Builder $subQuery) => (
+                    ->where(static fn (Builder $subQuery) => (
                         $subQuery
                             ->orWhere('mobilization_end_date', '>', $now)
-                            ->when($useManualReturn, static fn(Builder $subSubQuery) => (
+                            ->when($useManualReturn, static fn (Builder $subSubQuery) => (
                                 // - Bookings non retourné actuellement.
-                                $subSubQuery->orWhere(static fn(Builder $subSubSubQuery) => (
+                                $subSubQuery->orWhere(static fn (Builder $subSubSubQuery) => (
                                     $subSubSubQuery
                                         ->where('is_archived', false)
                                         ->where('is_return_inventory_done', false)
@@ -2493,20 +2493,20 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         $end = $period->getEndDate();
 
         return $rootQuery
-            ->where(static fn(Builder $query) => (
+            ->where(static fn (Builder $query) => (
                 $query
-                    ->when($end !== null, static fn(Builder $subQuery) => (
+                    ->when($end !== null, static fn (Builder $subQuery) => (
                         $subQuery->where('mobilization_start_date', '<', $end)
                     ))
-                    ->where(static fn(Builder $subQuery) => (
+                    ->where(static fn (Builder $subQuery) => (
                         $subQuery
                             ->orWhere('mobilization_end_date', '>', $start)
                             ->when(
                                 $withOverdue && $useManualReturn,
-                                static fn(Builder $subSubQuery) => (
+                                static fn (Builder $subSubQuery) => (
                                     $subSubQuery
                                         // - Événements en retard actuellement.
-                                        ->orWhere(static fn(Builder $subSubQuery) => (
+                                        ->orWhere(static fn (Builder $subSubQuery) => (
                                             $subSubQuery
                                                 // - On part du principe que les événements en cours ou
                                                 //   à venir ne vont pas être retournés en retard, donc
@@ -2517,7 +2517,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                                                 ->whereHas('materials')
                                         ))
                                         // - Événements qui n'étaient pas retournés avant la date spécifiée.
-                                        ->orWhere(static fn(Builder $subSubQuery) => (
+                                        ->orWhere(static fn (Builder $subSubQuery) => (
                                             $subSubQuery
                                                 ->where('is_return_inventory_done', true)
                                                 ->whereNotNull('return_inventory_datetime')
@@ -2533,10 +2533,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
     public function scopeHavingMaterialInPark(Builder $query, int $parkId): Builder
     {
-        return $query->whereHas('materials', static fn(Builder $eventMaterialQuery) => (
-            $eventMaterialQuery->whereHas('material', static fn(Builder $materialQuery) => (
+        return $query->whereHas('materials', static fn (Builder $eventMaterialQuery) => (
+            $eventMaterialQuery->whereHas('material', static fn (Builder $materialQuery) => (
                 $materialQuery
-                    ->where(static fn(Builder $subQuery) => (
+                    ->where(static fn (Builder $subQuery) => (
                         $subQuery
                             ->where('park_id', $parkId)
                     ))
@@ -2552,10 +2552,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return $query
             ->where('is_archived', false)
             ->where('is_return_inventory_done', false)
-            ->where(static fn(Builder $subQuery) => (
+            ->where(static fn (Builder $subQuery) => (
                 $subQuery
                     ->where('mobilization_end_date', '>', $start)
-                    ->when($end !== null, static fn(Builder $subSubQuery) => (
+                    ->when($end !== null, static fn (Builder $subSubQuery) => (
                         $subSubQuery->where('mobilization_end_date', '<=', $end)
                     ))
             ))
@@ -2590,7 +2590,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return $query
             ->where('mobilization_end_date', '<=', Carbon::now())
             ->where('is_return_inventory_done', false)
-            ->when($lax, static fn(Builder $subQuery) => (
+            ->when($lax, static fn (Builder $subQuery) => (
                 $subQuery->where('mobilization_end_date', '>=', Carbon::now()->subDays(30))
             ));
     }
@@ -2599,20 +2599,20 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     {
         $useManualReturn = Config::get('returnPolicy') === ReturnPolicy::MANUAL;
 
-        return $rootQuery->where(static fn(Builder $query) => (
+        return $rootQuery->where(static fn (Builder $query) => (
             $query
                 ->orWhere('mobilization_end_date', '>=', $date)
-                ->when($useManualReturn, static fn(Builder $subQuery) => (
+                ->when($useManualReturn, static fn (Builder $subQuery) => (
                     $subQuery
                         // - Bookings non retourné actuellement.
-                        ->orWhere(static fn(Builder $subSubQuery) => (
+                        ->orWhere(static fn (Builder $subSubQuery) => (
                             $subSubQuery
                                 ->where('is_archived', false)
                                 ->where('is_return_inventory_done', false)
                                 ->whereHas('materials')
                         ))
                         // - Bookings qui n'étaient pas retournés avant la date spécifiée.
-                        ->orWhere(static fn(Builder $subSubQuery) => (
+                        ->orWhere(static fn (Builder $subSubQuery) => (
                             $subSubQuery
                                 ->where('is_return_inventory_done', true)
                                 ->whereNotNull('return_inventory_datetime')
@@ -2640,15 +2640,15 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             if ($user->person) {
                 if ($checkBeneficiaries) {
-                    $query->orWhereHas('beneficiaries', static fn(Builder $beneficiariesQuery) => (
+                    $query->orWhereHas('beneficiaries', static fn (Builder $beneficiariesQuery) => (
                         $beneficiariesQuery->whereBelongsTo($user->person)
                     ));
                 }
 
                 if (isFeatureEnabled(Feature::TECHNICIANS)) {
                     $query
-                        ->orWhereHas('technicians', static fn(Builder $eventTechniciansQuery) => (
-                            $eventTechniciansQuery->whereHas('technician', static fn(Builder $technician) => (
+                        ->orWhereHas('technicians', static fn (Builder $eventTechniciansQuery) => (
+                            $eventTechniciansQuery->whereHas('technician', static fn (Builder $technician) => (
                                 $technician->whereBelongsTo($user->person)
                             ))
                         ));
@@ -3023,11 +3023,11 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         if (!empty($mobilizationPeriodErrors)) {
             $data->set('mobilization_period', (
                 count($mobilizationPeriodErrors) === 1
-                ? current($mobilizationPeriodErrors)
-                : implode("\n", array_map(
-                    static fn($message) => sprintf('- %s', $message),
-                    $mobilizationPeriodErrors,
-                ))
+                    ? current($mobilizationPeriodErrors)
+                    : implode("\n", array_map(
+                        static fn ($message) => sprintf('- %s', $message),
+                        $mobilizationPeriodErrors,
+                    ))
             ));
         }
         $data->delete('mobilization_start_date');
@@ -3041,11 +3041,11 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         if (!empty($operationPeriodErrors)) {
             $data->set('operation_period', (
                 count($operationPeriodErrors) === 1
-                ? current($operationPeriodErrors)
-                : implode("\n", array_map(
-                    static fn($message) => sprintf('- %s', $message),
-                    $operationPeriodErrors,
-                ))
+                    ? current($operationPeriodErrors)
+                    : implode("\n", array_map(
+                        static fn ($message) => sprintf('- %s', $message),
+                        $operationPeriodErrors,
+                    ))
             ));
         }
         $data->delete('operation_start_date');

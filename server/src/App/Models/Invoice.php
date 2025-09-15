@@ -86,7 +86,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
     {
         parent::__construct($attributes);
 
-        $this->validation = fn() => [
+        $this->validation = fn () => [
             'number' => V::custom([$this, 'checkNumber']),
             'date' => V::notEmpty()->dateTime(),
             'booking_type' => V::custom([$this, 'checkBookingType']),
@@ -190,7 +190,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
                 'number' => $value,
                 'billing_company_id' => $this->billing_company_id,
             ])
-            ->when($this->exists, fn(Builder $subQuery) => (
+            ->when($this->exists, fn (Builder $subQuery) => (
                 $subQuery->where('id', '!=', $this->id)
             ))
             ->withTrashed()
@@ -234,7 +234,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
                 return true;
             }
 
-            // - Sinon, seuls les devis legacy sont concernés.
+        // - Sinon, seuls les devis legacy sont concernés.
         } elseif (!$isLegacyRaw) {
             return V::nullType();
         }
@@ -260,7 +260,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
                 return true;
             }
 
-            // - Sinon, seuls les devis legacy sont concernés.
+        // - Sinon, seuls les devis legacy sont concernés.
         } elseif (!$isLegacyRaw) {
             return V::nullType();
         }
@@ -311,7 +311,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         }
 
         // Note: S'il n'y a pas de taxes, le champ doit être à `null` et non un tableau vide.
-        $schema = V::arrayType()->notEmpty()->each(V::custom(static fn($taxValue) => (
+        $schema = V::arrayType()->notEmpty()->each(V::custom(static fn ($taxValue) => (
             new SchemaStrict(
                 new Rule\Key('name', V::notEmpty()->length(1, 30)),
                 new Rule\Key('is_rate', V::boolType()),
@@ -544,7 +544,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         }
 
         return array_map(
-            static fn($tax) => array_replace($tax, [
+            static fn ($tax) => array_replace($tax, [
                 'value' => Decimal::of($tax['value'])
                     ->toScale($tax['is_rate'] ? 3 : 2),
                 'total' => Decimal::of($tax['total'])
@@ -652,7 +652,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             ->all();
 
         $hasMaterialDiscount = $this->materials->some(
-            static fn($material) => !$material->discount_rate->isZero(),
+            static fn ($material) => !$material->discount_rate->isZero(),
         );
 
         return [
@@ -681,7 +681,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             'totalGlobalDiscount' => $this->total_global_discount,
             'totalWithoutTaxes' => $this->total_without_taxes,
             'totalTaxes' => array_map(
-                static fn($tax) => array_replace($tax, [
+                static fn ($tax) => array_replace($tax, [
                     'value' => $tax['is_rate']
                         ? $tax['value']->dividedBy(100, 5)
                         : $tax['value'],
@@ -808,7 +808,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
                 // - Métadonnées.
                 'metadata' => [
                     'properties' => $booking->totalisable_properties
-                        ->map(static fn(Property $property) => (
+                        ->map(static fn (Property $property) => (
                             $property->serialize(Property::SERIALIZE_SUMMARY)
                         ))
                         ->values(),

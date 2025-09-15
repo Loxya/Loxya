@@ -94,7 +94,7 @@ final class App
         $useRouterCache = (bool) Config::get('useRouterCache') && Config::getEnv() === 'production';
         $routeCollector = $this->app->getRouteCollector();
 
-        $getActionFqn = static fn($action) => sprintf('Loxya\\Controllers\\%s', $action);
+        $getActionFqn = static fn ($action) => sprintf('Loxya\\Controllers\\%s', $action);
 
         // - Ajoute le parseur de route au conteneur.
         $this->container->set(RouteParserInterface::class, $routeCollector->getRouteParser());
@@ -119,7 +119,7 @@ final class App
         $this->app->group('/api', function (RouteCollectorProxy $group) use ($isCORSEnabled, $getActionFqn) {
             // - Autorise les requêtes de type OPTIONS sur les routes d'API.
             if ($isCORSEnabled) {
-                $group->options('/{routes:.+}', fn(Request $request, Response $response) => $response);
+                $group->options('/{routes:.+}', fn (Request $request, Response $response) => $response);
             }
 
             // - Toutes les routes d'API sont définies dans le fichier `Config/routes.php`.
@@ -158,8 +158,14 @@ final class App
         $this->app->get('/materials/print[/]', $getActionFqn('MaterialController:printAll'));
 
         // - Static files
-        $this->app->get('/static/materials/{id:[0-9]+}/picture[/]', $getActionFqn('MaterialController:getPicture'));
-        $this->app->get('/static/billing-companies/{id:[0-9]+}/logo[/]', $getActionFqn('BillingCompanyController:getLogo'));
+        $this->app->get(
+            '/static/materials/{id:[0-9]+}/picture[/]',
+            $getActionFqn('MaterialController:getPicture'),
+        );
+        $this->app->get(
+            '/static/billing-companies/{id:[0-9]+}/logo[/]',
+            $getActionFqn('BillingCompanyController:getLogo'),
+        );
 
         // - Public resources
         $this->app->get('/calendar/public/{uuid:[a-z0-9-]+}.ics', $getActionFqn('CalendarController:public'))
