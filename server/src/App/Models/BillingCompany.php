@@ -46,7 +46,7 @@ final class BillingCompany extends BaseModel implements Serializable
     use Serializer;
     use SoftDeletes;
 
-    private const LOGO_BASEPATH = (
+    private const string LOGO_BASEPATH = (
         DATA_FOLDER . DS . 'billing_companies' . DS . 'logo'
     );
 
@@ -294,8 +294,8 @@ final class BillingCompany extends BaseModel implements Serializable
             $company->append(['country']);
         });
         return (new DotArray($company->attributesForSerialization()))
-        ->delete(['created_at', 'updated_at', 'deleted_at'])
-        ->all();
+            ->delete(['created_at', 'updated_at', 'deleted_at'])
+            ->all();
     }
 
     // ------------------------------------------------------
@@ -371,7 +371,7 @@ final class BillingCompany extends BaseModel implements Serializable
                 $filename = $this->getAttributeFromArray('logo');
                 @unlink(static::LOGO_BASEPATH . DS . $filename);
             } catch (\Throwable) {
-              // We do not care if the unlink fails.
+                // We do not care if the unlink fails.
             }
 
             $this->logo = $newLogo;
@@ -394,7 +394,7 @@ final class BillingCompany extends BaseModel implements Serializable
             try {
                 @unlink(static::LOGO_BASEPATH . DS . $previousLogo);
             } catch (\Throwable) {
-              // We do not care if the unlink fails.
+                // We do not care if the unlink fails.
             }
         }
 
