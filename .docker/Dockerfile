@@ -44,6 +44,7 @@ RUN \
         curl \
         dom \
         fileinfo \
+        ftp \
         gd \
         gettext \
         iconv \
@@ -111,6 +112,13 @@ CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 HEALTHCHECK --timeout=10s CMD curl --silent --fail http://127.0.0.1/php-ping || exit 1
 
 FROM app-base AS app-dev
+
+RUN set -eux; \
+    apk add --no-cache \
+        git;
+
+# - Git configuration
+COPY ./config/gitconfig /etc/gitconfig
 
 # - Nginx dev. configuration
 COPY ./config/vhosts/default.dev.conf /etc/nginx/vhosts/default.conf

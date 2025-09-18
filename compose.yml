@@ -16,7 +16,9 @@ services:
         build:
             context: ./.docker
             target: app-dev
-        env_file: .env
+        env_file:
+            - path: .env
+              required: false
         restart: always
         environment:
             DB_HOST: db
@@ -42,7 +44,9 @@ services:
             - --mysql-native-password=ON
             - --character-set-server=utf8mb4
             - --collation-server=utf8mb4_unicode_ci
-        env_file: .env
+        env_file:
+            - path: .env
+              required: false
         restart: always
         environment:
             MYSQL_DATABASE: loxya
@@ -58,7 +62,9 @@ services:
     maildev:
         container_name: loxya-maildev
         image: maildev/maildev
-        env_file: .env
+        env_file:
+            - path: .env
+              required: false
         restart: always
         environment:
             TZ: Europe/Paris
