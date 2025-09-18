@@ -290,7 +290,10 @@
 
     <!-- TypeHints -->
     <rule ref="SlevomatCodingStandard.TypeHints.LongTypeHints" />
+    <!--
+    TODO: Lorsque PHP 8.3+ uniquement sera utilisé dans l'application :
     <rule ref="SlevomatCodingStandard.TypeHints.ClassConstantTypeHint" />
+    -->
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHintSpacing" />
     <rule ref="SlevomatCodingStandard.TypeHints.UselessConstantTypeHint" />
     <rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue" />
