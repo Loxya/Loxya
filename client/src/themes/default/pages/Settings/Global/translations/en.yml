@@ -15,7 +15,7 @@ categories:
     display-materials-list: See the material of this category
 
     name-length-not-valid: The name must have a length between 2 and 96 characters.
-    cannot-delete-not-empty: 'Impossible to delete this category, because it''s not empty!'
+    cannot-delete-not-empty: "Impossible to delete this category, because it's not empty!"
 
     #
     # - Catégories
@@ -43,7 +43,7 @@ categories:
     modify-subcategory: Modify the sub-category
     delete-subcategory: Delete the sub-category
 
-    new-subcategory: "New sub-category of \"{categoryName}\""
+    new-subcategory: 'New sub-category of "{categoryName}"'
     subcategory-name: Name of the sub-category
     subcategory-name-already-exists: A sub-category already exists with this name.
 
@@ -333,3 +333,71 @@ estimates-invoices:
     custom-text-title: Text title
     custom-text-content: Text content
     saved: The settings for estimates and invoices have been successfully saved.
+
+companies:
+    title: Billing - Companies
+    help: Here you can manage the billing companies used in estimates and invoices.
+    no-company-yet: There is no company yet.
+    create-a-first-company: Create a first company
+    new-company: New company
+    delete: Move the company to the trash
+    confirm-delete: "Move this company to the trash?"
+    deleted: The company has been successfully moved to the trash.
+    edit: Edit the company
+
+    columns:
+        name: Name
+        address: Address
+
+    modals:
+        #
+        # - Édition d'une société de facturation
+        #
+
+        company-edition:
+            modal-title:
+                new-company: New company
+                edit: 'Edit company "{name}"'
+            actions:
+                save: Save company
+            saved: The company has been successfully saved.
+            fields:
+                name:
+                    label: Company name
+                    placeholder: Company name
+                email:
+                    label: E-mail
+                    placeholder: Companie's e-mail
+                phone:
+                    label: Phone
+                    placeholder: Phone number
+                address:
+                    label: Address
+                street:
+                    label: Street
+                    placeholder: Street and number
+                postal-code:
+                    label: Postal code
+                    placeholder: Postal code
+                locality:
+                    label: City
+                    placeholder: City
+                country:
+                    label: Country
+                    placeholder: Select a country
+                vat-number:
+                    label: VAT number
+                    placeholder: VAT number
+                code-label:
+                    label: Additional code
+                    placeholder: Siret, RCS, ...
+                code-value:
+                    label: Value
+                    placeholder: Value of the additional code
+                legal-numbers:
+                    label: Additional legal numbers
+                logo:
+                    label: Logo
+                website:
+                    label: Website
+                    placeholder: Website URL
