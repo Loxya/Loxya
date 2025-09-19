@@ -4,6 +4,7 @@ import { Group } from '@/stores/api/groups';
 import store from '@/themes/default/globals/store';
 import EventSummarySettings from './EventSummary';
 import CategoriesSettings from './Categories';
+import CompaniesSettings from './Companies';
 import TagsSettings from './Tags';
 import CalendarSettings from './Calendar';
 import InventoriesSettings from './Inventories';
@@ -83,6 +84,16 @@ const pages: Array<Page | RouteConfig> = [
         meta: {
             icon: 'tasks',
             title: 'page.settings.inventories.title',
+            requiresGroups: [Group.ADMINISTRATION],
+        },
+    },
+    {
+        name: 'global-settings:companies',
+        path: 'companies',
+        component: CompaniesSettings,
+        meta: {
+            icon: 'building',
+            title: 'page.settings.companies.title',
             requiresGroups: [Group.ADMINISTRATION],
         },
     },

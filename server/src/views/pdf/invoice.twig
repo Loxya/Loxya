@@ -16,7 +16,7 @@
         <td class="half">
             {{-
                 include('blocks/company-address.twig', {
-                    company: seller,
+                    company: billingCompany,
                     showLegalNumbers: true,
                     showLogo: true,
                 })
@@ -299,7 +299,7 @@
             <td class="half">
                 {{-
                     include('blocks/company-address.twig', {
-                        company: seller,
+                        company: billingCompany,
                         showLegalNumbers: false,
                         showLogo: true,
                     })

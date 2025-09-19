@@ -158,7 +158,14 @@ final class App
         $this->app->get('/materials/print[/]', $getActionFqn('MaterialController:printAll'));
 
         // - Static files
-        $this->app->get('/static/materials/{id:[0-9]+}/picture[/]', $getActionFqn('MaterialController:getPicture'));
+        $this->app->get(
+            '/static/materials/{id:[0-9]+}/picture[/]',
+            $getActionFqn('MaterialController:getPicture'),
+        );
+        $this->app->get(
+            '/static/billing-companies/{id:[0-9]+}/logo[/]',
+            $getActionFqn('BillingCompanyController:getLogo'),
+        );
 
         // - Public resources
         $this->app->get('/calendar/public/{uuid:[a-z0-9-]+}.ics', $getActionFqn('CalendarController:public'))

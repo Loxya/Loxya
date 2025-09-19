@@ -193,6 +193,11 @@ final class Acl
                 'external',
                 'default',
             ],
+            'BillingCompany' => [
+                'getLogo',
+                'getAll',
+                'getOne',
+            ],
             'api-catch-not-found',
         ],
         Group::OPERATION => [
@@ -352,6 +357,11 @@ final class Acl
                 'external',
                 'default',
             ],
+            'BillingCompany' => [
+                'getLogo',
+                'getAll',
+                'getOne',
+            ],
             'api-catch-not-found',
         ],
         Group::READONLY_PLANNING_GENERAL => [
@@ -450,6 +460,11 @@ final class Acl
                 'external',
                 'default',
             ],
+            'BillingCompany' => [
+                'getLogo',
+                'getAll',
+                'getOne',
+            ],
             'api-catch-not-found',
         ],
         Group::ANONYMOUS => [
@@ -478,6 +493,9 @@ final class Acl
             ],
             'Calendar' => [
                 'public',
+            ],
+            'BillingCompany' => [
+                'getLogo',
             ],
         ],
     ];

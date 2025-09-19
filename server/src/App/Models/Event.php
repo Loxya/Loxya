@@ -98,6 +98,8 @@ use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
  * @property-read User|null $manager
  * @property int|null $author_id
  * @property-read User|null $author
+ * @property int|null $billing_company_id
+ * @property-read BillingCompany|null $billing_company
  * @property-read CarbonImmutable $created_at
  * @property-read CarbonImmutable|null $updated_at
  * @property-read CarbonImmutable|null $deleted_at
@@ -190,6 +192,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             'return_inventory_author_id' => V::custom([$this, 'checkReturnInventoryAuthorId']),
             'manager_id' => V::custom([$this, 'checkManagerId']),
             'author_id' => V::custom([$this, 'checkAuthorId']),
+            'billing_company_id' => V::custom([$this, 'checkBillingCompanyId']),
         ];
     }
 
@@ -509,6 +512,15 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return User::includes($value);
     }
 
+    public function checkBillingCompanyId($value)
+    {
+        V::nullable(V::intVal())->check($value);
+        if ($value === null || ($this->exists && !$this->isDirty('billing_company_id'))) {
+            return true;
+        }
+        return BillingCompany::includes($value);
+    }
+
     // ------------------------------------------------------
     // -
     // -    Relations
@@ -593,6 +605,12 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             ->withTrashed();
     }
 
+    public function billingCompany(): BelongsTo
+    {
+        return $this->belongsTo(BillingCompany::class)
+            ->withTrashed();
+    }
+
     // ------------------------------------------------------
     // -
     // -    Mutators
@@ -632,6 +650,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         'return_inventory_author_id' => 'integer',
         'manager_id' => 'integer',
         'author_id' => 'integer',
+        'billing_company_id' => 'integer',
         'note' => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
@@ -708,6 +727,11 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     public function getAuthorAttribute(): User|null
     {
         return $this->getRelationValue('author');
+    }
+
+    public function getBillingCompanyAttribute(): BillingCompany|null
+    {
+        return $this->getRelationValue('billingCompany');
     }
 
     public function getDepartureInventoryAuthorAttribute(): User|null
@@ -1256,6 +1280,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         'currency',
         'author_id',
         'manager_id',
+        'billing_company_id',
         'note',
     ];
 
@@ -2292,6 +2317,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                 'is_billable' => $this->is_billable,
                 'currency' => Config::get('currency'),
                 'global_discount_rate' => $globalDiscountRate,
+                'billing_company_id' => $this->billing_company_id ?? null,
                 'note' => $this->note,
                 'author_id' => $author?->id,
             ]);
@@ -2758,6 +2784,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'has_deleted_materials',
                         'has_unassigned_mandatory_positions',
                         'author',
+                        'billing_company',
                     ]);
                     if ($event->is_billable) {
                         $event->append(['extras', 'estimates', 'invoices']);
@@ -2782,6 +2809,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'categories',
                         'parks',
                         'author',
+                        'billing_company',
                     ]);
                     break;
 
@@ -2797,6 +2825,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'categories',
                         'parks',
                         'author',
+                        'billing_company',
                     ]);
                     break;
 
@@ -2817,6 +2846,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'has_unassigned_mandatory_positions',
                         'total_replacement',
                         'author',
+                        'billing_company',
                     ]);
                     if ($event->is_billable) {
                         $event->append(['extras', 'estimates', 'invoices']);
@@ -2965,6 +2995,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return $data
             ->delete([
                 'author_id',
+                'billing_company_id',
                 'preparer_id',
                 'manager_id',
                 'request_id',

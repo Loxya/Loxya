@@ -62,6 +62,9 @@ return [
         '/events/{id:[0-9]+}/missing-materials[/]' => 'EventController:getMissingMaterials',
         '/events/{id:[0-9]+}/documents[/]' => 'EventController:getDocuments',
 
+        '/billing-companies[/]' => 'BillingCompanyController:getAll',
+        '/billing-companies/{id:[0-9]+}[/]' => 'BillingCompanyController:getOne',
+
         '/settings[/]' => 'SettingController:getAll',
 
         '/bookings[/]' => 'BookingController:getAll',
@@ -115,6 +118,8 @@ return [
         '/events/{id:[0-9]+}/documents[/]' => 'EventController:attachDocument',
         '/events/{id:[0-9]+}/assignments[/]' => 'EventController:createAssignment',
         '/events/{id:[0-9]+}/positions[/]' => 'EventController:createPosition',
+
+        '/billing-companies[/]' => 'BillingCompanyController:create',
 
         sprintf(
             '/bookings/{entity:(?:%s)}/{id:[0-9]+}/lists[/]',
@@ -176,6 +181,8 @@ return [
         '/events/{id:[0-9]+}/unarchive[/]' => 'EventController:unarchive',
         '/events/{id:[0-9]+}/assignments/{assignmentId:[0-9]+}[/]' => 'EventController:updateAssignment',
 
+        '/billing-companies/{id:[0-9]+}[/]' => 'BillingCompanyController:update',
+
         '/settings[/]' => 'SettingController:update',
 
         sprintf(
@@ -218,5 +225,6 @@ return [
         '/events/{id:[0-9]+}/return[/]' => 'EventController:cancelReturnInventory',
         '/events/{id:[0-9]+}/assignments/{assignmentId:[0-9]+}[/]' => 'EventController:deleteAssignment',
         '/events/{id:[0-9]+}/positions/{positionId:[0-9]+}[/]' => 'EventController:deletePosition',
+        '/billing-companies/{id:[0-9]+}[/]' => 'BillingCompanyController:delete',
     ],
 ];

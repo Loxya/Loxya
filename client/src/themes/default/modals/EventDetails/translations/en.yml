@@ -20,6 +20,7 @@ infos:
     created-by: "Created by: {author}"
     request-date: "Request date: {date}"
     manager: "Project manager: {manager}"
+    billing-company: "Billing company: {billingCompany}"
     mobilization-period: "Mobilization period: {period}"
     initially-planned-period: Initially {period}
     overdue-since: Overdue since {duration}
@@ -59,7 +60,7 @@ estimates:
     estimate-created: Estimate created.
 
     item:
-        title: 'Estimate of {date} at {hour}'
+        title: "Estimate of {date} at {hour}"
         deleted: The estimate has been deleted.
         confirm-delete: Do you really want to delete this estimate?
 

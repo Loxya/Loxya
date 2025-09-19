@@ -226,6 +226,7 @@ const EventDetailsInfos = defineComponent({
             author,
             manager,
             description,
+            billing_company: billingCompany,
             is_confirmed: isConfirmed,
             mobilization_period: mobilizationPeriod,
         } = event;
@@ -268,6 +269,23 @@ const EventDetailsInfos = defineComponent({
                         <span class="EventDetailsInfos__summary__details__item__value">
                             {__('modal.event-details.infos.created-by', {
                                 author: author.full_name,
+                            })}
+                        </span>
+                    </p>,
+                );
+            }
+
+            if (billingCompany) {
+                items.push(
+                    <p
+                        class={[
+                            'EventDetailsInfos__summary__details__item',
+                            'EventDetailsInfos__summary__details__item--billing-company',
+                        ]}
+                    >
+                        <span class="EventDetailsInfos__summary__details__item__value">
+                            {__('modal.event-details.infos.billing-company', {
+                                billingCompany: billingCompany.name,
                             })}
                         </span>
                     </p>,

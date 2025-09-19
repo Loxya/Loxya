@@ -37,7 +37,6 @@ use Respect\Validation\Rules as Rule;
  * @property-read ?string $url
  * @property string $booking_type
  * @property int $booking_id
- * @property-read array $seller
  * @property-read Event $booking
  * @property string|null $booking_title
  * @property string|null $booking_reference
@@ -62,6 +61,8 @@ use Respect\Validation\Rules as Rule;
  * @property Decimal $total_replacement
  * @property string $currency
  * @property int|null $author_id
+ * @property int|null $billing_company_id
+ * @property-read BillingCompany|null $billing_company
  * @property array $metadata
  * @property-read User|null $author
  * @property-read CarbonImmutable $created_at
@@ -108,6 +109,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             'total_replacement' => V::custom([$this, 'checkAmount'], false),
             'currency' => V::custom([$this, 'checkCurrency']),
             'author_id' => V::custom([$this, 'checkAuthorId']),
+            'billing_company_id' => V::custom([$this, 'checkBillingCompanyId']),
             'metadata' => V::nullable(V::json()),
         ];
     }
@@ -184,7 +186,10 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             ->check($value);
 
         $alreadyExists = static::query()
-            ->where('number', $value)
+            ->where([
+                'number' => $value,
+                'billing_company_id' => $this->billing_company_id,
+            ])
             ->when($this->exists, fn (Builder $subQuery) => (
                 $subQuery->where('id', '!=', $this->id)
             ))
@@ -370,6 +375,24 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             : true;
     }
 
+    public function checkBillingCompanyId($value)
+    {
+        V::nullable(V::intVal())->check($value);
+
+        if ($value === null) {
+            return true;
+        }
+
+        $billingCompany = BillingCompany::withTrashed()->find($value);
+        if (!$billingCompany) {
+            return false;
+        }
+
+        return !$this->exists || $this->isDirty('billing_company_id')
+            ? !$billingCompany->trashed()
+            : true;
+    }
+
     // ------------------------------------------------------
     // -
     // -    Relations
@@ -402,6 +425,12 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id')
+            ->withTrashed();
+    }
+
+    public function billingCompany(): BelongsTo
+    {
+        return $this->belongsTo(BillingCompany::class)
             ->withTrashed();
     }
 
@@ -438,6 +467,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         'total_replacement' => AsDecimal::class,
         'currency' => 'string',
         'author_id' => 'integer',
+        'billing_company_id' => 'integer',
         'metadata' => 'array',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
@@ -475,22 +505,23 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             : null;
     }
 
+    public function getBillingCompanyAttribute(): BillingCompany|null
+    {
+        $company = $this->getRelationValue('billingCompany');
+        if (!is_null($company)) {
+            return $company;
+        }
+
+        // If there's no billing company linked to the invoice event,
+        // we fall back to the global companyData config.
+        return BillingCompany::defaultBillingCompany();
+    }
+
     public function getBookingLocationAttribute(): string|null
     {
         return $this->booking instanceof Event
             ? $this->booking->location
             : null;
-    }
-
-    public function getSellerAttribute(): array
-    {
-        $company = Config::get('companyData');
-
-        return array_replace($company, [
-            'country' => ($company['country'] ?? null) !== null
-                ? Country::tryFromCode($company['country'])
-                : null,
-        ]);
     }
 
     /** @return Collection<array-key, InvoiceMaterial> */
@@ -546,7 +577,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
 
         $filename = Str::slugify(implode('-', [
             $i18n->translate($isCreditNote ? 'credit-note' : 'invoice'),
-            $this->seller['name'],
+            $this->billing_company->name,
             $this->number,
             $this->beneficiary->full_name,
         ]));
@@ -627,7 +658,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         return [
             'number' => $this->number,
             'date' => $this->date,
-            'seller' => $this->seller,
+            'billingCompany' => $this->billing_company,
             'beneficiary' => $this->beneficiary,
             'currency' => $this->currency,
             'booking' => [
@@ -754,7 +785,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
 
         return dbTransaction(static function () use ($booking, $beneficiary, $creator) {
             $invoice = new static([
-                'number' => static::getNextNumber(),
+                'number' => static::getNextNumber(null, $booking->billing_company_id),
                 'date' => CarbonImmutable::now(),
 
                 'booking_title' => $booking instanceof Event ? $booking->title : null,
@@ -786,6 +817,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
             $invoice->booking()->associate($booking);
             $invoice->beneficiary()->associate($beneficiary);
             $invoice->author()->associate($creator);
+            $invoice->billingCompany()->associate($booking->billing_company);
 
             if (!$invoice->save()) {
                 return false;
@@ -830,12 +862,13 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         });
     }
 
-    public static function getLastNumber(?int $year = null): ?string
+    public static function getLastNumber(?int $year = null, ?int $billingCompanyId = null): ?string
     {
         $year = (int) ($year ?? CarbonImmutable::now()->format('Y'));
 
         $invoices = static::selectRaw('number')
             ->whereRaw(sprintf('YEAR(date) = %s', $year))
+            ->where('billing_company_id', $billingCompanyId)
             ->withTrashed()
             ->get();
 
@@ -850,16 +883,20 @@ final class Invoice extends BaseModel implements Serializable, Pdfable
         return $last ? $last['invoice']->number : null;
     }
 
-    public static function getNextNumber(?int $year = null): string
+    public static function getNextNumber(?int $year = null, ?int $billingCompanyId = null): ?string
     {
         $year = (int) ($year ?? CarbonImmutable::now()->format('Y'));
 
-        $lastNumber = static::getLastNumber($year);
+        $lastNumber = static::getLastNumber($year, $billingCompanyId);
         if ($lastNumber !== null) {
             $lastNumber = (int) explode('-', $lastNumber)[1];
         }
 
-        return sprintf('%s-%05d', $year, ($lastNumber ?? 0) + 1);
+        $number = sprintf('%s-%05d', $year, ($lastNumber ?? 0) + 1);
+        if ($billingCompanyId !== null) {
+            $number = sprintf('%s:%s', $billingCompanyId, $number);
+        }
+        return $number;
     }
 
     // ------------------------------------------------------

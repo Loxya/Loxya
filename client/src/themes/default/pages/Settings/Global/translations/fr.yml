@@ -336,3 +336,71 @@ estimates-invoices:
     custom-text-title: Titre du texte
     custom-text-content: Contenu du texte
     saved: Les paramètres des devis et factures ont bien été sauvegardés.
+
+companies:
+    title: Facturation - Entreprises
+    help: Ici, vous pouvez gérer les entreprises de facturation utilisées dans les devis et factures.
+    no-company-yet: Il n'y a pas encore d'entreprise.
+    create-a-first-company: Créer une première entreprise
+    new-company: Nouvelle entreprise
+    delete: Mettre l'entreprise à la corbeille
+    confirm-delete: "Mettre cette entreprise à la corbeille\_?"
+    deleted: L'entreprise a bien été mise à la corbeille.
+    edit: Modifier l'entreprise
+
+    columns:
+        name: Nom
+        address: Adresse
+
+    modals:
+        #
+        # - Édition d'une société de facturation
+        #
+
+        company-edition:
+            modal-title:
+                new-company: Nouvelle entreprise
+                edit: "Modification de l'entreprise «\_{name}\_»"
+            actions:
+                save: Enregistrer l'entreprise
+            saved: L'entreprise a bien été sauvegardée.
+            fields:
+                name:
+                    label: Nom de l'entreprise
+                    placeholder: Nom de l'entreprise
+                email:
+                    label: Email
+                    placeholder: Adresse email
+                phone:
+                    label: Téléphone
+                    placeholder: Numéro de téléphone
+                address:
+                    label: Adresse
+                street:
+                    label: Rue
+                    placeholder: Rue et numéro
+                postal-code:
+                    label: Code postal
+                    placeholder: Code postal
+                locality:
+                    label: Ville
+                    placeholder: Ville
+                country:
+                    label: Pays
+                    placeholder: Sélectionner un pays
+                vat-number:
+                    label: Numéro de TVA
+                    placeholder: Numéro de TVA
+                code-label:
+                    label: Code additionnel
+                    placeholder: Siret, RCS, ...
+                code-value:
+                    label: Valeur
+                    placeholder: Valeur du code additionnel
+                legal-numbers:
+                    label: Numéros légaux additionnels
+                logo:
+                    label: Logo
+                website:
+                    label: Site web
+                    placeholder: URL du site web

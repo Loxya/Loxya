@@ -2,6 +2,7 @@ import { z } from '@/utils/validation';
 import requester from '@/globals/requester';
 import { UserSchema } from './users';
 import { BeneficiarySchema } from './beneficiaries';
+import { BillingCompanySchema } from './billing-companies';
 import { withPaginationEnvelope } from './@schema';
 import {
     EventExtraSchema,
@@ -80,6 +81,7 @@ export const BookingExcerptSchema = (() => z.strictObject({
     parks: z.number().array(), // - Ids des parcs liés.
     manager: z.lazy(() => UserSchema).nullable(),
     author: z.lazy(() => UserSchema).nullable(),
+    billing_company: z.lazy(() => z.nullable(BillingCompanySchema)),
     created_at: z.datetime(),
 }))();
 
@@ -111,6 +113,7 @@ export const createBookingSummarySchema = <T extends ZodRawShape>(augmentation: 
     categories: z.number().array(), // - Ids des catégories liés.
     parks: z.number().array(), // - Ids des parcs liés.
     manager: z.lazy(() => UserSchema).nullable(),
+    billing_company: z.lazy(() => z.nullable(BillingCompanySchema)),
     author: z.lazy(() => UserSchema).nullable(),
     created_at: z.datetime(),
 }).extend<T>(augmentation);
