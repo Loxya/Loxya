@@ -1,3 +1,4 @@
+import RawDateTime from '@/utils/rawDatetime';
 import DateTime from '@/utils/datetime';
 import Day from '@/utils/day';
 import Period, { PeriodPartReadableFormat, PeriodReadableFormat } from '@/utils/period';
@@ -216,6 +217,24 @@ describe('Utils / Period', () => {
             const result2 = period2.asHours(true);
             expect(result2).toBeInstanceOf(Decimal);
             expect(result2.toString()).toBe('2');
+        });
+
+        it('should handle DST transitions correctly', () => {
+            // - Sur le jour du passage à l'heure d'été.
+            const springDst = new Period(
+                new DateTime(RawDateTime.tz('2024-03-31 00:00:00', 'Europe/Paris')),
+                new DateTime(RawDateTime.tz('2024-04-01 00:00:00', 'Europe/Paris')),
+            );
+            expect(springDst.asHours()).toBe(24);
+            expect(springDst.asHours(true).toString()).toBe('24');
+
+            // - Sur le jour du passage à l'heure d'hiver.
+            const autumnDst = new Period(
+                new DateTime(RawDateTime.tz('2024-10-27 00:00:00', 'Europe/Paris')),
+                new DateTime(RawDateTime.tz('2024-10-28 00:00:00', 'Europe/Paris')),
+            );
+            expect(autumnDst.asHours()).toBe(24);
+            expect(autumnDst.asHours(true).toString()).toBe('24');
         });
     });
 
@@ -496,7 +515,7 @@ describe('Utils / Period', () => {
             const period2 = new Period('2024-01-01', '2024-01-02');
             expect(period2.toReadableParts()).toStrictEqual({
                 start: '01/01/2024 - 00:00',
-                end: '01/02/2024 - 00:00', // - Format anglais.
+                end: '02/01/2024 - 00:00',
             });
         });
 
@@ -505,14 +524,14 @@ describe('Utils / Period', () => {
             const period1 = new Period('2024-01-01', '2024-01-02', true);
             expect(period1.toReadableParts()).toStrictEqual({
                 start: '01/01/2024',
-                end: '01/02/2024', // - Format anglais.
+                end: '02/01/2024',
             });
 
             // - Période "pleine" simple sur une seule journée.
             const period2 = new Period('2024-01-01', '2024-01-01', true);
             expect(period2.toReadableParts()).toStrictEqual({
                 start: '01/01/2024',
-                end: '01/01/2024', // - Format anglais.
+                end: '01/01/2024',
             });
         });
 
@@ -524,57 +543,57 @@ describe('Utils / Period', () => {
                 end: '01/01/2024 - 12:45',
             });
             expect(period1.toReadableParts(PeriodPartReadableFormat.MEDIUM)).toStrictEqual({
-                start: 'Jan 1, 2024 - 10:12',
-                end: 'Jan 1, 2024 - 12:45',
+                start: '1 janv. 2024 - 10:12',
+                end: '1 janv. 2024 - 12:45',
             });
             expect(period1.toReadableParts(PeriodPartReadableFormat.LONG)).toStrictEqual({
-                start: 'January 1, 2024 - 10:12',
-                end: 'January 1, 2024 - 12:45',
+                start: '1 janvier 2024 - 10:12',
+                end: '1 janvier 2024 - 12:45',
             });
 
             // - Période sans heures.
             const period2 = new Period('2024-01-01', '2024-01-02');
             expect(period2.toReadableParts(PeriodPartReadableFormat.SHORT)).toStrictEqual({
                 start: '01/01/2024 - 00:00',
-                end: '01/02/2024 - 00:00', // - Format anglais.
+                end: '02/01/2024 - 00:00',
             });
             expect(period2.toReadableParts(PeriodPartReadableFormat.MEDIUM)).toStrictEqual({
-                start: 'Jan 1, 2024 - 00:00',
-                end: 'Jan 2, 2024 - 00:00',
+                start: '1 janv. 2024 - 00:00',
+                end: '2 janv. 2024 - 00:00',
             });
             expect(period2.toReadableParts(PeriodPartReadableFormat.LONG)).toStrictEqual({
-                start: 'January 1, 2024 - 00:00',
-                end: 'January 2, 2024 - 00:00',
+                start: '1 janvier 2024 - 00:00',
+                end: '2 janvier 2024 - 00:00',
             });
 
             // - Période "pleine" simples.
             const period3 = new Period('2024-01-01', '2024-01-02', true);
             expect(period3.toReadableParts(PeriodPartReadableFormat.SHORT)).toStrictEqual({
                 start: '01/01/2024',
-                end: '01/02/2024', // - Format anglais.
+                end: '02/01/2024',
             });
             expect(period3.toReadableParts(PeriodPartReadableFormat.MEDIUM)).toStrictEqual({
-                start: 'Jan 1, 2024',
-                end: 'Jan 2, 2024',
+                start: '1 janv. 2024',
+                end: '2 janv. 2024',
             });
             expect(period3.toReadableParts(PeriodPartReadableFormat.LONG)).toStrictEqual({
-                start: 'January 1, 2024',
-                end: 'January 2, 2024',
+                start: '1 janvier 2024',
+                end: '2 janvier 2024',
             });
 
             // - Période "pleine" simples sur une seule journée.
             const period4 = new Period('2024-01-01', '2024-01-01', true);
             expect(period4.toReadableParts(PeriodPartReadableFormat.SHORT)).toStrictEqual({
                 start: '01/01/2024',
-                end: '01/01/2024', // - Format anglais.
+                end: '01/01/2024',
             });
             expect(period4.toReadableParts(PeriodPartReadableFormat.MEDIUM)).toStrictEqual({
-                start: 'Jan 1, 2024',
-                end: 'Jan 1, 2024',
+                start: '1 janv. 2024',
+                end: '1 janv. 2024',
             });
             expect(period4.toReadableParts(PeriodPartReadableFormat.LONG)).toStrictEqual({
-                start: 'January 1, 2024',
-                end: 'January 1, 2024',
+                start: '1 janvier 2024',
+                end: '1 janvier 2024',
             });
         });
     });
@@ -605,7 +624,7 @@ describe('Utils / Period', () => {
                 key: 'from-date-to-date',
                 params: {
                     from: '01/01/2024 - 00:00',
-                    to: '01/02/2024 - 00:00', // - Format anglais.
+                    to: '02/01/2024 - 00:00',
                 },
             });
         });
@@ -621,7 +640,7 @@ describe('Utils / Period', () => {
                 key: 'from-date-to-date',
                 params: {
                     from: '01/01/2024',
-                    to: '01/02/2024', // - Format anglais.
+                    to: '02/01/2024',
                 },
             });
 
@@ -630,7 +649,7 @@ describe('Utils / Period', () => {
             doTest(period2, {
                 key: 'on-date',
                 params: {
-                    date: '01/01/2024', // - Format anglais.
+                    date: '01/01/2024',
                 },
             });
         });
@@ -652,15 +671,15 @@ describe('Utils / Period', () => {
             doTest(period1, PeriodReadableFormat.MEDIUM, {
                 key: 'from-date-to-date',
                 params: {
-                    from: 'Jan 1, 2024 - 10:12',
-                    to: 'Jan 1, 2024 - 12:45',
+                    from: '1 janv. 2024 - 10:12',
+                    to: '1 janv. 2024 - 12:45',
                 },
             });
             doTest(period1, PeriodReadableFormat.LONG, {
                 key: 'from-date-to-date',
                 params: {
-                    from: 'January 1, 2024 - 10:12',
-                    to: 'January 1, 2024 - 12:45',
+                    from: '1 janvier 2024 - 10:12',
+                    to: '1 janvier 2024 - 12:45',
                 },
             });
 
@@ -670,21 +689,21 @@ describe('Utils / Period', () => {
                 key: 'from-date-to-date',
                 params: {
                     from: '01/01/2024 - 00:00',
-                    to: '01/02/2024 - 00:00', // - Format anglais.
+                    to: '02/01/2024 - 00:00',
                 },
             });
             doTest(period2, PeriodReadableFormat.MEDIUM, {
                 key: 'from-date-to-date',
                 params: {
-                    from: 'Jan 1, 2024 - 00:00',
-                    to: 'Jan 2, 2024 - 00:00',
+                    from: '1 janv. 2024 - 00:00',
+                    to: '2 janv. 2024 - 00:00',
                 },
             });
             doTest(period2, PeriodReadableFormat.LONG, {
                 key: 'from-date-to-date',
                 params: {
-                    from: 'January 1, 2024 - 00:00',
-                    to: 'January 2, 2024 - 00:00',
+                    from: '1 janvier 2024 - 00:00',
+                    to: '2 janvier 2024 - 00:00',
                 },
             });
 
@@ -694,21 +713,21 @@ describe('Utils / Period', () => {
                 key: 'from-date-to-date',
                 params: {
                     from: '01/01/2024',
-                    to: '01/02/2024', // - Format anglais.
+                    to: '02/01/2024',
                 },
             });
             doTest(period3, PeriodReadableFormat.MEDIUM, {
                 key: 'from-date-to-date',
                 params: {
-                    from: 'Jan 1, 2024',
-                    to: 'Jan 2, 2024',
+                    from: '1 janv. 2024',
+                    to: '2 janv. 2024',
                 },
             });
             doTest(period3, PeriodReadableFormat.LONG, {
                 key: 'from-date-to-date',
                 params: {
-                    from: 'January 1, 2024',
-                    to: 'January 2, 2024',
+                    from: '1 janvier 2024',
+                    to: '2 janvier 2024',
                 },
             });
 
@@ -717,19 +736,19 @@ describe('Utils / Period', () => {
             doTest(period4, PeriodReadableFormat.SHORT, {
                 key: 'on-date',
                 params: {
-                    date: '01/01/2024', // - Format anglais.
+                    date: '01/01/2024',
                 },
             });
             doTest(period4, PeriodReadableFormat.MEDIUM, {
                 key: 'on-date',
                 params: {
-                    date: 'Jan 1, 2024',
+                    date: '1 janv. 2024',
                 },
             });
             doTest(period4, PeriodReadableFormat.LONG, {
                 key: 'on-date',
                 params: {
-                    date: 'January 1, 2024',
+                    date: '1 janvier 2024',
                 },
             });
         });
@@ -742,19 +761,19 @@ describe('Utils / Period', () => {
 
             // - Période simple.
             const period1 = new Period('2024-01-01 10:12:10', '2024-01-01 12:45:00');
-            doTest(period1, '1 Jan - 10:12 ⇒ 1 Jan - 12:45');
+            doTest(period1, '1 janv. - 10:12 ⇒ 1 janv. - 12:45');
 
             // - Période sans heures.
             const period2 = new Period('2024-01-01', '2024-01-02');
-            doTest(period2, '1 Jan - 00:00 ⇒ 2 Jan - 00:00');
+            doTest(period2, '1 janv. - 00:00 ⇒ 2 janv. - 00:00');
 
             // - Période "pleine" simples.
             const period3 = new Period('2024-01-01', '2024-01-02', true);
-            doTest(period3, '1 Jan ⇒ 2 Jan');
+            doTest(period3, '1 janv. ⇒ 2 janv.');
 
             // - Période "pleine" simples sur une seule journée.
             const period4 = new Period('2024-01-01', '2024-01-01', true);
-            doTest(period4, '1 Jan');
+            doTest(period4, '1 janv.');
         });
 
         it('should format period as humanely readable with "sentence" format', () => {
@@ -779,7 +798,7 @@ describe('Utils / Period', () => {
                 key: 'period-in-sentence',
                 params: {
                     from: '01/01/2024 - 00:00',
-                    to: '01/02/2024 - 00:00', // - Format anglais.
+                    to: '02/01/2024 - 00:00',
                 },
             });
 
@@ -789,7 +808,7 @@ describe('Utils / Period', () => {
                 key: 'period-in-sentence',
                 params: {
                     from: '01/01/2024',
-                    to: '01/02/2024', // - Format anglais.
+                    to: '02/01/2024',
                 },
             });
 
@@ -798,7 +817,7 @@ describe('Utils / Period', () => {
             doTest(period4, {
                 key: 'date-in-sentence',
                 params: {
-                    date: '01/01/2024', // - Format anglais.
+                    date: '01/01/2024',
                 },
             });
         });

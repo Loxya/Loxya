@@ -1,34 +1,28 @@
 import './index.scss';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
+import { DisabledKey, InvalidKey } from '@/themes/default/components/@constants';
 import stringIncludes from '@/utils/stringIncludes';
 import VueSelect from 'vue-select';
 import Button from '@/themes/default/components/Button';
 import Fragment from '@/components/Fragment';
+import { areValuesEqual } from './_utils';
 import icons from './icons';
 
-import type { PropType, ComponentRef } from 'vue';
+import type { Injected, PropType, ComponentRef } from 'vue';
 import type { DebouncedFunc } from 'lodash';
-
-export type Option = {
-    /** Le libellé qui sera affiché pour cette option. */
-    label: string,
-
-    /** La valeur de l'option. */
-    value: string | number,
-};
-
-type LooseOptions = string[] | Option[];
-type SearcherFunc = (search: string) => Promise<void> | void;
-
-/** Retourne le type de valeur des options. */
-type ValuesOf<T extends readonly unknown[], TO = T[number]> = (
-    TO extends { value: infer V } ? V
-        : TO extends string | number ? TO
-            : never
-);
+import type {
+    OptionValue,
+    LooseOptions,
+    SearcherFunc,
+    ValuesOf,
+    Options,
+    Option,
+} from './_types';
 
 type Props<
-    Options extends LooseOptions = LooseOptions,
+    ValueType extends OptionValue = OptionValue,
+    ExtraData = any,
+    InnerOptions extends LooseOptions<ValueType, ExtraData> = LooseOptions<ValueType, ExtraData>,
     IsMultiple extends boolean = boolean,
     Placeholder extends boolean | string = boolean | string,
     NullValue = (
@@ -94,6 +88,33 @@ type Props<
     searcher?: SearcherFunc | DebouncedFunc<SearcherFunc>,
 
     /**
+     * Une éventuelle fonction de rendu pour customiser l'affichage
+     * des options et/ou de la valeur sélectionnée.
+     *
+     * @param value - La valeur à rendre.
+     * @param asSelection - Indique si la valeur doit être rendue en tant que valeur
+     *                      sélectionnée du champ (`true`) ou en tant qu'option de la
+     *                      liste déroulante (`false`).
+     *
+     * @returns La valeur à rendre.
+     */
+    renderer?(value: InnerOptions[number], asSelection?: boolean): JSX.Node,
+
+    /**
+     * Permet de customiser le rendu de la zone "aucune option" qui
+     * s'affiche dans la liste déroulante quand aucun résultat n'est trouvé.
+     *
+     * Si non spécifié, un rendu par défaut sera utilisé en fonction
+     * du contexte (recherche en cours, caractères minimaux, etc.).
+     *
+     * @param currentSearch - Le texte actuellement saisi par l'utilisateur dans
+     *                        le champ de recherche.
+     *
+     * @returns La valeur à rendre ou `null` si vous souhaitez utiliser la sortie par défaut.
+     */
+    noOptionsRenderer?(currentSearch: string): JSX.Node | null,
+
+    /**
      * Peut-on ajouter une option en écrivant sa valeur dans le champ ?
      * À utiliser avec l'event `onCreate` pour récupérer la nouvelle valeur.
      *
@@ -127,8 +148,8 @@ type Props<
      */
     value: (
         IsMultiple extends true
-            ? Array<ValuesOf<Options>>
-            : ValuesOf<Options>
+            ? Array<ValuesOf<InnerOptions>>
+            : ValuesOf<InnerOptions>
     ) | NullValue,
 
     /**
@@ -138,7 +159,7 @@ type Props<
      * Voir le type {@link Option} pour plus de détails sur le format de chaque option.
      * Peut également être fourni sous la forme d'un tableau de simples chaînes de caractères.
      */
-    options: Options,
+    options: InnerOptions,
 
     /**
      * Fonction appelée lorsque la valeur du select change.
@@ -146,8 +167,8 @@ type Props<
      * @param newValue - La nouvelle valeur du select.
      */
     onInput?: IsMultiple extends true
-        ? (newValue: Array<ValuesOf<Options>> | NullValue) => void
-        : (newValue: ValuesOf<Options> | NullValue) => void,
+        ? (newValue: Array<ValuesOf<InnerOptions>> | NullValue) => void
+        : (newValue: ValuesOf<InnerOptions> | NullValue) => void,
 
     /**
      * Fonction appelée lorsque la valeur du select change.
@@ -155,8 +176,8 @@ type Props<
      * @param newValue - La nouvelle valeur du select.
      */
     onChange?: IsMultiple extends true
-        ? (newValue: Array<ValuesOf<Options>> | NullValue) => void
-        : (newValue: ValuesOf<Options> | NullValue) => void,
+        ? (newValue: Array<ValuesOf<InnerOptions>> | NullValue) => void
+        : (newValue: ValuesOf<InnerOptions> | NullValue) => void,
 
     /**
      * Fonction appelée lorsque l'utilisateur demande
@@ -177,15 +198,21 @@ type Data = {
     pendingCreation: string | null,
 };
 
-type SelectedValue = string | Option | Array<string | Option> | null;
+type SelectedValue<T extends OptionValue = OptionValue, ExtraData = any> = (
+    | string
+    | Option<T, ExtraData>
+    | Array<string | Option<T, ExtraData>>
+    | null
+);
+
+type InstanceProperties = {
+    injectedInvalid: Injected<typeof InvalidKey>,
+    injectedDisabled: Injected<typeof DisabledKey>,
+};
 
 /** Un champ de formulaire de type sélecteur. */
 const Select = defineComponent({
     name: 'Select',
-    inject: {
-        'input.invalid': { default: false },
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -219,6 +246,14 @@ const Select = defineComponent({
             type: Function as PropType<Props['searcher']>,
             default: undefined,
         },
+        renderer: {
+            type: Function as PropType<Props['renderer']>,
+            default: undefined,
+        },
+        noOptionsRenderer: {
+            type: Function as PropType<Props['noOptionsRenderer']>,
+            default: undefined,
+        },
         canCreate: {
             type: Boolean as PropType<Required<Props>['canCreate']>,
             default: false,
@@ -238,7 +273,8 @@ const Select = defineComponent({
                 }
 
                 const validateValue = (_value: unknown): boolean => (
-                    ['number', 'string'].includes(typeof _value)
+                    _value !== null && _value !== undefined &&
+                    ['number', 'string', 'object'].includes(typeof _value)
                 );
 
                 // - Mode multiple.
@@ -261,9 +297,12 @@ const Select = defineComponent({
                         return ['string', 'number'].includes(typeof option);
                     }
 
-                    return ['label', 'value'].every((field: string) => (
-                        ['string', 'number'].includes(typeof (option as any)[field])
-                    ));
+                    const { label, value } = option as Record<string, unknown>;
+                    return (
+                        typeof label === 'string' &&
+                        ['string', 'number', 'object'].includes(typeof value) &&
+                        value !== null
+                    );
                 });
             },
         },
@@ -284,6 +323,10 @@ const Select = defineComponent({
         },
     },
     emits: ['input', 'change', 'create'],
+    setup: (): InstanceProperties => ({
+        injectedInvalid: inject(InvalidKey, computed(() => false)),
+        injectedDisabled: inject(DisabledKey, computed(() => false)),
+    }),
     data: (): Data => ({
         pendingCreation: null,
     }),
@@ -300,7 +343,7 @@ const Select = defineComponent({
                 : placeholder;
         },
 
-        filteredOptions(): string[] | Option[] {
+        filteredOptions(): string[] | Options {
             const { options, value } = this;
 
             if (value === null || !this.multiple) {
@@ -309,34 +352,25 @@ const Select = defineComponent({
 
             // Note: Si c'est une sélection multiple, on ne repropose
             //       pas les options déjà sélectionnées.
-            return options.filter((option: string | number | Option) => {
-                const stringifiedOption = (typeof option === 'object' ? option.value : option).toString();
-                return (!Array.isArray(value) ? [value] : value).every(
-                    (_value: string | number): boolean => (
-                        stringifiedOption !== _value.toString()
-                    ),
-                );
-            }) as string[] | Option[];
+            return options.filter((option: string | Option) => {
+                const optionValue = typeof option === 'object' ? option.value : option;
+                const values: OptionValue[] = !Array.isArray(value) ? [value] : value;
+                return values.every((_value) => !areValuesEqual(optionValue, _value));
+            }) as string[] | Options;
         },
 
         inheritedInvalid(): boolean {
             if (this.invalid !== undefined) {
                 return this.invalid;
             }
-
-            // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'];
+            return this.injectedInvalid;
         },
 
         inheritedDisabled(): boolean {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
 
         selected(): SelectedValue {
@@ -347,31 +381,47 @@ const Select = defineComponent({
             }
 
             if (this.multiple) {
-                return (!Array.isArray(value) ? [value] : value).reduce(
-                    (selection: Array<string | Option>, _value: string | number) => {
-                        const stringifiedValue = _value.toString();
+                const values: OptionValue[] = !Array.isArray(value) ? [value] : value;
+                return values.reduce(
+                    (selection: Array<string | Option>, _value: OptionValue) => {
                         const option = options.find((_option: string | Option) => {
                             const rawOption = typeof _option === 'object' ? _option.value : _option;
-                            return rawOption.toString() === stringifiedValue;
+                            return areValuesEqual(rawOption, _value);
                         });
-                        return option !== undefined ? selection.concat(option) : selection;
+                        return option !== undefined ? [...selection, option] : selection;
                     },
                     [],
                 );
             }
 
-            return options.find((option: string | number | Option) => {
-                option = typeof option === 'object' && option !== null
+            return options.find((option: string | Option) => {
+                const optionValue = typeof option === 'object' && option !== null
                     ? option.value
                     : option;
 
-                return value.toString() === option.toString();
+                return areValuesEqual(value as OptionValue, optionValue);
             }) ?? null;
         },
 
         clearable() {
             return this.placeholder !== false;
         },
+    },
+    created() {
+        if (this.name !== undefined) {
+            const { value, options } = this;
+
+            const hasObjectValue = value !== null && (
+                (!Array.isArray(value) && typeof value === 'object') ||
+                (Array.isArray(value) && value.some((_value: unknown) => typeof _value === 'object'))
+            );
+            const hasObjectOption = options.some((option: string | Option) => (
+                typeof option === 'object' && typeof option.value === 'object'
+            ));
+            if (hasObjectValue || hasObjectOption) {
+                throw new Error('<Select>: Object values are not compatible with hidden input serialization.');
+            }
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -422,7 +472,7 @@ const Select = defineComponent({
                 }
             }
 
-            let selection: string | number | Array<string | number> | null = null;
+            let selection: OptionValue | OptionValue[] | null = null;
             if (this.multiple) {
                 if (selected === null) {
                     selected = [];
@@ -432,7 +482,7 @@ const Select = defineComponent({
                     selected = [selected];
                 }
 
-                selection = selected.map((item: string | number | Option) => (
+                selection = selected.map((item: string | Option) => (
                     typeof item === 'object' ? item.value : item
                 ));
             } else if (selected === null) {
@@ -447,7 +497,7 @@ const Select = defineComponent({
             this.$emit('change', selection);
         },
 
-        handleOptionCreating(input: any): string | number | Option | undefined {
+        handleOptionCreating(input: any): string | Option | undefined {
             if (!this.canCreate || typeof input !== 'string') {
                 this.pendingCreation = null;
                 return undefined;
@@ -455,7 +505,7 @@ const Select = defineComponent({
 
             // - Si la valeur recherchée correspond parfaitement à un autre
             //   option, on ne propose pas de création mais l'option existante.
-            const existingOption = this.options.find((option: string | number | Option) => {
+            const existingOption = this.options.find((option: string | Option) => {
                 option = typeof option === 'object' ? option.label : option;
                 return input.toLocaleLowerCase() === option.toString().toLocaleLowerCase();
             });
@@ -500,12 +550,30 @@ const Select = defineComponent({
             return stringIncludes(label, search);
         },
 
+        isOptionSelectable(option: string | Option): boolean {
+            return typeof option !== 'object' || !option.disabled;
+        },
+
         __(key: string, params?: Record<string, number | string>, count?: number): string {
             key = !key.startsWith('global.')
                 ? `components.Select.${key}`
                 : key.replace(/^global\./, '');
 
             return this.$t(key, params, count);
+        },
+
+        // ------------------------------------------------------
+        // -
+        // -    API Publique
+        // -
+        // ------------------------------------------------------
+
+        /**
+         * Permet de donner le focus au champ de recherche du sélecteur.
+         */
+        focus() {
+            const $input = this.$refs.input as ComponentRef<typeof VueSelect> | undefined;
+            $input?.searchEl?.focus();
         },
     },
     render() {
@@ -522,10 +590,13 @@ const Select = defineComponent({
             inheritedDisabled: disabled,
             highlight,
             clearable,
+            renderer,
             autocomplete,
+            isOptionSelectable,
             isOptionMatchingSearch,
             dropdownShouldOpen,
             formattedPlaceholder,
+            noOptionsRenderer,
             canCreate,
             handleInput,
             handleSearch,
@@ -542,7 +613,7 @@ const Select = defineComponent({
                 return (
                     <Fragment>
                         <input type="hidden" name={name} value="" />
-                        {value.map((_value: Option['value']) => (
+                        {(value as Array<string | number>).map((_value: string | number) => (
                             <input
                                 key={_value}
                                 type="hidden"
@@ -565,6 +636,7 @@ const Select = defineComponent({
         return (
             <div class={className}>
                 <VueSelect
+                    ref="input"
                     class="Select__input"
                     disabled={disabled}
                     clearable={clearable}
@@ -581,21 +653,69 @@ const Select = defineComponent({
                     createOption={handleOptionCreating}
                     dropdownShouldOpen={dropdownShouldOpen}
                     filterBy={isOptionMatchingSearch}
+                    selectable={isOptionSelectable}
                     onSearch={handleSearch}
                     onInput={handleInput}
                     scopedSlots={{
-                        'no-options': ({ searching, search }: { search: string, searching: boolean }) => {
-                            if (hasCustomSearcher) {
-                                if (search.length === 0) {
-                                    return __('global.start-typing-to-search');
-                                }
+                        'selected-option': (option: Option | { label: Option['value'] }) => {
+                            // - Récupère l'option d'origine, voir le code ci-dessous.
+                            //   https://github.com/sagalbot/vue-select/blob/v3.20.4/src/components/Select.vue#L1231
+                            const originalOption: Option | OptionValue = (
+                                Object.keys(option).length > 1 || !('label' in option)
+                                    ? option as Option
+                                    : option.label
+                            );
+                            return renderer?.(originalOption as any, true) ?? option.label;
+                        },
+                        'option': (option: Option | { label: Option['value'] }) => {
+                            if (
+                                this.pendingCreation !== null &&
+                                this.pendingCreation === option.label
+                            ) {
+                                return (
+                                    <span class="Select__option Select__option--new">
+                                        {(
+                                            createLabel !== undefined
+                                                ? (typeof createLabel === 'function' ? createLabel(option.label) : createLabel)
+                                                : __('create-label', { label: option.label })
+                                        )}
+                                    </span>
+                                );
+                            }
 
-                                if (search.length > 0 && search.length < MIN_CUSTOM_SEARCHER_CHARS) {
-                                    return __(
-                                        'global.type-at-least-count-chars-to-search',
-                                        { count: MIN_CUSTOM_SEARCHER_CHARS - search.length },
-                                        MIN_CUSTOM_SEARCHER_CHARS - search.length,
-                                    );
+                            // - Récupère l'option d'origine, voir le code ci-dessous.
+                            //   https://github.com/sagalbot/vue-select/blob/v3.20.4/src/components/Select.vue#L1231
+                            const originalOption: Option | OptionValue = (
+                                Object.keys(option).length > 1 || !('label' in option)
+                                    ? option as Option
+                                    : option.label
+                            );
+
+                            return (
+                                <span class="Select__option">
+                                    {renderer?.(originalOption as any, false) ?? option.label}
+                                </span>
+                            );
+                        },
+                        'no-options': ({ search: currentSearch }: { search: string }) => {
+                            if (hasCustomSearcher && currentSearch.length > 0 && currentSearch.length < MIN_CUSTOM_SEARCHER_CHARS) {
+                                return __(
+                                    'global.type-at-least-count-chars-to-search',
+                                    { count: MIN_CUSTOM_SEARCHER_CHARS - currentSearch.length },
+                                    MIN_CUSTOM_SEARCHER_CHARS - currentSearch.length,
+                                );
+                            }
+
+                            if (noOptionsRenderer !== undefined) {
+                                const result = noOptionsRenderer(currentSearch);
+                                if (result !== null) {
+                                    return result;
+                                }
+                            }
+
+                            if (hasCustomSearcher) {
+                                if (currentSearch.length <= 0) {
+                                    return __('global.start-typing-to-search');
                                 }
 
                                 if (!canCreate) {
@@ -611,44 +731,23 @@ const Select = defineComponent({
                                             type="add"
                                             size="small"
                                             class="Select__no-results__create-action"
-                                            onClick={() => { handleOptionCreate(search); }}
+                                            onClick={() => { handleOptionCreate(currentSearch); }}
                                         >
                                             {(
                                                 createLabel !== undefined
-                                                    ? (typeof createLabel === 'function' ? createLabel(search) : createLabel)
-                                                    : __('create-label', { label: search })
+                                                    ? (typeof createLabel === 'function' ? createLabel(currentSearch) : createLabel)
+                                                    : __('create-label', { label: currentSearch })
                                             )}
                                         </Button>
                                     </div>
                                 );
                             }
 
-                            if (!searching || options.length === 0) {
+                            if (currentSearch.length === 0 || options.length === 0) {
                                 return __('no-options');
                             }
-                            return __('no-matching-result');
-                        },
-                        'option': ({ label }: Option) => {
-                            if (
-                                this.pendingCreation !== null &&
-                                this.pendingCreation === label
-                            ) {
-                                return (
-                                    <span class="Select__option Select__option--new">
-                                        {(
-                                            createLabel !== undefined
-                                                ? (typeof createLabel === 'function' ? createLabel(label) : createLabel)
-                                                : __('create-label', { label })
-                                        )}
-                                    </span>
-                                );
-                            }
 
-                            return (
-                                <span class="Select__option">
-                                    {label}
-                                </span>
-                            );
+                            return __('no-matching-result');
                         },
                     }}
                     clearSearchOnSelect
@@ -664,11 +763,15 @@ const Select = defineComponent({
 // - Exports
 //
 
+export type { Options, Option } from './_types';
+
 type SelectGeneric = <
-    Options extends LooseOptions,
+    ValueType extends OptionValue,
+    ExtraData,
+    InnerOptions extends LooseOptions<ValueType, ExtraData>,
     IsMultiple extends boolean = false,
     Placeholder extends boolean | string = true,
->(props: Props<Options, IsMultiple, Placeholder>) => JSX.Element;
+>(props: Props<ValueType, ExtraData, InnerOptions, IsMultiple, Placeholder>) => JSX.Element;
 
 export type SelectRef = ComponentRef<typeof Select>;
 export default Select as any as SelectGeneric;

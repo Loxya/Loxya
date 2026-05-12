@@ -62,3 +62,5 @@ listing:
     overdue-since: Overdue since {duration}
     initially-planned-period: Initially {period}
     late-return-on: Returned on {date} ({duration} late)
+
+    empty: No event planned at the moment.

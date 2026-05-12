@@ -44,7 +44,7 @@ final class OpeningHour extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkWeekDay($value)
+    public function checkWeekDay(mixed $value)
     {
         return V::create()
             ->intVal()
@@ -52,7 +52,7 @@ final class OpeningHour extends BaseModel implements Serializable
             ->validate($value);
     }
 
-    public function checkStartTime($value)
+    public function checkStartTime(mixed $value)
     {
         $timeChecker = V::anyOf(V::time('H:i:s'), V::equals('24:00:00'));
         if (!$timeChecker->validate($value)) {
@@ -96,7 +96,7 @@ final class OpeningHour extends BaseModel implements Serializable
         return !$hasConflict ?: 'period-conflict-with-existing-one';
     }
 
-    public function checkEndTime($value)
+    public function checkEndTime(mixed $value)
     {
         $timeChecker = V::anyOf(V::time('H:i:s'), V::equals('24:00:00'));
         if (!$timeChecker->validate($value)) {

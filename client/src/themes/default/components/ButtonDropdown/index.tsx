@@ -2,11 +2,19 @@ import './index.scss';
 import invariant from 'invariant';
 import { defineComponent } from 'vue';
 import ClickOutside from 'vue-click-outside';
+import { MountingPortal as Portal } from 'portal-vue';
+import {
+    offset,
+    autoUpdate,
+    autoPlacement,
+    computePosition,
+} from '@floating-ui/dom';
 import Icon from '@/themes/default/components/Icon';
-import Button from '@/themes/default/components/Button';
+import Button, { TYPES } from '@/themes/default/components/Button';
+import Transition from './components/Transition';
 
 import type { PropType } from 'vue';
-import type { Location } from 'vue-router';
+import type { RawLocation } from 'vue-router';
 import type { Type } from '@/themes/default/components/Button';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
@@ -24,7 +32,7 @@ type Action = {
      * Si non définie, un élément HTML `<button>` sera utilisé et
      * vous devriez écouter l'événement `onClick` pour réagir au click.
      */
-    target?: string | Location,
+    target?: RawLocation,
 
     /**
      * Si l'action secondaire est un lien, permet d'indiquer que c'est un lien externe.
@@ -64,9 +72,7 @@ type Action = {
     secondary?: Action,
 
     /**
-     * Fonction à utiliser lors d'un clic sur le bouton d'action secondaire.
-     *
-     * N'est utile que quand l'action secondaire n'est pas un lien.
+     * Fonction appelée lors d'un clic sur le bouton d'action secondaire.
      *
      * @param event - L'événement d'origine.
      */
@@ -74,6 +80,15 @@ type Action = {
 };
 
 type Props = {
+    /**
+     * Le type (= variante) du bouton dropdown.
+     *
+     * Voir {@link TYPES} pour les types acceptés.
+     *
+     * @default 'default'
+     */
+    type?: Type,
+
     /** Le contenu à afficher dans le bouton principal. */
     label: string,
 
@@ -84,7 +99,7 @@ type Props = {
      * Si non définie, un élément HTML `<button>` sera utilisé et
      * vous devriez écouter l'événement `onClick` pour réagir au click.
      */
-    to?: string | Location,
+    to?: RawLocation,
 
     /**
      * Si le bouton principal est un lien, permet d'indiquer que c'est un lien externe.
@@ -137,8 +152,13 @@ type Props = {
     actions: Action[],
 };
 
+type InstanceProperties = {
+    cancelMenuPositionUpdater: (() => void) | undefined,
+};
+
 type Data = {
     isOpen: boolean,
+    menuPosition: Position,
 };
 
 /**
@@ -158,6 +178,14 @@ const ButtonDropdown = defineComponent({
     name: 'ButtonDropdown',
     directives: { ClickOutside },
     props: {
+        type: {
+            type: String as PropType<Required<Props>['type']>,
+            default: 'default',
+            validator: (value: unknown) => (
+                typeof value === 'string' &&
+                TYPES.includes(value as any)
+            ),
+        },
         label: {
             type: String as PropType<Props['label']>,
             required: true,
@@ -190,7 +218,7 @@ const ButtonDropdown = defineComponent({
             ),
         },
     },
-    setup(props) {
+    setup(props): InstanceProperties {
         invariant(
             !props.download || !props.external,
             'The `external` prop. must not be set when the `download` prop. is true.',
@@ -199,10 +227,20 @@ const ButtonDropdown = defineComponent({
             (!props.download && !props.external) || typeof props.to === 'string',
             'The `to` props. must be a string when the props `download` or `external` are used.',
         );
-        return {};
+        props.actions.forEach((action: Action) => {
+            invariant(
+                !action.external || typeof action.target === 'string',
+                `The action's \`target\` prop. must be a string when the prop. \`external\` is used.`,
+            );
+        });
+
+        return {
+            cancelMenuPositionUpdater: undefined,
+        };
     },
     data: (): Data => ({
         isOpen: false,
+        menuPosition: { x: 0, y: 0 },
     }),
     computed: {
         inheritedExternal(): boolean | undefined {
@@ -213,6 +251,15 @@ const ButtonDropdown = defineComponent({
             return this.external ?? false;
         },
     },
+    mounted() {
+        this.registerMenuPositionUpdater();
+    },
+    updated() {
+        this.registerMenuPositionUpdater();
+    },
+    beforeDestroy() {
+        this.cleanupMenuPositionUpdater();
+    },
     methods: {
         // ------------------------------------------------------
         // -
@@ -220,33 +267,107 @@ const ButtonDropdown = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleClose() {
-            this.isOpen = false;
-        },
-
-        handleToggle() {
-            this.isOpen = !this.isOpen;
-        },
-
-        handleClick() {
+        handleClickMain() {
             if (this.disabled) {
                 return;
             }
             this.isOpen = false;
+        },
+
+        handleToggle() {
+            if (this.disabled) {
+                return;
+            }
+            this.isOpen = !this.isOpen;
+        },
+
+        handleClickOutside(e: Event) {
+            // - Si c'est un click dans le dropdown, on ne fait rien.
+            const $menu = this.$refs.menu as HTMLElement | undefined;
+            if (e.target !== null && $menu?.contains(e.target as Node)) {
+                return;
+            }
+            this.isOpen = false;
+        },
+
+        handleClickMenu() {
+            this.isOpen = false;
+        },
+
+        // ------------------------------------------------------
+        // -
+        // -    Méthodes internes
+        // -
+        // ------------------------------------------------------
+
+        async updateMenuPosition(): Promise<void> {
+            const $button = this.$refs.button as HTMLElement | undefined;
+            const $menu = this.$refs.menu as HTMLElement | undefined;
+
+            if (!this.isOpen || !$button || !$menu) {
+                return;
+            }
+
+            const oldPosition = { ...this.menuPosition };
+            const newPosition = await computePosition($button, $menu, {
+                placement: 'bottom-end',
+                middleware: [
+                    autoPlacement({
+                        alignment: 'end',
+                        allowedPlacements: [
+                            'bottom-start',
+                            'bottom-end',
+                            'top-start',
+                            'top-end',
+                        ],
+                    }),
+                    offset(6),
+                ],
+            });
+
+            if (newPosition.x === oldPosition.x && newPosition.y === oldPosition.y) {
+                return;
+            }
+
+            this.menuPosition = { x: newPosition.x, y: newPosition.y };
+        },
+
+        cleanupMenuPositionUpdater() {
+            if (typeof this.cancelMenuPositionUpdater === 'function') {
+                this.cancelMenuPositionUpdater();
+                this.cancelMenuPositionUpdater = undefined;
+            }
+        },
+
+        registerMenuPositionUpdater() {
+            this.cleanupMenuPositionUpdater();
+
+            const $button = this.$refs.button as HTMLElement | undefined;
+            const $menu = this.$refs.menu as HTMLElement | undefined;
+            if ($button && $menu) {
+                this.cancelMenuPositionUpdater = autoUpdate(
+                    $button,
+                    $menu,
+                    this.updateMenuPosition.bind(this),
+                );
+            }
         },
     },
     render() {
         const {
             isOpen,
             disabled,
-            handleClose,
+            menuPosition,
             icon,
+            type,
             label,
             to,
             inheritedExternal,
             download,
-            handleClick,
             handleToggle,
+            handleClickMain,
+            handleClickOutside,
+            handleClickMenu,
             actions,
         } = this;
 
@@ -255,62 +376,78 @@ const ButtonDropdown = defineComponent({
         }];
 
         return (
-            <div class={classNames} v-clickOutside={handleClose}>
-                <Button
-                    to={to}
-                    icon={icon}
-                    external={inheritedExternal}
-                    download={download}
-                    onClick={handleClick}
-                    disabled={disabled}
-                    class="ButtonDropdown__main-button"
-                >
-                    {label}
-                </Button>
-                <Button
-                    onClick={handleToggle}
-                    class="ButtonDropdown__toggle"
-                    disabled={disabled}
-                >
-                    <Icon name="ellipsis-h" />
-                </Button>
-                <ul class="ButtonDropdown__menu">
-                    {actions.map((action: Action) => (
-                        <li class="ButtonDropdown__menu__item" key={action.label}>
-                            <Button
-                                type={action.type}
-                                to={action.target}
-                                icon={action.icon}
-                                download={action.download}
-                                external={action.external}
-                                onClick={action.onClick ?? (() => {})}
-                                disabled={disabled}
-                                class={[
-                                    'ButtonDropdown__action-button',
-                                    { 'ButtonDropdown__action-button--primary': !!action.secondary },
-                                ]}
-                            >
-                                {action.label}
-                            </Button>
-                            {!!action.secondary && (
-                                <Button
-                                    class={[
-                                        'ButtonDropdown__action-button',
-                                        'ButtonDropdown__action-button--secondary',
-                                    ]}
-                                    type={action.secondary.type}
-                                    to={action.secondary.target}
-                                    icon={action.secondary.icon}
-                                    download={action.secondary.download}
-                                    external={action.secondary.external}
-                                    onClick={action.secondary.onClick ?? (() => {})}
-                                    tooltip={action.secondary.label}
-                                    disabled={disabled}
-                                />
-                            )}
-                        </li>
-                    ))}
-                </ul>
+            <div class={classNames} v-clickOutside={handleClickOutside}>
+                <div ref="button" class="ButtonDropdown__button">
+                    <Button
+                        to={to}
+                        icon={icon}
+                        type={type}
+                        external={inheritedExternal}
+                        download={download}
+                        onClick={handleClickMain}
+                        disabled={disabled}
+                        class="ButtonDropdown__button__main"
+                    >
+                        {label}
+                    </Button>
+                    <Button
+                        type={type}
+                        onClick={handleToggle}
+                        class="ButtonDropdown__button__toggle"
+                        disabled={disabled}
+                    >
+                        <Icon name="ellipsis-h" />
+                    </Button>
+                </div>
+                {isOpen && (
+                    <Portal mountTo="#app" transition={Transition} append>
+                        <ul
+                            ref="menu"
+                            class="ButtonDropdown__menu"
+                            onClick={handleClickMenu}
+                            style={{
+                                left: `${menuPosition.x}px`,
+                                top: `${menuPosition.y}px`,
+                            }}
+                        >
+                            {actions.map((action: Action) => (
+                                <li class="ButtonDropdown__menu__item" key={action.label}>
+                                    <Button
+                                        type={action.type}
+                                        to={action.target}
+                                        icon={action.icon}
+                                        download={action.download}
+                                        external={action.external}
+                                        onClick={action.onClick ?? (() => {})}
+                                        disabled={disabled}
+                                        class={[
+                                            'ButtonDropdown__action-button',
+                                            { 'ButtonDropdown__action-button--primary': !!action.secondary },
+                                        ]}
+                                    >
+                                        {action.label}
+                                    </Button>
+                                    {!!action.secondary && (
+                                        <Button
+                                            class={[
+                                                'ButtonDropdown__action-button',
+                                                'ButtonDropdown__action-button--secondary',
+                                            ]}
+                                            type={action.secondary.type}
+                                            to={action.secondary.target}
+                                            icon={action.secondary.icon}
+                                            download={action.secondary.download}
+                                            external={action.secondary.external}
+                                            onClick={action.secondary.onClick ?? (() => {})}
+                                            tooltip={action.secondary.label}
+                                            disabled={disabled}
+                                        />
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </Portal>
+                )}
             </div>
         );
     },

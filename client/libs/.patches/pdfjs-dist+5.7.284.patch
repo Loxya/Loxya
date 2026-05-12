@@ -1,0 +1,23 @@
+diff --git a/node_modules/pdfjs-dist/package.json b/node_modules/pdfjs-dist/package.json
+index f4ecd04..46b95ec 100644
+--- a/node_modules/pdfjs-dist/package.json
++++ b/node_modules/pdfjs-dist/package.json
+@@ -3,6 +3,18 @@
+   "version": "5.7.284",
+   "main": "build/pdf.mjs",
+   "types": "types/src/pdf.d.ts",
++  "exports": {
++    ".": {
++      "default": "./build/pdf.mjs",
++      "types": "./types/src/pdf.d.ts"
++    },
++    "./worker": "./build/pdf.worker.mjs",
++    "./legacy": {
++      "default": "./legacy/build/pdf.mjs",
++      "types": "./legacy/build/pdf.d.mts"
++    },
++    "./legacy/worker": "./legacy/build/pdf.worker.mjs"
++  },
+   "description": "Generic build of Mozilla's PDF.js library.",
+   "keywords": [
+     "Mozilla",

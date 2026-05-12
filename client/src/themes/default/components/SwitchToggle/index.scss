@@ -55,15 +55,11 @@ $size: 1.7rem;
     &:focus,
     &:focus-visible {
         outline: none;
-
-        #{$block}__slide {
-            background-color: globals.$input-focus-background-color;
-        }
     }
 
     &:hover {
         #{$block}__slide {
-            background-color: color.adjust(globals.$bg-color-emphasis, $lightness: 3%);
+            background-color: color.adjust(globals.$bg-color-emphasis, $lightness: 1%);
 
             &__button {
                 background-color: color.adjust(globals.$interactive-element-default-background-color, $lightness: 8%);
@@ -88,12 +84,12 @@ $size: 1.7rem;
 
     &--highlight {
         #{$block}__slide__button {
-            background-color: globals.$interactive-element-success-background-color;
+            background-color: globals.$interactive-element-primary-background-color;
         }
 
         &:hover {
             #{$block}__slide__button {
-                background-color: color.adjust(globals.$interactive-element-success-background-color, $lightness: 5%);
+                background-color: color.adjust(globals.$interactive-element-primary-background-color, $lightness: 5%);
             }
         }
     }
@@ -125,7 +121,7 @@ $size: 1.7rem;
 
         &#{$block}--highlight {
             #{$block}__slide__button {
-                background-color: globals.$interactive-element-success-background-color;
+                background-color: globals.$interactive-element-primary-background-color;
             }
         }
     }

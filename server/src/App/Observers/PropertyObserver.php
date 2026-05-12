@@ -13,7 +13,7 @@ use Loxya\Support\Str;
 
 final class PropertyObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function updated(Property $property): void
     {
@@ -102,7 +102,7 @@ final class PropertyObserver
             }
 
             $doUpdate(static fn (array $value) => (
-                Period::tryFrom($value)->setFullDays($property->full_days)
+                Period::tryFrom($value)?->setFullDays($property->full_days)
             ));
             return;
         }

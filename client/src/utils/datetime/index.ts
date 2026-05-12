@@ -1,3 +1,4 @@
+import Day from '@/utils/day';
 import invariant from 'invariant';
 import RawDateTime, { isRawDateTime } from '@/utils/rawDatetime';
 import {
@@ -38,7 +39,7 @@ export type InclusionPattern = '()' | '[]' | '[)' | '(]';
 
 /** Une date et heure (e.g. `2024-01-01 14:30:24`) */
 class DateTime {
-    private _rawDateTime: RawDateTimeInstance;
+    private readonly _rawDateTime: RawDateTimeInstance;
 
     constructor(input?: DateTimeInput | RawDateTimeInstance) {
         let rawDateTime: RawDateTimeInstance | undefined;
@@ -1614,6 +1615,15 @@ class DateTime {
      */
     public toDate(): Date {
         return this._rawDateTime.toDate();
+    }
+
+    /**
+     * Retourne l'instance sous forme d'instance de `Day`.
+     *
+     * @returns Une instance de `Day` équivalente à la présente instance.
+     */
+    public toDay(): Day {
+        return new Day(this);
     }
 
     /**

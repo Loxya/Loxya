@@ -12,7 +12,6 @@ use Loxya\Models\Event;
 use Loxya\Models\Material;
 use Loxya\Support\Arr;
 use Loxya\Support\File\UploadedFile;
-use Loxya\Support\Period;
 
 final class MaterialsTest extends ApiTestCase
 {
@@ -36,6 +35,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '19400.00',
+                'weight' => '24.500',
+                'origin_country' => 'CH',
                 'is_hidden_on_bill' => false,
                 'is_discountable' => false,
                 'is_deleted' => false,
@@ -75,6 +76,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '349.90',
+                'weight' => '6.400',
+                'origin_country' => 'CH',
                 'is_hidden_on_bill' => false,
                 'is_discountable' => true,
                 'is_deleted' => false,
@@ -111,6 +114,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '89.00',
+                'weight' => '1.200',
+                'origin_country' => 'FR',
                 'is_hidden_on_bill' => false,
                 'is_discountable' => true,
                 'is_deleted' => false,
@@ -147,6 +152,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '59.00',
+                'weight' => '3.000',
+                'origin_country' => 'BE',
                 'is_hidden_on_bill' => false,
                 'is_discountable' => true,
                 'is_deleted' => false,
@@ -184,6 +191,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '9.50',
+                'weight' => '0.350',
+                'origin_country' => 'FR',
                 'is_hidden_on_bill' => true,
                 'is_discountable' => true,
                 'is_deleted' => false,
@@ -211,6 +220,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '419.00',
+                'weight' => '4.800',
+                'origin_country' => 'FR',
                 'is_hidden_on_bill' => false,
                 'is_discountable' => false,
                 'is_deleted' => false,
@@ -245,6 +256,8 @@ final class MaterialsTest extends ApiTestCase
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '32000.00',
+                'weight' => null,
+                'origin_country' => null,
                 'is_hidden_on_bill' => false,
                 'is_discountable' => false,
                 'is_deleted' => false,
@@ -269,13 +282,15 @@ final class MaterialsTest extends ApiTestCase
                 'sub_category_id' => null,
                 'rental_price' => '1500.00',
                 'degressive_rate_id' => 3,
-                'tax_id' => 4,
+                'tax_id' => 1,
                 'stock_quantity' => 2,
                 'out_of_order_quantity' => 0,
                 'available_quantity' => 2,
                 'departure_inventory_todo' => null,
                 'return_inventory_todo' => null,
                 'replacement_price' => '8500.00',
+                'weight' => null,
+                'origin_country' => 'FR',
                 'is_hidden_on_bill' => false,
                 'is_discountable' => true,
                 'is_deleted' => false,
@@ -600,7 +615,6 @@ final class MaterialsTest extends ApiTestCase
             'name' => 'Console numérique Yamaha 01V96 V2',
             'reference' => '01V96-v2',
             'park_id' => 1,
-            'park_location_id' => 3,
             'category_id' => 1,
             'sub_category_id' => 1,
             'rental_price' => '180.00',
@@ -614,14 +628,13 @@ final class MaterialsTest extends ApiTestCase
                 ['id' => 3, 'value' => '1000'],
                 ['id' => 4, 'value' => 'ok'],
                 ['id' => 5, 'value' => '2025-10-21'],
-                ['id' => 7, 'value' => new Period('2025-10-21', '2025-10-22', true)],
+                ['id' => 6, 'value' => 20.2],
             ],
         ]);
         $this->assertApiValidationError([
             'properties' => [
                 0 => ['value' => 'This field must contain a decimal number.'],
                 3 => ['value' => 'This field should be a boolean.'],
-                5 => ['value' => 'This field is invalid.'],
             ],
         ]);
 
@@ -634,6 +647,8 @@ final class MaterialsTest extends ApiTestCase
             'sub_category_id' => 1,
             'rental_price' => '100.00',
             'replacement_price' => '357.00',
+            'weight' => '26.8',
+            'origin_country' => 'FR',
             'stock_quantity' => 1,
             'tags' => [2, 1],
         ]);
@@ -649,6 +664,8 @@ final class MaterialsTest extends ApiTestCase
             'degressive_rate_id' => null,
             'tax_id' => null,
             'replacement_price' => '357.00',
+            'weight' => '26.800',
+            'origin_country' => 'FR',
             'stock_quantity' => 1,
             'out_of_order_quantity' => 0,
             'available_quantity' => 1,
@@ -680,6 +697,8 @@ final class MaterialsTest extends ApiTestCase
             'tax_id' => 1,
             'replacement_price' => '2000.00',
             'stock_quantity' => 2,
+            'weight' => '34.2',
+            'origin_country' => 'FR',
             'properties' => [
                 ['id' => 1, 'value' => 12.5],
                 ['id' => 3, 'value' => 60],
@@ -696,6 +715,8 @@ final class MaterialsTest extends ApiTestCase
             'sub_category_id' => 1,
             'rental_price' => '180.00',
             'replacement_price' => '2000.00',
+            'weight' => '34.200',
+            'origin_country' => 'FR',
             'degressive_rate_id' => 3,
             'tax_id' => 1,
             'stock_quantity' => 2,

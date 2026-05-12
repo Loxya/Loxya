@@ -12,17 +12,18 @@ export type UnsyncedDataValue<T> = {
     current: T,
 };
 
+/* eslint-disable @typescript-eslint/naming-convention */
 type UnsyncedDataSimple = {
     name: ReturnType<typeof getNameUnsyncedData>,
     reference: ReturnType<typeof getReferenceUnsyncedData>,
+    unit_replacement_price: ReturnType<typeof getUnitReplacementPriceUnsyncedData>,
 };
 
 type UnsyncedDataBilling = {
-    /* eslint-disable @typescript-eslint/naming-convention */
     unit_price: ReturnType<typeof getUnitPriceUnsyncedData>,
     degressive_rate: ReturnType<typeof getDegressiveRateUnsyncedData>,
-    /* eslint-enable @typescript-eslint/naming-convention */
 };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export type UnsyncedData<WithBilling extends boolean = boolean> = WithBilling extends true
     ? (UnsyncedDataSimple & UnsyncedDataBilling)
@@ -127,6 +128,26 @@ const getUnitPriceUnsyncedData = (material: SourceMaterial): UnsyncedDataValue<{
     };
 };
 
+const getUnitReplacementPriceUnsyncedData = (material: SourceMaterial): UnsyncedDataValue<Decimal | null> => {
+    const base = material.replacement_price;
+    const override = material.overrides?.replacement_price ?? null;
+
+    // - Si l'override et la base sont `null`, alors ce n'est pas unsynced.
+    //   Si l'override est non `null`, alors c'est unsynced quand la base est
+    //   nulle ou qu'elle est différente de l'override.
+    const isUnsynced = override !== null
+        ? base === null || !base.equals(override)
+        : base !== null;
+
+    return {
+        base,
+        override,
+        isUnsynced,
+        isResyncable: isUnsynced,
+        current: override,
+    };
+};
+
 const getUnsyncedData = <T extends boolean>(material: SourceMaterial, withBilling: T): UnsyncedData<T> => {
     const name = getNameUnsyncedData(material);
     const reference = getReferenceUnsyncedData(material);
@@ -139,6 +160,7 @@ const getUnsyncedData = <T extends boolean>(material: SourceMaterial, withBillin
         name,
         reference,
         unit_price: getUnitPriceUnsyncedData(material),
+        unit_replacement_price: getUnitReplacementPriceUnsyncedData(material),
         degressive_rate: getDegressiveRateUnsyncedData(material),
     } as UnsyncedData<T>;
 };

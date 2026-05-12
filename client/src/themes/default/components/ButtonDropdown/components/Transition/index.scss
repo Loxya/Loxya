@@ -1,0 +1,15 @@
+.ButtonDropdownTransition {
+    &--enter-active {
+        opacity: 1;
+        transform: none;
+        transition:
+            transform 200ms ease-in-out,
+            opacity 200ms ease;
+    }
+
+    &--enter {
+        transform-origin: 50% 0%;
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+}

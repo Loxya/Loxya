@@ -1,15 +1,18 @@
 import core from 'zod';
 import { markRaw } from 'vue';
 import Decimal from 'decimal.js';
+import invariant from 'invariant';
 import Color from '@/utils/color';
 import Period, { SerializedPeriodSchema } from '@/utils/period';
 import DateTime from '@/utils/datetime';
 import Currency from '@/utils/currency';
+import Country from '@/utils/country';
+import Phone from '@/utils/phone';
 import Day from '@/utils/day';
 
 import type { Raw } from 'vue';
-import type { RefinementCtx } from 'zod';
 import type { SerializedPeriod } from '@/utils/period';
+import type { AnyZodObject, RefinementCtx, ZodRawShape, ZodUnion } from 'zod';
 
 /**
  * Prise en charge d'une période sérialisée.
@@ -41,7 +44,6 @@ const period = () => (
                         cause: error,
                     },
                 });
-
                 return core.NEVER;
             }
         })
@@ -68,7 +70,6 @@ const datetime = () => (
                         cause: error,
                     },
                 });
-
                 return core.NEVER;
             }
         })
@@ -95,7 +96,6 @@ const day = () => (
                         cause: error,
                     },
                 });
-
                 return core.NEVER;
             }
         })
@@ -127,7 +127,6 @@ const decimal = () => (
                         cause: error,
                     },
                 });
-
                 return core.NEVER;
             }
         })
@@ -154,7 +153,59 @@ const currency = () => (
                         cause: error,
                     },
                 });
+                return core.NEVER;
+            }
+        })
+);
 
+/**
+ * Prise en charge d'un pays, qu'il soit sous forme d'instance ou sous forme de code ISO.
+ *
+ * @returns Un wrapper de validation de pays (instance ou chaîne de caractère).
+ *          Le retour sera en instance de `Country`.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const country = () => (
+    core
+        .union([core.string().length(2), core.instanceof(Country)])
+        .transform((value: string | Country, ctx: RefinementCtx): Raw<Country> => {
+            try {
+                return markRaw(new Country(value));
+            } catch (error) {
+                ctx.addIssue({
+                    code: core.ZodIssueCode.custom,
+                    params: {
+                        code: 'invalid-country',
+                        cause: error,
+                    },
+                });
+                return core.NEVER;
+            }
+        })
+);
+
+/**
+ * Prise en charge d'un téléphone, qu'il soit sous forme d'instance ou sous
+ * forme de code chaîne de caractères.
+ *
+ * @returns Un wrapper de validation de téléphone (instance ou chaîne de caractère).
+ *          Le retour sera en instance de `Phone`.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const phone = () => (
+    core
+        .union([core.string(), core.instanceof(Phone)])
+        .transform((value: string | Phone, ctx: RefinementCtx): Raw<Phone> => {
+            try {
+                return markRaw(new Phone(value, { loose: true }));
+            } catch (error) {
+                ctx.addIssue({
+                    code: core.ZodIssueCode.custom,
+                    params: {
+                        code: 'invalid-phone',
+                        cause: error,
+                    },
+                });
                 return core.NEVER;
             }
         })
@@ -192,6 +243,109 @@ const color = () => (
         })
 );
 
+/**
+ * Prise en charge d'une adresse email.
+ *
+ * @returns Un wrapper de validation d'une adresse email.
+ *          Le retour sera une chaîne de caractères.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const email = () => (
+    // TODO [zod@>3.22.4]: Remettre `email()`.
+    core.string()
+);
+
+/**
+ * Prise en charge des valeurs string-like (e.g. 74000 => "74000").
+ *
+ * @returns Un wrapper de validation de valeur string-like.
+ *          Le retour sera une chaîne de caractères.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const stringLike = () => (
+    core
+        .union([core.string(), core.number()])
+        .transform(String)
+);
+
+/**
+ * Créé un schéma littéral avec une valeur par défaut identique.
+ *
+ * @param value - La valeur littérale à utiliser comme type et comme valeur par défaut.
+ *
+ * @returns Un wrapper de validation littéral avec valeur par défaut.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const constant = <T extends NonNullable<core.Primitive>>(value: T) => (
+    core.literal(value).default(value)
+);
+
+/**
+ * Prise en charge des valeurs number-like (e.g. "1" => 1).
+ *
+ * @returns Un wrapper de validation de valeur number-like.
+ *          Le retour sera un nombre.
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const numberLike = () => (
+    core
+        .union([core.number(), core.string()])
+        .transform((value: number | string, ctx: RefinementCtx): number => {
+            const parsed = Number(value);
+            if (Number.isNaN(parsed)) {
+                ctx.addIssue({
+                    code: core.ZodIssueCode.custom,
+                    params: {
+                        code: 'invalid-number',
+                        cause: 'Invalid number-like.',
+                    },
+                });
+
+                return core.NEVER;
+            }
+            return parsed;
+        })
+);
+
+// ------------------------------------------------------
+// -
+// -    Surcharge de `.extend()`
+// -
+// ------------------------------------------------------
+
+((originalExtend: (this: AnyZodObject, augmentation: ZodRawShape) => AnyZodObject) => {
+    // @ts-expect-error -- L'implémentation ne peut pas refléter le type générique conditionnel.
+    core.ZodObject.prototype.extend = function extend(this: AnyZodObject, ...variants: ZodRawShape[]) {
+        if (variants.length <= 1) {
+            return originalExtend.call(this, variants[0] ?? {});
+        }
+
+        const schemas = variants.map((variant) => (
+            originalExtend.call(this, variant)
+        ));
+
+        const [first, second, ...rest] = schemas;
+        return core.union([first, second, ...rest]);
+    };
+
+    // @ts-expect-error -- L'implémentation ne peut pas refléter le type générique conditionnel.
+    core.ZodUnion.prototype.extend = function extend(this: ZodUnion<any>, ...variants: ZodRawShape[]) {
+        const schemas = this.options.flatMap((base: core.ZodTypeAny) => {
+            invariant(base instanceof core.ZodObject, '`.extend()` can only be used on a union of `ZodObject`.');
+            return variants.map((variant) => originalExtend.call(base, variant));
+        });
+
+        const [first, second, ...rest] = schemas;
+        return core.union([first!, second!, ...rest]);
+    };
+})(core.ZodObject.prototype.extend);
+
+// ------------------------------------------------------
+// -
+// -    Exports
+// -
+// ------------------------------------------------------
+
 export type {
     infer as SchemaInfer,
     output as SchemaOutput,
@@ -205,6 +359,12 @@ export const z = {
     period,
     datetime,
     day,
+    email,
     currency,
     color,
+    country,
+    phone,
+    stringLike,
+    numberLike,
+    constant,
 };

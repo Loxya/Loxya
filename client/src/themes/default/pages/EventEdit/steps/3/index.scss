@@ -3,8 +3,9 @@
 .EventEditStepTechnicians {
     display: flex;
     flex-direction: column;
+    overflow: auto;
     height: 100%;
-    min-width: 800px;
+    min-width: 600px;
     gap: globals.$spacing-medium;
 
     &__header {
@@ -48,6 +49,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: auto;
+        height: 100%;
     }
 
     &__timeline {
@@ -83,10 +86,10 @@
     }
 
     &__footer {
-        flex: 0;
         display: flex;
+        flex-wrap: wrap;
         justify-content: center;
-        padding: globals.$spacing-medium 0 globals.$spacing-large;
+        padding: globals.$spacing-small 0;
         gap: globals.$spacing-small;
     }
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace Loxya\Tests;
 
 use Illuminate\Support\Carbon;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Event;
 use Loxya\Models\Material;
 use Loxya\Support\Period;
+use Loxya\Support\Validation\ValidationsException;
 
 final class MaterialTest extends TestCase
 {
@@ -89,19 +89,19 @@ final class MaterialTest extends TestCase
 
     public function testCreateMaterialWithoutData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Material::new([]);
     }
 
     public function testCreateMaterialBadData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Material::new(['foo' => 'bar']);
     }
 
     public function testCreateMaterialDuplicate(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Material::new([
             'name' => 'Test duplicate ref. CL3',
             'reference' => 'CL3',
@@ -121,20 +121,22 @@ final class MaterialTest extends TestCase
             'name' => 'Analog Mixing Console Yamaha RM800',
             'description' => null,
             'reference' => 'RM800',
+            'is_unitary' => 0,
             'park_id' => 1,
             'park_location_id' => null,
             'category_id' => 1,
-            'is_unitary' => 0,
             'sub_category_id' => null,
             'out_of_order_quantity' => 0,
             'rental_price' => '100.00',
             'degressive_rate_id' => 1,
-            'tax_id' => 5,
+            'tax_id' => 3,
             'replacement_price' => '100.60',
             'stock_quantity' => 1,
             'is_hidden_on_bill' => false,
             'is_discountable' => true,
             'is_reservable' => 1,
+            'weight' => '10.500',
+            'origin_country' => 'FR',
             'picture' => null,
             'note' => null,
             'created_at' => '2019-02-24 23:59:00',
@@ -145,12 +147,15 @@ final class MaterialTest extends TestCase
             'name' => 'Analog Mixing Console Yamaha RM800',
             'reference' => 'RM800',
             'park_id' => 1,
+            'park_location_id' => null,
             'category_id' => 1,
             'rental_price' => '100.0',
             'degressive_rate_id' => 1,
-            'tax_id' => 5,
+            'tax_id' => 3,
             'replacement_price' => '100.6',
             'stock_quantity' => 1,
+            'weight' => '10.5',
+            'origin_country' => 'FR',
         ]);
         $this->assertSameCanonicalize($expected, $material->toArray());
     }

@@ -1,6 +1,7 @@
 import './index.scss';
 import formatAmount from '@/utils/formatAmount';
 import { defineComponent } from 'vue';
+import Decimal from 'decimal.js';
 import getUnsyncedData from '../../utils/getUnsyncedData';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import isMaterialResyncable from '../../utils/isMaterialResyncable';
@@ -8,7 +9,6 @@ import Fragment from '@/components/Fragment';
 import Button from '@/themes/default/components/Button';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 
-import type Decimal from 'decimal.js';
 import type { MaterialResynchronizableField } from '@/stores/api/bookings';
 import type { PropType } from 'vue';
 import type { Bookable, EmbeddedMaterial, SourceMaterial } from '../../_types';
@@ -38,8 +38,7 @@ const ResyncMaterialDataModal = defineComponent({
     name: 'ResyncMaterialDataModal',
     modal: {
         width: 600,
-        draggable: true,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         bookable: {
@@ -182,6 +181,7 @@ const ResyncMaterialDataModal = defineComponent({
             handleRowClick,
             handleCheckbox,
         } = this;
+        const { currency } = this.bookable;
 
         const renderContent = (): JSX.Element => {
             if (isAlreadySync || !isResyncable) {
@@ -211,19 +211,37 @@ const ResyncMaterialDataModal = defineComponent({
 
                                         const isSelected = selection.includes(field);
 
-                                        const currentValue: string = field !== 'unit_price'
-                                            ? (unsyncedDatum.current as Decimal | string).toString()
-                                            : formatAmount(
-                                                (unsyncedDatum as Required<UnsyncedData>['unit_price']).current.price,
-                                                (unsyncedDatum as Required<UnsyncedData>['unit_price']).current.currency,
-                                            );
+                                        const renderCurrentValue = (): JSX.Node => {
+                                            if (field === 'unit_price') {
+                                                return formatAmount(
+                                                    (unsyncedDatum as Required<UnsyncedData>['unit_price']).current.price,
+                                                    (unsyncedDatum as Required<UnsyncedData>['unit_price']).current.currency,
+                                                );
+                                            }
 
-                                        const baseValue: string = field !== 'unit_price'
-                                            ? (unsyncedDatum.base as Decimal | string).toString()
-                                            : formatAmount(
-                                                (unsyncedDatum as Required<UnsyncedData>['unit_price']).base.price,
-                                                (unsyncedDatum as Required<UnsyncedData>['unit_price']).base.currency,
-                                            );
+                                            if (field === 'unit_replacement_price') {
+                                                const value = (unsyncedDatum as Required<UnsyncedData>['unit_replacement_price']).current;
+                                                return formatAmount(value ?? new Decimal(0), currency);
+                                            }
+
+                                            return (unsyncedDatum.current as Decimal | string).toString();
+                                        };
+
+                                        const renderBaseValue = (): JSX.Node => {
+                                            if (field === 'unit_price') {
+                                                return formatAmount(
+                                                    (unsyncedDatum as Required<UnsyncedData>['unit_price']).base.price,
+                                                    (unsyncedDatum as Required<UnsyncedData>['unit_price']).base.currency,
+                                                );
+                                            }
+
+                                            if (field === 'unit_replacement_price') {
+                                                const value = (unsyncedDatum as Required<UnsyncedData>['unit_replacement_price']).base;
+                                                return formatAmount(value ?? new Decimal(0), currency);
+                                            }
+
+                                            return (unsyncedDatum.base as Decimal | string).toString();
+                                        };
 
                                         return (
                                             <tr
@@ -262,7 +280,7 @@ const ResyncMaterialDataModal = defineComponent({
                                                         'ResyncMaterialDataModal__list__item__col--current-value',
                                                     ]}
                                                 >
-                                                    {currentValue}
+                                                    {renderCurrentValue()}
                                                 </td>
                                                 <td
                                                     class={[
@@ -270,7 +288,7 @@ const ResyncMaterialDataModal = defineComponent({
                                                         'ResyncMaterialDataModal__list__item__col--revert-value',
                                                     ]}
                                                 >
-                                                    {baseValue}
+                                                    {renderBaseValue()}
                                                 </td>
                                             </tr>
                                         );

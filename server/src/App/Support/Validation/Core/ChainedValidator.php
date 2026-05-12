@@ -4,12 +4,13 @@ declare(strict_types=1);
 namespace Loxya\Support\Validation\Core;
 
 use Loxya\Support\Validation\ChainedValidator as ChainedValidatorExtended;
+use Loxya\Support\Validation\Validatable;
 use Respect\Validation\Rules\Key;
-use Respect\Validation\Validatable;
+use Respect\Validation\Validatable as CoreCoreValidatable;
 
 interface ChainedValidator extends Validatable
 {
-    public function allOf(Validatable ...$rule): ChainedValidatorExtended;
+    public function allOf(CoreCoreValidatable ...$rule): ChainedValidatorExtended;
 
     public function alnum(string ...$additionalChars): ChainedValidatorExtended;
 
@@ -19,7 +20,7 @@ interface ChainedValidator extends Validatable
 
     public function alwaysValid(): ChainedValidatorExtended;
 
-    public function anyOf(Validatable ...$rule): ChainedValidatorExtended;
+    public function anyOf(CoreCoreValidatable ...$rule): ChainedValidatorExtended;
 
     public function arrayType(): ChainedValidatorExtended;
 
@@ -27,7 +28,7 @@ interface ChainedValidator extends Validatable
 
     public function attribute(
         string $reference,
-        ?Validatable $validator = null,
+        ?CoreCoreValidatable $validator = null,
         bool $mandatory = true,
     ): ChainedValidatorExtended;
 
@@ -43,7 +44,7 @@ interface ChainedValidator extends Validatable
 
     public function bsn(): ChainedValidatorExtended;
 
-    public function call(callable $callable, Validatable $rule): ChainedValidatorExtended;
+    public function call(callable $callable, CoreCoreValidatable $rule): ChainedValidatorExtended;
 
     public function callableType(): ChainedValidatorExtended;
 
@@ -80,7 +81,7 @@ interface ChainedValidator extends Validatable
 
     public function dateTime(?string $format = null): ChainedValidatorExtended;
 
-    public function decimal(int $decimals): ChainedValidatorExtended;
+    // public function decimal(int $decimals): ChainedValidatorExtended;
 
     public function digit(string ...$additionalChars): ChainedValidatorExtended;
 
@@ -88,7 +89,7 @@ interface ChainedValidator extends Validatable
 
     public function domain(bool $tldCheck = true): ChainedValidatorExtended;
 
-    public function each(Validatable $rule): ChainedValidatorExtended;
+    public function each(CoreCoreValidatable $rule): ChainedValidatorExtended;
 
     public function email(): ChainedValidatorExtended;
 
@@ -162,13 +163,13 @@ interface ChainedValidator extends Validatable
 
     public function key(
         string $reference,
-        ?Validatable $referenceValidator = null,
+        ?CoreCoreValidatable $referenceValidator = null,
         bool $mandatory = true,
     ): ChainedValidatorExtended;
 
     public function keyNested(
         string $reference,
-        ?Validatable $referenceValidator = null,
+        ?CoreCoreValidatable $referenceValidator = null,
         bool $mandatory = true,
     ): ChainedValidatorExtended;
 
@@ -214,9 +215,9 @@ interface ChainedValidator extends Validatable
 
     public function no(bool $useLocale = false): ChainedValidatorExtended;
 
-    public function noneOf(Validatable ...$rule): ChainedValidatorExtended;
+    public function noneOf(CoreCoreValidatable ...$rule): ChainedValidatorExtended;
 
-    public function not(Validatable $rule): ChainedValidatorExtended;
+    public function not(CoreCoreValidatable $rule): ChainedValidatorExtended;
 
     public function notBlank(): ChainedValidatorExtended;
 
@@ -228,7 +229,7 @@ interface ChainedValidator extends Validatable
 
     public function noWhitespace(): ChainedValidatorExtended;
 
-    public function nullable(Validatable $rule): ChainedValidatorExtended;
+    public function nullable(CoreCoreValidatable $rule): ChainedValidatorExtended;
 
     public function nullType(): ChainedValidatorExtended;
 
@@ -240,9 +241,9 @@ interface ChainedValidator extends Validatable
 
     public function odd(): ChainedValidatorExtended;
 
-    public function oneOf(Validatable ...$rule): ChainedValidatorExtended;
+    public function oneOf(CoreCoreValidatable ...$rule): ChainedValidatorExtended;
 
-    public function optional(Validatable $rule): ChainedValidatorExtended;
+    public function optional(CoreCoreValidatable $rule): ChainedValidatorExtended;
 
     public function perfectSquare(): ChainedValidatorExtended;
 
@@ -265,8 +266,6 @@ interface ChainedValidator extends Validatable
     public function primeNumber(): ChainedValidatorExtended;
 
     public function printable(string ...$additionalChars): ChainedValidatorExtended;
-
-    public function publicDomainSuffix(): ChainedValidatorExtended;
 
     public function punct(string ...$additionalChars): ChainedValidatorExtended;
 
@@ -293,8 +292,6 @@ interface ChainedValidator extends Validatable
     public function stringType(): ChainedValidatorExtended;
 
     public function stringVal(): ChainedValidatorExtended;
-
-    public function subdivisionCode(string $countryCode): ChainedValidatorExtended;
 
     /**
      * @param mixed[] $superset
@@ -327,7 +324,11 @@ interface ChainedValidator extends Validatable
 
     public function vowel(string ...$additionalChars): ChainedValidatorExtended;
 
-    public function when(Validatable $if, Validatable $then, ?Validatable $else = null): ChainedValidatorExtended;
+    public function when(
+        CoreCoreValidatable $if,
+        CoreCoreValidatable $then,
+        ?CoreCoreValidatable $else = null,
+    ): ChainedValidatorExtended;
 
     public function writable(): ChainedValidatorExtended;
 

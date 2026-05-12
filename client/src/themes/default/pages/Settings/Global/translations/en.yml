@@ -154,12 +154,21 @@ inventories:
                 start-full: Returned quantities are pre-filled with the expected quantities.
 
 taxes:
-    title: "Billing - Taxes"
-    help: Here you can modify the billing settings related to taxes.
+    title:
+        default: "Billing - Taxes"
+        simple: "Billing - VAT"
+    help:
+        default: Here you can modify the billing settings related to taxes.
+        simple: Here you can modify the billing settings related to VAT.
     saved: Taxes settings have been successfully saved.
 
-    section-title: "Taxes and Tax Groups"
-    create-action: New tax
+    section-title:
+        default: "Taxes and Tax Groups"
+        simple: "VAT Rates"
+
+    create-action:
+        default: New tax
+        simple: New rate
 
     confirm-delete: Do you really want to delete this tax?
     not-deletable:
@@ -184,11 +193,17 @@ taxes:
             Save the changes you just made to the default tax and then try again.
 
     default-field:
-        label: Tax by default
-        placeholder: Tax-free
+        label:
+            default: Default tax
+            simple: Default VAT rate
+        placeholder:
+            default: "No tax (exempt without explicit reason)"
+            simple: "No VAT (exempt without explicit reason)"
 
     table-column:
-        name: Name
+        name:
+            default: Name
+            simple: Rate
         is-group: Tax group?
 
     yes-with-count-sub-taxes:
@@ -202,8 +217,12 @@ taxes:
 
         tax-edition:
             modal-title:
-                new: New tax
-                edit: Modification of the tax "{name}"
+                new:
+                    default: New tax
+                    simple: New VAT rate
+                edit:
+                    default: Modification of the tax "{name}"
+                    simple: Modification of the rate "{rate}"
             save: Save tax
             saved: The tax have been successfully saved.
             fields:
@@ -218,14 +237,7 @@ taxes:
                         This could be for example:
                         - A group that would include a VAT as well as an "Eco Tax".
                         - A TPS + TVQ tax group for Quebec.
-                is-rate:
-                    label: "Rate\_/\_Fixed price?"
-                    options:
-                        rate: Rate
-                        fixed-price: Fixed price
-                value:
-                    label-rate: Rate
-                    label-fixed-price: Amount
+                value: Rate
                 components:
                     label: Group taxes
                     empty: |
@@ -236,12 +248,7 @@ taxes:
                         name:
                             label: Tax name
                             placeholder: VAT, Eco Tax, ...
-                        value: "Rate\_/\_Amount"
-                        is-rate:
-                            label: "Rate\_/\_Fixed price?"
-                            options:
-                                rate: Rate
-                                fixed-price: Fixed price
+                        value: Rate
 
 degressive-rates:
     title: "Billing - Degressive Rates"
@@ -319,17 +326,13 @@ estimates-invoices:
     help: Here you can customize the content of the estimates and invoices.
 
     details: Details
-    display-booking-description: "Display the event description?"
-    display-mobilization-period: "Display the pickup and return dates?"
     display-total-replacement-price: "Display the total replacement values?"
-    display-totalisable-attributes: "Display the totals of material's special attributes? (under the materials list)"
+    display-totalisable-attributes: "Display the totals of material's special attributes?"
     material-list: Material list
-    display-pictures: "Display pictures (thumbnails)?"
     display-descriptions: "Display descriptions?"
     display-replacement-prices: "Display replacement values?"
-    display-unit-prices: "Display unit prices and subtotals?"
-    estimates-custom-text: Custom text for estimates (above the signature)
-    invoices-custom-text: Custom text for invoices (below the totals)
-    custom-text-title: Text title
-    custom-text-content: Text content
     saved: The settings for estimates and invoices have been successfully saved.
+
+    special-mentions:
+        estimates: Default special mentions for estimates
+        invoices: Default special mentions for invoices

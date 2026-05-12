@@ -1,4 +1,5 @@
 @use '~@/themes/default/style/globals';
+@use 'sass:map';
 @use 'sass:color';
 
 .InputColor {
@@ -53,7 +54,7 @@
 
     &__picker {
         position: absolute;
-        z-index: 100;
+        z-index: map.get(globals.$layers, 'dropdowns');
         top: 0;
         left: 0;
     }

@@ -14,11 +14,13 @@ trait TransientAttributes
 
     protected function getTransientAttribute(string $key, $default = null)
     {
-        return $this->transientAttributes[$key] ?? $default;
+        return array_key_exists($key, $this->transientAttributes)
+            ? $this->transientAttributes[$key]
+            : $default;
     }
 
     protected function hasTransientAttribute(string $key): bool
     {
-        return isset($this->transientAttributes[$key]);
+        return array_key_exists($key, $this->transientAttributes);
     }
 }

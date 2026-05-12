@@ -13,8 +13,10 @@ action-duplicate: Dupliquer
 action-enable: Activer
 action-disable: Désactiver
 action-refresh: Rafraîchir les données
+address: Adresse
 'yes': Oui
 'no': Non
+and: et
 color: Couleur
 center-on-today: Centrer sur aujourd'hui
 configure-columns: Configurer les colonnes
@@ -49,7 +51,8 @@ type-at-least-count-chars-to-search:
 count-chars:
     - '{count} caractère'
     - '{count} caractères'
-empty-state: Il n'y a aucun enregistrement à afficher pour le moment.
+empty-state: Il n'y a aucun enregistrement à afficher.
+no-results-state: Aucun résultat ne correspond à votre recherche.
 search-term: Recherche
 no-result-found-try-another-search: Aucun résultat. Essayez avec une autre recherche.
 locked-reason: 'Verrouillé: {reason}'
@@ -71,6 +74,7 @@ save: Sauvegarder
 manually-save: Sauvegarder manuellement
 save-draft: Sauvegarder le brouillon
 add: Ajouter
+send: Envoyer
 saving: Sauvegarde...
 saved: '{entity} sauvegardé.'
 deleting: Suppression...
@@ -87,6 +91,9 @@ other-infos: Autres informations
 other: Autre
 documents: Documents
 billing: Facturation
+client: Client
+including-taxes: 'dont {amount} de T.V.A.'
+plus-taxes: 'plus {amount} de T.V.A.'
 history: Historique
 properties: Caractéristiques
 schedule: Agenda
@@ -101,16 +108,9 @@ nickname: Surnom
 company: Société
 person: Personne
 legal-name: Raison sociale
-registration-id: Numéro d'identification
 contact-details: Coordonnées
 email: E-mail
 phone: Téléphone
-address: Adresse
-street: Numéro et rue
-postal-code: Code postal
-city: Ville
-locality: Ville
-country: Pays
 access: Accès
 group: Groupe
 groups:
@@ -118,7 +118,6 @@ groups:
     supervision: Supervision
     operation: Opération
     readonly-planning-general: Consultation du planning général
-    readonly-planning-self: Consultation de son planning
 owner: Propriétaire
 opening-hours: Horaires d'ouverture
 hours: heures
@@ -132,6 +131,7 @@ reference: Référence
 number: Numéro
 park: Parc
 park-name: "Parc «\_{name}\_»"
+contact-name: "Contact\_: {name}"
 prices: Tarifs
 identification-type: Type d'identification
 rental-price: Tarif location
@@ -147,7 +147,7 @@ stock-qty: Qté stock
 stock-quantity: Quantité en stock
 out-of-order-qty: Qté en panne
 out-of-order-quantity: Quantité en panne
-remaining-qty: Qté restante
+remaining-qty-today: Qté restante aujourd'hui
 awaited-qty-dots: "Qté attendue\_:"
 actual-qty: Qté effective
 quantities: Quantités
@@ -164,6 +164,7 @@ material-is-discountable: "Le matériel est «\_remisable\_»\_: une remise peut
 hidden-on-invoice: "Caché sur la facture\_?"
 material-not-displayed-on-invoice: Le matériel n'est pas affiché sur les factures.
 price-must-be-zero: le tarif de location doit être égal à 0
+all-custom: "Tout(e) {field}"
 all-parks: Tous parcs confondus
 all-categories: Toutes catégories
 all-sub-categories: Toutes sous-catégories
@@ -278,10 +279,14 @@ total-amount: Montant total
 total-amount-without-taxes: "Montant total H.T.\_:\_{amount}"
 total-amount-after-discount: "Total H.T. après remise\_:\_{amount}"
 total-replacement: "Valeur de remplacement totale\_: {total}"
+weight: Poids
+total-weight: "Poids total\_: {total}\_{unit}"
+origin-country: Pays d'origine
 daily-total-without-tax: "Total H.T.\_/\_jour\_:"
 daily-total: "Total\_/\_jour\_:"
 total-without-taxes: "Total H.T.\_:"
-total-taxes: "T.V.A.\_:"
+total-without-taxes-value: "Total H.T.\_: {amount}"
+total-vat: "Total T.V.A.\_:"
 total-with-taxes: "Total T.T.C.\_:"
 total-dots: "Total\_:"
 excl-tax: H.T.
@@ -372,3 +377,115 @@ quick-creation:
         needs-its-return-inventory: "Il faut faire l'inventaire de retour de cet événement\_!"
         has-not-returned-materials: Cet événement a du matériel qui n'a pas été retourné.
         overdue: Le retour du matériel de cet événement est en retard.
+
+#
+# - Entreprise
+#
+
+registration-id:
+    generic: Numéro d'enregistrement
+    FR: Numéro de SIRET / SIREN
+    BE: Numéro BCE
+    CH: Numéro IDE
+    CA: Numéro d'entreprise
+
+precise-registration-id:
+    generic: Numéro d'enregistrement
+    FR: Numéro de SIRET
+    BE: Numéro BCE
+    CH: Numéro IDE
+    CA: Numéro d'entreprise
+
+vat-number:
+    generic: Numéro de TVA
+    CA: Numéro de taxe
+
+#
+# - Adresse
+#
+
+street: Numéro et rue
+additional-street: Complément d'adresse
+country: Pays
+
+administrative-area:
+    generic: Zone administrative
+    area: "Zone"
+    canton: "Canton"
+    county: "Comté"
+    department: "Département"
+    district: "District"
+    do_si: "Do / Si"
+    emirate: "Émirat"
+    island: "Île"
+    parish: "Paroisse"
+    prefecture: "Préfecture"
+    province: "Province"
+    region: "Région"
+    state: "État"
+
+postal-code:
+    generic: "Code postal"
+    eircode: "Eircode"
+    pin: "PIN code"
+    postal: "Code postal"
+    zip: "ZIP code"
+
+locality:
+    generic: "Localité"
+    city: "Ville"
+    district: "District"
+    post_town: "Ville postale"
+    suburb: "Banlieue / Quartier"
+    town_city: "Ville / Commune"
+
+#
+# - Facturation
+#
+
+tax-regimes:
+    S: Standard
+    Z: Taux zéro
+    AE: Auto-liquidation
+    K: Livraison intra-communautaire
+    G: Export
+    E: Exempté
+    O: Hors champ
+
+estimate-status:
+    draft: Brouillon
+    obsolete: Obsolète
+    pending: En attente d'envoi
+    sent: Envoyé
+    accepted: Accepté
+    expired: Expiré
+    rejected: Refusé
+    partially-invoiced: Partiellement facturé
+    invoiced: Facturé
+
+invoice-status:
+    draft: Brouillon
+    obsolete: Obsolète
+    pending: En attente d'envoi
+    sent: Envoyée
+    overdue: Paiement en retard
+    partially-paid: Partiellement payée
+    paid: Payée
+    refunded: Remboursée
+    cancelled: Annulée
+
+credit-note-status:
+    draft: Brouillon
+    obsolete: Obsolète
+    pending: En attente d'envoi
+    sent: Envoyé
+    overdue: Paiement en retard
+    partially-paid: Partiellement remboursé
+    paid: Remboursé
+    cancelled: Annulé
+
+payment-methods:
+    cash: Espèces
+    card: Carte bancaire
+    cheque: Chèque
+    transfer: Virement bancaire

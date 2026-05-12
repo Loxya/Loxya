@@ -48,7 +48,7 @@ final class Role extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
         V::notEmpty()
             ->length(2, 191)
@@ -127,7 +127,7 @@ final class Role extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = ['name'];
+    protected array $orderable = ['name'];
 
     public function scopeSearch(Builder $query, string|array $term): Builder
     {

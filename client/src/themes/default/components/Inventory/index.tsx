@@ -6,11 +6,11 @@ import { UNCATEGORIZED } from '@/stores/api/materials';
 import { groupByCategories } from './_utils';
 import { InventoryLock, InventoryErrorsSchema } from './_types';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
-import SearchPanel from '@/themes/default/components/MaterialsFilters';
 import Item from './components/Item';
+import SearchPanel from '@/themes/default/components/MaterialsFilters';
 
-import type { PropType } from 'vue';
 import type { Tag } from '@/stores/api/tags';
+import type { PropType } from 'vue';
 import type { Filters } from '@/themes/default/components/MaterialsFilters';
 import type {
     AwaitedMaterial,
@@ -32,8 +32,9 @@ export enum DisplayGroup {
     NONE = 'none',
 }
 
+type FilterPredicate = (material: AwaitedMaterial) => boolean;
 type FilterResolver<T extends keyof Filters> = (
-    (material: AwaitedMaterial, filter: NonNullable<Filters[T]>) => boolean
+    (filter: NonNullable<Filters[T]>) => FilterPredicate
 );
 
 type Props = {
@@ -111,7 +112,7 @@ type Props = {
      * @param materialId - L'identifiant du matériel pour lequel l'inventaire a changé.
      * @param inventory - La nouvelle valeur de l'inventaire du matériel.
      */
-    onChange?(newValue: AwaitedMaterial['id'], materialInventory: InventoryMaterialData): void,
+    onChange?(materialId: AwaitedMaterial['id'], materialInventory: InventoryMaterialData): void,
 };
 
 type Data = {
@@ -192,40 +193,58 @@ const Inventory = defineComponent({
             const { materials, filters } = this;
 
             const filterResolvers: { [T in keyof Filters]: FilterResolver<T> } = {
-                search: ({ name, reference }: AwaitedMaterial, rawTerms: Filters['search']) => {
+                search: (rawTerms: Filters['search']) => {
                     const terms = rawTerms.filter(
                         (term: string) => term.trim().length > 1,
                     );
                     if (terms.length === 0) {
-                        return true;
+                        return () => true;
                     }
 
-                    return terms.some((term: string) => (
-                        stringIncludes(name, term) ||
-                        stringIncludes(reference, term)
-                    ));
+                    return ({ name, reference }: AwaitedMaterial) => (
+                        terms.some((term: string) => (
+                            stringIncludes(name, term) ||
+                            stringIncludes(reference, term)
+                        ))
+                    );
                 },
-                park: (material: AwaitedMaterial, parkId: NonNullable<Filters['park']>) => (
-                    material.park_id === parkId
+                park: (parkId: NonNullable<Filters['park']>) => (
+                    (material: AwaitedMaterial) => material.park_id === parkId
                 ),
-                category: (material: AwaitedMaterial, categoryId: NonNullable<Filters['category']>) => (
-                    (material.category_id === null && categoryId === UNCATEGORIZED) ||
-                    material.category_id === categoryId
+                category: (categoryId: NonNullable<Filters['category']>) => (
+                    (material: AwaitedMaterial) => (
+                        (material.category_id === null && categoryId === UNCATEGORIZED) ||
+                        material.category_id === categoryId
+                    )
                 ),
-                subCategory: (material: AwaitedMaterial, subCategoryId: NonNullable<Filters['subCategory']>) => (
-                    material.sub_category_id === subCategoryId
+                subCategory: (subCategoryId: NonNullable<Filters['subCategory']>) => (
+                    (material: AwaitedMaterial) => (
+                        material.sub_category_id === subCategoryId
+                    )
                 ),
-                tags: (material: AwaitedMaterial, tags: Filters['tags']) => (
-                    tags.length === 0 || material.tags.some((tag: Tag) => tags.includes(tag.id))
+                tags: (tags: Filters['tags']) => (
+                    (material: AwaitedMaterial) => (
+                        tags.length === 0 || material.tags.some((tag: Tag) => tags.includes(tag.id))
+                    )
                 ),
             };
 
+            const predicates: FilterPredicate[] = (
+                (Object.entries(filters) as Array<[keyof Filters, unknown]>)
+                    .filter(([, filterValue]: [keyof Filters, unknown]) => {
+                        if (Array.isArray(filterValue)) {
+                            return filterValue.length > 0;
+                        }
+                        return ![undefined, null, ''].includes(filterValue as any);
+                    })
+                    .map(([key, filterValue]: [keyof Filters, unknown]) => {
+                        const resolverFactory = filterResolvers[key];
+                        return (resolverFactory as any)(filterValue) as FilterPredicate;
+                    })
+            );
+
             return materials.filter((material: AwaitedMaterial): boolean => (
-                !(Object.entries(filterResolvers) as Array<[keyof Filters, FilterResolver<keyof Filters>]>).some(
-                    <T extends keyof Filters>([field, filterResolver]: [T, FilterResolver<T>]) => (
-                        filters[field] ? !filterResolver(material, filters[field]) : false
-                    ),
-                )
+                predicates.every((predicate: FilterPredicate) => predicate(material))
             ));
         },
 

@@ -1,25 +1,29 @@
 import './index.scss';
-import { defineComponent } from 'vue';
 import pick from 'lodash/pick';
+import config from '@/globals/config';
+import { defineComponent } from 'vue';
 import cloneDeep from 'lodash/cloneDeep';
+import { AddressField } from '@/utils/address';
+import SelectCountry from '@/themes/default/components/SelectCountry';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
+import type Country from '@/utils/country';
 import type { ComponentRef, PropType } from 'vue';
-import type { Options } from '@/utils/formatOptions';
-import type { Country } from '@/stores/api/countries';
-import type { Park, ParkEdit } from '@/stores/api/parks';
+import type { AddressFieldDefinition } from '@/utils/country';
+import type { ParkDetails, ParkEdit } from '@/stores/api/parks';
 
 type Props = {
     /** Les données déjà sauvegardées du parc (s'il existait déjà). */
-    savedData?: Park | null,
+    savedData?: ParkDetails | null,
 
     /** Permet d'indiquer que la sauvegarde est en cours. */
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Partial<Record<keyof ParkEdit, string>>,
+    errors?: Partial<Record<keyof ParkEdit, string>> | null,
 
     /**
      * Fonction appelée lorsque l'utilisateur soumet les changements.
@@ -39,21 +43,31 @@ type Data = {
     data: ParkEdit,
 };
 
-const DEFAULT_VALUES: ParkEdit = Object.freeze({
-    name: '',
-    street: '',
-    postal_code: '',
-    locality: '',
-    country_id: null,
-    opening_hours: '',
-    note: '',
-});
+const getDefaults = (savedData: ParkDetails | null): ParkEdit => {
+    const BASE_DEFAULTS: ParkEdit = {
+        name: '',
+        street: null,
+        additional_street: null,
+        postal_code: null,
+        administrative_area: null,
+        locality: null,
+        country: config.mainCountry,
+        opening_hours: '',
+        note: '',
+    };
+
+    return {
+        ...BASE_DEFAULTS,
+        ...pick(savedData ?? {}, Object.keys(BASE_DEFAULTS)),
+        country: savedData?.country ?? config.mainCountry,
+    };
+};
 
 /** Formulaire d'édition d'un parc. */
 const ParkEditForm = defineComponent({
     name: 'ParkEditForm',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         savedData: {
@@ -81,24 +95,18 @@ const ParkEditForm = defineComponent({
     },
     emits: ['submit', 'cancel'],
     data(): Data {
-        const data = {
-            ...DEFAULT_VALUES,
-            ...pick(this.savedData ?? {}, Object.keys(DEFAULT_VALUES)),
+        return {
+            data: getDefaults(this.savedData),
         };
-
-        return { data };
     },
     computed: {
         isNew(): boolean {
             return this.savedData === null;
         },
 
-        countriesOptions(): Options<Country> {
-            return this.$store.getters['countries/options'];
+        addressFields(): AddressFieldDefinition[][] {
+            return this.data.country.getAddressFields(true);
         },
-    },
-    created() {
-        this.$store.dispatch('countries/fetch');
     },
     mounted() {
         if (this.isNew) {
@@ -115,6 +123,24 @@ const ParkEditForm = defineComponent({
         // -
         // ------------------------------------------------------
 
+        handleChangeCountry(newCountry: Country) {
+            this.data.country = newCountry;
+
+            const fieldMap = {
+                [AddressField.ADDRESS_LINE1]: 'street',
+                [AddressField.ADDRESS_LINE2]: 'additional_street',
+                [AddressField.POSTAL_CODE]: 'postal_code',
+                [AddressField.ADMINISTRATIVE_AREA]: 'administrative_area',
+                [AddressField.LOCALITY]: 'locality',
+            } as const;
+            const newAddressFields = newCountry.getUsedAddressField();
+            Object.entries(fieldMap).forEach(([field, dataKey]) => {
+                if (!newAddressFields.includes(field as AddressField)) {
+                    this.data[dataKey] = null;
+                }
+            });
+        },
+
         handleSubmit(e: SubmitEvent) {
             e?.preventDefault();
 
@@ -130,8 +156,9 @@ const ParkEditForm = defineComponent({
             $t: __,
             data,
             errors,
-            countriesOptions,
             isSaving,
+            addressFields,
+            handleChangeCountry,
             handleSubmit,
             handleCancel,
         } = this;
@@ -151,36 +178,111 @@ const ParkEditForm = defineComponent({
                     />
                 </Fieldset>
                 <Fieldset title={__('contact-details')}>
-                    <FormField
-                        label="street"
-                        autocomplete="off"
-                        v-model={data.street}
-                        error={errors?.street}
-                    />
-                    <div class="ParkEditForm__locality">
-                        <FormField
-                            label="postal-code"
-                            class="ParkEditForm__postal-code"
-                            autocomplete="off"
-                            v-model={data.postal_code}
-                            error={errors?.postal_code}
-                        />
-                        <FormField
-                            label="city"
-                            class="ParkEditForm__city"
-                            autocomplete="off"
-                            v-model={data.locality}
-                            error={errors?.locality}
-                        />
+                    <div class="ParkEditForm__address">
+                        {addressFields.map((lineFields: AddressFieldDefinition[], index: number) => (
+                            <div key={index} class="ParkEditForm__address__group">
+                                {lineFields.map((field: AddressFieldDefinition) => {
+                                    switch (field.field) {
+                                        case AddressField.ADDRESS_LINE1: {
+                                            return (
+                                                <FormField
+                                                    label={__('street')}
+                                                    class={[
+                                                        'ParkEditForm__address__part',
+                                                        `ParkEditForm__address__part--street`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.street}
+                                                    error={errors?.street}
+                                                    onInput={(value: string) => {
+                                                        data.street = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.ADDRESS_LINE2: {
+                                            return (
+                                                <FormField
+                                                    label={__('additional-street')}
+                                                    class={[
+                                                        'ParkEditForm__address__part',
+                                                        `ParkEditForm__address__part--additional-street`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.additional_street}
+                                                    error={errors?.additional_street}
+                                                    onInput={(value: string) => {
+                                                        data.additional_street = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.POSTAL_CODE: {
+                                            return (
+                                                <FormField
+                                                    label={__(`postal-code.${field.type}`)}
+                                                    class={[
+                                                        'ParkEditForm__address__part',
+                                                        `ParkEditForm__address__part--postal-code`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.postal_code}
+                                                    error={errors?.postal_code}
+                                                    onInput={(value: string) => {
+                                                        data.postal_code = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.ADMINISTRATIVE_AREA: {
+                                            return (
+                                                <FormField
+                                                    label={__(`administrative-area.${field.type}`)}
+                                                    class={[
+                                                        'ParkEditForm__address__part',
+                                                        `ParkEditForm__address__part--administrative-area`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.administrative_area}
+                                                    error={errors?.administrative_area}
+                                                    onInput={(value: string) => {
+                                                        data.administrative_area = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.LOCALITY: {
+                                            return (
+                                                <FormField
+                                                    label={__(`locality.${field.type}`)}
+                                                    class={[
+                                                        'ParkEditForm__address__part',
+                                                        `ParkEditForm__address__part--locality`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.locality}
+                                                    error={errors?.locality}
+                                                    onInput={(value: string) => {
+                                                        data.locality = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        default: {
+                                            return null;
+                                        }
+                                    }
+                                })}
+                            </div>
+                        ))}
                     </div>
-                    <FormField
-                        label="country"
-                        type="select"
-                        autocomplete="off"
-                        options={countriesOptions}
-                        v-model={data.country_id}
-                        error={errors?.country_id}
-                    />
+                    <FormField label="country" type="custom" error={errors?.country}>
+                        <SelectCountry
+                            placeholder={false}
+                            value={data.country}
+                            onChange={handleChangeCountry}
+                        />
+                    </FormField>
                 </Fieldset>
                 <Fieldset title={__('other-infos')}>
                     <FormField

@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Loxya\Controllers;
 
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
-use Loxya\Controllers\Traits\Crud;
 use Loxya\Http\Request;
 use Loxya\Models\Document;
 use Psr\Http\Message\ResponseInterface;
@@ -14,8 +13,6 @@ use Slim\Psr7\Stream;
 
 final class DocumentController extends BaseController
 {
-    use Crud\HardDelete;
-
     public function getFile(Request $request, Response $response): ResponseInterface
     {
         $id = $request->getIntegerAttribute('id');
@@ -23,7 +20,7 @@ final class DocumentController extends BaseController
 
         $fileName = $document->name;
         $fileContent = file_get_contents($document->path);
-        if (!$fileContent) {
+        if ($fileContent === false) {
             throw new HttpNotFoundException($request, "The file of the document cannot be found.");
         }
 
@@ -34,9 +31,7 @@ final class DocumentController extends BaseController
             $fileStream = new Stream($streamHandle);
 
             return $response
-                ->withHeader('Content-Type', 'application/force-download')
-                ->withHeader('Content-Type', 'application/octet-stream')
-                ->withHeader('Content-Type', 'application/download')
+                ->withHeader('Content-Type', $document->type)
                 ->withHeader('Content-Description', 'File Transfer')
                 ->withHeader('Content-Transfer-Encoding', 'binary')
                 ->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $fileName))
@@ -53,5 +48,17 @@ final class DocumentController extends BaseController
                 $e->getMessage(),
             ));
         }
+    }
+
+    public function delete(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+        $document = Document::findOrFail($id);
+
+        if (!$document->delete()) {
+            throw new \RuntimeException("An unknown error occurred while deleting the document.");
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 }

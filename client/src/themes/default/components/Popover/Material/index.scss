@@ -1,7 +1,10 @@
+@use '~@/themes/default/style/globals';
+@use 'sass:map';
+
 .MaterialPopover {
     &__popup {
         position: absolute;
-        z-index: 1000;
+        z-index: map.get(globals.$layers, 'tooltips');
         top: 0;
         left: 0;
     }

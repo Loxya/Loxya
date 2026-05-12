@@ -1,0 +1,152 @@
+@use '~@/themes/default/style/globals';
+
+.Pagination {
+    $block: &;
+
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: globals.$spacing-medium;
+
+    &__pagination {
+        @extend %reset-list;
+
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        column-gap: 8px;
+
+        &__item {
+            $sub-block: &;
+
+            &__button {
+                @extend %reset-button;
+
+                display: inline-flex;
+                align-items: baseline;
+                justify-content: center;
+                min-width: 34px;
+                padding: 4px 10px;
+                border: 1px solid transparent;
+                border-radius: globals.$border-radius-large;
+                color: globals.$text-base-color;
+                font-weight: 600;
+                line-height: 24px;
+                cursor: pointer;
+                user-select: none;
+
+                &:hover {
+                    background-color: rgb(255 255 255 / 5%);
+                }
+            }
+
+            //
+            // - États.
+            //
+
+            &--active {
+                #{$sub-block}__button {
+                    background-color: rgb(255 255 255 / 5%);
+
+                    &:hover {
+                        background-color: rgb(255 255 255 / 8%);
+                    }
+                }
+            }
+
+            &--disabled {
+                #{$sub-block}__button {
+                    color: globals.$text-light-color;
+                    cursor: default;
+
+                    &:hover {
+                        background-color: transparent !important;
+                    }
+                }
+            }
+
+            //
+            // - Variantes
+            //
+
+            &--page {
+                display: none;
+            }
+
+            &--prev-page {
+                #{$sub-block}__button {
+                    @include globals.icon('long-arrow-alt-left') {
+                        margin-right: globals.$spacing-small;
+                        color: globals.$text-light-color;
+                        font-size: 0.9em;
+                    }
+                }
+
+                &#{$sub-block}--disabled {
+                    #{$sub-block}__button {
+                        &::before {
+                            color: globals.$text-muted-color;
+                        }
+                    }
+                }
+            }
+
+            &--next-page {
+                #{$sub-block}__button {
+                    @include globals.icon('long-arrow-alt-right', true) {
+                        margin-left: globals.$spacing-small;
+                        color: globals.$text-light-color;
+                        font-size: 0.9em;
+                    }
+                }
+
+                &#{$sub-block}--disabled {
+                    #{$sub-block}__button {
+                        &::after {
+                            color: globals.$text-muted-color;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    &__count {
+        margin: 0 auto;
+        color: globals.$text-muted-color;
+        font-size: 0.9rem;
+    }
+
+    //
+    // - Avec pagination
+    //
+
+    &--paginated {
+        #{$block}__count {
+            display: none;
+            margin-left: 0;
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        &__pagination {
+            justify-content: center;
+            width: auto;
+
+            &__item--page {
+                display: block;
+            }
+        }
+
+        &__count {
+            display: block !important;
+        }
+    }
+}

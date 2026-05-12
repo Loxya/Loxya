@@ -1,14 +1,21 @@
-import { InvoiceSchema } from '@/stores/api/invoices';
+import requester from '@/globals/requester';
+import apiInvoices from '@/stores/api/invoices';
+import { withPaginationEnvelope } from '@fixtures/@utils';
 import data from '@fixtures/invoices';
 
-import type { SafeParseSuccess } from 'zod';
-
 describe('Invoices Api', () => {
-    it('has a valid schema', () => {
-        data.default().forEach((datum: any) => {
-            const result = InvoiceSchema.safeParse(datum);
-            expect(result.success).toBeTruthy();
-            expect((result as SafeParseSuccess<unknown>).data).toMatchSnapshot();
+    describe('all()', () => {
+        it('parse the returned data correctly', async () => {
+            const paginatedData = withPaginationEnvelope(data.default());
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiInvoices.all()).resolves.toMatchSnapshot();
+        });
+    });
+
+    describe('one()', () => {
+        it('parse the returned data correctly', async () => {
+            jest.spyOn(requester, 'get').mockResolvedValue(data.details(1));
+            await expect(apiInvoices.one(1)).resolves.toMatchSnapshot();
         });
     });
 });

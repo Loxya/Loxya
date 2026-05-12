@@ -1,9 +1,48 @@
-import type { ClassValue } from 'clsx';
 import type { CreateElement } from 'vue';
+import type {
+    EmptyMessageAction,
+    EmptyMessageVariant,
+} from '@/themes/default/components/EmptyMessage';
 
-export type RenderFunction<T = any> = (h: CreateElement, row: T, index: number) => JSX.Node;
+export type Identifier = string | number;
 
-export type Column<Data = any> = {
+/** Descripteur du message affiché lorsqu'un tableau est vide. */
+export type EmptyMessage = {
+    /**
+     * Texte du message à afficher.
+     *
+     * Si non défini, un message par défaut adapté à
+     * la {@link variant} choisie est utilisé.
+     */
+    text?: string,
+
+    /**
+     * Variante d'état à représenter.
+     *
+     * @default EmptyMessageVariant.EMPTY
+     */
+    variant?: EmptyMessageVariant | `${EmptyMessageVariant}`,
+
+    /** Éventuelle action à afficher sous le message. */
+    action?: EmptyMessageAction,
+};
+
+export type Datum<K extends string = 'id'> = (
+    & Record<K, Identifier>
+    & Record<string, unknown>
+);
+
+export type RenderFunction<
+    T extends Datum<K> = any,
+    K extends string = 'id',
+> = (
+    (h: CreateElement, row: T, rowIndex: number) => JSX.Node
+);
+
+export type Column<
+    D extends Datum<K> = any,
+    K extends string = 'id',
+> = {
     /**
      * L'identifiant unique de la colonne.
      *
@@ -31,10 +70,10 @@ export type Column<Data = any> = {
      * valeur liée pour chaque élément du jeu de données et celui-ci
      * sera affiché tel quel.
      */
-    render?: RenderFunction<Data>,
+    render?: RenderFunction<D, K>,
 
     /** Une ou plusieurs classes à ajouter à la colonne. */
-    class?: ClassValue,
+    class?: JSX.NodeClass,
 
     /**
      * La colonne peut-elle être cachée par l'utilisateur ?
@@ -58,13 +97,27 @@ export type Column<Data = any> = {
      * @default false
      */
     defaultHidden?: boolean,
+
+    /**
+     * La direction de tri par défaut est-elle descendante ?
+     *
+     * @default false
+     */
+    defaultSortDesc?: boolean,
 };
 
-export type Columns<Data = any> = Array<Column<Data>>;
+export type Columns<
+    D extends Datum<K>,
+    K extends string = 'id',
+> = Array<Column<D, K>>;
 
-export type OrderBy<T extends Columns = Columns> = {
+export type OrderBy<
+    D extends Datum<K>,
+    Cs extends Columns<D, K>,
+    K extends string = 'id',
+> = {
     /** La clé de la colonne qui sera utilisée pour le tri. */
-    column: T[number]['key'],
+    column: Cs[number]['key'],
 
     /**
      * La colonne doit-elle être triée de façon ascendante (= `true`)
@@ -72,3 +125,29 @@ export type OrderBy<T extends Columns = Columns> = {
      */
     ascending?: boolean,
 };
+
+//
+// - Données "brutes"
+//
+
+export type RawColumn<
+    D extends Datum<K> = any,
+    K extends string = 'id',
+> = {
+    key: string,
+    title: string | undefined,
+    sortable: boolean,
+    render: RenderFunction<D, K> | undefined,
+    class?: JSX.NodeClass,
+};
+
+export type RawColumns<
+    D extends Datum<K> = any,
+    K extends string = 'id',
+> = Array<RawColumn<D, K>>;
+
+export type RawOrderBy<
+    D extends Datum<K> = any,
+    Cs extends RawColumns<D, K> = RawColumns,
+    K extends string = 'id',
+> = Required<OrderBy<D, Cs, K>>;

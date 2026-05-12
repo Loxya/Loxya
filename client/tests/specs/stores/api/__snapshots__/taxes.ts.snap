@@ -1,66 +1,24 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Taxes Api all() parse the returned data correctly 1`] = `
 [
   {
     "id": 1,
     "is_group": false,
-    "is_rate": true,
     "is_used": true,
-    "name": "T.V.A.",
     "value": /* Decimal Instance => */ "20",
   },
   {
     "id": 2,
     "is_group": false,
-    "is_rate": true,
     "is_used": false,
-    "name": "T.V.A.",
     "value": /* Decimal Instance => */ "5.5",
   },
   {
     "id": 3,
     "is_group": false,
-    "is_rate": false,
-    "is_used": true,
-    "name": "Taxe écologique",
-    "value": /* Decimal Instance => */ "1",
-  },
-  {
-    "components": [
-      {
-        "is_rate": true,
-        "name": "T.V.A",
-        "value": /* Decimal Instance => */ "20",
-      },
-      {
-        "is_rate": false,
-        "name": "Éco-participation",
-        "value": /* Decimal Instance => */ "2",
-      },
-    ],
-    "id": 4,
-    "is_group": true,
     "is_used": false,
-    "name": "Taxe meuble",
-  },
-  {
-    "components": [
-      {
-        "is_rate": true,
-        "name": "TPS",
-        "value": /* Decimal Instance => */ "5",
-      },
-      {
-        "is_rate": true,
-        "name": "TVQ",
-        "value": /* Decimal Instance => */ "9.975",
-      },
-    ],
-    "id": 5,
-    "is_group": true,
-    "is_used": true,
-    "name": "Taxe Québec (TPS + TVQ)",
+    "value": /* Decimal Instance => */ "10",
   },
 ]
 `;
@@ -69,9 +27,7 @@ exports[`Taxes Api create() parse the returned data correctly (with #1) 1`] = `
 {
   "id": 1,
   "is_group": false,
-  "is_rate": true,
   "is_used": true,
-  "name": "T.V.A.",
   "value": /* Decimal Instance => */ "20",
 }
 `;
@@ -80,9 +36,7 @@ exports[`Taxes Api create() parse the returned data correctly (with #2) 1`] = `
 {
   "id": 2,
   "is_group": false,
-  "is_rate": true,
   "is_used": false,
-  "name": "T.V.A.",
   "value": /* Decimal Instance => */ "5.5",
 }
 `;
@@ -91,52 +45,8 @@ exports[`Taxes Api create() parse the returned data correctly (with #3) 1`] = `
 {
   "id": 3,
   "is_group": false,
-  "is_rate": false,
-  "is_used": true,
-  "name": "Taxe écologique",
-  "value": /* Decimal Instance => */ "1",
-}
-`;
-
-exports[`Taxes Api create() parse the returned data correctly (with #4) 1`] = `
-{
-  "components": [
-    {
-      "is_rate": true,
-      "name": "T.V.A",
-      "value": /* Decimal Instance => */ "20",
-    },
-    {
-      "is_rate": false,
-      "name": "Éco-participation",
-      "value": /* Decimal Instance => */ "2",
-    },
-  ],
-  "id": 4,
-  "is_group": true,
   "is_used": false,
-  "name": "Taxe meuble",
-}
-`;
-
-exports[`Taxes Api create() parse the returned data correctly (with #5) 1`] = `
-{
-  "components": [
-    {
-      "is_rate": true,
-      "name": "TPS",
-      "value": /* Decimal Instance => */ "5",
-    },
-    {
-      "is_rate": true,
-      "name": "TVQ",
-      "value": /* Decimal Instance => */ "9.975",
-    },
-  ],
-  "id": 5,
-  "is_group": true,
-  "is_used": true,
-  "name": "Taxe Québec (TPS + TVQ)",
+  "value": /* Decimal Instance => */ "10",
 }
 `;
 
@@ -144,9 +54,7 @@ exports[`Taxes Api update() parse the returned data correctly (with #1) 1`] = `
 {
   "id": 1,
   "is_group": false,
-  "is_rate": true,
   "is_used": true,
-  "name": "T.V.A.",
   "value": /* Decimal Instance => */ "20",
 }
 `;
@@ -155,9 +63,7 @@ exports[`Taxes Api update() parse the returned data correctly (with #2) 1`] = `
 {
   "id": 2,
   "is_group": false,
-  "is_rate": true,
   "is_used": false,
-  "name": "T.V.A.",
   "value": /* Decimal Instance => */ "5.5",
 }
 `;
@@ -166,51 +72,7 @@ exports[`Taxes Api update() parse the returned data correctly (with #3) 1`] = `
 {
   "id": 3,
   "is_group": false,
-  "is_rate": false,
-  "is_used": true,
-  "name": "Taxe écologique",
-  "value": /* Decimal Instance => */ "1",
-}
-`;
-
-exports[`Taxes Api update() parse the returned data correctly (with #4) 1`] = `
-{
-  "components": [
-    {
-      "is_rate": true,
-      "name": "T.V.A",
-      "value": /* Decimal Instance => */ "20",
-    },
-    {
-      "is_rate": false,
-      "name": "Éco-participation",
-      "value": /* Decimal Instance => */ "2",
-    },
-  ],
-  "id": 4,
-  "is_group": true,
   "is_used": false,
-  "name": "Taxe meuble",
-}
-`;
-
-exports[`Taxes Api update() parse the returned data correctly (with #5) 1`] = `
-{
-  "components": [
-    {
-      "is_rate": true,
-      "name": "TPS",
-      "value": /* Decimal Instance => */ "5",
-    },
-    {
-      "is_rate": true,
-      "name": "TVQ",
-      "value": /* Decimal Instance => */ "9.975",
-    },
-  ],
-  "id": 5,
-  "is_group": true,
-  "is_used": true,
-  "name": "Taxe Québec (TPS + TVQ)",
+  "value": /* Decimal Instance => */ "10",
 }
 `;

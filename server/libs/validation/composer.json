@@ -1,0 +1,32 @@
+{
+    "name": "respect/validation",
+    "type": "library",
+    "version": "2.8.1.99",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Respect/Validation Contributors",
+            "homepage": "https://github.com/Respect/Validation/graphs/contributors"
+        }
+    ],
+    "require": {
+        "php-64bit": "^8.1 || ^8.2 || ^8.3",
+        "egulias/email-validator": "^4.0",
+        "giggsey/libphonenumber-for-php-lite": "^9.0",
+        "respect/stringifier": "^0.2.0",
+        "symfony/polyfill-mbstring": "^1.32"
+    },
+    "suggest": {
+        "ext-bcmath": "Arbitrary Precision Mathematics",
+        "ext-fileinfo": "File Information",
+        "ext-mbstring": "Multibyte String Functions"
+    },
+    "autoload": {
+        "psr-4": {
+            "Respect\\Validation\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

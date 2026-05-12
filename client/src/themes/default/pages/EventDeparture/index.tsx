@@ -7,7 +7,6 @@ import { ApiErrorCode } from '@/stores/api/@codes';
 import apiEvents from '@/stores/api/events';
 import { BookingEntity } from '@/stores/api/bookings';
 import { confirm } from '@/utils/alert';
-import showModal from '@/utils/showModal';
 import UpdateBookingMaterials from '@/themes/default/modals/UpdateBookingMaterials';
 import Page from '@/themes/default/components/Page';
 import Loading from '@/themes/default/components/Loading';
@@ -376,8 +375,8 @@ const EventDeparture = defineComponent({
                 }
             }
 
-            await showModal(this.$modal, UpdateBookingMaterials, {
-                defaultBooking: { ...this.event, entity: BookingEntity.EVENT },
+            await this.$modal.show(UpdateBookingMaterials, {
+                defaultBooking: { ...this.event!, entity: BookingEntity.EVENT },
             });
 
             this.fetchData();

@@ -54,32 +54,18 @@ final class SettingsTest extends ApiTestCase
                 'defaultTax' => 1,
             ],
             'estimates' => [
-                'customText' => [
-                    'title' => "Modalité de paiement",
-                    'content' => "Paiement par virement ou chèque.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de nous contacter pour toute precision concernant ce devis.",
             ],
             'invoices' => [
-                'customText' => [
-                    'title' => null,
-                    'content' => "Paiement attendu sous 30 jours.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
         ]);
     }
@@ -147,35 +133,21 @@ final class SettingsTest extends ApiTestCase
             ],
             'billing' => [
                 'defaultDegressiveRate' => 3,
-                'defaultTax' => 5,
+                'defaultTax' => 3,
             ],
             'estimates' => [
-                'customText' => [
-                    'title' => "Modalité de paiement",
-                    'content' => "Paiement par virement ou chèque.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => true,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => false,
+                'specialMentions' => "Merci de nous contacter pour toute precision concernant ce devis.",
             ],
             'invoices' => [
-                'customText' => [
-                    'title' => null,
-                    'content' => "Paiement attendu sous 30 jours.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
         ]);
         $this->assertStatusCode(StatusCode::STATUS_OK);
@@ -217,35 +189,21 @@ final class SettingsTest extends ApiTestCase
             ],
             'billing' => [
                 'defaultDegressiveRate' => 3,
-                'defaultTax' => 5,
+                'defaultTax' => 3,
             ],
             'estimates' => [
-                'customText' => [
-                    'title' => "Modalité de paiement",
-                    'content' => "Paiement par virement ou chèque.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => true,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => false,
+                'specialMentions' => "Merci de nous contacter pour toute precision concernant ce devis.",
             ],
             'invoices' => [
-                'customText' => [
-                    'title' => null,
-                    'content' => "Paiement attendu sous 30 jours.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
         ]);
 
@@ -265,7 +223,6 @@ final class SettingsTest extends ApiTestCase
             'billing.defaultDegressiveRate' => null,
             'billing.defaultTax' => null,
             'estimates.showTotalisableProperties' => true,
-            'estimates.showUnitPrices' => false,
         ]);
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
@@ -311,32 +268,18 @@ final class SettingsTest extends ApiTestCase
                 'defaultTax' => null,
             ],
             'estimates' => [
-                'customText' => [
-                    'title' => "Modalité de paiement",
-                    'content' => "Paiement par virement ou chèque.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => true,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => false,
+                'specialMentions' => "Merci de nous contacter pour toute precision concernant ce devis.",
             ],
             'invoices' => [
-                'customText' => [
-                    'title' => null,
-                    'content' => "Paiement attendu sous 30 jours.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
         ]);
     }

@@ -1,5 +1,7 @@
 import './index.scss';
 import { defineComponent } from 'vue';
+import Header from './components/Header';
+import Alert from '@/themes/default/components/Alert';
 
 import type { PropType } from 'vue';
 
@@ -8,12 +10,12 @@ export type Props = {
     name: string,
 
     /**
-     * L'éventuel titre de la page.
+     * Le titre de la page.
      *
      * Celui-ci sera utilisé dans le header de l'application
      * ainsi que dans le `<title></title>` du document.
      */
-    title?: string,
+    title: string,
 
     /** Un éventuel message d'aide global à la page. */
     help?: string,
@@ -44,12 +46,13 @@ export type Props = {
     actions?: JSX.Element[],
 };
 
+type Data = {
+    isLoading: boolean,
+};
+
 /** Une page. */
 const Page = defineComponent({
     name: 'Page',
-    inject: [
-        'setGlobalLoading',
-    ],
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -57,7 +60,7 @@ const Page = defineComponent({
         },
         title: {
             type: String as PropType<Props['title']>,
-            default: undefined,
+            required: true,
         },
         help: {
             type: String as PropType<Props['help']>,
@@ -80,16 +83,12 @@ const Page = defineComponent({
             default: undefined,
         },
     },
+    data: (): Data => ({
+        isLoading: false,
+    }),
     watch: {
         title(newTitle: Props['title']) {
             this.updateTitle(newTitle);
-        },
-
-        loading: {
-            handler(isLoading: boolean) {
-                this.setLoading(isLoading);
-            },
-            immediate: true,
         },
     },
     mounted() {
@@ -97,18 +96,11 @@ const Page = defineComponent({
     },
     beforeDestroy() {
         this.updateTitle(undefined);
-        this.setLoading(false);
     },
     methods: {
         updateTitle(newTitle: string | undefined) {
             this.$store.commit('setPageRawTitle', newTitle ?? null);
             document.title = [newTitle, 'Loxya'].filter(Boolean).join(' - ');
-        },
-
-        setLoading(isLoading: boolean) {
-            // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            this.setGlobalLoading(isLoading);
         },
 
         // ------------------------------------------------------
@@ -136,42 +128,42 @@ const Page = defineComponent({
         const {
             $t: __,
             name,
+            title,
             help,
+            loading,
             actions,
             centered,
             $scopedSlots: slots,
             hasValidationError,
         } = this;
 
-        const renderHelp = (): JSX.Element | null => {
-            if (!hasValidationError && !help) {
-                return null;
-            }
+        const subHeader = ((): JSX.Element | null => {
+            const renderSubHeaderContent = (): JSX.Node => {
+                const helpContent = ((): JSX.Element | null => {
+                    if (!hasValidationError && !help) {
+                        return null;
+                    }
 
-            return (
-                <p
-                    class={['Page__header__help', {
-                        'Page__header__help--error': hasValidationError,
-                    }]}
-                >
-                    {hasValidationError ? __('errors.validation') : help}
-                </p>
-            );
-        };
+                    if (hasValidationError) {
+                        return (
+                            <Alert type="error">
+                                {__('errors.validation')}
+                            </Alert>
+                        );
+                    }
 
-        const renderHeader = (): JSX.Element | null => {
-            const renderHeaderContent = (): JSX.Node => {
-                const helpContent = renderHelp();
+                    return <p class="Page__header__sub__help">{help}</p>;
+                })();
                 const customContent = slots.headerContent?.(undefined) ?? null;
                 if (helpContent === null && customContent === null) {
                     return null;
                 }
 
                 return (
-                    <div class="Page__header__content">
+                    <div class="Page__header__sub__content">
                         {helpContent}
                         {customContent !== null && (
-                            <div class="Page__header__content__custom">
+                            <div class="Page__header__sub__content__custom">
                                 {customContent}
                             </div>
                         )}
@@ -179,23 +171,13 @@ const Page = defineComponent({
                 );
             };
 
-            const headerContent = renderHeaderContent();
-            const hasActions = actions && actions.length > 0;
-            if (headerContent === null && !hasActions) {
-                return null;
-            }
-
-            return (
-                <div class="Page__header">
+            const headerContent = renderSubHeaderContent();
+            return headerContent === null ? null : (
+                <div class="Page__header__sub">
                     {headerContent}
-                    {hasActions && (
-                        <nav class="Page__header__actions" key="header-actions">
-                            {actions}
-                        </nav>
-                    )}
                 </div>
             );
-        };
+        })();
 
         const className = ['Page', `Page--${name}`, {
             'Page--centered': centered,
@@ -203,7 +185,14 @@ const Page = defineComponent({
 
         return (
             <div class={className} ref="container">
-                {renderHeader()}
+                <div class="Page__header">
+                    <Header
+                        title={title}
+                        actions={actions}
+                        showLoading={loading}
+                    />
+                    {subHeader}
+                </div>
                 <div class="Page__body" key="body">
                     {children}
                 </div>

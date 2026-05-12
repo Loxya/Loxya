@@ -29,14 +29,20 @@ final class Dataseed
             return;
         }
 
-        $fields = implode('`,`', array_keys($tableData[0]));
+
+        $columns = array_keys($tableData[0]);
         $tableQuery .= vsprintf(
             "INSERT INTO `%s` (`%s`) VALUES",
-            [$table, $fields],
+            [$table, implode('`,`', $columns)],
         );
 
         foreach ($tableData as $entry) {
-            $values = array_map([$this, '_formatValue'], array_values($entry));
+            $values = array_map(
+                fn ($column) => (
+                    $this->_formatValue($entry[$column] ?? null)
+                ),
+                $columns,
+            );
             $tableQuery .= sprintf("\n(%s),", implode(', ', $values));
         }
 

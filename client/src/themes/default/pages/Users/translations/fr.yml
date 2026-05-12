@@ -9,3 +9,5 @@ confirm-permanently-delete: "Voulez-vous vraiment supprimer définitivement cet 
 confirm-restore: "Voulez-vous vraiment restaurer cet utilisateur\_?"
 
 display-all-groups: Tous les groupes
+
+empty: Aucun utilisateur enregistré pour le moment.

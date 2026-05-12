@@ -1,7 +1,8 @@
 import './index.scss';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
+import { DisabledKey, InvalidKey } from '@/themes/default/components/@constants';
 
-import type { PropType } from 'vue';
+import type { Injected, PropType } from 'vue';
 
 type Props = {
     /**
@@ -54,13 +55,14 @@ type Props = {
     onChange?(newValue: string): void,
 };
 
+type InstanceProperties = {
+    injectedInvalid: Injected<typeof InvalidKey>,
+    injectedDisabled: Injected<typeof DisabledKey>,
+};
+
 /** Un champ permettant d'éditer du texte sur plusieurs lignes (= `<textarea>`). */
 const Textarea = defineComponent({
     name: 'Textarea',
-    inject: {
-        'input.invalid': { default: false },
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -98,25 +100,23 @@ const Textarea = defineComponent({
         },
     },
     emits: ['input', 'change'],
+    setup: (): InstanceProperties => ({
+        injectedInvalid: inject(InvalidKey, computed(() => false)),
+        injectedDisabled: inject(DisabledKey, computed(() => false)),
+    }),
     computed: {
         inheritedInvalid(): boolean {
             if (this.invalid !== undefined) {
                 return this.invalid;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'];
+            return this.injectedInvalid;
         },
 
         inheritedDisabled(): boolean {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
     },
     methods: {

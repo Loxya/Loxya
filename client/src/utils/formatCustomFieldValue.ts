@@ -1,4 +1,5 @@
 import { CustomFieldType } from '@/stores/api/@types';
+import formatNumber from './formatNumber';
 
 import type { I18nTranslate } from 'vuex-i18n';
 import type { PropertyWithValue } from '@/stores/api/properties';
@@ -28,7 +29,12 @@ const formatCustomFieldValue = (__: I18nTranslate, field: Field): string | null 
         }
         case CustomFieldType.INTEGER:
         case CustomFieldType.FLOAT: {
-            return [value, field.unit].join('\u00A0');
+            if (value === null) {
+                return null;
+            }
+            return field.unit !== null
+                ? [formatNumber(value), field.unit].join('\u00A0')
+                : formatNumber(value);
         }
         case CustomFieldType.DATE: {
             return value?.toReadable() ?? null;

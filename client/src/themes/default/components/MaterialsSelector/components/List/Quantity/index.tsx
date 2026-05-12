@@ -1,7 +1,7 @@
 import { defineComponent } from 'vue';
 import debounce from 'lodash/debounce';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
-import QuantityInput from '@/themes/default/components/QuantityInput';
+import InputQuantity from '@/themes/default/components/InputQuantity';
 
 import type { DebouncedMethod } from 'lodash';
 import type { PropType } from 'vue';
@@ -102,10 +102,10 @@ const MaterialsSelectorListQuantity = defineComponent({
         const { bouncedQuantity, handleChange } = this;
 
         return (
-            <QuantityInput
-                limit={{ min: 0 }}
+            <InputQuantity
                 value={bouncedQuantity}
                 onChange={handleChange}
+                inline
             />
         );
     },

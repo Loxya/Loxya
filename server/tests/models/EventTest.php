@@ -4,14 +4,16 @@ declare(strict_types=1);
 namespace Loxya\Tests;
 
 use Illuminate\Support\Carbon;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Event;
 use Loxya\Models\Property;
 use Loxya\Models\User;
 use Loxya\Services\I18n;
 use Loxya\Support\Arr;
+use Loxya\Support\Invoicing\TaxRegime;
+use Loxya\Support\Invoicing\VatExemptionCode\VatExemptionCodeEu;
 use Loxya\Support\Pdf\Pdf;
 use Loxya\Support\Period;
+use Loxya\Support\Validation\ValidationsException;
 
 final class EventTest extends TestCase
 {
@@ -39,8 +41,12 @@ final class EventTest extends TestCase
                 'currency' => 'EUR',
                 'total_without_global_discount' => null,
                 'global_discount_rate' => null,
+                'global_discount_breakdown' => null,
                 'total_global_discount' => null,
                 'total_without_taxes' => null,
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => null,
                 'total_with_taxes' => null,
                 'is_departure_inventory_done' => true,
@@ -76,14 +82,28 @@ final class EventTest extends TestCase
                 'is_billable' => true,
                 'currency' => 'EUR',
                 'total_without_global_discount' => '422.54',
+                'global_discount_breakdown' => [
+                    [
+                        'base' => '422.54',
+                        'value' => '42.25',
+                        'total' => '380.29',
+                        'tax' => [
+                            'type' => TaxRegime::STANDARD->value,
+                            'value' => '20.000',
+                        ],
+                    ],
+                ],
                 'global_discount_rate' => '10.0000',
                 'total_global_discount' => '42.25',
                 'total_without_taxes' => '380.29',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
-                        'is_rate' => true,
+                        'base' => '380.29',
                         'total' => '76.06',
                     ],
                 ],
@@ -120,25 +140,34 @@ final class EventTest extends TestCase
                 'materials_count' => 5,
                 'is_billable' => true,
                 'currency' => 'EUR',
-                'total_without_global_discount' => '-909.67',
+                'total_without_global_discount' => '2192.33',
+                'global_discount_breakdown' => [],
                 'global_discount_rate' => '0.0000',
                 'total_global_discount' => '0.00',
-                'total_without_taxes' => '-909.67',
+                'total_without_taxes' => '2192.33',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '1880.33',
                         'total' => '376.07',
                     ],
                     [
-                        'name' => 'Taxes diverses',
-                        'is_rate' => false,
-                        'value' => '10.00',
-                        'total' => '20.00',
+                        'type' => TaxRegime::STANDARD->value,
+                        'value' => '5.500',
+                        'base' => '310.00',
+                        'total' => '17.05',
+                    ],
+                    [
+                        'type' => TaxRegime::EXEMPTED->value,
+                        'reason' => [VatExemptionCodeEu::VATEX_EU_79_C->value],
+                        'base' => '2.00',
                     ],
                 ],
-                'total_with_taxes' => '-513.60',
+                'total_with_taxes' => '2585.45',
                 'is_departure_inventory_done' => false,
                 'departure_inventory_datetime' => null,
                 'departure_inventory_author_id' => null,
@@ -473,12 +502,12 @@ final class EventTest extends TestCase
         $result = Event::findOrFail(1)->toPdf(new I18n('fr_CH'));
         $this->assertInstanceOf(Pdf::class, $result);
         $this->assertSame('fiche-de-sortie-testing-corp-premier-evenement.pdf', $result->getName());
-        $this->assertMatchesHtmlSnapshot($result->getHtml());
+        $this->assertMatchesPdfSnapshot($result);
 
         $result = Event::findOrFail(2)->toPdf(new I18n('en'));
         $this->assertInstanceOf(Pdf::class, $result);
         $this->assertSame('release-sheet-testing-corp-second-evenement.pdf', $result->getName());
-        $this->assertMatchesHtmlSnapshot($result->getHtml());
+        $this->assertMatchesPdfSnapshot($result);
     }
 
     public function testEdit(): void
@@ -534,8 +563,12 @@ final class EventTest extends TestCase
                 'currency' => 'EUR',
                 'total_without_global_discount' => null,
                 'global_discount_rate' => null,
+                'global_discount_breakdown' => null,
                 'total_global_discount' => null,
                 'total_without_taxes' => null,
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => null,
                 'total_with_taxes' => null,
                 'total_replacement' => '158212.69',
@@ -569,19 +602,24 @@ final class EventTest extends TestCase
                         'person_id' => 3,
                         'user_id' => null,
                         'reference' => '0003',
-                        'last_name' => 'Benef',
-                        'first_name' => 'Client',
-                        'full_name' => 'Client Benef',
-                        'email' => 'client@beneficiaires.com',
+                        'last_name' => 'Faure',
+                        'first_name' => 'Élise',
+                        'full_name' => 'Élise Faure',
+                        'email' => 'elise@loxya.fr',
                         'street' => '156 bis, avenue des tests poussés',
+                        'additional_street' => 'Étage 3, Porte 2',
                         'postal_code' => '88080',
+                        'administrative_area' => null,
                         'locality' => 'Wazzaville',
-                        'phone' => '+33123456789',
-                        'country_id' => null,
-                        'full_address' => "156 bis, avenue des tests poussés\n88080 Wazzaville",
+                        'phone' => '+3211223344',
+                        'country' => 'FR',
+                        'address' => "156 bis, avenue des tests poussés\nÉtage 3, Porte 2\n88080 Wazzaville",
                         'company_id' => null,
                         'can_make_reservation' => 0,
                         'color' => null,
+                        'is_invoiceable' => true,
+                        'is_deleted' => false,
+                        'language' => null,
                         'note' => null,
                         'created_at' => '2018-01-01 00:02:00',
                         'updated_at' => '2022-01-01 00:02:00',
@@ -618,11 +656,14 @@ final class EventTest extends TestCase
                         'unit_price' => null,
                         'degressive_rate' => null,
                         'unit_price_period' => null,
-                        'discount_rate' => null,
-                        'taxes' => null,
                         'total_without_discount' => null,
+                        'discount_rate' => null,
                         'total_discount' => null,
                         'total_without_taxes' => null,
+                        'tax_regime' => null,
+                        'tax_exemption_code' => null,
+                        'tax_id' => null,
+                        'taxes' => null,
                         'unit_replacement_price' => '49.99',
                         'total_replacement_price' => '49.99',
                         'quantity_departed' => 1,
@@ -641,11 +682,14 @@ final class EventTest extends TestCase
                         'unit_price' => null,
                         'degressive_rate' => null,
                         'unit_price_period' => null,
-                        'discount_rate' => null,
-                        'taxes' => null,
                         'total_without_discount' => null,
+                        'discount_rate' => null,
                         'total_discount' => null,
                         'total_without_taxes' => null,
+                        'tax_regime' => null,
+                        'tax_exemption_code' => null,
+                        'tax_id' => null,
+                        'taxes' => null,
                         'unit_replacement_price' => '9.50',
                         'total_replacement_price' => '133.00',
                         'quantity_departed' => null,
@@ -664,11 +708,14 @@ final class EventTest extends TestCase
                         'unit_price' => null,
                         'degressive_rate' => null,
                         'unit_price_period' => null,
-                        'discount_rate' => null,
-                        'taxes' => null,
                         'total_without_discount' => null,
+                        'discount_rate' => null,
                         'total_discount' => null,
                         'total_without_taxes' => null,
+                        'tax_regime' => null,
+                        'tax_exemption_code' => null,
+                        'tax_id' => null,
+                        'taxes' => null,
                         'unit_replacement_price' => '19400.00',
                         'total_replacement_price' => '155200.00',
                         'quantity_departed' => null,
@@ -687,11 +734,14 @@ final class EventTest extends TestCase
                         'unit_price' => null,
                         'degressive_rate' => null,
                         'unit_price_period' => null,
-                        'discount_rate' => null,
-                        'taxes' => null,
                         'total_without_discount' => null,
+                        'discount_rate' => null,
                         'total_discount' => null,
                         'total_without_taxes' => null,
+                        'tax_regime' => null,
+                        'tax_exemption_code' => null,
+                        'tax_id' => null,
+                        'taxes' => null,
                         'unit_replacement_price' => '89.00',
                         'total_replacement_price' => '1780.00',
                         'quantity_departed' => null,
@@ -709,12 +759,15 @@ final class EventTest extends TestCase
                         'unit_price' => null,
                         'degressive_rate' => null,
                         'unit_price_period' => null,
-                        'discount_rate' => null,
                         'quantity' => 3,
-                        'taxes' => null,
                         'total_without_discount' => null,
+                        'discount_rate' => null,
                         'total_discount' => null,
                         'total_without_taxes' => null,
+                        'tax_regime' => null,
+                        'tax_exemption_code' => null,
+                        'tax_id' => null,
+                        'taxes' => null,
                         'unit_replacement_price' => '349.90',
                         'total_replacement_price' => '1049.70',
                         'quantity_departed' => null,
@@ -776,7 +829,7 @@ final class EventTest extends TestCase
         $event->syncBeneficiaries($beneficiaries);
         $this->assertEquals(2, count($event->beneficiaries));
         $this->assertEquals('Roger Rabbit', $event->beneficiaries[0]['full_name']);
-        $this->assertEquals('Client Benef', $event->beneficiaries[1]['full_name']);
+        $this->assertEquals('Élise Faure', $event->beneficiaries[1]['full_name']);
     }
 
     public function testSyncTechnicians(): void
@@ -808,7 +861,7 @@ final class EventTest extends TestCase
         $this->assertEquals('2019-03-01 08:00:00', $event->technicians[0]['start_date']);
         $this->assertEquals('2019-03-01 20:00:00', $event->technicians[0]['end_date']);
         $this->assertEquals(1, $event->technicians[0]['role_id']);
-        $this->assertEquals('Jean Technicien', $event->technicians[1]['technician']['full_name']);
+        $this->assertEquals('Jean Garcia', $event->technicians[1]['technician']['full_name']);
         $this->assertEquals('2019-03-02 10:00:00', $event->technicians[1]['start_date']);
         $this->assertEquals('2019-04-09 17:00:00', $event->technicians[1]['end_date']);
         $this->assertEquals(1, $event->technicians[1]['role_id']);
@@ -857,7 +910,7 @@ final class EventTest extends TestCase
                     'period' => new Period('2019-04-10 10:00:00', '2019-04-11 17:00:00'),
                 ],
             ]);
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = $e->getValidationErrors();
         }
 
@@ -903,7 +956,7 @@ final class EventTest extends TestCase
 
     public function testDuplicateBadData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Event::findOrFail(1)->duplicate([
             // - Période invalide: La start date ne contient pas une heure pile.
             'operation_period' => new Period('2021-08-01 10:38:20', '2021-08-02'),
@@ -934,13 +987,14 @@ final class EventTest extends TestCase
             'is_archived' => false,
             'total_without_global_discount' => '378.91',
             'global_discount_rate' => '0.0000',
+            'global_discount_breakdown' => [],
             'total_global_discount' => '0.00',
             'total_without_taxes' => '378.91',
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
-                    'is_rate' => true,
+                    'base' => '378.91',
                     'total' => '75.78',
                 ],
             ],
@@ -963,11 +1017,7 @@ final class EventTest extends TestCase
                     'unit_price_period' => '300.00',
                     'discount_rate' => '0.0000',
                     'taxes' => [
-                        [
-                            'name' => 'T.V.A.',
-                            'value' => '20.000',
-                            'is_rate' => true,
-                        ],
+                        ['value' => '20.000'],
                     ],
                     'total_without_discount' => '300.00',
                     'total_discount' => '0.00',
@@ -989,11 +1039,7 @@ final class EventTest extends TestCase
                     'unit_price_period' => '51.00',
                     'discount_rate' => '0.0000',
                     'taxes' => [
-                        [
-                            'name' => 'T.V.A.',
-                            'value' => '20.000',
-                            'is_rate' => true,
-                        ],
+                        ['value' => '20.000'],
                     ],
                     'total_without_discount' => '51.00',
                     'total_discount' => '0.00',
@@ -1015,11 +1061,7 @@ final class EventTest extends TestCase
                     'unit_price_period' => '27.91',
                     'discount_rate' => '0.0000',
                     'taxes' => [
-                        [
-                            'name' => 'T.V.A.',
-                            'value' => '20.000',
-                            'is_rate' => true,
-                        ],
+                        ['value' => '20.000'],
                     ],
                     'total_without_discount' => '27.91',
                     'total_discount' => '0.00',
@@ -1067,13 +1109,24 @@ final class EventTest extends TestCase
             'is_archived' => false,
             'total_without_global_discount' => '278.91',
             'global_discount_rate' => '10.0000',
+            'global_discount_breakdown' => [
+                [
+                    'base' => '278.91',
+                    'value' => '27.89',
+                    'total' => '251.02',
+                    'tax' => [
+                        'type' => TaxRegime::STANDARD->value,
+                        'value' => '20.000',
+                    ],
+                ],
+            ],
             'total_global_discount' => '27.89',
             'total_without_taxes' => '251.02',
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
-                    'is_rate' => true,
+                    'base' => '251.02',
                     'total' => '50.20',
                 ],
             ],
@@ -1169,13 +1222,24 @@ final class EventTest extends TestCase
             'is_archived' => false,
             'total_without_global_discount' => '316.38',
             'global_discount_rate' => '10.0000',
+            'global_discount_breakdown' => [
+                [
+                    'base' => '316.38',
+                    'value' => '31.64',
+                    'total' => '284.74',
+                    'tax' => [
+                        'type' => TaxRegime::STANDARD->value,
+                        'value' => '20.000',
+                    ],
+                ],
+            ],
             'total_global_discount' => '31.64',
             'total_without_taxes' => '284.74',
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
-                    'is_rate' => true,
+                    'base' => '284.74',
                     'total' => '56.95',
                 ],
             ],
@@ -1273,13 +1337,14 @@ final class EventTest extends TestCase
             'is_archived' => false,
             'total_without_global_discount' => '341.45',
             'global_discount_rate' => '0.0000',
+            'global_discount_breakdown' => [],
             'total_global_discount' => '0.00',
             'total_without_taxes' => '341.45',
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
-                    'is_rate' => true,
+                    'base' => '341.45',
                     'total' => '68.29',
                 ],
             ],
@@ -1385,7 +1450,7 @@ final class EventTest extends TestCase
         $this->assertEquals('Roger Rabbit', $event->technicians[0]['technician']['full_name']);
         $this->assertEquals('2018-12-17 09:00:00', $event->technicians[0]['start_date']);
         $this->assertEquals('2018-12-18 22:00:00', $event->technicians[0]['end_date']);
-        $this->assertEquals('Jean Technicien', $event->technicians[1]['technician']['full_name']);
+        $this->assertEquals('Jean Garcia', $event->technicians[1]['technician']['full_name']);
         $this->assertEquals('2018-12-18 14:00:00', $event->technicians[1]['start_date']);
         $this->assertEquals('2018-12-18 18:00:00', $event->technicians[1]['end_date']);
     }

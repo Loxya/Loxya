@@ -25,14 +25,21 @@ final class BeneficiariesTest extends ApiTestCase
                 'email' => 'tester@loxya.com',
                 'phone' => null,
                 'street' => "1, somewhere av.",
-                'postal_code' => '1234',
+                'additional_street' => null,
+                'postal_code' => '12340',
+                'administrative_area' => null,
                 'locality' => "Megacity",
-                'country_id' => 1,
-                'full_address' => "1, somewhere av.\n1234 Megacity",
+                'country' => 'FR',
+                'address' => implode("\n", [
+                    "1, somewhere av.",
+                    "12340 Megacity",
+                ]),
                 'company_id' => 1,
+                'language' => 'en',
                 'note' => null,
                 'company' => CompaniesTest::data(1),
-                'country' => CountriesTest::data(1),
+                'is_invoiceable' => true,
+                'is_deleted' => false,
                 'stats' => [
                     'borrowings' => 2,
                 ],
@@ -48,37 +55,49 @@ final class BeneficiariesTest extends ApiTestCase
                 'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => null,
+                'administrative_area' => null,
                 'locality' => null,
-                'country_id' => null,
-                'full_address' => null,
+                'country' => 'FR',
+                'address' => null,
                 'company_id' => null,
+                'language' => 'fr',
                 'note' => null,
                 'company' => null,
-                'country' => null,
+                'is_invoiceable' => true,
+                'is_deleted' => false,
                 'stats' => [
-                    'borrowings' => 2,
+                    'borrowings' => 0,
                 ],
             ],
             [
                 'id' => 3,
                 'user_id' => null,
                 'user' => null,
-                'first_name' => 'Client',
-                'last_name' => 'Benef',
-                'full_name' => 'Client Benef',
+                'first_name' => 'Élise',
+                'last_name' => 'Faure',
+                'full_name' => 'Élise Faure',
                 'reference' => '0003',
-                'email' => 'client@beneficiaires.com',
-                'phone' => '+33123456789',
+                'email' => 'elise@loxya.fr',
+                'phone' => '+3211223344',
                 'street' => '156 bis, avenue des tests poussés',
+                'additional_street' => "Étage 3, Porte 2",
                 'postal_code' => '88080',
+                'administrative_area' => null,
                 'locality' => 'Wazzaville',
-                'full_address' => "156 bis, avenue des tests poussés\n88080 Wazzaville",
-                'country_id' => null,
+                'address' => implode("\n", [
+                    "156 bis, avenue des tests poussés",
+                    "Étage 3, Porte 2",
+                    "88080 Wazzaville",
+                ]),
+                'country' => 'FR',
                 'company_id' => null,
+                'language' => null,
                 'note' => null,
                 'company' => null,
-                'country' => null,
+                'is_invoiceable' => true,
+                'is_deleted' => false,
                 'stats' => [
                     'borrowings' => 1,
                 ],
@@ -87,21 +106,28 @@ final class BeneficiariesTest extends ApiTestCase
                 'id' => 4,
                 'user_id' => null,
                 'user' => null,
-                'first_name' => 'Alphonse',
-                'last_name' => 'Latour',
-                'full_name' => 'Alphonse Latour',
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'full_name' => 'John Doe',
                 'reference' => '0004',
-                'email' => 'alphonse@latour.test',
-                'phone' => null,
-                'street' => null,
-                'postal_code' => null,
-                'locality' => null,
-                'full_address' => null,
-                'country_id' => null,
+                'email' => 'john@doe.test',
+                'phone' => '+17705555765',
+                'street' => "47 W 13th St",
+                'additional_street' => null,
+                'postal_code' => '10011',
+                'administrative_area' => 'NY',
+                'locality' => "New York",
+                'address' => implode("\n", [
+                    "47 W 13th St",
+                    "New York, NY 10011",
+                ]),
+                'country' => 'US',
                 'company_id' => null,
+                'language' => null,
                 'note' => null,
                 'company' => null,
-                'country' => null,
+                'is_invoiceable' => true,
+                'is_deleted' => false,
                 'stats' => [
                     'borrowings' => 0,
                 ],
@@ -109,8 +135,28 @@ final class BeneficiariesTest extends ApiTestCase
         ]);
 
         $beneficiaries = match ($format) {
-            Beneficiary::SERIALIZE_DEFAULT => $beneficiaries->map(static fn ($material) => (
-                Arr::except($material, ['user', 'stats'])
+            Beneficiary::SERIALIZE_SUMMARY => $beneficiaries->map(static fn ($beneficiary) => (
+                Arr::except($beneficiary, [
+                    'user',
+                    'user_id',
+                    'phone',
+                    'street',
+                    'additional_street',
+                    'postal_code',
+                    'administrative_area',
+                    'locality',
+                    'country',
+                    'address',
+                    'company_id',
+                    'language',
+                    'note',
+                    'stats',
+                    'is_invoiceable',
+                    'is_deleted',
+                ])
+            )),
+            Beneficiary::SERIALIZE_DEFAULT => $beneficiaries->map(static fn ($beneficiary) => (
+                Arr::except($beneficiary, ['user', 'stats'])
             )),
             Beneficiary::SERIALIZE_DETAILS => $beneficiaries,
             default => throw new \InvalidArgumentException(sprintf("Unknown format \"%s\"", $format)),
@@ -124,9 +170,9 @@ final class BeneficiariesTest extends ApiTestCase
         $this->client->get('/api/beneficiaries');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(4, [
+            self::data(4),
             self::data(3),
             self::data(1),
-            self::data(4),
             self::data(2),
         ]);
     }
@@ -134,17 +180,17 @@ final class BeneficiariesTest extends ApiTestCase
     public function testGetAllWithSearch(): void
     {
         // - Prénom
-        $this->client->get('/api/beneficiaries?search=cli');
+        $this->client->get('/api/beneficiaries?search=éli');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(1, [
-            self::data(3), // - Client Benef
+            self::data(3), // - Élise Faure
         ]);
 
         // - Prénom nom
-        $this->client->get('/api/beneficiaries?search=client ben');
+        $this->client->get('/api/beneficiaries?search=élise fau');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(1, [
-            self::data(3), // - Client Benef
+            self::data(3), // - Élise Faure
         ]);
 
         // - Nom Prénom
@@ -177,25 +223,27 @@ final class BeneficiariesTest extends ApiTestCase
         ]);
 
         // - Recherche multiple
-        $this->client->get('/api/beneficiaries?search[]=testing,+inc&search[]=client ben');
+        $this->client->get('/api/beneficiaries?search[]=testing,+inc&search[]=élise fau');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(2, [
-            self::data(3), // - Client Benef
+            self::data(3), // - Élise Faure
             self::data(1), // - Jean Fountain (Testing, Inc)
         ]);
     }
 
-    public function testGetOneNotFound(): void
-    {
-        $this->client->get('/api/beneficiaries/999');
-        $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
-    }
-
     public function testGetOne(): void
     {
-        $this->client->get('/api/beneficiaries/1');
-        $this->assertStatusCode(StatusCode::STATUS_OK);
-        $this->assertResponseData(self::data(1, Beneficiary::SERIALIZE_DETAILS));
+        // - Avec un bénéficiaire inexistante.
+        $this->client->get('/api/beneficiaries/999');
+        $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
+
+        // - Avec des bénéficiaires valides
+        $ids = array_column(static::data(null), 'id');
+        foreach ($ids as $id) {
+            $this->client->get(sprintf('/api/beneficiaries/%d', $id));
+            $this->assertStatusCode(StatusCode::STATUS_OK);
+            $this->assertResponseData(self::data($id, Beneficiary::SERIALIZE_DETAILS));
+        }
     }
 
     public function testGetBookings(): void
@@ -228,8 +276,8 @@ final class BeneficiariesTest extends ApiTestCase
         $this->client->get('/api/beneficiaries/1/estimates');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
-            EstimatesTest::data(1),
             EstimatesTest::data(2),
+            EstimatesTest::data(1),
         ]);
     }
 
@@ -238,6 +286,8 @@ final class BeneficiariesTest extends ApiTestCase
         $this->client->get('/api/beneficiaries/1/invoices');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
+            InvoicesTest::data(5),
+            InvoicesTest::data(3),
             InvoicesTest::data(1),
         ]);
     }
@@ -262,6 +312,7 @@ final class BeneficiariesTest extends ApiTestCase
             'last_name' => "This field is mandatory.",
             'reference' => "This reference is already in use.",
             'email' => "This email address is invalid.",
+            'country' => "This field is mandatory.",
         ]);
     }
 
@@ -277,7 +328,7 @@ final class BeneficiariesTest extends ApiTestCase
             'street' => '1 rue du test',
             'postal_code' => '74000',
             'locality' => 'Annecy',
-            'country_id' => 2,
+            'country' => 'FR',
             'note' => null,
         ]);
 
@@ -294,11 +345,15 @@ final class BeneficiariesTest extends ApiTestCase
             'company' => CompaniesTest::data(2),
             'phone' => null,
             'street' => '1 rue du test',
+            'additional_street' => null,
             'postal_code' => '74000',
+            'administrative_area' => null,
             'locality' => 'Annecy',
-            'country_id' => 2,
-            'country' => CountriesTest::data(2),
-            'full_address' => "1 rue du test\n74000 Annecy",
+            'country' => 'FR',
+            'address' => "1 rue du test\n74000 Annecy",
+            'is_invoiceable' => true,
+            'is_deleted' => false,
+            'language' => null,
             'note' => null,
             'stats' => [
                 'borrowings' => 0,
@@ -310,7 +365,10 @@ final class BeneficiariesTest extends ApiTestCase
         $this->client->post('/api/beneficiaries', [
             'first_name' => 'Tester',
             'last_name' => 'Leblanc',
+            'pseudo' => 'new-test',
             'email' => 'tester@loxya.com',
+            'password' => '0123456',
+            'country' => 'CH',
         ]);
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
     }
@@ -336,7 +394,7 @@ final class BeneficiariesTest extends ApiTestCase
             'last_name' => 'Gatillon',
             'postal_code' => '74000',
             'locality' => 'Annecy',
-            'country_id' => 2,
+            'country' => 'FR',
             'note' => "Très bon client.",
         ]);
 
@@ -349,9 +407,8 @@ final class BeneficiariesTest extends ApiTestCase
                 'full_name' => 'José Gatillon',
                 'postal_code' => '74000',
                 'locality' => 'Annecy',
-                'country_id' => 2,
-                'country' => CountriesTest::data(2),
-                'full_address' => "1, somewhere av.\n74000 Annecy",
+                'country' => 'FR',
+                'address' => "1, somewhere av.\n74000 Annecy",
                 'note' => "Très bon client.",
                 'user' => array_merge(UsersTest::data(1), [
                     'first_name' => 'José',

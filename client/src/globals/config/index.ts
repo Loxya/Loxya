@@ -1,49 +1,21 @@
-import { z } from '@/utils/validation';
 import deepFreeze from 'deep-freeze-strict';
-import BillingMode from './@enums/billing-mode';
-import ReturnPolicy from './@enums/return-policy';
-import { CountrySchema } from '@/stores/api/countries/schemas';
+import {
+    BillingMode,
+    ReturnPolicy,
+    WeightUnit,
+} from './@enums';
+import ConfigSchema from './@schema';
 
-import type { SchemaInput, SchemaInfer } from '@/utils/validation';
-
-const GlobalConfigSchema = z.strictObject({
-    baseUrl: z.string(),
-    isSslEnabled: z.boolean(),
-    version: z.string(),
-    returnPolicy: z.nativeEnum(ReturnPolicy),
-    billingMode: z.nativeEnum(BillingMode),
-    defaultLang: z.string(),
-    api: z.strictObject({
-        url: z.string(),
-        headers: z.record(z.string(), z.string()),
-    }),
-    auth: z.strictObject({
-        cookie: z.string(),
-        timeout: z.number().nullable(),
-    }),
-    features: z.strictObject({
-        technicians: z.boolean(),
-    }),
-    currency: z.currency(),
-    organization: z.strictObject({
-        name: z.string().nullable(),
-        country: z.lazy(() => CountrySchema).nullable(),
-    }),
-    defaultPaginationLimit: z.number(),
-    maxConcurrentFetches: z.number(),
-    maxFileUploadSize: z.number(),
-    maxFetchPeriod: z.number(),
-    authorizedFileTypes: z.string().array(),
-    authorizedImageTypes: z.string().array(),
-    colorSwatches: z.string().array().nullable(),
-});
+import type { RawGlobalConfig, GlobalConfig } from './@types';
 
 //
 // - Types.
 //
 
-export type RawGlobalConfig = SchemaInput<typeof GlobalConfigSchema>;
-export type GlobalConfig = SchemaInfer<typeof GlobalConfigSchema>;
+export type {
+    RawGlobalConfig,
+    GlobalConfig,
+};
 
 //
 // - Constants
@@ -81,10 +53,7 @@ const defaultConfig: RawGlobalConfig = {
     baseUrl,
     isSslEnabled,
     version: '__DEV__',
-    api: {
-        url: `${baseUrl}/api`,
-        headers: { Accept: 'application/json' },
-    },
+    mainCountry: 'FR',
     defaultLang: 'fr',
     currency: 'EUR',
     auth: {
@@ -96,16 +65,30 @@ const defaultConfig: RawGlobalConfig = {
     },
     organization: {
         name: null,
-        country: null,
+        isVatExempted: false,
+        vatExemptionCode: null,
+        vatExemptionReason: null,
+        country: 'FR',
+    },
+    estimates: {
+        validityDays: 15,
+    },
+    invoices: {
+        paymentTermDays: 15,
     },
     defaultPaginationLimit: 100,
     maxConcurrentFetches: 2,
     billingMode: BillingMode.PARTIAL,
     returnPolicy: ReturnPolicy.AUTO,
-    maxFileUploadSize: 25 * 1024 * 1024,
-    maxFetchPeriod: 3 * 30,
+    maxFileUploadSize: 25 * 1024 * 1024, // = 25 Mo.
+    maxFetchPeriod: 3 * 30, // = 3 mois.
+    measurementUnits: {
+        materials: {
+            weight: WeightUnit.KILOGRAM,
+        },
+    },
     colorSwatches: null,
-    authorizedFileTypes: [
+    allowedFileTypes: [
         'application/pdf',
         'application/zip',
         'application/x-rar-compressed',
@@ -124,7 +107,7 @@ const defaultConfig: RawGlobalConfig = {
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ],
-    authorizedImageTypes: [
+    allowedImageTypes: [
         'image/jpeg',
         'image/png',
         'image/webp',
@@ -135,6 +118,6 @@ const defaultConfig: RawGlobalConfig = {
 // - Final config.
 //
 
-const globalConfig = GlobalConfigSchema.parse(window.__SERVER_CONFIG__ ?? defaultConfig);
+const globalConfig = ConfigSchema.parse(window.__SERVER_CONFIG__ ?? defaultConfig);
 
 export default deepFreeze(globalConfig);

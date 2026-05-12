@@ -20,6 +20,9 @@ type Props = {
      * @param values - La liste des tags sélectionnés.
      */
     persister(values: Array<Tag['id']>): Promise<unknown>,
+
+    /** Fonction appelée lorsque la modale est fermée. */
+    onClose?(): void,
 };
 
 type Data = {
@@ -32,8 +35,7 @@ const AssignTags = defineComponent({
     name: 'AssignTags',
     modal: {
         width: 600,
-        draggable: true,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         name: {
@@ -47,6 +49,11 @@ const AssignTags = defineComponent({
         persister: {
             type: Function as PropType<Props['persister']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
         },
     },
     emits: ['saved', 'close'],

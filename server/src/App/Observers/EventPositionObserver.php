@@ -9,7 +9,7 @@ use Loxya\Models\EventTechnician;
 
 final class EventPositionObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function deleted(EventPosition $eventPosition): void
     {

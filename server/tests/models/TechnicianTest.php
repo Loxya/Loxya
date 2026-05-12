@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Loxya\Tests;
 
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Event;
 use Loxya\Models\Technician;
+use Loxya\Support\Validation\ValidationsException;
 
 final class TechnicianTest extends TestCase
 {
@@ -17,19 +17,19 @@ final class TechnicianTest extends TestCase
         $this->assertEquals(['Roger Rabbit'], $results->pluck('full_name')->all());
 
         // - Prénom nom
-        $results = Technician::search('jean tec')->get();
+        $results = Technician::search('jean gar')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals(['Jean Technicien'], $results->pluck('full_name')->all());
+        $this->assertEquals(['Jean Garcia'], $results->pluck('full_name')->all());
 
         // - Nom Prénom
-        $results = Technician::search('technicien jean')->get();
+        $results = Technician::search('garcia jean')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals(['Jean Technicien'], $results->pluck('full_name')->all());
+        $this->assertEquals(['Jean Garcia'], $results->pluck('full_name')->all());
 
         // - Email
-        $results = Technician::search('client@technicien.com')->get();
+        $results = Technician::search('jg@loxya.fr')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals(['Jean Technicien'], $results->pluck('full_name')->all());
+        $this->assertEquals(['Jean Garcia'], $results->pluck('full_name')->all());
 
         // - Nickname
         $results = Technician::search('Riri')->get();
@@ -48,7 +48,7 @@ final class TechnicianTest extends TestCase
             'street' => null,
             'postal_code' => null,
             'locality' => null,
-            'country_id' => null,
+            'country' => 'FR',
             'user_id' => 2,
             'pseudo' => 'robbie',
             'password' => '123abc',
@@ -66,7 +66,7 @@ final class TechnicianTest extends TestCase
                 'street' => null,
                 'postal_code' => null,
                 'locality' => null,
-                'country_id' => null,
+                'country' => 'FR',
             ],
             'user' => [
                 'email' => 'tester2@loxya.com',
@@ -88,7 +88,7 @@ final class TechnicianTest extends TestCase
                 'street' => null,
                 'postal_code' => null,
                 'locality' => null,
-                'country_id' => null,
+                'country' => 'FR',
             ],
             'user' => [
                 'email' => 'tester2@loxya.com',
@@ -115,19 +115,19 @@ final class TechnicianTest extends TestCase
 
     public function testCreateWithoutData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Technician::new([]);
     }
 
     public function testCreateBadData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Technician::new(['pseudo' => 'Sans email!']);
     }
 
     public function testCreateWithoutPerson(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Technician::new(['nickname' => 'Gégé']);
     }
 
@@ -144,7 +144,7 @@ final class TechnicianTest extends TestCase
                 'street' => null,
                 'postal_code' => '74000',
                 'locality' => 'Annecy',
-                'country_id' => 2,
+                'country' => 'FR',
             ],
             'roles' => [1],
         ];
@@ -156,7 +156,7 @@ final class TechnicianTest extends TestCase
         $this->assertEquals('José', $result->person->first_name);
         $this->assertEquals('Gatillon', $result->person->last_name);
         $this->assertEquals('Annecy', $result->person->locality);
-        $this->assertEquals('Suisse', $result->person->country->name);
+        $this->assertEquals('FR', $result->person->country->getCode());
         $this->assertEquals('Régisseur', $result->roles[0]->name);
     }
 

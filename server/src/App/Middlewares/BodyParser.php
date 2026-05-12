@@ -145,7 +145,6 @@ final class BodyParser extends BodyParsingMiddlewareCore
                         }
                     }
                 }
-                $file['size'] = self::toFormattedBytes($file['size']);
 
                 $_FILES[$headers['content-disposition']['name']] = $file;
                 $data['files'][$headers['content-disposition']['name']] = $file;
@@ -188,34 +187,22 @@ final class BodyParser extends BodyParsingMiddlewareCore
         return $headers;
     }
 
-    private static function toFormattedBytes(int $bytes): string
-    {
-        $precision = 2;
-        $base = log($bytes, 1024);
-        $suffixes = ['', 'K', 'M', 'G', 'T'];
-
-        return round(1024 ** ($base - floor($base)), $precision) . $suffixes[floor($base)];
-    }
-
     private static function toBytes(string $formattedBytes): ?int
     {
         $units = ['B', 'K', 'M', 'G', 'T', 'P'];
         $unitsExtended = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-        $number = (int) preg_replace("/[^0-9]+/", "", $formattedBytes);
-        $suffix = preg_replace("/[^a-zA-Z]+/", "", $formattedBytes);
-
-        //B or no suffix
-        if (is_numeric($suffix[0])) {
-            return preg_replace('/[^\d]/', '', $formattedBytes);
+        $suffix = preg_replace('/[^a-zA-Z]+/', '', $formattedBytes);
+        if ($suffix === '' || $suffix === 'B') {
+            return (int) preg_replace('/[^\d]/', '', $formattedBytes);
         }
 
+        $number = (int) preg_replace('/[^0-9]+/', '', $formattedBytes);
         $exponent = array_flip($units)[$suffix] ?? null;
         $exponent ??= array_flip($unitsExtended)[$suffix] ?? null;
 
-        if ($exponent === null) {
-            return null;
-        }
-        return $number * (1024 ** $exponent);
+        return $exponent !== null
+            ? ($number * (1024 ** $exponent))
+            : null;
     }
 }

@@ -5,6 +5,7 @@ add-properties: Add properties
 add-btn: Add a property
 all-categories-not-limited: All categories (not limited)
 deleted: Property deleted.
+empty: No material property created at the moment.
 
 confirm-permanently-delete:
     '1': |-

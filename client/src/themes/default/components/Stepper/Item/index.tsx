@@ -1,6 +1,7 @@
 import './index.scss';
 import { defineComponent } from 'vue';
 import Icon from '@/themes/default/components/Icon';
+import StepperOrientation from '../_constants';
 
 import type { PropType } from 'vue';
 import type { Step } from '..';
@@ -14,6 +15,12 @@ type Props = {
 
     /** L'étape est-elle l'étape active ? */
     active: boolean,
+
+    /** L'étape a-t-elle été dépassée (remplie ou non) ? */
+    behind: boolean,
+
+    /** L'orientation du stepper. */
+    orientation: StepperOrientation | `${StepperOrientation}`,
 
     /** Fonction appelée lorsque l'élément a été cliqué. */
     onClick?(): void,
@@ -33,6 +40,14 @@ const StepperItem = defineComponent({
         },
         active: {
             type: Boolean as PropType<Props['active']>,
+            required: true,
+        },
+        behind: {
+            type: Boolean as PropType<Props['behind']>,
+            required: true,
+        },
+        orientation: {
+            type: String as PropType<Props['orientation']>,
             required: true,
         },
         // eslint-disable-next-line vue/no-unused-properties
@@ -64,25 +79,26 @@ const StepperItem = defineComponent({
     },
     render() {
         const { name, filled, reachable = true } = this.step;
-        const { number, icon, active, handleClick } = this;
+        const { number, icon, orientation, active, behind, handleClick } = this;
+        const isVertical = orientation === StepperOrientation.VERTICAL;
+
+        const classNames = ['StepperItem', `StepperItem--${orientation}`, {
+            'StepperItem--active': active,
+            'StepperItem--reachable': reachable,
+            'StepperItem--validated': !active && filled,
+            'StepperItem--behind': behind,
+        }];
 
         return (
-            <div
-                role="button"
-                class={[
-                    'StepperItem',
-                    {
-                        'StepperItem--active': active,
-                        'StepperItem--reachable': reachable,
-                        'StepperItem--validated': !active && filled,
-                    },
-                ]}
-                onClick={handleClick}
-            >
-                <Icon class="StepperItem__icon" name={icon} />
-                <span class="StepperItem__number">{number}</span>
-                <span class="StepperItem__name">{name}</span>
-            </div>
+            <li class={classNames}>
+                <div role="button" class="StepperItem__link" onClick={handleClick}>
+                    {isVertical && <Icon class="StepperItem__icon" name={icon} />}
+                    <span class="StepperItem__content">
+                        <span class="StepperItem__number">{number}</span>
+                        <span class="StepperItem__text">{name}</span>
+                    </span>
+                </div>
+            </li>
         );
     },
 });

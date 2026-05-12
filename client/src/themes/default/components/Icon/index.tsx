@@ -1,3 +1,4 @@
+import './index.scss';
 import { defineComponent } from 'vue';
 
 import type { PropType } from 'vue';
@@ -84,9 +85,11 @@ const Icon = defineComponent({
             normalizedTooltip: tooltip,
         } = this;
 
-        const classNames = ['Icon', VARIANT_MAP[variant], `fa-${name}`, {
-            'fa-spin': spin,
+        const classNames = ['Icon', VARIANT_MAP[variant], {
+            'Icon--spin': spin,
         }];
+
+        classNames.push(`fa-${name}`);
 
         return (
             <i

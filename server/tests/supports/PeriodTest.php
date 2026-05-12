@@ -121,6 +121,14 @@ final class PeriodTest extends TestCase
         // - Avec une période à l'heure près (1).
         $period4 = new Period('2024-01-01 14:30:00', '2024-01-01 15:30:00');
         $this->assertSame(2, $period4->asHours());
+
+        // - Sur le jour du passage à l'heure d'été.
+        $period5 = new Period('2024-03-31', '2024-03-31', true);
+        $this->assertSame(24, $period5->asHours());
+
+        // - Sur le jour du passage à l'heure d'hiver.
+        $period6 = new Period('2024-10-27', '2024-10-27', true);
+        $this->assertSame(24, $period6->asHours());
     }
 
     public function testContain(): void

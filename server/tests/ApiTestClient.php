@@ -14,17 +14,18 @@ use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\UriInterface;
 use Slim\Http\Response;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Slim\Psr7\Factory\UriFactory;
 
 /**
  * ApiTestClient.
  *
- * @method Body get(UriInterface|string $uri, array|callable|null $headers = null)
+ * @method Body get(UriInterface|string $uri, array $query = [], array|callable|null $headers = null)
  * @method Body post(UriInterface|string $uri, ?array $data = null, array|UploadedFileInterface|null $files = null, array|callable|null $headers = null)
  * @method Body patch(UriInterface|string $uri, ?array $data = null, ?array $files = null, array|callable|null $headers = null)
  * @method Body put(UriInterface|string $uri, ?array $data = null, ?array $files = null, array|callable|null $headers = null)
- * @method Body delete(UriInterface|string $uri, array|callable|null $headers = null)
- * @method Body head(UriInterface|string $uri, array|callable|null $headers = null)
- * @method Body options(UriInterface|string $uri, array|callable|null $headers = null)
+ * @method Body delete(UriInterface|string $uri, array $query = [], array|callable|null $headers = null)
+ * @method Body head(UriInterface|string $uri, array $query = [], array|callable|null $headers = null)
+ * @method Body options(UriInterface|string $uri, array $query = [], array|callable|null $headers = null)
  */
 final class ApiTestClient
 {
@@ -41,15 +42,22 @@ final class ApiTestClient
 
     public function __call($method, $arguments): Body
     {
-        $uri = array_shift($arguments);
-        Assert::notNull($uri, 'Endpoint URI should be specified.');
+        $rawUri = array_shift($arguments);
+        Assert::string($rawUri, 'Endpoint URI should be specified.');
+
+        $uri = (new UriFactory())->createUri($rawUri);
 
         switch (strtoupper($method)) {
             case 'GET':
             case 'HEAD':
             case 'OPTIONS':
             case 'DELETE':
-                [$headers] = Arr::defaults($arguments, [null]);
+                [$query, $headers] = Arr::defaults($arguments, [[], null]);
+
+                $existingQuery = [];
+                parse_str($uri->getQuery(), $existingQuery);
+
+                $uri = $uri->withQuery(http_build_query([...$existingQuery, ...$query]));
                 return $this->request($method, $uri, null, null, $headers);
 
             case 'POST':

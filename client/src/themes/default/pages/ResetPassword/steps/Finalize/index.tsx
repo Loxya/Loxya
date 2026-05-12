@@ -2,6 +2,7 @@ import './index.scss';
 import { defineComponent } from 'vue';
 import apiPasswordReset from '@/stores/api/password-reset';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Button from '@/themes/default/components/Button';
 import { HttpCode, RequestError } from '@/utils/requester';
 
@@ -25,7 +26,7 @@ type Data = {
 const ResetPasswordPageFinalizeStep = defineComponent({
     name: 'ResetPasswordPageFinalizeStep',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         data: {

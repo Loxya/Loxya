@@ -3,37 +3,33 @@ declare(strict_types=1);
 
 namespace Loxya\Support\Pdf;
 
-use Dompdf\Canvas;
-use Dompdf\Dompdf;
-use Dompdf\FontMetrics;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Loxya\Config\Config;
 use Loxya\Services\I18n;
 use Loxya\Services\View;
 use Loxya\Support\Str;
+use Pontedilana\PhpWeasyPrint\Pdf as PdfRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Psr7\Stream;
 
-final class Pdf implements PdfInterface
+class Pdf implements PdfInterface
 {
+    /** Le nom du fichier physique du PDF. */
     protected string $name;
 
+    /** Le contenu HTML du PDF. */
     protected string $html;
 
-    protected I18n $i18n;
-
+    /** La version binaire du PDF, lorsqu'elle aura été générée. */
     protected string|null $binary = null;
 
-    protected const DEFAULT_FONT = 'DejaVu Sans';
-
-    public function __construct(string $name, string $html, I18n $i18n)
+    final public function __construct(string $name, string $html)
     {
         $name = Str::slugify(preg_replace('/\.pdf$/i', '', $name));
         $this->name = sprintf('%s.pdf', $name);
 
         $this->html = $html;
-        $this->i18n = $i18n;
     }
 
     public function getName(): string
@@ -43,7 +39,13 @@ final class Pdf implements PdfInterface
 
     public function getHtml(): string
     {
-        return $this->html;
+        $baseTag = sprintf('<base href="%s/" />', Config::getBaseUrl());
+        return str_replace('<head>', sprintf("<head>\n   %s", $baseTag), $this->html);
+    }
+
+    public function withXml(string $xml): HybridPdf
+    {
+        return new HybridPdf($this->getName(), $this->html, $xml);
     }
 
     // ------------------------------------------------------
@@ -57,7 +59,7 @@ final class Pdf implements PdfInterface
         $html = (new View($i18n, 'pdf'))->fetch($template, array_merge($data, [
             'baseUrl' => Config::getBaseUrl(),
         ]));
-        return new static($name, $html, $i18n);
+        return new static($name, $html);
     }
 
     // ------------------------------------------------------
@@ -72,42 +74,35 @@ final class Pdf implements PdfInterface
             return $this->binary;
         }
 
-        $rawContent = $this->getHtml();
-
-        $this->binary = increaseMemory('1G', function () use ($rawContent) {
-            // - Font cache dir
+        $this->binary = increaseMemory('1G', function () {
+            // - Dossier de cache / temporaire
             $cacheDir = CACHE_FOLDER . DS . 'pdf';
-            if (!is_dir($cacheDir)) {
-                @mkdir($cacheDir, 0777, true);
+            $tmpDir = TMP_FOLDER . DS . 'pdf';
+            foreach ([$cacheDir, $tmpDir] as $dir) {
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0777, true);
+                }
             }
 
-            $renderer = new Dompdf([
-                'tempDir' => TMP_FOLDER,
-                'fontCache' => $cacheDir,
-                'logOutputFile' => LOGS_FOLDER . DS . 'pdf.html',
-                'defaultMediaType' => 'print',
-                'defaultPaperSize' => 'a4',
-                'defaultPaperOrientation' => 'portrait',
-                'defaultFont' => self::DEFAULT_FONT,
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-            ]);
-
-            $renderer->loadHtml($rawContent);
-            $renderer->render();
-
-            $canvas = $renderer->getCanvas();
-            $canvas->page_script(
-                function (int $pageNumber, int $pageCount, Canvas $canvas, FontMetrics $fontMetrics) {
-                    $font = $fontMetrics->getFont(self::DEFAULT_FONT);
-                    $pageText = $this->i18n->translate('page-n-of-n', $pageNumber, $pageCount);
-                    $canvas->text(510, 810, $pageText, $font, 8);
-                },
+            $renderer = new PdfRenderer(
+                env('WEASYPRINT_BINARY', '/usr/bin/weasyprint'),
+                [
+                    'pdf-variant' => 'pdf/a-3b',
+                    'base-url' => PUBLIC_FOLDER,
+                    'media-type' => 'print',
+                    'cache-folder' => $cacheDir,
+                    'presentational-hints' => true,
+                    'optimize-images' => true,
+                    'custom-metadata' => true,
+                    'uncompressed-pdf' => true,
+                ],
             );
+            $renderer->setTimeout(25); // - Secondes.
+            $renderer->setTemporaryFolder($tmpDir);
 
-            $binary = $renderer->output();
-            if ($binary === null) {
-                throw new \RuntimeException('An unknown error occurred while rendering the PDF.');
+            $binary = $renderer->getOutputFromHtml($this->html);
+            if (empty($binary)) {
+                throw new \RuntimeException("An unknown error occurred while rendering the PDF.");
             }
 
             return $binary;
@@ -118,25 +113,18 @@ final class Pdf implements PdfInterface
 
     public function asResponse(Response $response): ResponseInterface
     {
-        if (env('DEBUG_EXPORT') === true && Config::getEnv() !== 'test') {
+        if (env('DEBUG_EXPORT') === true || Config::getEnv() === 'test') {
             return $this->asResponseHtml($response);
-        }
-
-        $binary = $this->asBinaryString();
-        if (Config::getEnv() === 'test') {
-            $binary = $this->getHtml();
         }
 
         try {
             $streamHandle = fopen('php://memory', 'r+');
-            fwrite($streamHandle, $binary);
+            fwrite($streamHandle, $this->asBinaryString());
             rewind($streamHandle);
             $fileStream = new Stream($streamHandle);
 
             return $response
-                ->withHeader('Content-Type', 'application/force-download')
-                ->withHeader('Content-Type', 'application/octet-stream')
-                ->withHeader('Content-Type', 'application/download')
+                ->withHeader('Content-Type', 'application/pdf')
                 ->withHeader('Content-Description', 'File Transfer')
                 ->withHeader('Content-Transfer-Encoding', 'binary')
                 ->withHeader('Content-Disposition', sprintf('attachment; filename="%s"', $this->getName()))

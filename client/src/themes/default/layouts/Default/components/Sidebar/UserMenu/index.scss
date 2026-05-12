@@ -1,4 +1,5 @@
 @use '~@/themes/default/style/globals';
+@use '../variables' as *;
 @use 'sass:color';
 
 .DefaultLayoutSidebarUserMenu {
@@ -20,6 +21,7 @@
                 border: none;
                 border-left: 4px solid transparent;
                 background: none;
+                color: inherit !important;
                 font-size: 1.05rem;
                 line-height: 1;
                 text-decoration: none;
@@ -28,21 +30,14 @@
                 user-select: none;
                 cursor: pointer;
 
-                // - Permet de surcharger le style de base des liens.
-                // stylelint-disable-next-line declaration-no-important, order/properties-order
-                color: inherit !important;
-
                 &:hover,
                 &:focus {
                     outline: 0;
                 }
 
                 &:hover {
-                    background-color: globals.$bg-color-side-menu-item-hover;
-
-                    // - Permet de surcharger le style de base des liens.
-                    // stylelint-disable-next-line declaration-no-important
-                    color: color.adjust(globals.$primary-color, $saturation: 10%, $lightness: 5%) !important;
+                    background-color: $item-background-hover;
+                    color: $item-color-hover !important;
                 }
             }
 
@@ -66,14 +61,11 @@
             &--active {
                 #{$block}__link {
                     border-color: globals.$primary-color;
-                    background-color: globals.$bg-color-side-menu-item-active;
-
-                    // - Permet de surcharger le style de base des liens.
-                    // stylelint-disable-next-line declaration-no-important
-                    color: globals.$link-active-color !important;
+                    background-color: $item-background-active;
+                    color: $item-color-active !important;
 
                     &:hover {
-                        background-color: globals.$bg-color-side-menu-item-active;
+                        background-color: $item-background-active;
                     }
                 }
             }

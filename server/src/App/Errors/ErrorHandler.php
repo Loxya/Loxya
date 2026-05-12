@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Loxya\Errors\Exception\ApiException;
 use Loxya\Errors\Exception\ApiTooManyRequestsException;
 use Loxya\Errors\Exception\HttpTooManyRequestsException;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Errors\Renderer\HtmlErrorRenderer;
 use Loxya\Errors\Renderer\JsonErrorRenderer;
+use Loxya\Support\Validation\ValidationsException;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpException;
 use Slim\Handlers\ErrorHandler as CoreErrorHandler;
@@ -39,7 +39,7 @@ class ErrorHandler extends CoreErrorHandler
             return $this->exception->getCode();
         }
 
-        if ($this->exception instanceof ValidationException) {
+        if ($this->exception instanceof ValidationsException) {
             return StatusCode::STATUS_BAD_REQUEST;
         }
 
@@ -74,7 +74,7 @@ class ErrorHandler extends CoreErrorHandler
     {
         $isIgnoredException = (
             $this->exception instanceof ModelNotFoundException ||
-            $this->exception instanceof ValidationException ||
+            $this->exception instanceof ValidationsException ||
             $this->exception instanceof ApiException ||
             (
                 $this->exception instanceof HttpException &&

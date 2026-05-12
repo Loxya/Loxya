@@ -5,13 +5,22 @@ namespace Loxya\Services;
 
 use Brick\Math\BigDecimal as Decimal;
 use League\MimeTypeDetection\FinfoMimeTypeDetector;
+use libphonenumber\NumberParseException;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\Feature;
+use Loxya\Services\View\Loader;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
 use Loxya\Support\Period;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ResponseInterface;
+use ScssPhp\ScssPhp\Compiler as ScssCompiler;
+use ScssPhp\ScssPhp\OutputStyle as ScssOutputStyle;
+use ScssPhp\ScssPhp\ValueConverter as ScssValueConverter;
 use Slim\Views\Twig;
+use Symfony\Component\Filesystem\Path;
 use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Extra\Html\HtmlExtension;
@@ -23,29 +32,41 @@ use Twig\TwigFunction;
 final class View
 {
     private Twig $view;
-
     private I18n $i18n;
 
-    private ?string $folder;
+    private readonly ?string $folder;
+    private readonly array $globalVars;
 
     /**
      * Constructeur.
      *
      * @param I18n $i18n - L'instance d'I18n qui sera utilisée pour définir la langue de la vue.
      * @param string|null $folder - Un éventuel dossier dans lequel sera recherché les fichiers de vue.
+     *                              Si un chemin absolu est fourni, celui-ci sera utilisé comme racine
+     *                              pour la résolution des fichiers de vue (à la place de `VIEWS_FOLDER`).
+     *                              Sinon, il doit s'agir d'un sous-dossier de `VIEWS_FOLDER`.
      *                              Le fait de passer ce paramètre activera aussi la détection des
      *                              fichiers de vue par langue.
+     * @param array $globalVars - Permet de passer des variables globales à tous les rendus.
      */
-    public function __construct(I18n $i18n, ?string $folder = null)
+    public function __construct(I18n $i18n, ?string $folder = null, ?array $globalVars = [])
     {
         $cachePath = false;
         if (Config::getEnv() === 'production') {
             $cachePath = CACHE_FOLDER . DS . 'views';
         }
 
+        $isAbsoluteFolder = $folder !== null && Path::isAbsolute($folder);
+        $rootFolder = $isAbsoluteFolder ? $folder : VIEWS_FOLDER;
+
         $this->i18n = $i18n;
-        $this->folder = $folder ? trim($folder, '\\/') : null;
-        $this->view = Twig::create(VIEWS_FOLDER, [
+        $this->globalVars = $globalVars;
+        $this->folder = (
+            $folder !== null && !$isAbsoluteFolder
+                ? trim($folder, '\\/')
+                : null
+        );
+        $this->view = new Twig(new Loader($rootFolder), [
             'debug' => Config::getEnv() !== 'production',
             'cache' => $cachePath,
         ]);
@@ -57,7 +78,26 @@ final class View
         $this->view->getEnvironment()->addGlobal('env', Config::getEnv());
         $this->view->getEnvironment()->addGlobal('locale', $i18n->getLocale());
         $this->view->getEnvironment()->addGlobal('lang', $i18n->getLanguage());
-        $this->view->getEnvironment()->addGlobal('organization', Config::get('companyData'));
+
+        foreach ($this->globalVars as $key => $value) {
+            $this->view->getEnvironment()->addGlobal($key, $value);
+        }
+
+        // - Organisation.
+        $organization = Config::get('organization');
+        $organization = array_replace($organization, [
+            'address' => Config::getOrganizationAddress(),
+            'country' => Config::getOrganizationCountry(),
+        ]);
+        $this->view->getEnvironment()->addGlobal('organization', $organization);
+
+        // - Unités de mesure.
+        $measurementUnits = Config::get('measurementUnits');
+        $this->view->getEnvironment()->addGlobal('measurementUnits', [
+            'materials' => [
+                'weight' => $measurementUnits['materials']['weight']->value,
+            ],
+        ]);
 
         //
         // - Extensions
@@ -90,6 +130,12 @@ final class View
         $this->view->getEnvironment()->addFunction(
             new TwigFunction('client_asset', $this->getClientAsset()),
         );
+        $this->view->getEnvironment()->addFunction(
+            new TwigFunction('source', $this->getSource(), [
+                'needs_environment' => true,
+                'is_safe' => ['all'],
+            ]),
+        );
 
         //
         // - Filters
@@ -105,6 +151,9 @@ final class View
             new TwigFilter('format_currency', $this->formatCurrencyFilter()),
         );
         $this->view->getEnvironment()->addFilter(
+            new TwigFilter('format_phone', $this->formatPhoneFilter()),
+        );
+        $this->view->getEnvironment()->addFilter(
             new TwigFilter('format_number', $this->formatNumberFilter()),
         );
         $this->view->getEnvironment()->addFilter(
@@ -118,6 +167,14 @@ final class View
         $this->view->getEnvironment()->addFilter(
             new TwigFilter('format_period_*', $this->formatPeriodPartFilter(), [
                 'needs_environment' => true,
+            ]),
+        );
+        $this->view->getEnvironment()->addFilter(
+            new TwigFilter('format_iban', $this->formatIbanFilter()),
+        );
+        $this->view->getEnvironment()->addFilter(
+            new TwigFilter('scss', $this->compileScssFilter(), [
+                'is_safe' => ['all'],
             ]),
         );
     }
@@ -243,6 +300,93 @@ final class View
         );
     }
 
+    private function getSource(): callable
+    {
+        $isProduction = Config::getEnv() === 'production';
+
+        return function (Environment $env, string $name, bool $ignoreMissing = false) use ($isProduction): string {
+            $loader = $env->getLoader();
+            try {
+                $source = $loader->getSourceContext($name);
+            } catch (\Twig\Error\LoaderError $e) {
+                if ($ignoreMissing) {
+                    return '';
+                }
+                throw $e;
+            }
+
+            $sourcePath = $source->getPath();
+            $content = $source->getCode();
+
+            // - Pour les fichiers non-SCSS, on retourne le contenu tel quel.
+            if (!str_ends_with($sourcePath, '.scss')) {
+                return $content;
+            }
+
+            $cacheDir = CACHE_FOLDER . DS . 'scss';
+            $cacheFile = $cacheDir . DS . md5($sourcePath) . '.css';
+
+            $needsCompilation = (
+                !$isProduction ||
+                !is_file($cacheFile) ||
+                filemtime($sourcePath) > filemtime($cacheFile)
+            );
+            if ($needsCompilation) {
+                $css = $this->createScssCompiler(dirname($sourcePath))
+                    ->compileString($content, $sourcePath)
+                    ->getCss();
+
+                if ($isProduction) {
+                    if (!is_dir($cacheDir)) {
+                        mkdir($cacheDir, 0775, true);
+                    }
+                    file_put_contents($cacheFile, $css);
+                }
+
+                return $css;
+            }
+
+            return file_get_contents($cacheFile);
+        };
+    }
+
+    private function createScssCompiler(?string $sourceDir = null): ScssCompiler
+    {
+        $compiler = new ScssCompiler();
+        $compiler->setOutputStyle(ScssOutputStyle::EXPANDED);
+        $compiler->replaceVariables(array_map(
+            static fn ($value) => ScssValueConverter::fromPhp($value),
+            $this->globalVars,
+        ));
+
+        if ($sourceDir !== null) {
+            $compiler->setImportPaths([$sourceDir]);
+        }
+
+        return $compiler;
+    }
+
+    private function compileScssFilter(): callable
+    {
+        $isProduction = Config::getEnv() === 'production';
+
+        return function (string $content) use ($isProduction): string {
+            $compile = fn (): string => (
+                $this->createScssCompiler()
+                    ->compileString($content)
+                    ->getCss()
+            );
+            if (!$isProduction) {
+                return $compile();
+            }
+
+            /** @var Cache $cache */
+            $cache = container('cache');
+            $cacheKey = sprintf('scss.inline.%s', md5($content));
+            return $cache->get($cacheKey, $compile);
+        };
+    }
+
     // ------------------------------------------------------
     // -
     // -    Filtres Twig
@@ -265,6 +409,49 @@ final class View
         };
     }
 
+    private function formatPhoneFilter(): callable
+    {
+        return static function (string $rawNumber, Country|string|null $country = null): string {
+            if ($country !== null) {
+                $country = !($country instanceof Country)
+                    ? strtoupper($country)
+                    : $country->getCode();
+            }
+
+            $phoneUtil = PhoneNumberUtil::getInstance();
+            try {
+                $phoneNumber = $phoneUtil->parse($rawNumber, $country);
+                if (!$phoneUtil->isValidNumber($phoneNumber)) {
+                    return $rawNumber;
+                }
+                $phoneCountryCode = $phoneNumber->getCountryCode();
+
+                // - Code du pays déduit du numéro lui-même.
+                if ($phoneCountryCode !== null) {
+                    $inferredCountry = $phoneUtil->getRegionCodeForCountryCode($phoneCountryCode);
+                    if ($inferredCountry !== PhoneNumberUtil::UNKNOWN_REGION) {
+                        $country = $inferredCountry;
+                    }
+                }
+
+                $mainCountry = Config::get('mainCountry');
+                if ($country !== null && $mainCountry !== null) {
+                    $format = $country !== $mainCountry
+                        ? PhoneNumberFormat::INTERNATIONAL
+                        : PhoneNumberFormat::NATIONAL;
+                    return $phoneUtil->format($phoneNumber, $format);
+                }
+
+                $formattedNumber = $phoneUtil->format($phoneNumber, PhoneNumberFormat::NATIONAL);
+                return $phoneCountryCode !== null
+                    ? sprintf('(+%d) %s', $phoneCountryCode, $formattedNumber)
+                    : $formattedNumber;
+            } catch (NumberParseException) {
+                return $rawNumber;
+            }
+        };
+    }
+
     private function formatNumberFilter(): callable
     {
         // phpcs:ignore Generic.Files.LineLength.TooLong
@@ -283,10 +470,26 @@ final class View
         };
     }
 
+    private function formatIbanFilter(): callable
+    {
+        return static function (string $iban): string {
+            $iban = preg_replace('/\s+/', '', $iban);
+            return implode(' ', str_split($iban, 4));
+        };
+    }
+
     private function formatPeriodFilter(): callable
     {
         return function (Environment $env, Period $period, string $format = 'short', ?string $locale = null): string {
-            $formatDate = static function (\DateTimeInterface|null $date, bool $withTime) use ($env, $format, $locale) {
+            $formatDate = static function (
+                \DateTimeInterface|null $date,
+                bool $withTime,
+                ?string $datePattern = null,
+            ) use (
+                $env,
+                $format,
+                $locale,
+            ) {
                 if ($date === null) {
                     return '?';
                 }
@@ -302,7 +505,9 @@ final class View
                     $env,
                     $date,
                     $dateFormat,
-                    $format === 'minimalist' ? 'd MMM' : '',
+                    $datePattern ?? (
+                        $format === 'minimalist' ? 'd MMM' : ''
+                    ),
                     null,
                     'gregorian',
                     $locale,
@@ -335,9 +540,30 @@ final class View
                     };
                 }
 
+                $startDate = $period->getStartDate();
+                $endDate = $period->getEndDate()?->subDay();
+
+                // - Lorsque la date de début partage certaines composantes avec la date
+                //   de fin, on utilise un pattern réduit pour éviter les répétitions.
+                //   (e.g. "du 15 au 20 mai 2026" plutôt que "du 15 mai 2026 au 20 mai 2026").
+                $customStartDatePattern = $endDate === null ? null : match (true) {
+                    $startDate->isSameMonth($endDate) => match ($format) {
+                        'minimalist', 'medium', 'long' => 'd',
+                        'full' => 'EEEE d',
+                        default => null,
+                    },
+                    $startDate->isSameYear($endDate) => match ($format) {
+                        'minimalist', 'medium' => 'd MMM',
+                        'long' => 'd MMMM',
+                        'full' => 'EEEE d MMMM',
+                        default => null,
+                    },
+                    default => null,
+                };
+
                 $formattedDates = [
-                    $formatDate($period->getStartDate(), false),
-                    $formatDate($period->getEndDate()?->subDay(), false),
+                    $formatDate($startDate, false, $customStartDatePattern),
+                    $formatDate($endDate, false),
                 ];
             } else {
                 $formattedDates = [

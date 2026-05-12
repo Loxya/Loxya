@@ -1,9 +1,9 @@
 import './index.scss';
+import { Step } from '..';
 import isEqual from 'lodash/isEqual';
 import Period, { PeriodReadableFormat } from '@/utils/period';
 import DateTime from '@/utils/datetime';
 import { confirm } from '@/utils/alert';
-import showModal from '@/utils/showModal';
 import apiEvents from '@/stores/api/events';
 import mergeDifference from '@/utils/mergeDifference';
 import apiTechnicians from '@/stores/api/technicians';
@@ -215,7 +215,7 @@ const EventEditStepTechnicians = defineComponent({
         },
 
         async handleCreateTechnicianAssignment(date: DateTime, technician: TechnicianWithEvents) {
-            await showModal(this.$modal, AssignmentCreation, {
+            await this.$modal.show(AssignmentCreation, {
                 event: this.event,
                 technician,
                 defaultStartDate: date,
@@ -225,7 +225,7 @@ const EventEditStepTechnicians = defineComponent({
         },
 
         async handleUpdateTechnicianAssignment(assignment: EventTechnician) {
-            await showModal(this.$modal, AssignmentEdition, {
+            await this.$modal.show(AssignmentEdition, {
                 event: this.event,
                 assignment,
             });
@@ -365,11 +365,11 @@ const EventEditStepTechnicians = defineComponent({
         },
 
         handlePrevClick() {
-            this.$emit('goToStep', 2);
+            this.$emit('goToStep', Step.BENEFICIARIES);
         },
 
         handleNextClick() {
-            this.$emit('goToStep', 4);
+            this.$emit('goToStep', Step.MATERIALS);
         },
 
         // ------------------------------------------------------
@@ -501,10 +501,12 @@ const EventEditStepTechnicians = defineComponent({
                             </div>
                         )}
                     </div>
-                    <FiltersPanel
-                        values={filters}
-                        onChange={handleFiltersChange}
-                    />
+                    {hasAssignableTechnicians && (
+                        <FiltersPanel
+                            values={filters}
+                            onChange={handleFiltersChange}
+                        />
+                    )}
                 </header>
                 <div class="EventEditStepTechnicians__content">
                     {renderContent()}

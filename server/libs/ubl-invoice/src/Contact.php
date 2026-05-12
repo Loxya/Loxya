@@ -1,0 +1,179 @@
+<?php
+declare(strict_types=1);
+
+namespace NumNum\UBL;
+
+use Sabre\Xml\Reader;
+use Sabre\Xml\Writer;
+use Sabre\Xml\XmlDeserializable;
+use Sabre\Xml\XmlSerializable;
+use function Sabre\Xml\Deserializer\keyValue;
+
+class Contact implements XmlSerializable, XmlDeserializable
+{
+    private $id;
+
+    private $name;
+
+    private $telephone;
+
+    private $telefax;
+
+    private $electronicMail;
+
+    // phpcs:ignore SlevomatCodingStandard.Functions.DisallowEmptyFunction
+    final public function __construct() {}
+
+    /**
+     * @return string
+     */
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return Contact
+     */
+    public function setId(string $id): Contact
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param mixed $name
+     *
+     * @return static
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTelephone(): ?string
+    {
+        return $this->telephone;
+    }
+
+    /**
+     * @param string $telephone
+     *
+     * @return static
+     */
+    public function setTelephone(?string $telephone)
+    {
+        $this->telephone = $telephone;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTelefax(): ?string
+    {
+        return $this->telefax;
+    }
+
+    /**
+     * @param string $telefax
+     *
+     * @return static
+     */
+    public function setTelefax(?string $telefax)
+    {
+        $this->telefax = $telefax;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getElectronicMail(): ?string
+    {
+        return $this->electronicMail;
+    }
+
+    /**
+     * @param string $electronicMail
+     *
+     * @return static
+     */
+    public function setElectronicMail(?string $electronicMail)
+    {
+        $this->electronicMail = $electronicMail;
+        return $this;
+    }
+
+    /**
+     * The xmlSerialize method is called during xml writing.
+     *
+     * @param Writer $writer
+     *
+     * @return void
+     */
+    public function xmlSerialize(Writer $writer): void
+    {
+        if ($this->id !== null) {
+            $writer->write([
+                Schema::CBC . 'ID' => $this->id,
+            ]);
+        }
+
+        if ($this->name !== null) {
+            $writer->write([
+                Schema::CBC . 'Name' => $this->name,
+            ]);
+        }
+
+        if ($this->telephone !== null) {
+            $writer->write([
+                Schema::CBC . 'Telephone' => $this->telephone,
+            ]);
+        }
+
+        if ($this->telefax !== null) {
+            $writer->write([
+                Schema::CBC . 'Telefax' => $this->telefax,
+            ]);
+        }
+
+        if ($this->electronicMail !== null) {
+            $writer->write([
+                Schema::CBC . 'ElectronicMail' => $this->electronicMail,
+            ]);
+        }
+    }
+
+    /**
+     * The xmlDeserialize method is called during xml reading.
+     *
+     * @param Reader $reader
+     *
+     * @return static
+     */
+    public static function xmlDeserialize(Reader $reader)
+    {
+        $keyValues = keyValue($reader);
+
+        return (new static())
+            ->setName($keyValues[Schema::CBC . 'Name'] ?? null)
+            ->setTelephone($keyValues[Schema::CBC . 'Telephone'] ?? null)
+            ->setTelefax($keyValues[Schema::CBC . 'Telefax'] ?? null)
+            ->setElectronicMail($keyValues[Schema::CBC . 'ElectronicMail'] ?? null);
+    }
+}

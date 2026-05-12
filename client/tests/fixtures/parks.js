@@ -5,11 +5,18 @@ import pick from 'lodash/pick';
 const data = [
     {
         id: 1,
-        name: 'default',
-        street: 'Hangar 951',
+        name: 'Défaut',
+        street: '10 rue des canaux',
+        additional_street: 'Hangar 951',
         postal_code: '01234',
+        administrative_area: null,
         locality: 'Secretville',
-        country_id: 1,
+        country: 'FR',
+        address: (
+            `10 rue des canaux\n` +
+            `Hangar 951\n` +
+            `01234 Secretville`
+        ),
         opening_hours: `Du lundi au vendredi, de 09:00 à 19:00.`,
         note: null,
         total_items: 7,
@@ -18,11 +25,14 @@ const data = [
     },
     {
         id: 2,
-        name: 'spare',
+        name: 'Spare',
         street: null,
+        additional_street: null,
         postal_code: null,
+        administrative_area: null,
         locality: null,
-        country_id: null,
+        country: 'FR',
+        address: null,
         opening_hours: null,
         note: `Les bidouilles de fond de tiroir`,
         total_items: 2,

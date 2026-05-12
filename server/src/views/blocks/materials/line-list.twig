@@ -1,9 +1,27 @@
+{%- set showProperties = (
+    material.properties is not empty or
+    material.weight is not empty or
+    material.origin_country is not empty
+) -%}
 <tr>
     <td>{{ material.reference }}</td>
     <td>
         {{ material.name }}
-        {% if material.properties is not empty %}
+        {%- if showProperties -%}
             <br />
+            {% if material.weight is not empty -%}
+            <span class="lighter">
+                {{- __('weight-value', [
+                    material.weight|format_number(locale=locale),
+                    measurementUnits.materials.weight,
+                ]) -}}
+            </span>
+            {% endif -%}
+            {% if material.origin_country is not empty -%}
+            <span class="lighter">
+                {{- __('origin-country-value', [material.origin_country.name]) -}}
+            </span>
+            {% endif -%}
             {% for property in material.properties %}
                 {{ include('blocks/materials/property.twig', { property }) }}
             {% endfor %}

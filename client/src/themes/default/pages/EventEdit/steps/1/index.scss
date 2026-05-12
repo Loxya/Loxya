@@ -1,9 +1,24 @@
 @use '~@/themes/default/style/globals';
 
 .EventEditStepInfos {
-    max-width: 800px;
-    min-width: 250px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    height: 100%;
+    gap: globals.$spacing-medium;
+
+    &__wrapper {
+        flex: 1;
+        overflow: auto;
+        height: 100%;
+        padding: 0 globals.$spacing-small;
+    }
+
+    &__content {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
 
     &__operation-period {
         display: flex;
@@ -40,8 +55,6 @@
 
         &__item {
             flex: 1;
-
-            // stylelint-disable-next-line declaration-no-important -- Surcharge du `.FormField + .FormField`.
             margin-top: 0 !important;
         }
     }
@@ -64,8 +77,8 @@
     &__actions {
         display: flex;
         flex-wrap: wrap;
-        justify-content: flex-end;
-        padding: globals.$spacing-large 0;
+        justify-content: center;
+        padding: globals.$spacing-small 0;
         gap: globals.$spacing-small;
     }
 
@@ -77,10 +90,6 @@
         &__roles {
             flex-direction: row;
             gap: globals.$spacing-medium;
-        }
-
-        &__actions {
-            padding-left: globals.$form-label-width;
         }
     }
 }

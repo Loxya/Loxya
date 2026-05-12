@@ -20,6 +20,11 @@
                 display: block;
                 max-width: 110px;
             }
+
+            &--minimalist {
+                flex: 0 0 27px;
+                display: none;
+            }
         }
 
         &::after {
@@ -27,13 +32,11 @@
             top: 0;
             right: 0;
             flex: none;
+            display: flex !important;
             align-items: center;
             justify-content: center;
             height: 100%;
             padding: 0 3px;
-
-            // stylelint-disable-next-line declaration-no-important, order/properties-order
-            display: flex !important;
         }
     }
 
@@ -50,6 +53,11 @@
             &__logo {
                 &--large {
                     display: none;
+                }
+
+                &--minimalist {
+                    flex: 0 0 24px;
+                    display: block;
                 }
             }
 

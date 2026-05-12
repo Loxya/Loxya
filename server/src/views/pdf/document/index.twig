@@ -1,0 +1,20 @@
+{% extends 'pdf/base.twig' %}
+
+{% block head ~%}
+    <style type="text/css">
+        @page {
+            @bottom-right {
+                {%- set footerCounter = (
+                    __('page-n-of-n', ['{page}', '{total}'])|escape|replace({
+                        '{page}': '" counter(page) "',
+                        '{total}': '" counter(pages) "',
+                    })
+                ) ~%}
+                content: "{{ footerCounter|raw }}";
+            }
+        }
+    </style>
+    <style type="text/css">
+        {{~ source('./index.scss') }}
+    </style>
+{% endblock %}

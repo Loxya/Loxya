@@ -12,7 +12,10 @@ import type Period from '@/utils/period';
 import type { ClassValue } from 'clsx';
 import type { RawColor } from '@/utils/color';
 import type { PropType, Raw } from 'vue';
-import type { CalendarItem as CalendarItemCore } from 'vue-simple-calendar';
+import type {
+    CalendarItem as CalendarItemCore,
+    NormalizedCalendarItem as NormalizedCalendarItemCore,
+} from 'vue-simple-calendar';
 
 export type CalendarItem = {
     id: string | number,
@@ -137,7 +140,7 @@ const MonthCalendar = defineComponent({
             this.displayedDate = markRaw(this.displayedDate.add(1, 'month'));
         },
 
-        handleClickItem({ originalItem: { id } }: { originalItem: CalendarItemCore }) {
+        handleClickItem({ id }: NormalizedCalendarItemCore) {
             this.$emit('clickItem', id);
 
             if (
@@ -198,8 +201,7 @@ const MonthCalendar = defineComponent({
                     itemContentHeight="53px"
                     itemBorderHeight="0px"
                     locale={getLocale()}
-                    // Note: Le camelCase (`onClickItem`) ne fonctionne pas.
-                    onClick-item={handleClickItem}
+                    onClickItem={handleClickItem}
                     doEmitItemMouseEvents
                 />
             </div>

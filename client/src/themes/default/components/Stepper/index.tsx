@@ -1,11 +1,12 @@
 import './index.scss';
 import { defineComponent } from 'vue';
+import StepperOrientation from './_constants';
 import Item from './Item';
 
 import type { PropType } from 'vue';
 
-export type Step = {
-    id: number | string,
+export type Step<T extends number | string = number | string> = {
+    id: T,
     name: string,
     filled: boolean,
     reachable?: boolean,
@@ -24,6 +25,14 @@ type Props = {
     currentStepId: Step['id'],
 
     /**
+     * L'orientation des étapes.
+     *
+     * - `vertical` (défaut) : Étapes empilées, type sidebar.
+     * - `horizontal` : Étapes alignées sur une ligne.
+     */
+    orientation?: StepperOrientation | `${StepperOrientation}`,
+
+    /**
      * Fonction appelée lorsque l'utilisateur a demandé un changement d'étape.
      *
      * @param id - L'identifiant de l'étape à ouvrir.
@@ -40,8 +49,16 @@ const Stepper = defineComponent({
             required: true,
         },
         currentStepId: {
-            type: Number as PropType<Props['currentStepId']>,
+            type: [Number, String] as PropType<Props['currentStepId']>,
             required: true,
+        },
+        orientation: {
+            type: String as PropType<Required<Props>['orientation']>,
+            default: StepperOrientation.VERTICAL,
+            validator: (value: unknown) => (
+                typeof value === 'string' &&
+                (Object.values(StepperOrientation) as string[]).includes(value)
+            ),
         },
         // eslint-disable-next-line vue/no-unused-properties
         onOpenStep: {
@@ -50,6 +67,22 @@ const Stepper = defineComponent({
         },
     },
     emits: ['openStep'],
+    computed: {
+        currentStepIndex(): number {
+            return this.steps.findIndex((step: Step) => (
+                step.id === this.currentStepId
+            ));
+        },
+
+        progressPercent(): number {
+            const stepsCount = this.steps.length - 1;
+            if (stepsCount <= 0) {
+                return 0;
+            }
+            const percent = Math.round((this.currentStepIndex / stepsCount) * 100);
+            return Math.min(percent, 100);
+        },
+    },
     methods: {
         openStep(id: Step['id']): void {
             const step = this.steps.find((_step: Step) => _step.id === id);
@@ -60,22 +93,53 @@ const Stepper = defineComponent({
         },
     },
     render() {
-        const { steps, openStep } = this;
+        const isHorizontal = this.orientation === StepperOrientation.HORIZONTAL;
+        const {
+            steps,
+            orientation,
+            currentStepId,
+            currentStepIndex,
+            progressPercent,
+            openStep,
+        } = this;
 
         return (
-            <div class="Stepper">
-                {steps.map((step: Step, index: number) => (
-                    <Item
-                        key={step.id}
-                        step={step}
-                        number={index + 1}
-                        active={step.id === this.currentStepId}
-                        onClick={() => { openStep(step.id); }}
-                    />
-                ))}
+            <div
+                class={['Stepper', `Stepper--${orientation}`]}
+                style={{ '--steps-count': steps.length }}
+            >
+                <ol class="Stepper__list">
+                    {steps.map((step: Step, index: number) => {
+                        const isActive = step.id === currentStepId;
+                        const isBehind = index < currentStepIndex;
+
+                        return (
+                            <Item
+                                key={step.id}
+                                step={step}
+                                number={index + 1}
+                                active={isActive}
+                                behind={isBehind}
+                                orientation={orientation}
+                                class="Stepper__list__item"
+                                onClick={() => { openStep(step.id); }}
+                            />
+                        );
+                    })}
+                </ol>
+                {isHorizontal && (
+                    <div
+                        class="Stepper__progressbar"
+                        style={{ '--progressbar-value': progressPercent }}
+                    >
+                        <span class="Stepper__progressbar__bar" />
+                        <div class="Stepper__progressbar__value" />
+                    </div>
+                )}
             </div>
         );
     },
 });
 
+export { StepperOrientation };
 export default Stepper;

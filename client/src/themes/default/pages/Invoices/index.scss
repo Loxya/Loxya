@@ -1,0 +1,90 @@
+@use '~@/themes/default/style/globals';
+
+.Invoices {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    &__table {
+        flex: 1;
+
+        &__cell {
+            &--number {
+                width: 120px;
+                text-align: center;
+            }
+
+            &--due-date,
+            &--status,
+            &--total-with-taxes {
+                display: none;
+            }
+
+            &--issue-date,
+            &--due-date {
+                width: 150px;
+                text-align: center;
+            }
+
+            &--total-without-taxes,
+            &--total-with-taxes {
+                max-width: 200px;
+                min-width: 130px;
+                text-align: right;
+            }
+
+            &--status {
+                width: 200px;
+                text-align: center;
+            }
+
+            &__empty {
+                color: globals.$text-light-color;
+                font-style: italic;
+            }
+
+            //
+            // - Responsive
+            //
+
+            @media (width >= 1000px) {
+                &--status {
+                    display: table-cell;
+                }
+            }
+
+            @media (min-width: globals.$screen-big-desktop) {
+                &--due-date,
+                &--total-with-taxes {
+                    display: table-cell;
+                }
+            }
+        }
+    }
+
+    &__buyer {
+        &__color {
+            display: inline-block;
+            width: 0.8em;
+            height: 0.8em;
+            margin-right: globals.$spacing-thin;
+            border-radius: globals.$border-radius-normal;
+            background-color: var(--color);
+        }
+
+        &__primary {
+            display: block;
+        }
+
+        &__name {
+            font-weight: 500;
+        }
+
+        &__contact {
+            display: block;
+            color: globals.$text-light-color;
+            font-weight: 400;
+            font-style: italic;
+        }
+    }
+}

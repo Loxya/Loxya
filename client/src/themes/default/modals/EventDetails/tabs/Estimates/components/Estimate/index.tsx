@@ -1,26 +1,21 @@
 import './index.scss';
 import { defineComponent } from 'vue';
-import { confirm } from '@/utils/alert';
-import apiEstimates from '@/stores/api/estimates';
 import { Group } from '@/stores/api/groups';
 import formatAmount from '@/utils/formatAmount';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
+import StatusBadge from '@/themes/default/components/BadgeStatus/Estimate';
+
+// - Modales
+import InvoiceDetailsModal from '@/themes/default/modals/InvoiceDetails';
+import EstimateDetailsModal from '@/themes/default/modals/EstimateDetails';
 
 import type { PropType } from 'vue';
-import type { Estimate } from '@/stores/api/estimates';
+import type { Estimate, EstimateDetails } from '@/stores/api/estimates';
 
 type Props = {
     /** Le devis à afficher. */
     estimate: Estimate,
-
-    /**
-     * Le devis est-il obsolète ?
-     *
-     * Par exemple si un nouveau devis pour la même
-     * "cible" a été régénéré depuis.
-     */
-    outdated?: boolean,
 
     /**
      * Fonction appelée lorsque le devis a été supprimé.
@@ -28,6 +23,19 @@ type Props = {
      * @param id - L'identifiant du devis supprimé.
      */
     onDeleted?(id: Estimate['id']): void,
+
+    /**
+     * Fonction appelée lorsque le devis a été mis à jour.
+     *
+     * @param estimate - Le devis mis à jour.
+     */
+    onUpdated?(estimate: EstimateDetails): void,
+
+    /**
+     * Fonction appelée lorsqu'un rechargement complet
+     * des données est nécessaire.
+     */
+    onRefetchNeeded?(): void,
 };
 
 type Data = {
@@ -42,27 +50,35 @@ const EventDetailsEstimate = defineComponent({
             type: Object as PropType<Props['estimate']>,
             required: true,
         },
-        outdated: {
-            type: Boolean as PropType<Required<Props>['outdated']>,
-            default: false,
-        },
         // eslint-disable-next-line vue/no-unused-properties
         onDeleted: {
             type: Function as PropType<Props['onDeleted']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpdated: {
+            type: Function as PropType<Props['onUpdated']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRefetchNeeded: {
+            type: Function as PropType<Props['onRefetchNeeded']>,
+            default: undefined,
+        },
     },
-    emits: ['deleted'],
+    emits: ['deleted', 'updated', 'refetchNeeded'],
     data: (): Data => ({
         isDeleting: false,
     }),
     computed: {
         hasTaxes(): boolean {
-            const { total_taxes: totalTaxes } = this.estimate;
-            return totalTaxes.length > 0;
+            return (
+                this.estimate.global_tax_regime === null &&
+                (this.estimate.total_taxes ?? []).length > 0
+            );
         },
 
-        userCanDelete(): boolean {
+        isTeamMember(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
                 Group.SUPERVISION,
@@ -77,31 +93,58 @@ const EventDetailsEstimate = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async handleDelete() {
-            if (!this.userCanDelete || this.isDeleting) {
-                return;
-            }
+        async handleShowDetails() {
+            const { estimate: { id }, isTeamMember } = this;
 
-            const { __, estimate: { id } } = this;
-            const isConfirmed = await confirm({
-                type: 'danger',
-                text: __('confirm-delete'),
-                confirmButtonText: __('global.yes-delete'),
+            let isDeleted: boolean = false;
+            let shouldRefetch: boolean = false;
+            let updatedEstimate: Estimate | null = null;
+            let nextOpen = null as { kind: 'estimate' | 'invoice', id: number } | null;
+
+            await this.$modal.show(EstimateDetailsModal, {
+                id,
+                onUpdated: (updated: EstimateDetails) => {
+                    updatedEstimate = updated;
+                },
+                onDeleted: () => { isDeleted = true; },
+                onInvoiceCreated: () => { shouldRefetch = true; },
+                onRequestOpen: isTeamMember
+                    ? (kind, _id): void => { nextOpen = { kind, id: _id }; }
+                    : undefined,
             });
-            if (!isConfirmed) {
-                return;
+
+            while (nextOpen !== null) {
+                const current = nextOpen;
+                nextOpen = null;
+
+                /* eslint-disable @typescript-eslint/no-loop-func, no-await-in-loop */
+                if (current.kind === 'estimate') {
+                    await this.$modal.show(EstimateDetailsModal, {
+                        id: current.id,
+                        onChange: () => { shouldRefetch = true; },
+                        onRequestOpen: (kind, _id) => {
+                            nextOpen = { kind, id: _id };
+                        },
+                    });
+                } else {
+                    await this.$modal.show(InvoiceDetailsModal, {
+                        id: current.id,
+                        onChange: () => { shouldRefetch = true; },
+                        onRequestOpen: (kind, _id) => {
+                            nextOpen = { kind, id: _id };
+                        },
+                    });
+                }
+                /* eslint-enable @typescript-eslint/no-loop-func, no-await-in-loop */
             }
 
-            this.isDeleting = true;
-            try {
-                await apiEstimates.remove(id);
-
+            if (shouldRefetch) {
+                this.$emit('refetchNeeded');
+            } else if (isDeleted) {
+                this.isDeleting = true;
                 this.$emit('deleted', id);
-                this.$toasted.success(__('deleted'));
-            } catch {
-                this.$toasted.error(__('global.errors.unexpected-while-deleting'));
-            } finally {
-                this.isDeleting = false;
+            } else if (updatedEstimate !== null) {
+                this.$emit('updated', updatedEstimate);
             }
         },
 
@@ -123,50 +166,62 @@ const EventDetailsEstimate = defineComponent({
         const {
             __,
             estimate,
-            isDeleting,
-            userCanDelete,
-            handleDelete,
-            outdated,
             hasTaxes,
+            isDeleting,
+            handleShowDetails,
         } = this;
-
         const {
             url,
             date,
             currency,
             total_without_taxes: totalWithoutTaxes,
+            created_at: createdAt,
         } = estimate;
 
-        const className = ['EventDetailsEstimate', {
-            'EventDetailsEstimate--outdated': outdated,
-        }];
-
         return (
-            <div class={className}>
+            <div class="EventDetailsEstimate">
                 <Icon name="file-signature" class="EventDetailsEstimate__icon" />
-                <div class="EventDetailsEstimate__text">
-                    {__('title', { date: date.format('L'), hour: date.format('HH:mm') })}<br />
-                    <strong>{formatAmount(totalWithoutTaxes, currency)} {hasTaxes && __('global.excl-tax')}</strong>
+                <div class="EventDetailsEstimate__heading">
+                    <span class="EventDetailsEstimate__heading__name">
+                        {((): string => {
+                            if (!('number' in estimate) || estimate.number === undefined) {
+                                const displayDate = date ?? createdAt;
+                                return __('title.without-number', {
+                                    date: displayDate.format('L'),
+                                    hour: displayDate.format('HH:mm'),
+                                });
+                            }
+                            return __('title.with-number', { number: estimate.number });
+                        })()}
+                    </span>
+                    <span class="EventDetailsEstimate__heading__total">
+                        {formatAmount(totalWithoutTaxes, currency)}
+                        {hasTaxes && ` ${__('global.excl-tax')}`}
+                    </span>
+                </div>
+                <div class="EventDetailsEstimate__date">
+                    {date !== undefined ? date.format('L') : (
+                        <span class="EventDetailsEstimate__date__empty">
+                            {'\u2014'}
+                        </span>
+                    )}
+                </div>
+                <div class="EventDetailsEstimate__status">
+                    <StatusBadge estimate={estimate} />
                 </div>
                 <div class="EventDetailsEstimate__actions">
                     <Button
                         icon="download"
-                        type={!outdated ? 'primary' : 'secondary'}
-                        class="EventDetailsEstimate__download"
                         disabled={isDeleting}
                         to={url}
                         download
-                    >
-                        {__('global.download')}
-                    </Button>
-                    {userCanDelete && (
-                        <Button
-                            type="delete"
-                            class="EventDetailsEstimate__delete"
-                            loading={isDeleting}
-                            onClick={handleDelete}
-                        />
-                    )}
+                    />
+                    <Button
+                        icon="eye"
+                        type="primary"
+                        onClick={handleShowDetails}
+                        disabled={isDeleting}
+                    />
                 </div>
             </div>
         );

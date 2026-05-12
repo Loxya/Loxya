@@ -186,6 +186,23 @@ abstract class ApiTestCase extends TestCase
     protected static function dataFactory($id, array $data)
     {
         $data = array_column($data, null, 'id');
-        return $id ? $data[$id] : array_values($data);
+        $data = $id ? $data[$id] : array_values($data);
+
+        $resolveLazyData = static function (mixed $value) use (&$resolveLazyData) {
+            if ($value instanceof \Closure) {
+                return $resolveLazyData($value());
+            }
+
+            if (!is_array($value)) {
+                return $value;
+            }
+
+            foreach ($value as $key => $item) {
+                $value[$key] = $resolveLazyData($item);
+            }
+
+            return $value;
+        };
+        return $resolveLazyData($data);
     }
 }

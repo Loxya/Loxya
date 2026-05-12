@@ -8,10 +8,26 @@ title: 'Material: "{name}"'
 infos:
     click-to-open-image: Click to open image in a new tab.
     park-name: "Park \"{name}\""
-    tax: Tax
-    no-tax: No tax applied.
-    degressive-rate: Degressive rate
-    no-degressive-rate: No degressive rate applied.
+    park-location: "Location: {label}"
+
+    approvers:
+        label: Approvers
+        help: "Operators who can approve requests to reserve this equipment:"
+        empty:
+            "No operator can approve requests for this material at the moment.\n
+            Administrators will always have the right to approve a reservation."
+
+    degressive-rate:
+        label: Degressive rate
+        empty: No degressive rate applied.
+
+    tax:
+        label:
+            default: Tax
+            simple: VAT rate
+        empty:
+            default: None (exempt without explicit reason).
+            simple: None (exempt without explicit reason).
 
 documents:
     confirm-permanently-delete: Do you really want to permanently delete this document?

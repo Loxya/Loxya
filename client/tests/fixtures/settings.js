@@ -47,32 +47,18 @@ const data = deepFreeze({
         defaultTax: 1,
     },
     estimates: {
-        customText: {
-            title: 'Modalités de paiement',
-            content: 'Paiement par virement ou chèque.',
-        },
-        showBookingDescription: false,
-        showMobilizationPeriod: false,
         showTotalReplacementPrice: false,
         showTotalisableProperties: false,
-        showPictures: false,
         showDescriptions: false,
         showReplacementPrices: true,
-        showUnitPrices: true,
+        specialMentions: `Merci de nous contacter pour toute precision concernant ce devis.`,
     },
     invoices: {
-        customText: {
-            title: null,
-            content: 'Paiement attendu sous 30 jours.',
-        },
-        showBookingDescription: false,
-        showMobilizationPeriod: false,
         showTotalReplacementPrice: false,
         showTotalisableProperties: false,
-        showPictures: false,
         showDescriptions: false,
         showReplacementPrices: true,
-        showUnitPrices: true,
+        specialMentions: `Merci de préciser votre nom et prénom dans l'intitulé du virement.`,
     },
 });
 

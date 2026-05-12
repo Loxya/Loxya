@@ -33,28 +33,6 @@
         "created_at": "2023-05-01 15:15:20"
     },
     {
-        "id": 4,
-        "entity_type": "reservation",
-        "entity_id": 1,
-        "name": "Carte de l'étudiant.png",
-        "type": "image/x-png",
-        "size": 9397,
-        "file": "90fa8870-3e5f-4327-9329-4dd041eebbe1.png",
-        "author_id": 2,
-        "created_at": "2023-05-02 17:32:05"
-    },
-    {
-        "id": 5,
-        "entity_type": "reservation",
-        "entity_id": 1,
-        "name": "bon_de_sortie.doc",
-        "type": "application/msword",
-        "size": 10014149,
-        "file": "d697b2db-e1e6-4484-a27d-5635beaf55d6.doc",
-        "author_id": 2,
-        "created_at": "2023-05-01 15:15:20"
-    },
-    {
         "id": 6,
         "entity_type": "technician",
         "entity_id": 2,

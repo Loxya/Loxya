@@ -15,17 +15,11 @@
         "lint": "vendors/bin/phpcs",
         "lint:fix": "vendors/bin/phpcbf",
         "phpstan": "vendors/bin/phpstan analyse --memory-limit=1G",
-        "test": "vendors/bin/phpunit --colors=always --testdox"
+        "test": "vendors/bin/phpunit --colors=always"
     },
     "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/Loxya-vendors/Validation-PHP.git"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/Loxya-vendors/PDF417-PHP.git"
-        }
+        { "type": "path", "url": "libs/validation", "options": { "symlink": true } },
+        { "type": "path", "url": "libs/ubl-invoice", "options": { "symlink": true } }
     ],
     "require": {
         "php-64bit": "8.1 || 8.2 || 8.3",
@@ -33,21 +27,22 @@
         "adbario/php-dot-notation": "3.3.0",
         "akrabat/ip-address-middleware": "2.6.1",
         "apereo/phpcas": "1.6.1",
-        "bigfish/pdf417": "1.0.0",
         "brick/math": "0.12.3",
-        "cocur/slugify": "4.6.0",
+        "cocur/slugify": "4.7.1",
+        "commerceguys/addressing": "2.2.4",
         "consoletvs/profanity": "3.5.1",
-        "dompdf/dompdf": "2.0.8",
         "egulias/email-validator": "4.0.4",
         "eluceo/ical": "2.14.0",
         "firebase/php-jwt": "6.11.1",
+        "giggsey/libphonenumber-for-php-lite": "9.0.15",
         "guzzlehttp/guzzle": "7.9.3",
         "hidehalo/nanoid-php": "2.0.0",
-        "illuminate/database": "v10.48.28",
-        "illuminate/events": "v10.48.28",
-        "illuminate/pagination": "v10.48.28",
-        "illuminate/support": "v10.48.28",
-        "league/csv": "9.8.0",
+        "horstoeko/zugferd": "1.0.120",
+        "illuminate/database": "10.48.28",
+        "illuminate/events": "10.48.28",
+        "illuminate/pagination": "10.48.28",
+        "illuminate/support": "10.48.28",
+        "laravel/prompts": "0.3.6",
         "league/flysystem": "3.29.1",
         "league/flysystem-aws-s3-v3": "3.29.0",
         "league/flysystem-ftp": "3.29.0",
@@ -56,35 +51,38 @@
         "mailjet/mailjet-apiv3-php": "1.6.5",
         "monolog/monolog": "3.9.0",
         "nesbot/carbon": "2.73.0",
+        "num-num/ubl-invoice": "*",
         "odan/session": "~6.1.0",
         "onelogin/php-saml": "4.3.0",
         "php-di/php-di": "7.0.11",
-        "phpmailer/phpmailer": "v6.10.0",
+        "phpmailer/phpmailer": "6.10.0",
+        "pontedilana/php-weasyprint": "2.3.0",
         "psr/container": "2.0.2",
+        "punic/punic": "3.8.1",
         "ramsey/uuid": "4.8.1",
-        "respect/validation": "2.8.0",
+        "respect/validation": "*",
         "robmorgan/phinx": "0.16.9",
+        "scssphp/scssphp": "2.1.0",
         "slim/http": "1.3.0",
         "slim/http-cache": "1.2.0",
         "slim/psr7": "1.7.1",
         "slim/slim": "4.14.0",
         "slim/twig-view": "3.4.1",
         "soundasleep/html2text": "2.1.0",
-        "symfony/cache": "v6.4.21",
-        "symfony/console": "v6.4.22",
+        "symfony/cache": "6.4.21",
+        "symfony/console": "6.4.22",
         "symfony/filesystem": "6.4.24",
-        "symfony/finder": "v6.4.17",
-        "symfony/yaml": "v6.4.21",
-        "twig/html-extra": "v3.21.0",
-        "twig/intl-extra": "v3.21.0",
-        "twig/string-extra": "v3.21.0",
-        "twig/twig": "v3.21.1",
+        "symfony/finder": "6.4.17",
+        "symfony/yaml": "6.4.21",
+        "twig/html-extra": "3.21.0",
+        "twig/intl-extra": "3.21.0",
+        "twig/string-extra": "3.21.0",
+        "twig/twig": "3.21.1",
         "vlucas/phpdotenv": "5.6.2",
         "webmozart/assert": "1.11.0",
         "zircote/swagger-php": "5.1.3"
     },
     "require-dev": {
-        "ifsnop/mysqldump-php": "2.12.0",
         "php-mock/php-mock": "~2.6.0",
         "phpcompatibility/php-compatibility": "9.3.5",
         "phpstan/extension-installer": "1.4.3",
@@ -94,15 +92,17 @@
         "phpstan/phpstan-webmozart-assert": "2.0.0",
         "phpunit/phpunit": "10.5.46",
         "slevomat/coding-standard": "8.19.1",
-        "spatie/phpunit-snapshot-assertions": "5.2.0",
+        "spatie/phpunit-snapshot-assertions": "5.2.3",
         "squizlabs/php_codesniffer": "3.13.2",
-        "symfony/var-dumper": "v6.4.21"
+        "symfony/process": "6.4.33",
+        "symfony/var-dumper": "6.4.21"
     },
     "autoload": {
         "psr-4": {
             "Loxya\\": "src/App",
             "Loxya\\Tests\\": "tests",
-            "Loxya\\Tests\\Fixtures\\": "tests/fixtures"
+            "Loxya\\Tests\\Fixtures\\": "tests/fixtures",
+            "Loxya\\Tests\\Fixtures\\Snapshots\\Drivers\\": "tests/fixtures/snapshots/drivers"
         }
     },
     "config": {

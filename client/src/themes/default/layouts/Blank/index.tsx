@@ -1,7 +1,7 @@
 import './index.scss';
 import { defineComponent } from 'vue';
 import config from '@/globals/config';
-import Logo from '@/themes/default/components/Logo';
+import Logo from '@/components/Logo';
 
 /** Variante "vide" du template de l'application. */
 const BlankLayout = defineComponent({

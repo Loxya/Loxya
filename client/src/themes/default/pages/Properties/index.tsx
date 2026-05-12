@@ -1,5 +1,6 @@
 import './index.scss';
 import isEqual from 'lodash/isEqual';
+import isTruthy from '@/utils/isTruthy';
 import { confirm } from '@/utils/alert';
 import stringIncludes from '@/utils/stringIncludes';
 import mergeDifference from '@/utils/mergeDifference';
@@ -12,6 +13,7 @@ import ClientTable from '@/themes/default/components/Table/Client';
 import Dropdown from '@/themes/default/components/Dropdown';
 import Loading from '@/themes/default/components/Loading';
 import Button from '@/themes/default/components/Button';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
 import {
     persistFilters,
@@ -19,11 +21,12 @@ import {
     clearPersistedFilters,
 } from '@/utils/filtersPersister';
 
+import type { CreateElement } from 'vue';
 import type { Filters } from './components/Filters';
-import type { ComponentRef, CreateElement } from 'vue';
 import type { Category } from '@/stores/api/categories';
 import type { PropertyDetails as Property, PropertyEntity } from '@/stores/api/properties';
-import type { Columns } from '@/themes/default/components/Table/Client';
+import type { ClientTableRef, Columns } from '@/themes/default/components/Table/Client';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 import type { Session } from '@/stores/api/session';
 
 type Data = {
@@ -66,6 +69,17 @@ const Properties = defineComponent({
         shouldPersistSearch(): boolean {
             const session = this.$store.state.auth.user as Session;
             return !session.disable_search_persistence;
+        },
+
+        hasActiveFilters(): boolean {
+            return this.filters.search.length > 0;
+        },
+
+        hasContent(): boolean {
+            return (
+                this.isFetched &&
+                (this.properties.length > 0 || this.hasActiveFilters)
+            );
         },
 
         filteredProperties(): Property[] {
@@ -334,7 +348,7 @@ const Properties = defineComponent({
         },
 
         handleConfigureColumns() {
-            const $table = this.$refs.table as ComponentRef<typeof ClientTable>;
+            const $table = this.$refs.table as ClientTableRef;
             $table?.showColumnsSelector();
         },
 
@@ -376,9 +390,11 @@ const Properties = defineComponent({
             columns,
             $options,
             isFetched,
+            hasContent,
             isDeleting,
             filteredProperties,
             hasCriticalError,
+            hasActiveFilters,
             handleFiltersChange,
             handleConfigureColumns,
         } = this;
@@ -391,28 +407,50 @@ const Properties = defineComponent({
             );
         }
 
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage = (
+            hasActiveFilters
+                ? { variant: EmptyMessageVariant.NO_RESULTS }
+                : {
+                    text: __('empty'),
+                    action: {
+                        type: 'primary',
+                        icon: 'plus',
+                        label: __('add-btn'),
+                        target: { name: 'add-property' },
+                    },
+                }
+        );
+
         return (
             <Page
                 name="properties"
                 loading={isDeleting}
                 title={__('title')}
                 actions={[
-                    <Button type="add" to={{ name: 'add-property' }} collapsible>
+                    <Button type="primary" to={{ name: 'add-property' }} collapsible icon="plus">
                         {__('add-btn')}
                     </Button>,
-                    <Dropdown>
-                        <Button icon="table" onClick={handleConfigureColumns}>
-                            {__('global.configure-columns')}
-                        </Button>
-                    </Dropdown>,
-                ]}
-                scopedSlots={{
-                    headerContent: (): JSX.Node => (
-                        <FiltersPanel
-                            values={filters}
-                            onChange={handleFiltersChange}
-                        />
+                    hasContent && (
+                        <Dropdown>
+                            <Button icon="table" onClick={handleConfigureColumns}>
+                                {__('global.configure-columns')}
+                            </Button>
+                        </Dropdown>
                     ),
+                ].filter(isTruthy)}
+                scopedSlots={{
+                    headerContent: (): JSX.Node => {
+                        if (!hasContent) {
+                            return null;
+                        }
+                        return (
+                            <FiltersPanel
+                                values={filters}
+                                onChange={handleFiltersChange}
+                            />
+                        );
+                    },
                 }}
             >
                 <div class="Properties">
@@ -423,6 +461,8 @@ const Properties = defineComponent({
                         columns={columns}
                         data={filteredProperties}
                         defaultOrderBy="name"
+                        emptyMessage={emptyMessage}
+                        sticky
                     />
                 </div>
             </Page>

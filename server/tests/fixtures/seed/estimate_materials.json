@@ -9,17 +9,15 @@
         "unit_price": "200.00",
         "degressive_rate": "1.00",
         "unit_price_period": "200.00",
-        "discount_rate": "0.0000",
-        "taxes": [
-            {
-                "name": "T.V.A.",
-                "is_rate": true,
-                "value": "20.000"
-            }
-        ],
         "total_without_discount": "200.00",
+        "discount_rate": "0.0000",
         "total_discount": "0.00",
         "total_without_taxes": "200.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ],
         "unit_replacement_price": "19400.00",
         "total_replacement_price": "19400.00",
         "is_hidden_on_bill": false
@@ -34,17 +32,15 @@
         "unit_price": "25.50",
         "degressive_rate": "2.00",
         "unit_price_period": "51.00",
-        "discount_rate": "0.0000",
-        "taxes": [
-            {
-                "name": "T.V.A.",
-                "is_rate": true,
-                "value": "20.000"
-            }
-        ],
         "total_without_discount": "51.00",
+        "discount_rate": "0.0000",
         "total_discount": "0.00",
         "total_without_taxes": "51.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ],
         "unit_replacement_price": "349.90",
         "total_replacement_price": "349.90",
         "is_hidden_on_bill": false
@@ -59,17 +55,15 @@
         "unit_price": "2.75",
         "degressive_rate": "1.75",
         "unit_price_period": "4.81",
-        "discount_rate": "50.0000",
-        "taxes": [
-            {
-                "name": "T.V.A.",
-                "is_rate": true,
-                "value": "5.000"
-            }
-        ],
         "total_without_discount": "9.62",
+        "discount_rate": "50.0000",
         "total_discount": "4.81",
         "total_without_taxes": "4.81",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "5.500" }
+        ],
         "unit_replacement_price": "10.00",
         "total_replacement_price": "20.00",
         "is_hidden_on_bill": false
@@ -84,11 +78,13 @@
         "unit_price": "300.00",
         "degressive_rate": null,
         "unit_price_period": null,
-        "discount_rate": "0.0000",
-        "taxes": null,
         "total_without_discount": "300.00",
+        "discount_rate": "0.0000",
         "total_discount": "0.00",
         "total_without_taxes": "300.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": null,
         "unit_replacement_price": "19400.00",
         "total_replacement_price": "19400.00",
         "is_hidden_on_bill": false
@@ -103,11 +99,13 @@
         "unit_price": "25.50",
         "degressive_rate": null,
         "unit_price_period": null,
-        "discount_rate": "0.0000",
-        "taxes": null,
         "total_without_discount": "25.50",
+        "discount_rate": "0.0000",
         "total_discount": "0.00",
         "total_without_taxes": "25.50",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": null,
         "unit_replacement_price": "349.90",
         "total_replacement_price": "349.90",
         "is_hidden_on_bill": false
@@ -122,11 +120,13 @@
         "unit_price": "2.75",
         "degressive_rate": null,
         "unit_price_period": null,
-        "discount_rate": "0.0000",
-        "taxes": null,
         "total_without_discount": "5.50",
+        "discount_rate": "0.0000",
         "total_discount": "0.00",
         "total_without_taxes": "5.50",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": null,
         "unit_replacement_price": "10.00",
         "total_replacement_price": "20.00",
         "is_hidden_on_bill": false

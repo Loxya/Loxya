@@ -3,6 +3,7 @@
 .InterfaceUserSettings {
     display: flex;
     flex-direction: column;
+    padding: 0 globals.$spacing-small;
 
     &__loading {
         margin-top: globals.$spacing-medium;
@@ -19,8 +20,6 @@
 
         &__item {
             flex: 1;
-
-            // stylelint-disable-next-line declaration-no-important -- Surcharge du `.FormField + .FormField`.
             margin-top: 0 !important;
         }
     }

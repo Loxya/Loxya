@@ -1,0 +1,79 @@
+@use '~@/themes/default/style/globals';
+
+.PageHeader {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    height: globals.$main-header-height;
+    background-color: globals.$bg-color-emphasis;
+
+    &__menu-toggle {
+        flex: 0 0 auto;
+        display: flex;
+        align-self: stretch;
+        align-items: center;
+        padding: 0 1.5rem;
+        cursor: pointer;
+
+        > .Icon {
+            font-size: 1.5rem;
+        }
+    }
+
+    &__main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        padding-right: globals.$spacing-medium;
+        gap: globals.$spacing-medium;
+
+        &__title {
+            display: flex;
+            align-items: center;
+            gap: globals.$spacing-medium;
+        }
+
+        &__actions {
+            flex-shrink: 0;
+            display: flex;
+            margin-left: auto;
+            gap: globals.$spacing-small;
+        }
+    }
+
+    &__title {
+        overflow: hidden;
+        margin: 0;
+        color: #fff;
+        font-size: 1.3rem;
+        font-weight: 400;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    &__loading {
+        flex: none;
+        font-size: 0.9rem;
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-mobile) {
+        &__menu-toggle {
+            display: none;
+        }
+
+        &__main {
+            padding-left: globals.$spacing-medium;
+        }
+    }
+
+    @media (min-width: globals.$screen-tablet) {
+        &__title {
+            font-size: 1.6rem;
+        }
+    }
+}

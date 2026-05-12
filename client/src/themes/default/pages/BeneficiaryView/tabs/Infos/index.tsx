@@ -56,7 +56,7 @@ const BeneficiaryViewInfos = defineComponent({
             full_name: fullName,
             reference,
             phone,
-            full_address: address,
+            address,
             country,
             stats: { borrowings },
             note,
@@ -90,7 +90,7 @@ const BeneficiaryViewInfos = defineComponent({
                                 {__('phone')}
                             </dt>
                             <dd class="BeneficiaryViewInfos__info__value">
-                                {phone ?? (
+                                {phone?.toReadable() ?? (
                                     <span class="BeneficiaryViewInfos__info__empty">
                                         {__('not-specified')}
                                     </span>
@@ -126,11 +126,7 @@ const BeneficiaryViewInfos = defineComponent({
                                 {__('country')}
                             </dt>
                             <dd class="BeneficiaryViewInfos__info__value">
-                                {country?.name ?? (
-                                    <span class="BeneficiaryViewInfos__info__empty">
-                                        {__('not-specified')}
-                                    </span>
-                                )}
+                                {country.name}
                             </dd>
                         </dl>
                     </div>
@@ -200,11 +196,12 @@ const BeneficiaryViewInfos = defineComponent({
                                         </span>
                                     )}
                                 </h4>
-                                <p class="BeneficiaryViewInfos__company__address">
-                                    {company.full_address}
-                                    {company.country ? `\n${company.country.name}` : ''}
-                                </p>
-                                <p>{company.phone}</p>
+                                {company.address !== null && (
+                                    <p class="BeneficiaryViewInfos__company__address">
+                                        {company.address}
+                                    </p>
+                                )}
+                                <p>{company.phone?.toReadable()}</p>
                                 <p>{company.note}</p>
                             </dd>
                         </dl>

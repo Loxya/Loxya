@@ -3,6 +3,7 @@ title-trash: Parcs de matériel supprimés
 help: Vous pouvez cliquer sur le nombre d'articles que contient le parc pour en afficher la liste.
 
 action-add: Nouveau parc de matériel
+empty: Aucun parc de matériel enregistré pour le moment.
 display-events-for-park: Voir les événements
 display-materials-of-this-park: Voir le matériel de ce parc
 print-materials-of-this-park: Imprimer la liste de ce parc (PDF)

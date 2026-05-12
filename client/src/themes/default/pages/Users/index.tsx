@@ -1,5 +1,4 @@
 import './index.scss';
-import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
 import { HttpCode, RequestError } from '@/globals/requester';
@@ -16,28 +15,30 @@ import Dropdown from '@/themes/default/components/Dropdown';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
-import {
-    ServerTable,
-    getLegacySavedSearch,
-} from '@/themes/default/components/Table';
+import { ServerTable } from '@/themes/default/components/Table';
 import {
     persistFilters,
     getPersistedFilters,
     clearPersistedFilters,
 } from '@/utils/filtersPersister';
 
+import type { CreateElement } from 'vue';
 import type { DebouncedMethod } from 'lodash';
 import type { User } from '@/stores/api/users';
 import type { Filters } from './components/Filters';
-import type { ComponentRef, CreateElement } from 'vue';
-import type { Columns } from '@/themes/default/components/Table/Server';
-import type { PaginationParams, SortableParams } from '@/stores/api/@types';
 import type { Session } from '@/stores/api/session';
+import type { Columns, ServerTableRef } from '@/themes/default/components/Table/Server';
+import type { PaginationParams, SortableParams } from '@/stores/api/@types';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type Data = {
     filters: Filters,
+    appliedFilters: Filters,
     isLoading: boolean,
+    isFetched: boolean,
+    isEmpty: boolean,
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
@@ -71,26 +72,20 @@ const Users = defineComponent({
             const savedFilters = getPersistedFilters(FILTERS_PERSISTENCE_KEY, FiltersSchema);
             if (savedFilters !== null) {
                 Object.assign(filters, savedFilters);
-            } else {
-                // - Ancienne sauvegarde éventuelle, dans le component `<Table />`.
-                const savedSearchLegacy = this.$options.name
-                    ? getLegacySavedSearch(this.$options.name)
-                    : null;
-
-                if (savedSearchLegacy !== null) {
-                    Object.assign(filters, { search: [savedSearchLegacy] });
-                }
             }
         } else {
             clearPersistedFilters(FILTERS_PERSISTENCE_KEY);
         }
 
         return {
+            filters,
+            appliedFilters: { ...filters },
             isLoading: false,
+            isFetched: false,
+            isEmpty: false,
             hasCriticalError: false,
             shouldDisplayTrashed: false,
             isTrashDisplayed: false,
-            filters,
         };
     },
     computed: {
@@ -101,6 +96,25 @@ const Users = defineComponent({
 
         currentUserId(): User['id'] {
             return this.$store.state.auth.user.id;
+        },
+
+        hasActiveFilters(): boolean {
+            const { appliedFilters } = this;
+            return (
+                appliedFilters.search.length > 0 ||
+                appliedFilters.group !== null
+            );
+        },
+
+        hasContent(): boolean {
+            if (this.isTrashDisplayed) {
+                return true;
+            }
+
+            return (
+                this.isFetched &&
+                (!this.isEmpty || this.hasActiveFilters)
+            );
         },
 
         columns(): Columns<User> {
@@ -172,7 +186,7 @@ const Users = defineComponent({
                         'Users__table__cell--phone',
                     ],
                     render: (h: CreateElement, { phone }: User) => (
-                        phone ?? (
+                        phone?.toReadable() ?? (
                             <span class="Users__table__cell__empty">
                                 {__('not-specified')}
                             </span>
@@ -339,7 +353,7 @@ const Users = defineComponent({
                 return;
             }
 
-            const $table = this.$refs.table as ComponentRef<typeof ServerTable>;
+            const $table = this.$refs.table as ServerTableRef;
             $table?.showColumnsSelector();
         },
 
@@ -350,7 +364,7 @@ const Users = defineComponent({
                 this.filters.search = newSearch;
             }
 
-            // - Catégorie.
+            // - Groupe.
             if (this.filters.group !== newFilters.group) {
                 this.filters.group = newFilters.group;
             }
@@ -367,16 +381,21 @@ const Users = defineComponent({
         // ------------------------------------------------------
 
         async fetch(pagination: SortableParams & PaginationParams) {
-            pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
             this.isLoading = true;
+
+            const filters: Filters = { ...this.filters };
+            this.appliedFilters = filters;
 
             try {
                 const data = await apiUsers.all({
                     ...pagination,
-                    ...this.filters,
+                    ...filters,
                     deleted: this.shouldDisplayTrashed,
                 });
+
+                this.isFetched = true;
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
+                this.isEmpty = data.pagination.total.items <= 0;
                 return data;
             } catch (error) {
                 if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
@@ -397,7 +416,7 @@ const Users = defineComponent({
         refreshTable() {
             this.refreshTableDebounced?.cancel();
 
-            (this.$refs.table as ComponentRef<typeof ServerTable>)?.refresh();
+            (this.$refs.table as ServerTableRef)?.refresh();
         },
     },
     render() {
@@ -408,8 +427,10 @@ const Users = defineComponent({
             filters,
             columns,
             isLoading,
+            hasContent,
             isTrashDisplayed,
             hasCriticalError,
+            hasActiveFilters,
             handleFiltersChange,
             handleFiltersSubmit,
             handleConfigureColumns,
@@ -429,16 +450,39 @@ const Users = defineComponent({
             ? __('page.users.title')
             : __('page.users.title-trash');
 
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage | undefined = (() => {
+            if (isTrashDisplayed) {
+                return undefined;
+            }
+
+            if (hasActiveFilters) {
+                return { variant: EmptyMessageVariant.NO_RESULTS };
+            }
+
+            return {
+                text: __('page.users.empty'),
+                action: {
+                    type: 'primary',
+                    icon: 'plus',
+                    label: __('page.users.action-add'),
+                    target: { name: 'add-user' },
+                },
+            };
+        })();
+
         // - Actions de la page.
         const actions = !isTrashDisplayed
             ? [
-                <Button type="add" icon="user-plus" to={{ name: 'add-user' }} collapsible>
+                <Button type="primary" icon="user-plus" to={{ name: 'add-user' }} collapsible>
                     {__('page.users.action-add')}
                 </Button>,
                 <Dropdown>
-                    <Button icon="table" onClick={handleConfigureColumns}>
-                        {__('configure-columns')}
-                    </Button>
+                    {hasContent && (
+                        <Button icon="table" onClick={handleConfigureColumns}>
+                            {__('configure-columns')}
+                        </Button>
+                    )}
                     <Button icon="trash" onClick={handleToggleShowTrashed}>
                         {__('open-trash-bin')}
                     </Button>
@@ -457,13 +501,18 @@ const Users = defineComponent({
                 loading={isLoading}
                 actions={actions}
                 scopedSlots={isTrashDisplayed ? undefined : {
-                    headerContent: (): JSX.Node => (
-                        <FiltersPanel
-                            values={filters}
-                            onChange={handleFiltersChange}
-                            onSubmit={handleFiltersSubmit}
-                        />
-                    ),
+                    headerContent: (): JSX.Node => {
+                        if (!hasContent) {
+                            return null;
+                        }
+                        return (
+                            <FiltersPanel
+                                values={filters}
+                                onChange={handleFiltersChange}
+                                onSubmit={handleFiltersSubmit}
+                            />
+                        );
+                    },
                 }}
             >
                 <div class="Users">
@@ -474,6 +523,8 @@ const Users = defineComponent({
                         class="Users__table"
                         columns={columns}
                         fetcher={fetch}
+                        emptyMessage={emptyMessage}
+                        sticky
                     />
                 </div>
             </Page>

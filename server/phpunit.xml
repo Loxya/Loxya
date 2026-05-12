@@ -7,6 +7,7 @@
     displayDetailsOnTestsThatTriggerNotices="true"
     displayDetailsOnTestsThatTriggerWarnings="true"
     displayDetailsOnTestsThatTriggerDeprecations="true"
+    displayDetailsOnPhpunitDeprecations="true"
     cacheResultFile="./src/var/cache/.phpunit.result.cache"
 >
     <php>
@@ -29,6 +30,10 @@
         </testsuite>
         <testsuite name="api">
             <directory>tests/endpoints</directory>
+        </testsuite>
+        <testsuite name="events">
+            <directory>tests/observers</directory>
+            <directory>tests/listeners</directory>
         </testsuite>
         <testsuite name="services">
             <directory>tests/services</directory>

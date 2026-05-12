@@ -7,8 +7,8 @@ import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import SearchPanel from '@/themes/default/components/MaterialsFilters';
 import SwitchToggle from '@/themes/default/components/SwitchToggle';
 
-import type { DebouncedMethod } from 'lodash';
 import type { PropType } from 'vue';
+import type { DebouncedMethod } from 'lodash';
 import type { Filters as CoreFilters } from '@/themes/default/components/MaterialsFilters';
 import type { Filters } from '../../_types';
 

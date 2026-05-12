@@ -1,3 +1,4 @@
+import config, { BillingMode } from '@/globals/config';
 import { Layout } from '@/themes/default/layouts';
 import { Group } from '@/stores/api/groups';
 
@@ -13,6 +14,8 @@ import UserEdit from './UserEdit';
 import Beneficiaries from './Beneficiaries';
 import BeneficiaryView from './BeneficiaryView';
 import BeneficiaryEdit from './BeneficiaryEdit';
+import Invoices from './Invoices';
+import Estimates from './Estimates';
 import CompanyEdit from './CompanyEdit';
 import Materials from './Materials';
 import MaterialEdit from './MaterialEdit';
@@ -217,6 +220,40 @@ const pages: RouteConfig[] = [
         meta: {
             requiresLogin: true,
             requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
+        },
+    },
+
+    //
+    // - Factures
+    //
+
+    {
+        name: 'invoices',
+        path: '/invoices',
+        component: Invoices,
+        meta: {
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
+            disabled: (): boolean => (
+                config.billingMode === BillingMode.NONE
+            ),
+        },
+    },
+
+    //
+    // - Devis
+    //
+
+    {
+        name: 'estimates',
+        path: '/estimates',
+        component: Estimates,
+        meta: {
+            requiresLogin: true,
+            requiresGroups: [Group.ADMINISTRATION, Group.SUPERVISION, Group.OPERATION],
+            disabled: (): boolean => (
+                config.billingMode === BillingMode.NONE
+            ),
         },
     },
 

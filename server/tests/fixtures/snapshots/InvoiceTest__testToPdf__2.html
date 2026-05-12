@@ -1,392 +1,1277 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Facture n&deg;&nbsp;2020-00001</title>
-    <style type="text/css">
-        html {
-            margin: 9mm 8mm;
-            font-family: 'DejaVu Sans', sans-serif;
-            font-weight: 400;
-            font-size: 9pt;
-        }
-        body {
-            margin: 0;
-        }
-        h1 {
-            font-size: 1.5rem;
-            margin: 0 0 3mm 0;
-        }
-        h2 {
-            font-size: 1.25rem;
-            margin: 0 0 3mm 0;
-        }
-        h3 {
-            font-size: 1.125rem;
-            margin: 0 0 3mm 0;
-        }
-        h4 {
-            font-size: 1rem;
-            margin: 0 0 3mm 0;
-        }
-        p {
-            font-size: 1rem;
-            margin: 0 0 3mm 0;
-        }
-        small {
-            font-size: 0.85rem;
-        }
-        ul, ol {
-            margin: 2mm 0 3mm 0;
-            padding: 0;
-        }
-        li {
-            list-style: none;
-            border-left: 2px solid #ccc;
-            padding-left: 1mm;
-        }
-        table {
-            width: 100%;
-            table-layout: auto;
-            margin: 0 0 3mm 0;
-            border-spacing: 0;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 1mm 2mm;
-            border-top: 1pt solid #888;
-            border-left: 1pt solid #888;
-            vertical-align: top;
-        }
-        th {
-            text-align: left;
-        }
-        th:last-child, td:last-child {
-            border-right: 1pt solid #888;
-        }
-        tr:last-child > td {
-            border-bottom: 1pt solid #888;
-        }
-        .layout-table > tbody > tr > td {
-            border: none;
-            padding: 0;
-        }
-        .listing-table {
-            margin-bottom: 8mm;
-        }
-        .listing-table > thead > tr {
-            page-break-after: avoid;
-        }
-        .listing-table > thead > tr > th {
-            font-size: 0.8rem;
-            border-left: 1pt solid #ccc;
-            border-right: 1pt solid #ccc;
-            border-bottom: 1pt solid #888;
-            vertical-align: middle;
-        }
-        .listing-table > tbody > tr > td {
-            padding: 2mm;
-            font-size: 0.7rem;
-            border: none;
-            border-left: 1pt solid #ccc;
-            border-right: 1pt solid #ccc;
-            border-bottom: 1pt solid #ccc;
-            vertical-align: middle;
-        }
-        .listing-table > tbody > tr > td.section-title {
-            padding: 4mm 2mm 2mm;
-            font-size: 0.8rem;
-            color: #888;
-        }
-        .listing-table > thead > tr > th:first-child,
-        .listing-table > tbody > tr > td:first-child {
-            border-left: 1pt solid #888 !important;
-        }
-        .listing-table > thead > tr > th:last-child,
-        .listing-table > tbody > tr > td:last-child {
-            border-right: 1pt solid #888 !important;
-        }
-        .listing-table__item__label {
-            font-weight: 600;
-        }
-        .listing-table__item__sub-name {
-            margin-top: 2px;
-            font-size: 0.6rem;
-        }
-        .listing-table__item__label,
-        .listing-table__item__sub-name {
-            display: block;
-        }
-        .totals-table {
-            width: 50%;
-            margin: 0 0 5mm auto;
-        }
-        .totals-table--legacy {
-            width: 100%;
-            margin: 0;
-        }
-        .totals-table > tbody > tr > td {
-            border-bottom: 1pt solid #888;
-            text-align: right;
-            vertical-align: middle;
-        }
-        .totals-table--legacy > tbody > tr > td {
-            text-align: center;
-        }
-        .inset {
-            padding: 5mm 3mm 8mm !important;
-            border: 1pt solid #999 !important;
-        }
-        .half { width: 50%; }
-        .third { width: 33.33%; }
-        .two-third { width: 66.66%; }
-        .max50mm { max-width: 50mm; }
-        .left { text-align: left; }
-        .center { text-align: center; }
-        .right { text-align: right; }
-        .sizeTitle { font-size: 16pt; }
-        .sizeSubtitle { font-size: 14pt; }
-        .size12 { font-size: 1rem; }
-        .size10 { font-size: 0.9rem; }
-        .size8 { font-size: 0.85rem; }
-        .size7 { font-size: 7pt; }
-        .vspace2 { margin: 0; padding: 2mm 0; }
-        .vspace5 { margin: 0; padding: 5mm 0; }
-        .vspace10 { margin: 0; padding: 10mm 0; }
-        .spaceBottom1 { margin-bottom: 1mm; }
-        .spaceBottom2 { margin-bottom: 2mm; }
-        .spaceBottom5 { margin-bottom: 5mm; }
-        .indent5 { padding-left: 5mm; }
-        .indent10 { padding-left: 10mm; }
-        .box {
-            padding: 1mm;
-            background-color: #eee;
-            border-radius: 3pt;
-        }
-        .strong { font-weight: 700; }
-        .normal { font-weight: 400; }
-        .light { color: #333; }
-        .lighter { color: #666; }
-        .lightest { color: #aaa; }
-        .highlight { color: #e60000; }
-        .changePage { page-break-before: always; }
-        .picture-cell { width: 20mm; text-align: center; }
-        .material-picture { max-width: 18mm; max-height: 12mm; }
+    <head>
+        <base href="http://loxya.test/" />
+        <meta charset="UTF-8" />
+        <title>Invoice No. 2020-00002</title>
+        <meta name="generator" content="Loxya" />
 
-            </style>
-</head>
-<body>
-    <table class="layout-table">
-    <tr>
-        <td class="half">
-<div class="spaceBottom2 size12 strong">
-    Testing corp.<br>
-    5 rue des tests<br>
-    05555 Testville<br>
-    France
-</div>
-<div class="spaceBottom2">SIRET: 543 210 080 20145<br>APE: 947A
-</div>
-<div class="spaceBottom2">
-    T&eacute;l.&nbsp;: +33123456789<br>
-    E-mail&nbsp;: jean@testing-corp.dev<br>
-</div>
-<div class="spaceBottom2">N&deg; TVA Intracom.&nbsp;: FR11223344556600</div>
-        </td>
-        <td class="half">
-            <h2 class="box center">Facture en Euro, N&deg;&nbsp;2020-00001</h2>
-            <table class="layout-table spaceBottom5">
-                <tr>
-                    <td class="size12">Le 30.01.20</td>
-                    <td class="size12 right">Page 1</td>
-                </tr>
-            </table>
-            <p>B&eacute;n&eacute;ficiaire</p>
-            <h2>
-<strong>Testing, Inc</strong><br>
-Contact&nbsp;: Jean Fountain<br>
-1, company st.<br>
-1234 Megacity<br>
-<small>(R&eacute;f. 0001)</small><br>
-<small>T&eacute;l.&nbsp;: +4123456789</small><br>
-<small>E-mail&nbsp;: tester@loxya.com</small><br>
-            </h2>
-        </td>
-    </tr>
-</table>
+        <style type="text/css">
+            embedded-xml {
+                display: block;
+                margin: 30px;
+                padding: 15px;
+                background: #1e1e2e;
+                border-radius: 10px;
+                color: #cdd6f4;
+                line-height: 1.6;
+                font-size: 14px;
+                font-family: monospace;
+                white-space: pre;
+                overflow-x: auto;
+            }
+        </style>
 
-<div class="vspace5">
-    <p class="strong">&Eacute;v&eacute;nement&nbsp;: Premier &eacute;v&eacute;nement</p>
-    <p class="strong">
-        Du lundi, 17 d&eacute;cembre 2018 au mardi, 18 d&eacute;cembre 2018, &Agrave; Gap
-    </p>
-<table>
-        <thead>
-            <tr>
-                <th>Cat&eacute;gorie</th>
-                <th class="center">Quantit&eacute;</th>
-                <th class="right">Total H.T.&nbsp;/&nbsp;jour</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Son</td>
-                <td class="center">2 &eacute;l&eacute;ments</td>
-                <td class="right">
-                    325.50&nbsp;&euro;
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <p class="size8 lighter">Remarque&nbsp;: vous trouverez le d&eacute;tail aux pages suivantes.</p>
-</div>
+        <style type="text/css">
+            @page {
+                @bottom-right {
+                    content: "Page " counter(page) " of " counter(pages) "";
+                }
+            }
+        </style>
+        <style type="text/css">
+            :root {
+                --page-margin: 9mm 8mm 11mm;
+            }
 
-<div class="vspace5 size8">
-    <table class="totals-table totals-table--legacy">
-        <thead>
-            <tr>
-                <th>Total&nbsp;/&nbsp;jour</th>
-                <th>Coef. d&eacute;gressif</th>
-                <th>Remise</th>
-                <th colspan="2">Totaux</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="center">
-                <td>
-                    <div class="vspace2">
-                        325.50&nbsp;&euro;
-                    </div>
-                </td>
-                <td>
-                    <div class="vspace2">
-                        &times;&nbsp;<strong>1,75</strong>
-                        <span class="lighter">(2 jours)</span>
-                    </div>
-                </td>
-                <td rowspan="3">
-                    <div class="vspace2">
-                        4,4766% de 569.63&nbsp;&euro;
-                    </div>
-                    <div class="vspace5 strong">
-                        - 25.50&nbsp;&euro;
-                    </div>
-                </td>
-                <td rowspan="1">
-                    <div class="vspace2 center">
-                        Total H.T.
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            html {
+                font-family: "DejaVu Sans", sans-serif;
+                font-weight: 400;
+                font-size: 9pt;
+            }
+
+            @page {
+                size: A4;
+                margin: var(--page-margin);
+                @bottom-right {
+                    white-space: nowrap;
+                    font-size: 8pt;
+                    color: #666;
+                }
+            }
+            .__document {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                min-height: 100%;
+                align-items: safe center;
+                justify-content: safe center;
+                padding: 30px;
+                background-color: #eef0f4;
+                overflow: auto;
+                gap: 30px;
+            }
+            .__document__preview {
+                flex-shrink: 0;
+                columns: 210mm/297mm;
+                width: 210mm;
+                column-fill: auto;
+                box-decoration-break: clone;
+                gap: 20px;
+            }
+            .__document__preview__content {
+                box-decoration-break: clone;
+                -webkit-box-decoration-break: clone;
+                padding: var(--page-margin);
+                background-color: #fff;
+                min-height: 297mm;
+                box-shadow: 0 1.5mm 8mm rgba(0, 0, 0, 0.06);
+                border-radius: 3.5mm;
+            }
+            .__document__xml {
+                width: 100%;
+                margin: 0;
+            }
+
+            @media print {
+                img {
+                    image-rendering: pixelated;
+                }
+            }
+        </style>
+
+        <style type="text/css">
+            :root {
+                --color-accent: #2563eb;
+                --background-accent: #f5f9ff;
+            }
+        </style>
+        <style type="text/css">
+            @charset "UTF-8";
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 400;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/regular.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 400;
+                font-style: italic;
+                src: url("fonts/pdf/plus-jakarta-sans/italic/regular.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 500;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/medium.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 600;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/semi-bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 700;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 800;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/extra-bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 400;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/regular.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 500;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/medium.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 600;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/semi-bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 700;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/bold.ttf") format("truetype");
+            }
+            :root {
+                --page-margin: 11mm 13mm 18mm;
+                --font-base: "Plus Jakarta Sans", sans-serif;
+                --font-mono: "JetBrains Mono", monospace;
+                --color-base: #374151;
+                --color-secondary: #6b7280;
+                --color-tertiary: #9ca3af;
+                --color-emphasis: #111827;
+                --separator-color: #f1f2f4;
+                --emphasis-background: #f9fafb;
+                --emphasis-separator-color: #e5e7eb;
+                --emphasis-primary-background: #323947;
+                --emphasis-primary-color: #fff;
+                --border-radius: 2mm;
+                font-size: 16px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            @page {
+                @top-center {
+                    content: element(watermark);
+                }
+                @bottom-center {
+                    content: element(main-footer);
+                }
+            }
+            html {
+                color: var(--color-base);
+                font-family: var(--font-base);
+                -webkit-font-smoothing: antialiased;
+                font-weight: 400;
+                line-height: 1.55;
+            }
+
+            .watermark {
+                position: running(watermark);
+                color: rgba(17, 24, 39, 0.1);
+                font-family: var(--font-base);
+                font-size: 75pt;
+                font-weight: 800;
+                letter-spacing: 0.01em;
+                line-height: 1;
+                text-transform: uppercase;
+                transform: translateY(143mm) rotate(-30deg);
+                white-space: nowrap;
+            }
+            @media screen {
+                .watermark {
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    transform: translate(-50%, 143mm) rotate(-30deg);
+                    z-index: 1000;
+                }
+            }
+
+            .header {
+                display: grid;
+                align-items: start;
+                grid-template-columns: 1fr 1fr;
+                gap: 10mm;
+            }
+            .header__right {
+                display: flex;
+                flex-direction: column;
+                min-height: 100%;
+                gap: 4mm;
+            }
+            .header__right__main {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: safe center;
+            }
+
+            .main-infos {
+                display: flex;
+                flex-direction: column;
+                padding-top: 3.5mm;
+                border-top: 1px solid var(--separator-color);
+                font-size: 0.7rem;
+                gap: 0.5mm;
+            }
+            .main-infos__item {
+                white-space: nowrap;
+            }
+            .main-infos__item__label,
+            .main-infos__item__value {
+                display: inline;
+            }
+            .main-infos__item__label {
+                color: var(--color-secondary);
+            }
+            .main-infos__item__label::after {
+                content: " :";
+            }
+            .main-infos__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+            }
+
+            .meta {
+                display: flex;
+                flex-direction: column;
+                text-align: right;
+                gap: 2.7mm;
+            }
+            .meta__title {
+                display: flex;
+                flex-direction: column;
+                line-height: 1;
+                gap: 2.5mm;
+            }
+            .meta__title__type {
+                display: block;
+                color: var(--color-accent);
+                font-size: 0.6rem;
+                font-weight: 700;
+                letter-spacing: 0.7mm;
+                text-transform: uppercase;
+            }
+            .meta__title__number {
+                display: block;
+                color: var(--color-emphasis);
+                font-family: var(--font-mono);
+                font-size: 1.3rem;
+                font-weight: 700;
+            }
+            .meta__title__number--placeholder {
+                color: var(--color-tertiary);
+                font-family: var(--font-base);
+                font-size: 0.85rem;
+                font-style: italic;
+                font-weight: 500;
+            }
+            .meta__data {
+                display: flex;
+                flex-direction: column;
+                font-size: 0.7rem;
+                gap: 0.5mm;
+            }
+            .meta__data__item {
+                white-space: nowrap;
+            }
+            .meta__data__item__label,
+            .meta__data__item__value {
+                display: inline;
+            }
+            .meta__data__item__label {
+                color: var(--color-tertiary);
+            }
+            .meta__data__item__label::after {
+                content: " :";
+            }
+            .meta__data__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+            }
+
+            .seller {
+                display: flex;
+                flex-direction: column;
+                gap: 4mm;
+            }
+            .seller__logo__image {
+                max-width: 75mm;
+                max-height: 20mm;
+            }
+            .seller__infos {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5mm;
+            }
+            .seller__name {
+                color: var(--color-emphasis);
+                font-size: 1.35rem;
+                font-weight: 800;
+                line-height: 1.1;
+            }
+            .seller__address {
+                font-size: 0.75rem;
+                font-style: normal;
+                line-height: 1.7;
+            }
+            .seller__contact,
+            .seller__identifiers {
+                display: flex;
+                flex-direction: column;
+                color: var(--color-secondary);
+                font-size: 0.65rem;
+                list-style: none;
+            }
+            .seller__identifiers {
+                gap: 0.5mm;
+            }
+
+            .buyer {
+                padding: 5mm 6mm 4mm;
+                border-radius: var(--border-radius);
+                background: var(--emphasis-background);
+            }
+            .buyer__heading {
+                margin-bottom: 2mm;
+                color: var(--color-accent);
+                font-size: 0.55rem;
+                font-weight: 700;
+                letter-spacing: 0.7mm;
+                text-transform: uppercase;
+            }
+            .buyer__infos {
+                display: flex;
+                flex-direction: column;
+                color: var(--color-secondary);
+                gap: 1.3mm;
+            }
+            .buyer__name {
+                color: var(--color-emphasis);
+                font-size: 0.95rem;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+            .buyer__address {
+                font-size: 0.73rem;
+                font-style: normal;
+                line-height: 1.7;
+            }
+            .buyer__identifiers {
+                display: flex;
+                flex-direction: column;
+                color: var(--color-tertiary);
+                font-size: 0.65rem;
+                list-style: none;
+                gap: 0.5mm;
+            }
+            .buyer__extras {
+                display: flex;
+                flex-direction: column;
+                margin-top: 0.5mm;
+                padding-top: 2mm;
+                border-top: 1px solid var(--emphasis-separator-color);
+                font-size: 0.7rem;
+                gap: 0.5mm;
+            }
+            .buyer__extras__item {
+                white-space: nowrap;
+            }
+            .buyer__extras__item__label,
+            .buyer__extras__item__value {
+                display: inline;
+            }
+            .buyer__extras__item__label {
+                color: var(--color-tertiary);
+            }
+            .buyer__extras__item__label::after {
+                content: " :";
+            }
+            .buyer__extras__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+            }
+
+            .main-title {
+                display: flex;
+                flex-direction: column;
+                margin-top: 6mm;
+                gap: 0.5mm;
+            }
+            .main-title__main {
+                color: var(--color-emphasis);
+                font-size: 0.95rem;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+            .main-title__subtitle {
+                color: var(--color-secondary);
+                font-size: 0.75rem;
+            }
+            .main-title__subtitle__part {
+                display: inline-block;
+                font-weight: 500;
+            }
+            .main-title__subtitle__part__key {
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .main-title__subtitle__part__key::after {
+                content: " :";
+            }
+            .main-title__subtitle__part__value {
+                margin-left: 2px;
+            }
+            .main-title__subtitle__part + .main-title__subtitle__part::before {
+                content: "•";
+                margin: 0 1.3mm 0 1.1mm;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+
+            .line-table {
+                margin-top: 4mm;
+            }
+            .line-table__title {
+                margin-bottom: 2mm;
+                margin-left: 1mm;
+                color: var(--color-secondary);
+                font-size: 0.625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                break-after: avoid;
+            }
+            .line-table__table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .line-table__table__header__cell,
+            .line-table__table__body__cell {
+                text-align: left;
+            }
+            .line-table__table__header__cell:first-child,
+            .line-table__table__body__cell:first-child {
+                padding-left: 3mm;
+            }
+            .line-table__table__header__cell:last-child,
+            .line-table__table__body__cell:last-child {
+                padding-right: 3mm;
+            }
+            .line-table__table__header__cell--qty,
+            .line-table__table__body__cell--qty {
+                width: 10mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--reference,
+            .line-table__table__body__cell--reference {
+                width: 25mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--unit-price,
+            .line-table__table__body__cell--unit-price {
+                width: 20mm;
+                text-align: right;
+            }
+            .line-table__table__header__cell--tax,
+            .line-table__table__body__cell--tax {
+                width: 20mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--discount,
+            .line-table__table__body__cell--discount {
+                width: 14.6mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--total,
+            .line-table__table__body__cell--total {
+                width: 20mm;
+                text-align: right;
+            }
+            .line-table__table__header {
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                break-after: avoid;
+            }
+            .line-table__table__header__cell {
+                padding: 2.3mm 2mm;
+                background: var(--emphasis-background);
+                white-space: nowrap;
+            }
+            .line-table__table__header__cell:first-child {
+                border-top-left-radius: var(--border-radius);
+            }
+            .line-table__table__header__cell:last-child {
+                border-top-right-radius: var(--border-radius);
+            }
+            .line-table__table__body {
+                font-size: 0.7rem;
+            }
+            .line-table__table__body__header:first-child .line-table__table__body__header__cell {
+                border-top: 0;
+            }
+            .line-table__table__body__header__cell {
+                padding: 2mm 3mm;
+                background: var(--background-accent);
+                color: var(--color-accent);
+                font-size: 0.6875rem;
+                font-weight: 500;
+                letter-spacing: 0.1em;
+                break-after: avoid;
+            }
+            .line-table__table__body__row:last-child .line-table__table__body__cell {
+                border-bottom: 1px solid var(--separator-color);
+            }
+            .line-table__table__body__row + .line-table__table__body__row .line-table__table__body__cell {
+                border-top: 1px solid var(--separator-color);
+            }
+            .line-table__table__body__cell {
+                padding: 3mm 2mm;
+                vertical-align: middle;
+            }
+            .line-table__table__body__cell--designation {
+                font-size: 0.75rem;
+                font-weight: 600;
+                line-height: 1.4;
+                word-break: break-all;
+            }
+            .line-table__table__body__cell--qty,
+            .line-table__table__body__cell--reference,
+            .line-table__table__body__cell--unit-price,
+            .line-table__table__body__cell--discount,
+            .line-table__table__body__cell--total {
+                font-family: var(--font-mono);
+                white-space: nowrap;
+            }
+            .line-table__table__footer {
+                color: var(--color-secondary);
+                font-size: 0.65rem;
+                font-style: italic;
+            }
+            .line-table__table__footer__cell {
+                padding: 1mm 3mm 0;
+            }
+            .line-table__table__footer__data__item {
+                display: inline-block;
+                font-weight: 500;
+            }
+            .line-table__table__footer__data__item__key {
+                display: inline-block;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__footer__data__item__key::after {
+                content: " :";
+            }
+            .line-table__table__footer__data__item__value {
+                display: inline-block;
+                margin-left: 2px;
+            }
+            .line-table__table__footer__data__item__value--numeric {
+                font-family: var(--font-mono);
+            }
+            .line-table__table__footer__data__item + .line-table__table__footer__data__item::before {
+                content: "•";
+                margin: 0 1.3mm 0 1.1mm;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__item__name {
+                display: flex;
+                flex-direction: column;
+                font-size: 0.75rem;
+                font-weight: 600;
+                gap: 0.3mm;
+            }
+            .line-table__table__item__name__sub {
+                display: inline-block;
+                color: var(--color-secondary);
+                font-size: 0.6rem;
+                font-weight: 500;
+            }
+            .line-table__table__item__name__sub__part__key {
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__item__name__sub__part__key::after {
+                content: " :";
+            }
+            .line-table__table__item__name__sub__part__value {
+                margin-left: 2px;
+                word-break: break-all;
+            }
+            .line-table__table__item__name__sub__part__value--numeric {
+                font-family: var(--font-mono);
+            }
+            .line-table__table__item__name__sub__part + .line-table__table__item__name__sub__part::before {
+                content: "•";
+                margin: 0 1.3mm 0 1.1mm;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__item__description {
+                margin-top: 1mm;
+                color: var(--color-secondary);
+                font-size: 0.7rem;
+                font-weight: 400;
+                font-style: italic;
+            }
+            .line-table__table__item__discount--empty {
+                color: var(--color-tertiary);
+            }
+            .line-table__table__item__tax--empty {
+                color: var(--color-tertiary);
+            }
+            .line-table__table__item__tax--standard {
+                font-family: var(--font-mono);
+            }
+            .line-table__table__item__tax--exempt {
+                font-size: 0.68rem;
+            }
+            .line-table__table__item__tax__part + .line-table__table__item__tax__part::before {
+                content: "+";
+                margin: 0 1mm;
+                color: var(--color-secondary);
+            }
+            .line-table + .line-table {
+                margin-top: 6mm;
+            }
+
+            .summary {
+                display: grid;
+                align-items: start;
+                margin-top: 6mm;
+                grid-template-columns: 1fr 1fr;
+                break-inside: avoid;
+                gap: 8mm;
+            }
+
+            .global-tax-exemption {
+                color: var(--color-tertiary);
+                font-size: 0.6875rem;
+                font-style: italic;
+                line-height: 1.75;
+            }
+
+            .vat-breakdown {
+                width: 100%;
+                padding: 4.5mm 5.5mm;
+                border-radius: var(--border-radius);
+                background: var(--emphasis-background);
+            }
+            .vat-breakdown__title {
+                margin-bottom: 2mm;
+                color: var(--color-secondary);
+                font-size: 0.625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+            .vat-breakdown__table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .vat-breakdown__table__header__cell,
+            .vat-breakdown__table__body__cell {
+                text-align: left;
+            }
+            .vat-breakdown__table__header__cell:first-child,
+            .vat-breakdown__table__body__cell:first-child {
+                padding-left: 0;
+            }
+            .vat-breakdown__table__header__cell:last-child,
+            .vat-breakdown__table__body__cell:last-child {
+                padding-right: 0;
+            }
+            .vat-breakdown__table__header__cell--base,
+            .vat-breakdown__table__header__cell--total,
+            .vat-breakdown__table__body__cell--base,
+            .vat-breakdown__table__body__cell--total {
+                width: 18mm;
+                text-align: right;
+            }
+            .vat-breakdown__table__header {
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+            }
+            .vat-breakdown__table__header__cell {
+                padding: 1.8mm 2mm;
+                border-bottom: 1px solid var(--emphasis-separator-color);
+                white-space: nowrap;
+            }
+            .vat-breakdown__table__body {
+                font-size: 0.6875rem;
+            }
+            .vat-breakdown__table__body__row--exempt .vat-breakdown__table__body__cell--rate {
+                font-family: var(--font-base);
+                white-space: normal;
+            }
+            .vat-breakdown__table__body__row + .vat-breakdown__table__body__row .vat-breakdown__table__body__cell {
+                border-top: 1px solid var(--emphasis-separator-color);
+            }
+            .vat-breakdown__table__body__cell {
+                padding: 2mm;
+                font-family: var(--font-mono);
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+            .vat-breakdown__table__body__cell--rate {
+                white-space: nowrap;
+            }
+            .vat-breakdown__table__body__cell--base {
+                color: var(--color-secondary);
+            }
+            .vat-breakdown__notes {
+                margin-top: 2.5mm;
+                color: var(--color-secondary);
+                font-size: 0.65rem;
+                font-style: italic;
+                line-height: 1.6;
+                list-style: none;
+            }
+            .vat-breakdown__notes__item {
+                display: inline-flex;
+                flex-direction: row;
+                gap: 0.5mm;
+            }
+
+            .totals {
+                width: 100%;
+            }
+            .totals__lines {
+                padding: 0 2mm;
+            }
+            .totals__lines__item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 2.3mm 0;
+                border-bottom: 1px solid var(--separator-color);
+                gap: 3mm;
+            }
+            .totals__lines__item__label {
+                font-size: 0.781rem;
+            }
+            .totals__lines__item__value {
+                color: var(--color-emphasis);
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            .totals__lines__item--text .totals__lines__item__value {
+                font-family: var(--font-base);
+                white-space: normal;
+            }
+            .totals__grand {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 2mm;
+                padding: 3.5mm 5mm;
+                border-radius: var(--border-radius);
+                background: var(--emphasis-primary-background);
+                color: var(--emphasis-primary-color);
+                gap: 3mm;
+            }
+            .totals__grand__label {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.1;
+                opacity: 0.8;
+                gap: 0.5mm;
+            }
+            .totals__grand__label__main {
+                display: block;
+                font-size: 1rem;
+                font-weight: 600;
+            }
+            .totals__grand__label__sup {
+                display: block;
+                font-size: 0.75rem;
+            }
+            .totals__grand__value {
+                color: var(--emphasis-color);
+                font-family: var(--font-mono);
+                font-size: 1.1rem;
+                font-weight: 700;
+            }
+
+            .extras {
+                display: grid;
+                width: 100%;
+                margin-top: 6mm;
+                grid-template-columns: 1fr 1fr;
+                gap: 8mm;
+            }
+            .extras__box {
+                width: 100%;
+                padding: 4.5mm 5mm;
+                border: 1px solid var(--separator-color);
+                border-radius: var(--border-radius);
+                break-inside: avoid;
+            }
+            .extras__box__title {
+                margin-bottom: 1.5mm;
+                color: var(--color-secondary);
+                font-size: 0.625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+            .extras__box__content {
+                font-size: 0.6875rem;
+            }
+            .extras__payment-infos__methods__label {
+                color: var(--color-tertiary);
+            }
+            .extras__payment-infos__methods__label::after {
+                content: " :";
+            }
+            .extras__payment-infos__methods__values {
+                margin-left: 2px;
+                color: var(--color-emphasis);
+            }
+            .extras__payment-infos__bank {
+                margin-top: 3mm;
+                text-align: center;
+            }
+            .extras__payment-infos__bank__title {
+                margin-bottom: 1.5mm;
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+            .extras__payment-infos__bank__iban {
+                color: var(--color-emphasis);
+                font-family: var(--font-mono);
+                font-size: 0.781rem;
+                font-weight: 700;
+            }
+            .extras__payment-infos__bank__details {
+                display: flex;
+                justify-content: center;
+                margin-top: 0.5mm;
+                color: var(--color-tertiary);
+                font-size: 0.625rem;
+                gap: 1.5mm;
+            }
+            .extras__payment-infos__bank__details__item__label,
+            .extras__payment-infos__bank__details__item__value {
+                display: inline;
+            }
+            .extras__payment-infos__bank__details__item__label::after {
+                content: " :";
+            }
+            .extras__payment-infos__bank__details__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+                word-break: break-all;
+            }
+            .extras__payment-infos__bank__details__item + .extras__payment-infos__bank__details__item::before {
+                content: "—";
+                margin-right: 1.5mm;
+            }
+            .extras__properties {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                font-size: 0.6875rem;
+                gap: 1.5mm 8mm;
+            }
+            .extras__properties__item__label,
+            .extras__properties__item__value {
+                display: inline;
+            }
+            .extras__properties__item__label {
+                color: var(--color-tertiary);
+                word-break: break-all;
+            }
+            .extras__properties__item__label::after {
+                content: " :";
+            }
+            .extras__properties__item__value {
+                margin-left: 2px;
+                color: var(--color-base);
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .extras__legal-mentions {
+                display: flex;
+                flex-direction: column;
+                align-self: flex-end;
+                color: var(--color-tertiary);
+                font-size: 0.67rem;
+                line-height: 1.4;
+                gap: 2mm;
+            }
+            .extras__legal-mentions__part--special {
+                color: var(--color-secondary);
+            }
+            .extras--without-boxes,
+            .extras--with-all-boxes {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .extras--without-boxes .extras__box,
+            .extras--with-all-boxes .extras__box {
+                flex: 1;
+            }
+            .extras--without-boxes .extras__legal-mentions,
+            .extras--with-all-boxes .extras__legal-mentions {
+                align-self: auto;
+                width: 100%;
+                text-align: center;
+            }
+
+            .main-footer {
+                position: running(main-footer);
+                padding-top: 2mm;
+                border-top: 1px solid var(--separator-color);
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                line-height: 1.85;
+                text-align: center;
+                word-break: break-all;
+            }
+            @media screen {
+                .main-footer {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="__document">
+            <div class="__document__preview">
+                <div class="__document__preview__content">
+                    <footer class="main-footer">
+                        Testing corp. | SARL with a share capital of €1,000 | APE code: 7729Z | RCS TestGrandeVille 543210080<br />
+                        5 rue des tests 05555 Testville | VAT No.: FR85543210080
+                    </footer>
+
+                    <header class="header">
+                        <div class="header__left">
+                            <div class="seller">
+                                <div class="seller__logo">
+                                    <img src="img/logo/test/logo-wide.png" class="seller__logo__image" />
+                                </div>
+                                <div class="seller__infos">
+                                    <h2 class="seller__name">Testing corp.</h2>
+                                    <address class="seller__address">
+                                        5 rue des tests<br />
+                                        05555 Testville<br />
+                                        France
+                                    </address>
+                                    <ul class="seller__identifiers">
+                                        <li class="seller__identifiers__item">SIRET No.: 54321008020145</li>
+                                        <li class="seller__identifiers__item">VAT No.: FR85543210080</li>
+                                    </ul>
+                                    <ul class="seller__contact">
+                                        <li class="seller__contact__item">contact@testing-corp.dev</li>
+
+                                        <li class="seller__contact__item">01 23 45 67 89</li>
+                                    </ul>
+                                </div>
+                                <dl class="main-infos">
+                                    <div class="main-infos__item">
+                                        <dt class="main-infos__item__label">Billing type</dt>
+                                        <dd class="main-infos__item__value">Sale of services</dd>
+                                    </div>
+                                    <div class="main-infos__item">
+                                        <dt class="main-infos__item__label">Purchase order No.</dt>
+                                        <dd class="main-infos__item__value">BC-0001</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
-                </td>
-                <td rowspan="1">
-                    <div class="vspace2 right">
-                        544.13&nbsp;&euro;
-                    </div>
-                </td>
-            </tr>
-            <tr class="center">
-                <td rowspan="2" colspan="2">
-                    <div class="vspace5 strong">
-                        = 569.63&nbsp;&euro;
-                    </div>
-                </td>
-                <td>
-                    <div class="vspace2 center">
-                        T.V.A. (20%)
-                    </div>
-                </td>
-                <td>
-                    <div class="vspace2 right">
-                        108.83&nbsp;&euro;
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="vspace2 strong center">
-                        Total T.T.C.<br>
-                        Montant net &agrave; payer
-                    </div>
-                </td>
-                <td>
-                    <div class="vspace2 right strong">
-                        652.96&nbsp;&euro;
-                    </div>
-                </td>
-            </tr>
-                    </tbody>
-    </table>
-</div>
-<div class="changePage vspace5">
-    <table class="layout-table">
-        <tr>
-            <td class="half">
-<div class="spaceBottom2 size12 strong">
-    Testing corp.<br>
-    5 rue des tests<br>
-    05555 Testville<br>
-    France
-</div>
-<div class="spaceBottom2">
-    T&eacute;l.&nbsp;: +33123456789<br>
-    E-mail&nbsp;: jean@testing-corp.dev<br>
-</div>
-            </td>
-            <td class="half">
-                <h2 class="box center">D&eacute;tails de la facture N&deg;&nbsp;2020-00001</h2>
-                <table class="layout-table">
-                    <tr>
-                        <td class="size12">Le 30.01.20</td>
-                        <td class="size12 right">Page 2</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</div>
+                        <div class="header__right">
+                            <div class="meta">
+                                <h1 class="meta__title">
+                                    <span class="meta__title__type">Invoice</span>
+                                    <span class="meta__title__number">2020-00002</span>
+                                </h1>
+                                <dl class="meta__data">
+                                    <div class="meta__data__item">
+                                        <dt class="meta__data__item__label">Issue date</dt>
+                                        <dd class="meta__data__item__value">16 June 2020</dd>
+                                    </div>
+                                    <div class="meta__data__item">
+                                        <dt class="meta__data__item__label">Payment Terms</dt>
+                                        <dd class="meta__data__item__value">Payment due in 15 days</dd>
+                                    </div>
+                                </dl>
+                            </div>
 
-<table class="listing-table">
-    <thead>
-        <tr>
-            <th>D&eacute;signation</th>
-            <th class="center">Qt&eacute;</th>
-            <th class="center">P.U. H.T.</th>
-            <th class="right">Total H.T.</th>
-        </tr>
-    </thead>
-    <tbody>
-            <tr>
-                <td class="section-title" colspan="4">Son - Mixeurs</td>
-            </tr>
-            <tr>
-                <td>
-                    <span class="listing-table__item__name">Console Yamaha CL3</span>
-                    <span class="listing-table__item__sub-name">R&eacute;f.: PM5D &bull; Val. Remp. unitaire: 19&#8239;400.00&nbsp;&euro;</span>
-                </td>
-                <td class="center">1</td>
-                <td class="center">
-                    300.00&nbsp;&euro;
-                </td>
-                <td class="right">
-                    300.00&nbsp;&euro;
-                </td>
-            </tr>
-            <tr>
-                <td class="section-title" colspan="4">Son - Processeurs</td>
-            </tr>
-            <tr>
-                <td>
-                    <span class="listing-table__item__name">Processeur DBX PA2</span>
-                    <span class="listing-table__item__sub-name">R&eacute;f.: DBXPA2 &bull; Val. Remp. unitaire: 349.90&nbsp;&euro;</span>
-                </td>
-                <td class="center">1</td>
-                <td class="center">
-                    25.50&nbsp;&euro;
-                </td>
-                <td class="right">
-                    25.50&nbsp;&euro;
-                </td>
-            </tr>
-    </tbody>
-</table>
-</body>
+                            <div class="header__right__main">
+                                <div class="buyer">
+                                    <div class="buyer__heading">Beneficiary</div>
+                                    <div class="buyer__infos">
+                                        <h2 class="buyer__name">Roger Rabbit</h2>
+                                        <dl class="buyer__extras">
+                                            <div class="buyer__extras__item">
+                                                <dt class="buyer__extras__item__label">Reference</dt>
+                                                <dd class="buyer__extras__item__value">0002</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="line-table">
+                        <table class="line-table__table">
+                            <thead class="line-table__table__header">
+                                <tr class="line-table__table__header__row">
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--designation">Designation</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--qty">Qty</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--unit-price">Unit price</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--tax">VAT</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--discount">Discount</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--total">Total ex. tax</th>
+                                </tr>
+                            </thead>
+                            <tbody class="line-table__table__body">
+                                <tr class="line-table__table__body__header">
+                                    <td class="line-table__table__body__header__cell" colspan="6">Lumière</td>
+                                </tr>
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">PAR64 LED</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Reference</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">PAR64LED</span> </span
+                                                ><span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Unit repl. value</span>
+                                                    <span class="line-table__table__item__name__sub__part__value line-table__table__item__name__sub__part__value--numeric">€20.00</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">3</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">€13.30</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20%</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--discount">
+                                        <span class="line-table__table__item__discount line-table__table__item__discount--empty">&mdash;</span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">€39.90</td>
+                                </tr>
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">Showtec SDS-6</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Reference</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">SDS-6-01</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">€60.61</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20%</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--discount">
+                                        <span class="line-table__table__item__discount line-table__table__item__discount--empty">&mdash;</span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">€60.61</td>
+                                </tr>
+                                <tr class="line-table__table__body__header">
+                                    <td class="line-table__table__body__header__cell" colspan="6">Son</td>
+                                </tr>
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">Console Yamaha CL3</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Reference</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">CL3</span> </span
+                                                ><span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Unit repl. value</span>
+                                                    <span class="line-table__table__item__name__sub__part__value line-table__table__item__name__sub__part__value--numeric">€19,400.00</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">2</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">€1,140.00</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20%</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--discount">
+                                        <span class="line-table__table__item__discount line-table__table__item__discount--empty">&mdash;</span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">€2,280.00</td>
+                                </tr>
+                                <tr class="line-table__table__body__header">
+                                    <td class="line-table__table__body__header__cell" colspan="6">Transport</td>
+                                </tr>
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">Volkswagen Transporter</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Reference</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">Transporter</span> </span
+                                                ><span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Unit repl. value</span>
+                                                    <span class="line-table__table__item__name__sub__part__value line-table__table__item__name__sub__part__value--numeric">€349.90</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">€1,140.00</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">10%</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--discount">
+                                        <span class="line-table__table__item__discount">-10%</span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">€1,026.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="summary">
+                        <div class="summary__left">
+                            <div class="vat-breakdown">
+                                <div class="vat-breakdown__title">VAT breakdown</div>
+                                <table class="vat-breakdown__table">
+                                    <thead class="vat-breakdown__table__header">
+                                        <tr class="vat-breakdown__table__header__row">
+                                            <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--rate">Rate</th>
+                                            <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--base">Base</th>
+                                            <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--total">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="vat-breakdown__table__body">
+                                        <tr class="vat-breakdown__table__body__row vat-breakdown__table__body__row--standard">
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--rate">20%</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">€2,380.51</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">€476.10</td>
+                                        </tr>
+                                        <tr class="vat-breakdown__table__body__row vat-breakdown__table__body__row--standard">
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--rate">10%</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">€1,026.00</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">€102.60</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="totals">
+                            <dl class="totals__lines">
+                                <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Total ex. tax</dt>
+                                    <dd class="totals__lines__item__value">€3,406.51</dd>
+                                </div>
+
+                                <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Total VAT</dt>
+                                    <dd class="totals__lines__item__value">€578.70</dd>
+                                </div>
+                            </dl>
+                            <div class="totals__grand">
+                                <span class="totals__grand__label">
+                                    <span class="totals__grand__label__sup"> Total inc. tax</span>
+                                    <span class="totals__grand__label__main">Amount due</span>
+                                </span>
+                                <span class="totals__grand__value">€3,985.21</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="extras">
+                        <div class="extras__box">
+                            <div class="extras__box__title">Payment</div>
+                            <div class="extras__box__content">
+                                <div class="extras__payment-infos">
+                                    <div class="extras__payment-infos__methods">
+                                        <span class="extras__payment-infos__methods__label">Accepted payment methods</span>
+                                        <span class="extras__payment-infos__methods__values">cheque, bank transfer</span>
+                                    </div>
+                                    <div class="extras__payment-infos__bank">
+                                        <div class="extras__payment-infos__bank__title">Bank details</div>
+                                        <div class="extras__payment-infos__bank__iban">FR76 3000 6000 0112 3456 7890 189</div>
+                                        <dl class="extras__payment-infos__bank__details">
+                                            <div class="extras__payment-infos__bank__details__item">
+                                                <dt class="extras__payment-infos__bank__details__item__label">BIC</dt>
+                                                <dd class="extras__payment-infos__bank__details__item__value">BNPAFRPPXXX</dd>
+                                            </div>
+                                            <div class="extras__payment-infos__bank__details__item">
+                                                <dt class="extras__payment-infos__bank__details__item__label">Account holder</dt>
+                                                <dd class="extras__payment-infos__bank__details__item__value">Testing corp.</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="extras__legal-mentions">
+                            <p class="extras__legal-mentions__part extras__legal-mentions__part--special">Merci de rappeler votre référence client dans le libellé de virement.</p>
+                            <p class="extras__legal-mentions__part">VAT paid on debits. No discount will be granted for payments received before the due date. Any late payment will result in a penalty payable from the due date, calculated on the basis of three times the legal interest rate. Flat-rate compensation for collection costs in the event of late payment: €40.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

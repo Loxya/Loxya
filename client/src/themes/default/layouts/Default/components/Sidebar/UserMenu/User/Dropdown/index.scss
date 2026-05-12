@@ -1,4 +1,5 @@
 @use '~@/themes/default/style/globals';
+@use '../../../variables' as *;
 @use 'sass:color';
 
 .DefaultLayoutSidebarUserDropdown {
@@ -11,6 +12,7 @@
     border: globals.$dropdown-border;
     border-radius: globals.$border-radius-large;
     background: globals.$dropdown-background-color;
+    color: globals.$text-soft-color;
     box-shadow: globals.$dropdown-box-shadow;
     white-space: nowrap;
 
@@ -26,6 +28,7 @@
             border: none;
             border-left: 4px solid transparent;
             background: none;
+            color: inherit !important;
             font-size: 1.05rem;
             line-height: 1;
             text-decoration: none;
@@ -34,10 +37,6 @@
             white-space: nowrap;
             user-select: none;
             cursor: pointer;
-
-            // - Permet de surcharger le style de base des liens.
-            // stylelint-disable-next-line declaration-no-important, order/properties-order
-            color: inherit !important;
 
             // stylelint-disable-next-line order/properties-order
             padding:
@@ -52,11 +51,8 @@
             }
 
             &:hover {
-                background-color: color.adjust(globals.$bg-color-side-menu-item-hover, $lightness: 1%);
-
-                // - Permet de surcharger le style de base des liens.
-                // stylelint-disable-next-line declaration-no-important
-                color: color.adjust(globals.$primary-color, $saturation: 10%, $lightness: 5%) !important;
+                background-color: color.adjust($item-background-hover, $lightness: 1%);
+                color: $item-color-hover !important;
             }
         }
 

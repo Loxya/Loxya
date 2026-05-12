@@ -1,55 +1,88 @@
 @use '~@/themes/default/style/globals';
 
 .BeneficiaryViewBillingInvoices {
+    $block: &;
+
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    height: 100%;
+
     &__header {
         display: flex;
         align-items: baseline;
         margin-bottom: globals.$spacing-small;
         color: globals.$text-base-color;
         gap: globals.$spacing-medium;
+
+        &__title {
+            flex: 1;
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        &__count,
+        &__total {
+            padding: 0 10px;
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
     }
 
-    &__title {
-        flex: 1;
-        margin: 0;
-        font-size: 1.3rem;
+    &__body {
+        overflow: auto;
+        width: 100%;
     }
 
-    &__count,
-    &__total {
-        padding: 0 10px;
-        font-size: 1.15rem;
-        font-weight: 600;
-    }
-
-    &__empty {
-        color: globals.$text-soft-color;
-        font-style: italic;
-    }
-
-    &__col {
+    &__cell {
         &--number {
-            width: 100px;
-            font-weight: 600;
+            width: 120px;
+            min-width: 120px;
+            text-align: center;
         }
 
-        &--amount {
-            font-weight: 600;
-
-            // Important, pour surcharger le placement du texte dans le header de vue-table.
-            /* stylelint-disable-next-line declaration-no-important */
-            text-align: right !important;
+        &--issue-date {
+            width: 150px;
+            min-width: 150px;
+            text-align: center;
         }
 
-        &--discount {
-            // Important, pour surcharger la couleur du texte de vue-table.
-            /* stylelint-disable-next-line declaration-no-important */
-            color: globals.$text-soft-color !important;
+        &--total-without-taxes,
+        &--total-with-taxes {
+            max-width: 200px;
+            min-width: 130px;
+            text-align: right;
+        }
 
-            // Important, pour surcharger le placement du texte dans le header de vue-table.
-            /* stylelint-disable-next-line declaration-no-important */
-            text-align: center !important;
-            text-transform: capitalize;
+        &--status {
+            width: 200px;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        &__empty {
+            color: globals.$text-light-color;
+            font-style: italic;
+        }
+    }
+
+    //
+    // - État : Vide
+    //
+
+    &--empty {
+        #{$block}__body {
+            padding: 30px 0;
+        }
+    }
+
+    //
+    // - État : En chargement
+    //
+
+    &--loading {
+        #{$block}__body {
+            padding: 50px 0;
         }
     }
 }

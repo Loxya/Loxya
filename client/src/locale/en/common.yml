@@ -13,8 +13,10 @@ action-duplicate: Duplicate
 action-enable: Enable
 action-disable: Disable
 action-refresh: Refresh data
+address: Address
 'yes': 'Yes'
 'no': 'No'
+and: and
 color: Color
 center-on-today: Center on today
 configure-columns: Configure Columns
@@ -22,10 +24,10 @@ warning: Warning!
 loading: Loading...
 please-confirm: Please confirm...
 yes-delete: 'Yes, delete'
-yes-trash: 'Yes, move in trash bin'
+yes-trash: 'Yes, move to the trash bin'
 yes-permanently-delete: 'Yes, permanently delete'
 yes-regenerate-link: 'Yes, regenerate the link'
-yes-restore: 'Oui, restaurer'
+yes-restore: 'Yes, restore'
 changes-exists-really-cancel: Some changes have not been saved. Do you really want to leave this page?
 yes-leave-page: 'Yes, leave page'
 cancel: Cancel
@@ -49,7 +51,8 @@ type-at-least-count-chars-to-search:
 count-chars:
     - '{count} char'
     - '{count} chars'
-empty-state: There are no records to display at this time.
+empty-state: There are no records to display.
+no-results-state: No results match your search.
 search-term: Search
 no-result-found-try-another-search: No results. Try another search term.
 locked-reason: 'Locked: {reason}'
@@ -71,6 +74,7 @@ save: Save
 manually-save: Manually save
 save-draft: Save draft
 add: Add
+send: Send
 saving: Saving...
 saved: '{entity} saved.'
 deleting: Deleting...
@@ -87,6 +91,9 @@ other-infos: Other information
 other: Other
 documents: Documents
 billing: Billing
+client: Client
+including-taxes: 'including {amount} in VAT'
+plus-taxes: 'plus {amount} in VAT'
 history: History
 properties: Properties
 schedule: Schedule
@@ -101,16 +108,9 @@ nickname: Nickname
 company: Company
 person: Person
 legal-name: Legal name
-registration-id: Registration number
 contact-details: Contact details
 email: E-mail
 phone: Phone
-address: Address
-street: Street and Number
-postal-code: Postal code
-city: City
-locality: City
-country: Pays
 access: Access
 group: Group
 groups:
@@ -118,7 +118,6 @@ groups:
     supervision: Supervision
     operation: Operation
     readonly-planning-general: General schedule consultation
-    readonly-planning-self: Own schedule consultation
 owner: Owner
 opening-hours: Opening hours
 hours: hours
@@ -132,6 +131,7 @@ reference: Reference
 number: Number
 park: Park
 park-name: 'Park "{name}"'
+contact-name: "Contact: {name}"
 prices: Prices
 identification-type: Identification type
 rental-price: Rental price
@@ -147,7 +147,7 @@ stock-qty: Stock qty
 stock-quantity: Stock quantity
 out-of-order-qty: Out of order qty
 out-of-order-quantity: Out of order quantity
-remaining-qty: Remaining qty
+remaining-qty-today: Remaining qty today
 awaited-qty-dots: 'Awaited qty:'
 actual-qty: Actual qty
 quantities: Quantities
@@ -165,6 +165,7 @@ material-is-discountable: >-
 hidden-on-invoice: Hidden on invoice?
 material-not-displayed-on-invoice: The material is not displayed on invoices.
 price-must-be-zero: the rental price must be 0
+all-custom: "All {field}"
 all-parks: All parks combined
 all-categories: All categories
 all-sub-categories: All sub-categories
@@ -280,10 +281,14 @@ total-amount: Total amount
 total-amount-without-taxes: "Total amount excl. tax:\_{amount}"
 total-amount-after-discount: "Total excl. tax after discount:\_{amount}"
 total-replacement: 'Total replacement price: {total}'
+weight: Weight
+total-weight: "Total weight: {total}\_{unit}"
+origin-country: Origin country
 daily-total-without-tax: 'Daily total excl. tax:'
 daily-total: 'Daily total:'
 total-without-taxes: 'Total excl. tax:'
-total-taxes: 'Taxes:'
+total-without-taxes-value: 'Total excl. tax: {amount}'
+total-vat: 'Total VAT:'
 total-with-taxes: 'Total incl. taxes:'
 total-dots: "Total:"
 excl-tax: excl. tax
@@ -346,7 +351,7 @@ confirm-cancel-upload-change-tab: >-
     Please note that a file is currently being uploaded. If you leave this tab,
     it will be cancelled. Are you sure you want to continue?
 confirm-cancel-upload-close-modal: >-
-    Please note that a file is currently being uploaded. if you close this
+    Please note that a file is currently being uploaded. If you close this
     window, it will be cancelled. Are you sure you want to continue?
 
 quick-creation:
@@ -374,3 +379,113 @@ quick-creation:
         needs-its-return-inventory: It's necessary to make the return inventory of this event!
         has-not-returned-materials: This event has some not-returned materials.
         overdue: The return of the equipment for this event is overdue.
+
+#
+# - Entreprise
+#
+
+registration-id:
+    generic: Business registration number
+    FR: SIRET / SIREN number
+    BE: BCE number
+    CH: IDE number
+
+precise-registration-id:
+    generic: Business registration number
+    FR: SIRET number
+    BE: BCE number
+    CH: IDE number
+
+vat-number:
+    generic: VAT number
+    CA: Tax number
+
+#
+# - Adresse
+#
+
+street: Street address
+additional-street: Street address (line 2)
+country: Pays
+
+administrative-area:
+    generic: "Administrative area"
+    area: "Area"
+    canton: "Canton"
+    county: "County"
+    department: "Department"
+    district: "District"
+    do_si: "Do/Si"
+    emirate: "Emirate"
+    island: "Island"
+    parish: "Parish"
+    prefecture: "Prefecture"
+    province: "Province"
+    region: "Region"
+    state: "State"
+
+postal-code:
+    generic: "Postal code"
+    eircode: "Eircode"
+    pin: "PIN code"
+    postal: "Postal code"
+    zip: "ZIP code"
+
+locality:
+    generic: "Locality"
+    city: "City"
+    district: "District"
+    post_town: "Post town"
+    suburb: "Suburb"
+    town_city: "Town/City"
+
+#
+# - Facturation
+#
+
+tax-regimes:
+    S: Standard
+    Z: Zero rated
+    AE: Reverse charge
+    K: Intra-community supply
+    G: Export
+    E: Exempt
+    O: Out of scope
+
+estimate-status:
+    draft: Draft
+    obsolete: Obsolete
+    pending: Pending
+    sent: Sent
+    accepted: Accepted
+    expired: Expired
+    rejected: Rejected
+    partially-invoiced: Partially invoiced
+    invoiced: Invoiced
+
+invoice-status:
+    draft: Draft
+    obsolete: Obsolete
+    pending: Pending
+    sent: Sent
+    overdue: Overdue
+    partially-paid: Partially paid
+    paid: Paid
+    refunded: Refunded
+    cancelled: Cancelled
+
+credit-note-status:
+    draft: Draft
+    obsolete: Obsolete
+    pending: Pending
+    sent: Sent
+    overdue: Overdue
+    partially-paid: Partially refunded
+    paid: Refunded
+    cancelled: Cancelled
+
+payment-methods:
+    cash: Cash
+    card: Credit / Debit card
+    cheque: Cheque
+    transfer: Bank transfer

@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Loxya\Config\Config;
 use Loxya\Http\Request as HttpRequest;
-use Loxya\Models\Country;
 use Loxya\Models\Document;
 use Loxya\Models\Enums\Group;
 use Loxya\Models\Event;
@@ -20,7 +19,7 @@ use Loxya\Services\Auth;
 use Loxya\Services\I18n;
 use Loxya\Support\Collections\MaterialsCollection;
 use Loxya\Support\Database\QueryAggregator;
-use Loxya\Support\Pdf\Pdf;
+use Loxya\Support\Pdf\Document as PdfDocument;
 use Loxya\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -64,9 +63,8 @@ final class MaterialController extends BaseController
         $search = $httpRequest->getSearchArrayQueryParam('search');
         $paginated = $httpRequest->getBooleanQueryParam('paginated', true);
         $limit = $httpRequest->getIntegerQueryParam('limit');
-        $ascending = $httpRequest->getBooleanQueryParam('ascending', true);
         $quantitiesPeriod = $httpRequest->getPeriodQueryParam('quantitiesPeriod');
-        $orderBy = $httpRequest->getOrderByQueryParam('orderBy', Material::class);
+        $orderBy = $httpRequest->getOrderByQueryParams('orderBy', 'ascending', Material::class);
         $onlyDeleted = $httpRequest->getBooleanQueryParam('onlyDeleted', false);
         $withDeleted = $httpRequest->getQueryParam('withDeleted', false);
 
@@ -77,7 +75,8 @@ final class MaterialController extends BaseController
         $tags = $httpRequest->getIntegerArrayQueryParam('tags');
 
         $isComplexeOrderBy = (
-            in_array($orderBy, ['stock_quantity', 'out_of_order_quantity'], true) &&
+            $orderBy !== null &&
+            in_array($orderBy['column'], ['stock_quantity', 'out_of_order_quantity'], true) &&
             ($parkId !== null)
         );
 
@@ -92,8 +91,8 @@ final class MaterialController extends BaseController
             ->when($withDeleted, static fn (Builder $subQuery) => (
                 $subQuery->withTrashed()
             ))
-            ->when(!$isComplexeOrderBy, static fn (Builder $subQuery) => (
-                $subQuery->customOrderBy($orderBy, $ascending ? 'asc' : 'desc')
+            ->when($orderBy !== null && !$isComplexeOrderBy, static fn (Builder $subQuery) => (
+                $subQuery->customOrderBy($orderBy['column'], $orderBy['direction'])
             ));
 
         //
@@ -126,19 +125,19 @@ final class MaterialController extends BaseController
         // - Tri complexe.
         //
 
-        if ($isComplexeOrderBy) {
-            if ($orderBy === 'stock_quantity') {
+        if ($orderBy !== null && $isComplexeOrderBy) {
+            if ($orderBy['column'] === 'stock_quantity') {
                 $query
                     ->reorder(
                         'stock_quantity',
-                        $ascending ? 'asc' : 'desc',
+                        $orderBy['direction'],
                     );
             }
-            if ($orderBy === 'out_of_order_quantity') {
+            if ($orderBy['column'] === 'out_of_order_quantity') {
                 $query
                     ->reorder(
                         'out_of_order_quantity',
-                        $ascending ? 'asc' : 'desc',
+                        $orderBy['direction'],
                     );
             }
         }
@@ -231,24 +230,15 @@ final class MaterialController extends BaseController
             }
         }
 
-        // - Société.
-        $company = Config::get('companyData');
-        $company = array_replace($company, [
-            'country' => ($company['country'] ?? null) !== null
-                ? Country::tryFromCode($company['country'])
-                : null,
-        ]);
-
         $date = CarbonImmutable::now();
         $fileName = Str::slugify(implode('-', [
             $this->i18n->translate('materials-list'),
-            $parkOnlyName ?: $company['name'],
+            $parkOnlyName ?: Config::get('organization.name'),
             $date->format('Y-m-d'),
         ]));
 
-        $pdf = Pdf::createFromTemplate('materials-list', $this->i18n, $fileName, [
+        $pdf = PdfDocument::createFromTemplate('materials-list', $this->i18n, $fileName, [
             'date' => $date,
-            'company' => $company,
             'parkOnlyName' => $parkOnlyName,
             'currency' => Config::get('currency'),
             'parksMaterialsList' => $parksMaterials,

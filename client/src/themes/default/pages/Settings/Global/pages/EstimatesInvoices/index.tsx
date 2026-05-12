@@ -18,23 +18,13 @@ enum BillableType {
 }
 
 type EditedData = {
-    showMobilizationPeriod: BillableType[],
-    showBookingDescription: BillableType[],
     showTotalReplacementPrice: BillableType[],
     showTotalisableProperties: BillableType[],
-    showPictures: BillableType[],
     showReplacementPrices: BillableType[],
     showDescriptions: BillableType[],
-    showUnitPrices: BillableType[],
-    customText: {
-        estimates: {
-            title: string,
-            content: string,
-        },
-        invoices: {
-            title: string,
-            content: string,
-        },
+    specialMentions: {
+        estimates: string,
+        invoices: string,
     },
 };
 
@@ -50,14 +40,10 @@ const EstimatesInvoicesGlobalSettings = defineComponent({
     data(): Data {
         const settings = this.$store.state.settings as Settings;
         const fields: Array<keyof Settings['estimates'] | keyof Settings['invoices']> = [
-            'showMobilizationPeriod',
-            'showBookingDescription',
             'showTotalReplacementPrice',
             'showTotalisableProperties',
-            'showPictures',
             'showReplacementPrices',
             'showDescriptions',
-            'showUnitPrices',
         ];
         const data: EditedData = fields.reduce(
             (acc: Partial<EditedData>, field: keyof Settings['estimates'] | keyof Settings['invoices']): Partial<EditedData> => {
@@ -71,14 +57,11 @@ const EstimatesInvoicesGlobalSettings = defineComponent({
                 return { ...acc, [field]: choiceState };
             },
             {
-                customText: Object.fromEntries(
-                    (Object.values(BillableType)).map(
-                        (type: BillableType) => [type, {
-                            title: settings[type]?.customText?.title ?? '',
-                            content: settings[type]?.customText?.content ?? '',
-                        }],
-                    ),
-                ) as EditedData['customText'],
+                specialMentions: Object.fromEntries(
+                    (Object.values(BillableType)).map((type: BillableType) => (
+                        [type, settings[type]?.specialMentions ?? '']
+                    )),
+                ) as EditedData['specialMentions'],
             },
         ) as EditedData;
 
@@ -127,15 +110,15 @@ const EstimatesInvoicesGlobalSettings = defineComponent({
             const payload: SettingsEdit = (Object.values(BillableType)).reduce(
                 (acc: SettingsEdit, key: BillableType): SettingsEdit => {
                     const _payload = {
-                        showMobilizationPeriod: data.showMobilizationPeriod.includes(key),
-                        showBookingDescription: data.showBookingDescription.includes(key),
                         showTotalReplacementPrice: data.showTotalReplacementPrice.includes(key),
                         showTotalisableProperties: data.showTotalisableProperties.includes(key),
-                        showPictures: data.showPictures.includes(key),
                         showReplacementPrices: data.showReplacementPrices.includes(key),
                         showDescriptions: data.showDescriptions.includes(key),
-                        showUnitPrices: data.showUnitPrices.includes(key),
-                        customText: data.customText[key],
+                        specialMentions: (
+                            data.specialMentions[key].length > 0
+                                ? data.specialMentions[key]
+                                : null
+                        ),
                     };
                     return { ...acc, [key]: _payload };
                 },
@@ -184,7 +167,7 @@ const EstimatesInvoicesGlobalSettings = defineComponent({
     render() {
         const {
             __,
-            data: { customText },
+            data,
             isSaving,
             validationErrors,
             chooserOptions,
@@ -199,142 +182,91 @@ const EstimatesInvoicesGlobalSettings = defineComponent({
                 hasValidationError={!!validationErrors}
             >
                 <form class="EstimatesInvoicesGlobalSettings__form" onSubmit={handleSubmit}>
-                    <Fieldset title={__('details')}>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-mobilization-period"
-                            error={validationErrors?.['estimates.showMobilizationPeriod']}
+                    <div class="EstimatesInvoicesGlobalSettings__display-options">
+                        <Fieldset
+                            title={__('details')}
+                            class="EstimatesInvoicesGlobalSettings__display-options__fieldset"
                         >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showMobilizationPeriod}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showMobilizationPeriod = values;
-                                }}
-                            />
-                        </FormField>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-booking-description"
-                            error={validationErrors?.['estimates.showBookingDescription']}
+                            <FormField
+                                type="custom"
+                                label={__('display-total-replacement-price')}
+                                error={validationErrors?.['estimates.showTotalReplacementPrice']}
+                            >
+                                <Checkboxes
+                                    options={chooserOptions}
+                                    value={data.showTotalReplacementPrice}
+                                    onInput={(values: BillableType[]) => {
+                                        data.showTotalReplacementPrice = values;
+                                    }}
+                                />
+                            </FormField>
+                            <FormField
+                                type="custom"
+                                label={__('display-totalisable-attributes')}
+                                error={validationErrors?.['estimates.showTotalisableProperties']}
+                            >
+                                <Checkboxes
+                                    options={chooserOptions}
+                                    value={data.showTotalisableProperties}
+                                    onInput={(values: BillableType[]) => {
+                                        data.showTotalisableProperties = values;
+                                    }}
+                                />
+                            </FormField>
+                        </Fieldset>
+                        <Fieldset
+                            title={__('material-list')}
+                            class="EstimatesInvoicesGlobalSettings__display-options__fieldset"
                         >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showBookingDescription}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showBookingDescription = values;
-                                }}
-                            />
-                        </FormField>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-total-replacement-price"
-                            error={validationErrors?.['estimates.showTotalReplacementPrice']}
-                        >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showTotalReplacementPrice}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showTotalReplacementPrice = values;
-                                }}
-                            />
-                        </FormField>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-totalisable-attributes"
-                            error={validationErrors?.['estimates.showTotalisableProperties']}
-                        >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showTotalisableProperties}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showTotalisableProperties = values;
-                                }}
-                            />
-                        </FormField>
-                    </Fieldset>
-                    <Fieldset title={__('material-list')}>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-pictures"
-                            error={validationErrors?.['estimates.showPictures']}
-                        >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showPictures}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showPictures = values;
-                                }}
-                            />
-                        </FormField>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-replacement-prices"
-                            error={validationErrors?.['estimates.showReplacementPrices']}
-                        >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showReplacementPrices}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showReplacementPrices = values;
-                                }}
-                            />
-                        </FormField>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-descriptions"
-                            error={validationErrors?.['estimates.showDescriptions']}
-                        >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showDescriptions}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showDescriptions = values;
-                                }}
-                            />
-                        </FormField>
-                        <FormField
-                            type="custom"
-                            label="page.settings.estimates-invoices.display-unit-prices"
-                            error={validationErrors?.['estimates.showUnitPrices']}
-                        >
-                            <Checkboxes
-                                options={chooserOptions}
-                                value={this.data.showUnitPrices}
-                                onInput={(values: BillableType[]) => {
-                                    this.data.showUnitPrices = values;
-                                }}
-                            />
-                        </FormField>
-                    </Fieldset>
-                    <Fieldset title={__('estimates-custom-text')}>
-                        <FormField
-                            type="text"
-                            label="page.settings.estimates-invoices.custom-text-title"
-                            error={validationErrors?.['estimates.customText.title']}
-                            v-model={customText.estimates.title}
-                        />
+                            <FormField
+                                type="custom"
+                                label={__('display-replacement-prices')}
+                                error={validationErrors?.['estimates.showReplacementPrices']}
+                            >
+                                <Checkboxes
+                                    options={chooserOptions}
+                                    value={data.showReplacementPrices}
+                                    onInput={(values: BillableType[]) => {
+                                        data.showReplacementPrices = values;
+                                    }}
+                                />
+                            </FormField>
+                            <FormField
+                                type="custom"
+                                label={__('display-descriptions')}
+                                error={validationErrors?.['estimates.showDescriptions']}
+                            >
+                                <Checkboxes
+                                    options={chooserOptions}
+                                    value={data.showDescriptions}
+                                    onInput={(values: BillableType[]) => {
+                                        data.showDescriptions = values;
+                                    }}
+                                />
+                            </FormField>
+                        </Fieldset>
+                    </div>
+
+                    <Fieldset title={__('special-mentions.estimates')}>
                         <FormField
                             type="textarea"
-                            label="page.settings.estimates-invoices.custom-text-content"
-                            rows={10}
-                            error={validationErrors?.['estimates.customText.content']}
-                            v-model={customText.estimates.content}
+                            rows={7}
+                            error={validationErrors?.['estimates.specialMentions']}
+                            value={data.specialMentions.estimates}
+                            onInput={(values: string) => {
+                                data.specialMentions.estimates = values;
+                            }}
                         />
                     </Fieldset>
-                    <Fieldset title={__('invoices-custom-text')}>
-                        <FormField
-                            type="text"
-                            label="page.settings.estimates-invoices.custom-text-title"
-                            error={validationErrors?.['invoices.customText.title']}
-                            v-model={customText.invoices.title}
-                        />
+                    <Fieldset title={__('special-mentions.invoices')}>
                         <FormField
                             type="textarea"
-                            label="page.settings.estimates-invoices.custom-text-content"
-                            rows={10}
-                            error={validationErrors?.['invoices.customText.content']}
-                            v-model={customText.invoices.content}
+                            rows={7}
+                            error={validationErrors?.['invoices.specialMentions']}
+                            value={data.specialMentions.invoices}
+                            onInput={(values: string) => {
+                                data.specialMentions.invoices = values;
+                            }}
                         />
                     </Fieldset>
                     <section class="EstimatesInvoicesGlobalSettings__actions">

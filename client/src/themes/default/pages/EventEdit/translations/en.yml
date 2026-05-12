@@ -149,5 +149,18 @@ steps:
     billing:
         title: Billing
 
+        warnings:
+            empty-billing: |-
+                The billing currently contains no displayed lines.
+                Add materials or additional lines to be able to generate quotes and invoices later.
+            beneficiary-not-invoiceable:
+                message:
+                    "The beneficiary \"{name}\" has incomplete or invalid billing data.\n
+                    To be able to generate an estimate or invoice, its information will need to be completed or corrected."
+                action: Edit details
+
     summary:
         title: Summary
+        departure-inventory-unavailable-help: >-
+            The event contains shortages, the departure inventory
+            cannot be carried out until these have been corrected.

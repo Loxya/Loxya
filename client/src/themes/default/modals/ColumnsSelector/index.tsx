@@ -20,6 +20,13 @@ type Props = {
      * @param columns - Les colonnes sélectionnées.
      */
     onChange?(columns: Array<Column['key']>): void,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param columns - Les colonnes sélectionnées.
+     */
+    onClose?(columns: Array<Column['key']>): void,
 };
 
 type Data = {
@@ -43,6 +50,10 @@ const ColumnsSelector = defineComponent({
         },
         onChange: {
             type: Function as PropType<Props['onChange']>,
+            default: undefined,
+        },
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },

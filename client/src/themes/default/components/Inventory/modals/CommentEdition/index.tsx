@@ -3,6 +3,7 @@ import trim from 'lodash/trim';
 import { defineComponent } from 'vue';
 import Textarea from '@/themes/default/components/Textarea';
 import Button from '@/themes/default/components/Button';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 
 import type { ComponentRef, PropType } from 'vue';
 import type { AwaitedMaterial } from '../../_types';
@@ -13,22 +14,32 @@ type Props = {
 
     /** La valeur par défaut (= valeur actuelle) du commentaire. */
     defaultValue?: string | null,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur souhaite fermer la fenêtre modale.
+     *
+     * @param comment - Le commentaire saisi par l'utilisateur (`null` si le commentaire est vide).
+     *                  (uniquement si l'utilisateur n'a pas fermé la modale sans modifier)
+     */
+    onClose?(comment: string | null | undefined): void,
 };
 
 type Data = {
     value: string,
 };
 
-// @vue/component
+/**
+ * Fenêtre d'édition d'un commentaire dans
+ * l'inventaire de matériel.
+ */
 const ModalInventoryCommentEdition = defineComponent({
     name: 'ModalInventoryCommentEdition',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     modal: {
         width: 800,
-        draggable: true,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         material: {
@@ -37,6 +48,11 @@ const ModalInventoryCommentEdition = defineComponent({
         },
         defaultValue: {
             type: String as PropType<Props['defaultValue']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },

@@ -6,11 +6,19 @@ import Tab from './Tab';
 import type { PropType } from 'vue';
 
 export type TabChangeEvent = {
-    /** L'index de l'onglet qui est sur le point d'être sélectionné. */
-    index: number,
+    /**
+     * Identifiant de l'onglet sur le point d'être sélectionné.
+     *
+     * Correspond à la prop `id` du `<Tab>`, ou `undefined` si non fournie.
+     */
+    id: number | string | undefined,
 
-    /** L'index de l'onglet précédemment sélectionné. */
-    prevIndex: number,
+    /**
+     * Identifiant de l'onglet précédemment sélectionné.
+     *
+     * Correspond à la prop `id` du `<Tab>`, ou `undefined` si non fournie.
+     */
+    prevId: number | string | undefined,
 
     /** Permet d'annuler le comportement par défaut: Le changement de tab. */
     preventDefault(): void,
@@ -23,8 +31,12 @@ export type TabChangeEvent = {
 };
 
 type Props = {
-    /** L'index de l'onglet sélectionné par défaut. */
-    defaultIndex?: number,
+    /**
+     * L'identifiant de l'onglet sélectionné par défaut.
+     *
+     * Correspond à la prop `id` d'un des `<Tab>`.
+     */
+    defaultActive?: number | string,
 
     /**
      * Les actions contextuelles à afficher, sous la forme d'un tableau d'éléments. *
@@ -42,9 +54,10 @@ type Props = {
     /**
      * Fonction appelée lorsque l'onglet sélectionné a changé.
      *
-     * @param index - L'index du nouvel onglet sélectionné.
+     * @param id - L'identifiant du nouvel onglet sélectionné ou `undefined`
+     *             si l'onglet ciblé n'a pas d'`id` explicite.
      */
-    onChanged?(index: number): void,
+    onChanged?(id: number | string | undefined): void,
 };
 
 type Data = {
@@ -55,9 +68,9 @@ type Data = {
 const Tabs = defineComponent({
     name: 'Tabs',
     props: {
-        defaultIndex: {
-            type: Number as PropType<Required<Props>['defaultIndex']>,
-            default: 0,
+        defaultActive: {
+            type: [Number, String] as PropType<Props['defaultActive']>,
+            default: undefined,
         },
         actions: {
             type: Array as PropType<Props['actions']>,
@@ -76,15 +89,36 @@ const Tabs = defineComponent({
     },
     emits: ['change', 'changed'],
     data(): Data {
-        return {
-            selectedIndex: this.defaultIndex,
-        };
+        // - Si un identifiant d'onglet par défaut a été fourni, on le résout
+        //   vers son index visuel dans les onglets actuellement rendus.
+        let initialIndex = 0;
+        if (this.defaultActive !== undefined) {
+            const tabs = this.$slots.default?.filter((tab: JSX.Element) => (
+                (tab.componentOptions?.Ctor as any)?.extendOptions?.name === 'Tab'
+            )) ?? [];
+            const found = tabs.findIndex((tab: JSX.Element) => {
+                const id = (tab.componentOptions?.propsData as { id?: string | number } | undefined)?.id;
+                return id === this.defaultActive;
+            });
+            if (found !== -1) {
+                initialIndex = found;
+            }
+        }
+        return { selectedIndex: initialIndex };
     },
     methods: {
         async handleSelect(index: number) {
             if (this.selectedIndex === index) {
                 return;
             }
+
+            const tabs = this.$slots.default!.filter((tab: JSX.Element) => (
+                (tab.componentOptions!.Ctor as any).extendOptions.name === 'Tab'
+            ));
+            const resolveTabId = (tabIndex: number): number | string | undefined => {
+                const rawId = (tabs[tabIndex]?.componentOptions?.propsData as { id?: string | number } | undefined)?.id;
+                return typeof rawId === 'number' || typeof rawId === 'string' ? rawId : undefined;
+            };
 
             let hasChanged = false;
             const changeTab = (): void => {
@@ -94,13 +128,13 @@ const Tabs = defineComponent({
 
                 hasChanged = true;
                 this.selectedIndex = index;
-                this.$emit('changed', index);
+                this.$emit('changed', resolveTabId(index));
             };
 
             let defaultPrevented = false;
             const changeEventPayload: TabChangeEvent = {
-                index,
-                prevIndex: this.selectedIndex,
+                id: resolveTabId(index),
+                prevId: resolveTabId(this.selectedIndex),
                 preventDefault: () => {
                     if (hasChanged) {
                         throw new Error('Tab has already been changed.');
@@ -120,7 +154,7 @@ const Tabs = defineComponent({
         const { actions, selectedIndex, handleSelect } = this;
 
         // - Ceci ne peut pas être placé dans un computed, car sinon
-        // on perd la réactivité du contenu du panel.
+        //   on perd la réactivité du contenu du panel.
         const tabs = this.$slots.default!.filter((tab: JSX.Element) => (
             (tab.componentOptions!.Ctor as any).extendOptions.name === 'Tab'
         ));

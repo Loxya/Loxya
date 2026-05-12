@@ -11,7 +11,7 @@ name: loxya-dev
 
 services:
     # - Loxya
-    loxya:
+    app:
         container_name: loxya-app
         build:
             context: ./.docker
@@ -24,8 +24,9 @@ services:
             DB_HOST: db
             DB_USER: root
             DB_PASS: root
+            LANG: ${LANG:-fr_FR.UTF-8}
         ports:
-            - "${DOCKER_LOXYA_PORT:-80}:80"
+            - "${DOCKER_LOXYA_PORT:-8080}:80"
         networks:
             - loxya-db-network
             - loxya-network
@@ -52,7 +53,7 @@ services:
             MYSQL_DATABASE: loxya
             MYSQL_ROOT_PASSWORD: root
         ports:
-            - "${DOCKER_MYSQL_PORT:-3306}:3306"
+            - "${DOCKER_MYSQL_PORT:-3307}:3306"
         volumes:
             - db-data:/var/lib/mysql
         networks:
@@ -69,7 +70,7 @@ services:
         environment:
             TZ: Europe/Paris
         ports:
-            - "${DOCKER_MAILDEV_PORT:-1080}:1080"
+            - "${DOCKER_MAILDEV_PORT:-1081}:1080"
         networks:
             - loxya-network
 

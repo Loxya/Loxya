@@ -20,12 +20,12 @@ describe('formatCustomFieldValue', () => {
 
     it('returns the formatted value of a float custom field', () => {
         const property = materials.default(1).properties[1];
-        expect(formatCustomFieldValue(fakeTranslateFn, property)).toBe(`36.5\u00A0kg`);
+        expect(formatCustomFieldValue(fakeTranslateFn, property)).toBe(`36,5\u00A0kg`);
     });
 
     it('returns the formatted value of a date custom field', () => {
         const property = materials.default(6).properties[0];
-        expect(formatCustomFieldValue(fakeTranslateFn, property)).toBe('01/28/2021');
+        expect(formatCustomFieldValue(fakeTranslateFn, property)).toBe('28/01/2021');
     });
 
     it('returns the formatted value of a boolean custom field', () => {

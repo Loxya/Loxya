@@ -11,7 +11,7 @@ use Loxya\Services\Cache;
 
 final class UserObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function created(User $user): void
     {

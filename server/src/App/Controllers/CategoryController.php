@@ -3,30 +3,15 @@ declare(strict_types=1);
 
 namespace Loxya\Controllers;
 
-use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
-use Loxya\Controllers\Traits\Crud;
 use Loxya\Http\Request;
 use Loxya\Models\Category;
-use Loxya\Services\I18n;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Exception\HttpBadRequestException;
 use Slim\Http\Response;
 
 final class CategoryController extends BaseController
 {
-    use Crud\Create;
-    use Crud\Update;
-    use Crud\HardDelete;
-
-    private I18n $i18n;
-
-    public function __construct(Container $container, I18n $i18n)
-    {
-        parent::__construct($container);
-
-        $this->i18n = $i18n;
-    }
-
     public function getAll(Request $request, Response $response): ResponseInterface
     {
         $categories = Category::orderBy('name', 'asc')
@@ -35,6 +20,47 @@ final class CategoryController extends BaseController
 
         $categories = $categories->map(static fn ($category) => static::_formatOne($category));
         return $response->withJson($categories, StatusCode::STATUS_OK);
+    }
+
+    public function create(Request $request, Response $response): ResponseInterface
+    {
+        $postData = (array) $request->getParsedBody();
+        if (empty($postData)) {
+            throw new HttpBadRequestException($request, "No data was provided.");
+        }
+
+        $category = Category::new($postData);
+
+        $data = static::_formatOne($category);
+        return $response->withJson($data, StatusCode::STATUS_CREATED);
+    }
+
+    public function update(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+        $category = Category::findOrFail($id);
+
+        $postData = (array) $request->getParsedBody();
+        if (empty($postData)) {
+            throw new HttpBadRequestException($request, "No data was provided.");
+        }
+
+        $category->edit($postData);
+
+        $data = static::_formatOne($category);
+        return $response->withJson($data, StatusCode::STATUS_OK);
+    }
+
+    public function delete(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+        $category = Category::findOrFail($id);
+
+        if (!$category->delete()) {
+            throw new \RuntimeException("An unknown error occurred while deleting the category.");
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 
     // ------------------------------------------------------

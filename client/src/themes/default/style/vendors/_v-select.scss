@@ -1,11 +1,12 @@
+@use 'sass:map';
 @use 'sass:color';
 
 @use '~vue-select/src/scss/vue-select' with (
-    $vs-dropdown-min-width: 130px,
+    $vs-dropdown-min-width: 100px,
 );
 
 .v-select {
-    min-width: 130px;
+    min-width: 100px;
     border-radius: $input-border-radius;
 
     &:not(.vs--single) {
@@ -45,10 +46,10 @@
     }
 
     &__dropdown-menu {
+        z-index: map.get($layers, 'dropdowns');
         left: -1px;
         width: calc(100% + 2px);
-        border: $input-border-width solid $input-focus-border-color;
-        border-top: none;
+        border: none;
         border-radius: 0 0 $border-radius-normal $border-radius-normal;
         background-color: $input-background-color;
         color: $input-text-color;
@@ -126,9 +127,6 @@
         #{$block}__clear {
             margin: 0 0.3rem 0 0;
             padding: 0.6rem;
-
-            // - Important, pour surcharger la règle `.button:not(.Button)`
-            // stylelint-disable-next-line declaration-no-important
             background: none !important;
             color: inherit;
             fill: currentColor;
@@ -150,6 +148,11 @@
 
     &--open {
         border-color: $input-focus-border-color;
+
+        .vs__dropdown-toggle {
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
     }
 
     &--single {
@@ -170,7 +173,6 @@
         #{$block}__search,
         #{$block}__selected,
         #{$block}__open-indicator {
-            // stylelint-disable-next-line declaration-no-important -- Pour surcharger le style "disabled" du "core".
             background: none !important;
         }
 

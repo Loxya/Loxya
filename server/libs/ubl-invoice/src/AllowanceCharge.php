@@ -1,0 +1,284 @@
+<?php
+declare(strict_types=1);
+
+namespace NumNum\UBL;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Sabre\Xml\Reader;
+use Sabre\Xml\Writer;
+use Sabre\Xml\XmlDeserializable;
+use Sabre\Xml\XmlSerializable;
+use function Sabre\Xml\Deserializer\mixedContent;
+
+class AllowanceCharge implements XmlSerializable, XmlDeserializable
+{
+    private $chargeIndicator;
+
+    private $allowanceChargeReasonCode;
+
+    private $allowanceChargeReason;
+
+    private $multiplierFactorNumeric;
+
+    private $baseAmount;
+
+    private $amount;
+
+    private $taxCategory;
+
+    // phpcs:ignore SlevomatCodingStandard.Functions.DisallowEmptyFunction
+    final public function __construct() {}
+
+    /**
+     * @return bool
+     */
+    public function isChargeIndicator(): bool
+    {
+        return $this->chargeIndicator;
+    }
+
+    /**
+     * @param bool $chargeIndicator
+     *
+     * @return static
+     */
+    public function setChargeIndicator(bool $chargeIndicator)
+    {
+        $this->chargeIndicator = $chargeIndicator;
+        return $this;
+    }
+
+    /**
+     * @return int|string|null
+     */
+    public function getAllowanceChargeReasonCode()
+    {
+        return $this->allowanceChargeReasonCode;
+    }
+
+    /**
+     * @param int|string|null $allowanceChargeReasonCode
+     *
+     * @return static
+     */
+    public function setAllowanceChargeReasonCode($allowanceChargeReasonCode)
+    {
+        $this->allowanceChargeReasonCode = $allowanceChargeReasonCode;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAllowanceChargeReason(): ?string
+    {
+        return $this->allowanceChargeReason;
+    }
+
+    /**
+     * @param string $allowanceChargeReason
+     *
+     * @return static
+     */
+    public function setAllowanceChargeReason(?string $allowanceChargeReason)
+    {
+        $this->allowanceChargeReason = $allowanceChargeReason;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getMultiplierFactorNumeric(): ?float
+    {
+        return $this->multiplierFactorNumeric;
+    }
+
+    /**
+     * @param float $multiplierFactorNumeric
+     *
+     * @return static
+     */
+    public function setMultiplierFactorNumeric(?float $multiplierFactorNumeric)
+    {
+        $this->multiplierFactorNumeric = $multiplierFactorNumeric;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBaseAmount(): ?float
+    {
+        return $this->baseAmount;
+    }
+
+    /**
+     * @param float $baseAmount
+     *
+     * @return static
+     */
+    public function setBaseAmount(?float $baseAmount)
+    {
+        $this->baseAmount = $baseAmount;
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getAmount(): ?float
+    {
+        return $this->amount;
+    }
+
+    /**
+     * @param float $amount
+     *
+     * @return static
+     */
+    public function setAmount(?float $amount)
+    {
+        $this->amount = $amount;
+        return $this;
+    }
+
+    /**
+     * @return TaxCategory
+     */
+    public function getTaxCategory(): ?TaxCategory
+    {
+        return $this->taxCategory;
+    }
+
+    /**
+     * @param TaxCategory $taxCategory
+     *
+     * @return static
+     */
+    public function setTaxCategory(?TaxCategory $taxCategory)
+    {
+        $this->taxCategory = $taxCategory;
+        return $this;
+    }
+
+    /**
+     * The xmlSerialize method is called during xml writing.
+     *
+     * @param Writer $writer
+     *
+     * @return void
+     */
+    public function xmlSerialize(Writer $writer): void
+    {
+        $writer->write([
+            Schema::CBC . 'ChargeIndicator' => $this->chargeIndicator ? 'true' : 'false',
+        ]);
+
+        if ($this->allowanceChargeReasonCode !== null) {
+            $writer->write([
+                Schema::CBC . 'AllowanceChargeReasonCode' => $this->allowanceChargeReasonCode,
+            ]);
+        }
+
+        if ($this->allowanceChargeReason !== null) {
+            $writer->write([
+                Schema::CBC . 'AllowanceChargeReason' => $this->allowanceChargeReason,
+            ]);
+        }
+
+        if ($this->multiplierFactorNumeric !== null) {
+            $writer->write([
+                Schema::CBC . 'MultiplierFactorNumeric' => NumberFormatter::format($this->multiplierFactorNumeric),
+            ]);
+        }
+
+        $writer->write([
+            [
+                'name' => Schema::CBC . 'Amount',
+                'value' => NumberFormatter::format($this->amount, 2),
+                'attributes' => [
+                    'currencyID' => Generator::$currencyID,
+                ],
+            ],
+        ]);
+
+        if ($this->baseAmount !== null) {
+            $writer->write([
+                [
+                    'name' => Schema::CBC . 'BaseAmount',
+                    'value' => NumberFormatter::format($this->baseAmount, 2),
+                    'attributes' => [
+                        'currencyID' => Generator::$currencyID,
+                    ],
+                ],
+            ]);
+        }
+
+        if ($this->taxCategory !== null) {
+            $writer->write([
+                Schema::CAC . 'TaxCategory' => $this->taxCategory,
+            ]);
+        }
+    }
+
+    /**
+     * Parse allowance charge reason code, converting numeric strings to int, preserving non-numeric strings.
+     *
+     * @param string|null $value
+     *
+     * @return int|string|null
+     */
+    private static function parseAllowanceChargeReasonCode(?string $value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return intval($value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * The xmlDeserialize method is called during xml reading.
+     *
+     * @param Reader $reader
+     *
+     * @return static
+     */
+    public static function xmlDeserialize(Reader $reader)
+    {
+        $mixedContent = mixedContent($reader);
+        $collection = new ArrayCollection($mixedContent);
+
+        return (new static())
+            ->setChargeIndicator(
+                ReaderHelper::getTagValue(Schema::CBC . 'ChargeIndicator', $collection) === 'true',
+            )
+            ->setAllowanceChargeReasonCode(self::parseAllowanceChargeReasonCode(
+                ReaderHelper::getTagValue(Schema::CBC . 'AllowanceChargeReasonCode', $collection),
+            ))
+            ->setAllowanceChargeReason(
+                ReaderHelper::getTagValue(Schema::CBC . 'AllowanceChargeReason', $collection),
+            )
+            ->setMultiplierFactorNumeric((
+                ReaderHelper::getTagValue(Schema::CBC . 'MultiplierFactorNumeric', $collection) !== null
+                    ? floatval(ReaderHelper::getTagValue(Schema::CBC . 'MultiplierFactorNumeric', $collection))
+                    : null
+            ))
+            ->setBaseAmount((
+                ReaderHelper::getTagValue(Schema::CBC . 'BaseAmount', $collection) !== null
+                    ? floatval(ReaderHelper::getTagValue(Schema::CBC . 'BaseAmount', $collection))
+                    : null
+            ))
+            ->setAmount((
+                ReaderHelper::getTagValue(Schema::CBC . 'Amount', $collection) !== null
+                    ? floatval(ReaderHelper::getTagValue(Schema::CBC . 'Amount', $collection))
+                    : null
+            ))
+            ->setTaxCategory(ReaderHelper::getTagValue(Schema::CAC . 'TaxCategory', $collection));
+    }
+}

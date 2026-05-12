@@ -3,6 +3,7 @@ title-trash: Deleted Material parks
 help: You can click on the number of items in the park to display the list.
 
 action-add: New materials park
+empty: No material park registered at the moment.
 display-events-for-park: See events
 display-materials-of-this-park: See materials list of this park
 print-materials-of-this-park: Print list of this park (PDF)

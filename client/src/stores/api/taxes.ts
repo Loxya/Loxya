@@ -11,28 +11,26 @@ import type { SchemaInfer } from '@/utils/validation';
 
 const TaxComponentSchema = z.strictObject({
     name: z.string(),
-    is_rate: z.boolean(),
     value: z.decimal(),
 });
 
-export const TaxSchema = z
-    .strictObject({
-        id: z.number(),
+const BaseTaxSchema = z.strictObject({
+    id: z.number(),
+    is_used: z.boolean(),
+});
+
+export const TaxSchema = z.discriminatedUnion('is_group', [
+    BaseTaxSchema.extend({
         name: z.string(),
-        is_used: z.boolean(),
-    })
-    .strip() // TODO: À enlever lorsqu'on pourra garder les objets stricts avec les intersections.
-    .and(z.discriminatedUnion('is_group', [
-        z.object({ // TODO: `strictObject` lorsque ce sera possible.
-            is_group: z.literal(true),
-            components: z.lazy(() => TaxComponentSchema.array()),
-        }),
-        z.object({ // TODO: `strictObject` lorsque ce sera possible.
-            is_group: z.literal(false),
-            is_rate: z.boolean(),
-            value: z.decimal(),
-        }),
-    ]));
+        is_group: z.literal(true),
+        components: z.lazy(() => TaxComponentSchema.array()),
+    }),
+    BaseTaxSchema.extend({
+        name: z.string().optional(),
+        is_group: z.literal(false),
+        value: z.decimal(),
+    }),
+]);
 
 // ------------------------------------------------------
 // -
@@ -50,16 +48,14 @@ export type TaxComponent = SchemaInfer<typeof TaxComponentSchema>;
 
 export type TaxComponentEdit = {
     name: string | null,
-    is_rate: boolean | null,
     value: string | null,
 };
 
 export type TaxEdit = {
     name: string | null,
     is_group: boolean,
-    is_rate: boolean | null,
     value: string | null,
-    components: TaxComponentEdit[],
+    components?: TaxComponentEdit[],
 };
 
 // ------------------------------------------------------

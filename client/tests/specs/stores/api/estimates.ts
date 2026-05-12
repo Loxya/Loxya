@@ -1,14 +1,21 @@
-import { EstimateSchema } from '@/stores/api/estimates';
+import requester from '@/globals/requester';
+import apiEstimates from '@/stores/api/estimates';
+import { withPaginationEnvelope } from '@fixtures/@utils';
 import data from '@fixtures/estimates';
 
-import type { SafeParseSuccess } from 'zod';
-
 describe('Estimates Api', () => {
-    it('has a valid schema', () => {
-        data.default().forEach((datum: any) => {
-            const result = EstimateSchema.safeParse(datum);
-            expect(result.success).toBeTruthy();
-            expect((result as SafeParseSuccess<unknown>).data).toMatchSnapshot();
+    describe('all()', () => {
+        it('parse the returned data correctly', async () => {
+            const paginatedData = withPaginationEnvelope(data.default());
+            jest.spyOn(requester, 'get').mockResolvedValue(paginatedData);
+            await expect(apiEstimates.all()).resolves.toMatchSnapshot();
+        });
+    });
+
+    describe('one()', () => {
+        it('parse the returned data correctly', async () => {
+            jest.spyOn(requester, 'get').mockResolvedValue(data.details(1));
+            await expect(apiEstimates.one(1)).resolves.toMatchSnapshot();
         });
     });
 });

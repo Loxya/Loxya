@@ -6,9 +6,21 @@ beneficiary-type: Type de bénéficiaire
 person: Personne physique (individu)
 company: Personne morale (entreprise)
 
+not-invoiceable:
+    with-company: >-
+        Ce bénéficiaire ne pourra pas être facturé en l'état,
+        des informations obligatoires sont manquantes ou invalides
+        sur la fiche de l'entreprise liée.
+    without-company: >-
+        Ce bénéficiaire ne pourra pas être facturé en l'état,
+        des informations obligatoires sont manquantes ou invalides
+        sur sa fiche.
+
 confirm-delete: "Mettre ce bénéficiaire à la corbeille\_?"
 confirm-permanently-delete: "Voulez-vous vraiment supprimer définitivement ce bénéficiaire\_?"
 confirm-restore: "Voulez-vous vraiment restaurer ce bénéficiaire\_?"
 
 deleted: Bénéficiaire supprimé.
 restored: Bénéficiaire restauré.
+
+empty: Aucun bénéficiaire enregistré pour le moment.

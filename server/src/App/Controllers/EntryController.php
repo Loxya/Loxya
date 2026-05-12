@@ -7,7 +7,6 @@ use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Loxya\Config\Config;
 use Loxya\Http\Request;
-use Loxya\Models\Country;
 use Loxya\Models\Event;
 use Loxya\Models\Material;
 use Loxya\Services\Auth;
@@ -45,10 +44,6 @@ final class EntryController extends BaseController
 
     public function default(Request $request, Response $response): ResponseInterface
     {
-        if (!Config::customConfigExists()) {
-            return $response->withRedirect('/install', 302); // - 302 Redirect.
-        }
-
         return $this->view->render($response, 'entries/default.twig', [
             'serverConfig' => $this->getServerConfig(),
             'flashMessages' => $this->getFlashMessages(),
@@ -80,18 +75,11 @@ final class EntryController extends BaseController
     {
         $rawConfig = Config::get();
 
-        // - Uris
-        $baseUri = Config::getBaseUri();
-        $apiUri = $baseUri->withPath('/api');
-
         return [
-            'baseUrl' => (string) $baseUri,
+            'baseUrl' => Config::getBaseUrl(),
             'isSslEnabled' => Config::isSslEnabled(),
+            'mainCountry' => $rawConfig['mainCountry'],
             'version' => Config::getVersion(),
-            'api' => [
-                'url' => (string) $apiUri,
-                'headers' => $rawConfig['apiHeaders'],
-            ],
             'features' => [
                 'technicians' => $rawConfig['features']['technicians'],
             ],
@@ -100,10 +88,11 @@ final class EntryController extends BaseController
                 'timeout' => $rawConfig['sessionExpireHours'],
             ],
             'organization' => [
-                'name' => $rawConfig['companyData']['name'],
-                'country' => ($rawConfig['companyData']['country'] ?? null) !== null
-                    ? Country::tryFromCode($rawConfig['companyData']['country'])
-                    : null,
+                'name' => $rawConfig['organization']['name'],
+                'isVatExempted' => $rawConfig['organization']['isVatExempted'],
+                'vatExemptionCode' => $rawConfig['organization']['vatExemptionCode'],
+                'vatExemptionReason' => $rawConfig['organization']['vatExemptionReason'],
+                'country' => $rawConfig['organization']['country'],
             ],
             'defaultPaginationLimit' => $rawConfig['maxItemsPerPage'],
             'maxConcurrentFetches' => $rawConfig['maxConcurrentFetches'],
@@ -112,9 +101,20 @@ final class EntryController extends BaseController
             'currency' => $rawConfig['currency'],
             'returnPolicy' => $rawConfig['returnPolicy']->value,
             'billingMode' => $rawConfig['billingMode']->value,
+            'estimates' => [
+                'validityDays' => $rawConfig['estimates']['validityDays'],
+            ],
+            'invoices' => [
+                'paymentTermDays' => $rawConfig['invoices']['paymentTermDays'],
+            ],
             'maxFileUploadSize' => $rawConfig['maxFileUploadSize'],
-            'authorizedFileTypes' => $rawConfig['authorizedFileTypes'],
-            'authorizedImageTypes' => $rawConfig['authorizedImageTypes'],
+            'allowedFileTypes' => Config::ALLOWED_FILE_TYPES,
+            'allowedImageTypes' => Config::ALLOWED_IMAGE_TYPES,
+            'measurementUnits' => [
+                'materials' => [
+                    'weight' => $rawConfig['measurementUnits']['materials']['weight']->value,
+                ],
+            ],
             'colorSwatches' => $rawConfig['colorSwatches'],
         ];
     }

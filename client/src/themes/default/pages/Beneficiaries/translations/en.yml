@@ -6,9 +6,20 @@ beneficiary-type: Beneficiary type
 person: Natural person (individual)
 company: Legal entity (company)
 
+not-invoiceable:
+    with-company: >-
+        This beneficiary cannot be invoiced as is, some required
+        information is missing or invalid on the linked company's
+        profile.
+    without-company: >-
+        This beneficiary cannot be invoiced as is, some required
+        information is missing or invalid on their profile.
+
 confirm-delete: Move this beneficiary in trash bin?
 confirm-permanently-delete: Do you really want to permanently delete this beneficiary?
 confirm-restore: Do you really want to restore this beneficiary?
 
 deleted: Beneficiary deleted.
 restored: Beneficiary restored.
+
+empty: No beneficiary registered at the moment.

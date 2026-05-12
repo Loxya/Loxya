@@ -1,10 +1,12 @@
 import './index.scss';
 import omit from 'lodash/omit';
-import { RequestError } from '@/globals/requester';
 import { defineComponent } from 'vue';
+import config from '@/globals/config';
+import { RequestError } from '@/globals/requester';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Button from '@/themes/default/components/Button';
 import apiUsers from '@/stores/api/users';
 import { ApiErrorCode } from '@/stores/api/@codes';
@@ -22,15 +24,25 @@ type UserEditSelf = Simplify<(
     & { password_confirmation: UserEditSelf['password'] }
 )>;
 
-const normalizeFormData = (savedData: Session | UserDetails): UserEditSelf => ({
-    first_name: savedData.first_name,
-    last_name: savedData.last_name,
-    pseudo: savedData.pseudo,
-    email: savedData.email,
-    phone: savedData.phone,
-    password: '',
-    password_confirmation: '',
-});
+const normalizeFormData = (savedData: Session | UserDetails): UserEditSelf => {
+    const data: UserEditSelf = {
+        first_name: savedData.first_name,
+        last_name: savedData.last_name,
+        pseudo: savedData.pseudo,
+        email: savedData.email,
+        phone: null,
+        password: '',
+        password_confirmation: '',
+    };
+
+    if ((savedData?.phone ?? null) !== null) {
+        data.phone = !savedData.phone!.country?.isSame(config.mainCountry)
+            ? savedData.phone!.formatInternational()
+            : savedData.phone!.formatNational();
+    }
+
+    return data;
+};
 
 type Data = {
     hasCriticalError: boolean,
@@ -44,7 +56,7 @@ type Data = {
 const ProfileUserSettings = defineComponent({
     name: 'ProfileUserSettings',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     data(): Data {
         const { user } = this.$store.state.auth;
@@ -177,10 +189,10 @@ const ProfileUserSettings = defineComponent({
                             />
                         </div>
                         <FormField
-                            v-model={data.phone}
                             name="phone"
                             label="phone"
                             type="tel"
+                            v-model={data.phone}
                             error={validationErrors?.phone}
                         />
                     </div>

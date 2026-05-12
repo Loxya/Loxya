@@ -1,27 +1,56 @@
 invoice: "Invoice"
 credit-note: "Credit note"
+prepayment-invoice: "Prepayment invoice"
+prepayment-credit-note: "Credit note on prepayment"
+
 invoice-number: "Invoice No.\_%s"
 credit-note-number: "Credit note No.\_%s"
+prepayment-invoice-number: "Prepayment invoice No.\_%s"
+prepayment-credit-note-number: "Credit note on prepayment No.\_%s"
+
 invoice-title: "Invoice in %s, No.\_%s"
 credit-note-title: "Credit note in %s, No.\_%s"
-
 estimate: "Estimate"
-estimate-title: "Estimate in %s"
+estimate-title:
+    without-number: "Estimate in %s"
+    with-number: "Estimate No.\_%s"
+prepayments: Prepayments
 
 inventory: "Inventory"
 inventory-for-park: "Inventory for park: \"%s\""
 inventory-created-by: "Inventory created by %s"
 
+related-invoice: Related invoice
+related-invoice-mention: "{number} ({date})"
+
+related-estimate: Related estimate
+related-estimate-mention: "Estimate No.\_{number}"
+
+credit-note-on-invoice: "Credit note on invoice No.\_{number}"
+prepayment-invoice-on-estimate: "Prepayment invoice on estimate No.\_{number}"
+
+document-draft:
+    number-placeholder: "[Number to be assigned]"
+    watermark: "DRAFT"
+
+company: Company
+period: Period
+reservation-period: "Reservation period"
+event-period: "Event period"
 printed-on-date: "Printed on %s"
+issue-date: Issue date
+issue-date-value: "Issue date: %s"
+due-date-value: "Due date: %s"
+other: "Other"
+other-specify: "Other (specify)"
 as-of-date: "As of %s"
 for-park: "for park:"
 all-parks: "all parks"
 park-name: "Park %s"
 page: "Page %d"
-page-n-of-n: "Page %d of %d"
+page-n-of-n: "Page %s of %s"
 phone: "Phone: %s"
 email: "E-mail: %s"
-vat-number: "VAT number: %s"
 technicians: "Technicians"
 beneficiary: "Beneficiary"
 other-beneficiaries: "Other beneficiaries"
@@ -55,26 +84,40 @@ note-detail-next-page: "Note: you'll find the detail in next pages."
 amount: "Amount"
 duration: Duration
 number-of-days: ["%d day", "%d days"]
-discount-rate: "%s discount"
+discount-rate: "Discount (%s)"
 degressive-rate: "Degressive rate"
 discount: "Discount"
 discount-of-amount: "%s of %s"
 totals: "Totals"
 excl-tax: "Excl. taxes"
 incl-tax: "Incl. taxes"
-tax-not-applicable: "(V.A.T. not applicable)"
-unit-price: "Unit Price"
-unit-price-excl-tax: "Unit Price (excl. taxes)"
+tax-not-applicable: "(VAT not applicable)"
+unit-price: "Unit price"
+unit-price-excl-tax: "Unit price"
 daily-total: "Total\_/\_day"
 daily-total-excl-tax: "Total excl. taxes\_/\_day"
 total: "Total"
+total-vat: "Total VAT"
 subtotal: "Subtotal"
-total-excl-tax: "Total excl. taxes"
-total-incl-taxes: "Total incl. taxes"
+subtotal-without-prepayments: "Subtotal w/o prepayments"
+prepayments-deduction: "Prepayment deduction"
+prepayments-recovery: "Prepayment recovery"
+total-excl-tax: "Total ex. tax"
+total-excl-tax-short: "Total E.T."
+total-incl-taxes: "Total inc. tax"
 total-due: "Amount due"
 total-credit: "Amount to deduct"
+payment-informations: "Payment"
+accepted-payment-methods: "Accepted payment methods"
+bank-details: "Bank details"
+bic: "BIC"
+account-holder: "Account holder"
 estimate-acceptance-date: "Date of acceptance of the estimate:"
 estimate-acceptance-signature: "Signature of the beneficiary, preceded by the mention \"Good for approval\":"
+signature-heading: "Signature"
+signature-approval: "Good for approval — Date and signature"
+billing-type-label: "Billing type"
+order-number: "Purchase order No."
 invoice-details-title: "Details of invoice No.\_%s"
 credit-note-details-title: "Details of credit note No.\_%s"
 estimate-details-title: "Estimate details"
@@ -83,9 +126,11 @@ reference: "Reference"
 reference-value: "Ref.: %s"
 picture: "Picture"
 designation: "Designation"
-replacement-value: "Repl. Val."
-unit-replacement-value: "Unit repl. value: %s"
-total-replacement-value: "Total Repl. Val."
+replacement-value: "Repl. value"
+unit-replacement-short: "Unit repl. value"
+unit-replacement-value: "Unit replacement value"
+unit-replacement-value-short: "Unit repl. value: %s"
+total-replacement-value: "Total repl. value"
 description: "Description"
 tags: "Tags"
 qty-returned: "Qty Returned"
@@ -94,12 +139,10 @@ materials-list: "Materials list"
 title: "Title: \"%s\""
 notes: "Notes"
 location: "Location: %s"
-contact: "Contact:"
+contact: "Contact"
+contact-dots: "Contact:"
 manager: "Project manager: %s"
-beneficiary-reference: "Ref. %s"
-company-registration-number:
-    global: "%s"
-    fr: "SIRET\_: %s"
+service-code: "Service code"
 serial-number-short: "S/N %s"
 this-event-is-confirmed: "This event is confirmed."
 description-notes: "Description\_/\_Notes"
@@ -110,18 +153,23 @@ materials-park-name: "Materials of park \"%s\""
 other-materials: "Other Materials"
 not-categorized: "Not categorized"
 category-other: "Other"
-total-replacement-amount: "Total replacement amount: %s"
+total-replacement-amount: "Total replacement amount"
+total-replacement-amount-value: "Total replacement amount: %s"
 properties-totals: "Properties totals"
+properties: "Properties"
 output: "Output"
 return: "Return"
+optional: "(Optional)"
 date-dots: "Date:"
 signature: "Signature:"
 label: "Label"
 park-value: "Park: %s"
 enable-javascript-message: "Please enable JavaScript to use this application."
+prepayment-line: "Deposit on estimate No.\_{number}"
 state: "State"
+rate: "Rate"
 base: "Base"
-vat: "V.A.T."
+vat: "VAT"
 non-degressive: "Non degressive"
 group: "Group"
 per-unit: "Per unit"
@@ -129,9 +177,78 @@ per-unit: "Per unit"
 creation-date: "Creation date"
 pickup-date: "Pickup date: %s"
 return-date: "Return date: %s"
-
+weight: Weight
+weight-value: "Weight: %s\_%s"
+origin-country: Origin country
+origin-country-value: "Origin country: %s"
+exempted: Exempted
 'yes': "Yes"
 'no': "No"
+
+tax-breakdown:
+    simple: "VAT breakdown"
+    default: "Tax breakdown"
+
+prepayment-reprise-line:
+    details: "Prepayment No.\_{index} - Invoice No.\_{number} ({date})"
+    short: "Prepayment No.\_{index} dated {date}"
+
+prepayment-credit-note-reprise-line:
+    details: "Credit note on prepayment No.\_{index} - Invoice No.\_{number} ({date})"
+    short: "Credit note on prepayment No.\_{index} dated {date}"
+
+taxes:
+    default: Taxe(s)
+    simple: VAT
+
+tax-state:
+    exempted: Exempted
+    reverse-charge: Reverse charge
+    reverse-charge-supply: Intra-com. supply
+    export: Export
+    out-of-scope: Out of scope
+
+due-date:
+    fixed: Due date
+    delay: Payment Terms
+
+expiry-date:
+    fixed: Expiry Date
+    delay: Validity
+
+payment-terms:
+    immediately: "Payment due on receipt"
+    with-delay:
+        - "Payment due in %d day"
+        - "Payment due in %d days"
+
+# - Voir le enum `IdentifierScheme`
+business-registration-id:
+    generic: "Business No.: %s"
+    "0002": "SIREN No.: %s"
+    "0009": "SIRET No.: %s"
+    "0208": "Company No.: %s"
+    "0183": "Business ID: %s"
+
+business-registration-id-full:
+    generic: "Registered at %s / No. %s"
+    FR: "RCS %s %s"
+
+business-activity-code:
+    generic: "Business activity code: %s"
+    FR: "APE code: %s"
+    BE: "NACE code: %s"
+    CH: "NOGA code: %s"
+    CA: "NAICS code: %s"
+
+billing-type:
+    goods: Sale of goods
+    services: Sale of services
+    both: Sale of goods and services
+
+vat-number:
+    generic: "VAT No.: %s"
+    CA: "Tax No.: %s"
 
 label-with-period-flag:
     mobilization: "[Material mobilization] %s"
@@ -143,3 +260,9 @@ unit-state:
     brand-new: "Brand new"
     bad: "Bad"
     outdated: "Outdated"
+
+payment-method:
+    cash: Cash
+    card: Credit / Debit Card
+    cheque: Cheque
+    transfer: Bank transfer

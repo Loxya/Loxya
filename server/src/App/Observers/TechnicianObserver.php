@@ -7,7 +7,7 @@ use Loxya\Models\Technician;
 
 final class TechnicianObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function deleted(Technician $technician): void
     {

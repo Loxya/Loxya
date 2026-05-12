@@ -8,10 +8,18 @@ title: "Matériel\_: «\_{name}\_»"
 infos:
     click-to-open-image: Cliquez pour ouvrir l'image en grand dans un nouvel onglet.
     park-name: "Parc «\_{name}\_»"
-    tax: Taxe
-    no-tax: Aucune taxe appliquée.
-    degressive-rate: Tarif dégressif
-    no-degressive-rate: Aucun tarif dégressif appliqué.
+
+    degressive-rate:
+        label: Tarif dégressif
+        empty: Aucun tarif dégressif appliqué.
+
+    tax:
+        label:
+            default: Taxe
+            simple: Taux de T.V.A.
+        empty:
+            default: Aucune (exempté sans motif explicite).
+            simple: Aucun (exempté sans motif explicite).
 
 documents:
     confirm-permanently-delete: "Voulez-vous vraiment supprimer définitivement ce document\_?"

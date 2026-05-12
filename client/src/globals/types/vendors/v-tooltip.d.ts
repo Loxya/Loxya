@@ -19,5 +19,6 @@ declare module 'v-tooltip' {
     export type TooltipOptions = {
         content: string,
         placement?: TooltipPlacement,
+        container?: string | HTMLElement | false,
     };
 }

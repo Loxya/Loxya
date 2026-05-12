@@ -9,9 +9,23 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!--<![endif]-->
 
+    <style type="text/css" rel="stylesheet" media="all">
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #333333;
+                color: #fff;
+            }
+        }
+
+        :root {
+            color-scheme: light dark;
+            supported-color-schemes: light dark;
+        }
+    </style>
+
     {%- block head %}{% endblock ~%}
 </head>
 <body>
-    {% block body %}{% endblock %}
+    {%~ block body %}{% endblock %}
 </body>
 </html>

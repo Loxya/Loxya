@@ -1,0 +1,16 @@
+@use '~@/themes/default/style/globals';
+
+.Pdf {
+    display: flex;
+    flex-direction: column;
+    overflow: auto hidden;
+    width: 100%;
+    text-align: center;
+    row-gap: globals.$spacing-medium;
+
+    // - Prevent iOS flickering when resizing the pages.
+    /* stylelint-disable property-no-vendor-prefix */
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    /* stylelint-enable property-no-vendor-prefix */
+}

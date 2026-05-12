@@ -7,6 +7,8 @@ use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Support\Carbon;
 use Loxya\Models\EventMaterial;
 use Loxya\Models\Material;
+use Loxya\Support\Invoicing\TaxRegime;
+use Loxya\Support\Invoicing\VatExemptionCode\VatExemptionCodeFr;
 
 final class BookingMaterialsTest extends ApiTestCase
 {
@@ -55,12 +57,11 @@ final class BookingMaterialsTest extends ApiTestCase
             'discount_rate' => '0.0000',
             'total_discount' => '0.00',
             'total_without_taxes' => '324.94',
+            'tax_regime' => 'S',
+            'tax_exemption_code' => null,
+            'tax_id' => 1,
             'taxes' => [
-                [
-                    'name' => 'T.V.A.',
-                    'is_rate' => true,
-                    'value' => '20.000',
-                ],
+                ['value' => '20.000'],
             ],
             'unit_replacement_price' => '49.99',
             'total_replacement_price' => '99.98',
@@ -77,19 +78,27 @@ final class BookingMaterialsTest extends ApiTestCase
             ),
         ];
 
-        $changeEventMaterial = static function () {
+        $changeEventMaterial = static function (bool $withTaxesExemption = false) {
             $eventMaterial = EventMaterial::find(14);
             $eventMaterial->name = "Changed name";
             $eventMaterial->reference = 'XR-188';
             $eventMaterial->unit_price = '52.00';
             $eventMaterial->degressive_rate = '2.5';
-            $eventMaterial->taxes = [
-                [
-                    'name' => 'TVA',
-                    'is_rate' => true,
-                    'value' => '5.5',
-                ],
-            ];
+
+            if ($withTaxesExemption) {
+                $eventMaterial->tax_regime = TaxRegime::EXEMPTED->value;
+                $eventMaterial->tax_exemption_code = VatExemptionCodeFr::CUSTOM_FR_DROM->value;
+                $eventMaterial->tax_id = null;
+                $eventMaterial->taxes = null;
+            } else {
+                $eventMaterial->tax_regime = TaxRegime::STANDARD->value;
+                $eventMaterial->tax_exemption_code = null;
+                $eventMaterial->tax_id = 2;
+                $eventMaterial->taxes = [
+                    ['value' => '5.5'],
+                ];
+            }
+
             $eventMaterial->save();
         };
 
@@ -115,13 +124,37 @@ final class BookingMaterialsTest extends ApiTestCase
             'unit_price_period' => '130.00',
             'total_without_discount' => '260.00',
             'total_without_taxes' => '260.00',
+            'tax_regime' => TaxRegime::STANDARD->value,
+            'tax_id' => 2,
             'taxes' => [
-                [
-                    'name' => 'TVA',
-                    'is_rate' => true,
-                    'value' => '5.500',
-                ],
+                ['value' => '5.500'],
             ],
         ]));
+
+        // - Resynchronisation du nom uniquement (lors de la modification des taxes).
+        $changeEventMaterial(withTaxesExemption: true);
+        $this->client->put('/api/bookings/event/7/materials/6/resynchronize', ['name']);
+        $this->assertStatusCode(StatusCode::STATUS_OK);
+        $this->assertResponseData(array_replace($savedEventMaterial, [
+            'reference' => 'XR-188',
+            'unit_price' => '52.00',
+            'degressive_rate' => '2.50',
+            'unit_price_period' => '130.00',
+            'total_without_discount' => '260.00',
+            'total_without_taxes' => '260.00',
+            'tax_regime' => TaxRegime::EXEMPTED->value,
+            'tax_exemption_code' => VatExemptionCodeFr::CUSTOM_FR_DROM->value,
+            'tax_id' => null,
+            'taxes' => null,
+        ]));
+
+        // - Resynchronisation de tous les champs.
+        $changeEventMaterial(withTaxesExemption: true);
+        $this->client->put(
+            '/api/bookings/event/7/materials/6/resynchronize',
+            ['name', 'reference', 'unit_price', 'degressive_rate', 'taxes'],
+        );
+        $this->assertStatusCode(StatusCode::STATUS_OK);
+        $this->assertResponseData($savedEventMaterial);
     }
 }

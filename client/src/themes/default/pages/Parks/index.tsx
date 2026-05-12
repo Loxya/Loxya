@@ -1,5 +1,4 @@
 import './index.scss';
-import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
 import { HttpCode, RequestError } from '@/globals/requester';
@@ -7,7 +6,6 @@ import isTruthy from '@/utils/isTruthy';
 import apiParks from '@/stores/api/parks';
 import config from '@/globals/config';
 import { confirm } from '@/utils/alert';
-import formatAddress from '@/utils/formatAddress';
 import mergeDifference from '@/utils/mergeDifference';
 import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
@@ -20,27 +18,29 @@ import Link from '@/themes/default/components/Link';
 import ItemsCount from './components/ItemsCount';
 import TotalAmount from './components/TotalAmount';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
-import {
-    ServerTable,
-    getLegacySavedSearch,
-} from '@/themes/default/components/Table';
+import { ServerTable } from '@/themes/default/components/Table';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import {
     persistFilters,
     getPersistedFilters,
     clearPersistedFilters,
 } from '@/utils/filtersPersister';
 
+import type { CreateElement } from 'vue';
 import type { DebouncedMethod } from 'lodash';
 import type { Filters } from './components/Filters';
-import type { ComponentRef, CreateElement } from 'vue';
 import type { Park } from '@/stores/api/parks';
 import type { Session } from '@/stores/api/session';
-import type { Column } from '@/themes/default/components/Table/Server';
+import type { Column, ServerTableRef } from '@/themes/default/components/Table/Server';
 import type { PaginationParams, SortableParams } from '@/stores/api/@types';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type Data = {
     filters: Filters,
+    appliedFilters: Filters,
     isLoading: boolean,
+    isFetched: boolean,
+    isEmpty: boolean,
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
@@ -73,32 +73,41 @@ const Parks = defineComponent({
             const savedFilters = getPersistedFilters(FILTERS_PERSISTENCE_KEY, FiltersSchema);
             if (savedFilters !== null) {
                 Object.assign(filters, savedFilters);
-            } else {
-                // - Ancienne sauvegarde éventuelle, dans le component `<Table />`.
-                const savedSearchLegacy = this.$options.name
-                    ? getLegacySavedSearch(this.$options.name)
-                    : null;
-
-                if (savedSearchLegacy !== null) {
-                    Object.assign(filters, { search: [savedSearchLegacy] });
-                }
             }
         } else {
             clearPersistedFilters(FILTERS_PERSISTENCE_KEY);
         }
 
         return {
+            filters,
+            appliedFilters: { ...filters },
             isLoading: false,
+            isFetched: false,
+            isEmpty: false,
             hasCriticalError: false,
             shouldDisplayTrashed: false,
             isTrashDisplayed: false,
-            filters,
         };
     },
     computed: {
         shouldPersistSearch(): boolean {
             const session = this.$store.state.auth.user as Session;
             return !session.disable_search_persistence;
+        },
+
+        hasActiveFilters(): boolean {
+            return this.appliedFilters.search.length > 0;
+        },
+
+        hasContent(): boolean {
+            if (this.isTrashDisplayed) {
+                return true;
+            }
+
+            return (
+                this.isFetched &&
+                (!this.isEmpty || this.hasActiveFilters)
+            );
         },
 
         columns(): Array<Column<Park>> {
@@ -121,12 +130,20 @@ const Parks = defineComponent({
                     title: __('address'),
                     class: 'Parks__cell Parks__cell--address',
                     render: (h: CreateElement, park: Park) => {
-                        const address = formatAddress(park.street, park.postal_code, park.locality);
-                        return address ?? (
-                            <div class="Parks__cell__empty">
-                                {__('not-specified')}
-                            </div>
-                        );
+                        if (park.address === null) {
+                            return (
+                                <div class="Parks__cell__empty">
+                                    {__('not-specified')}
+                                </div>
+                            );
+                        }
+
+                        let { address } = park;
+                        if (!park.country.isSame(config.mainCountry)) {
+                            address += `\n${park.country.name}`;
+                        }
+
+                        return address;
                     },
                 },
                 !isTrashDisplayed && {
@@ -348,7 +365,7 @@ const Parks = defineComponent({
                 return;
             }
 
-            const $table = this.$refs.table as ComponentRef<typeof ServerTable>;
+            const $table = this.$refs.table as ServerTableRef;
             $table?.showColumnsSelector();
         },
 
@@ -371,16 +388,22 @@ const Parks = defineComponent({
         // ------------------------------------------------------
 
         async fetch(pagination: PaginationParams & SortableParams) {
-            pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
             this.isLoading = true;
+
+            const filters: Filters = { ...this.filters };
+            this.appliedFilters = filters;
 
             try {
                 const data = await apiParks.all({
                     ...pagination,
-                    ...this.filters,
+                    ...filters,
                     deleted: this.shouldDisplayTrashed,
                 });
+
+                this.isFetched = true;
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
+                this.isEmpty = data.pagination.total.items <= 0;
+
                 return data;
             } catch (error) {
                 if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
@@ -400,7 +423,7 @@ const Parks = defineComponent({
         refreshTable() {
             this.refreshTableDebounced?.cancel();
 
-            (this.$refs.table as ComponentRef<typeof ServerTable>)?.refresh();
+            (this.$refs.table as ServerTableRef)?.refresh();
         },
     },
     render() {
@@ -411,7 +434,9 @@ const Parks = defineComponent({
             filters,
             columns,
             isLoading,
+            hasContent,
             isTrashDisplayed,
+            hasActiveFilters,
             hasCriticalError,
             handleConfigureColumns,
             handleToggleShowTrashed,
@@ -432,16 +457,39 @@ const Parks = defineComponent({
             ? __('page.parks.title')
             : __('page.parks.title-trash');
 
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage | undefined = (() => {
+            if (isTrashDisplayed) {
+                return undefined;
+            }
+
+            if (hasActiveFilters) {
+                return { variant: EmptyMessageVariant.NO_RESULTS };
+            }
+
+            return {
+                text: __('page.parks.empty'),
+                action: {
+                    type: 'primary',
+                    icon: 'plus',
+                    label: __('page.parks.action-add'),
+                    target: { name: 'add-park' },
+                },
+            };
+        })();
+
         // - Actions de la page.
         const actions = !isTrashDisplayed
             ? [
-                <Button type="add" to={{ name: 'add-park' }} collapsible>
+                <Button type="primary" icon="plus" to={{ name: 'add-park' }} collapsible>
                     {__('page.parks.action-add')}
                 </Button>,
                 <Dropdown>
-                    <Button icon="table" onClick={handleConfigureColumns}>
-                        {__('configure-columns')}
-                    </Button>
+                    {hasContent && (
+                        <Button icon="table" onClick={handleConfigureColumns}>
+                            {__('configure-columns')}
+                        </Button>
+                    )}
                     <Button icon="trash" onClick={handleToggleShowTrashed}>
                         {__('open-trash-bin')}
                     </Button>
@@ -459,7 +507,7 @@ const Parks = defineComponent({
                 title={title}
                 loading={isLoading}
                 actions={actions}
-                scopedSlots={isTrashDisplayed ? undefined : {
+                scopedSlots={(isTrashDisplayed || !hasContent) ? undefined : {
                     headerContent: (): JSX.Node => (
                         <FiltersPanel
                             values={filters}
@@ -477,6 +525,8 @@ const Parks = defineComponent({
                         class="Parks__table"
                         columns={columns}
                         fetcher={fetch}
+                        emptyMessage={emptyMessage}
+                        sticky
                     />
                 </div>
             </Page>

@@ -1,0 +1,76 @@
+@use '~@/themes/default/style/globals';
+
+.InvoiceCreateStepBuyerAndLinesBuyerSelect {
+    &__option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: globals.$spacing-small;
+
+        &__label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        &__warning {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background-color: globals.$label-warning-background-color;
+            color: globals.$label-warning-color;
+            font-size: 0.75rem;
+            gap: 4px;
+
+            @include globals.icon('exclamation-triangle') {
+                font-size: 0.9em;
+            }
+        }
+
+        &--not-invoiceable {
+            color: globals.$text-soft-color;
+        }
+    }
+
+    &__selected {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: globals.$spacing-medium;
+        border-radius: globals.$border-radius-normal;
+        background-color: globals.$bg-color-emphasis-light;
+        gap: globals.$spacing-medium;
+
+        &__info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 2px;
+        }
+
+        &__name {
+            &__value {
+                color: globals.$text-base-color;
+                font-size: 1.05rem;
+                font-weight: 600;
+            }
+        }
+
+        &__contact {
+            color: globals.$text-light-color;
+            font-size: 0.9rem;
+        }
+
+        &__address {
+            margin-top: globals.$spacing-thin;
+            color: globals.$text-soft-color;
+            font-size: 0.9rem;
+            font-style: normal;
+            white-space: pre-line;
+        }
+    }
+}

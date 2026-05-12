@@ -66,4 +66,5 @@ modals:
             name: Nom
             reference: Référence
             unit_price: Prix unitaire
+            unit_replacement_price: Prix de remplacement
             degressive_rate: Coef. dégressif

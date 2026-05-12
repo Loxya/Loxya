@@ -1,15 +1,14 @@
 import { z } from '@/utils/validation';
 import requester from '@/globals/requester';
-import { CountrySchema } from './countries';
 import { DocumentSchema } from './documents';
 import { EventSchema } from './events';
-import { UserSchema } from './users';
 import { RoleSchema } from './roles';
 import { withPaginationEnvelope } from './@schema';
 
 import type { Raw } from 'vue';
-import type Period from '@/utils/period';
 import type { Event } from './events';
+import type Period from '@/utils/period';
+import type Country from '@/utils/country';
 import type { SchemaInfer } from '@/utils/validation';
 import type { RequestConfig } from '@/globals/requester';
 import type { PaginatedData, SortableParams, PaginationParams } from './@types';
@@ -41,27 +40,24 @@ export const TechnicianEventSchema = z.strictObject({
 
 export const TechnicianSchema = z.strictObject({
     id: z.number(),
-    user_id: z.number().nullable(),
     first_name: z.string(),
     last_name: z.string(),
     full_name: z.string(),
     nickname: z.string().nullable(),
-    // TODO [zod@>3.22.4]: Remettre `email()`.
-    email: z.string().nullable(),
-    phone: z.string().nullable(),
+    email: z.email().nullable(),
+    phone: z.phone().nullable(),
     street: z.string().nullable(),
+    additional_street: z.string().nullable(),
     postal_code: z.string().nullable(),
+    administrative_area: z.string().nullable(),
     locality: z.string().nullable(),
-    country_id: z.number().nullable(),
-    country: z.lazy(() => CountrySchema).nullable(),
-    full_address: z.string().nullable(),
+    country: z.country(),
+    address: z.string().nullable(),
     roles: z.lazy(() => RoleSchema.array()),
     note: z.string().nullable(),
 });
 
-export const TechnicianDetailsSchema = TechnicianSchema.extend({
-    user: z.lazy(() => UserSchema).nullable(),
-});
+export const TechnicianDetailsSchema = TechnicianSchema;
 
 export const TechnicianWithEventsSchema = TechnicianSchema.extend({
     events: TechnicianEventSchema.array(),
@@ -91,10 +87,11 @@ export type TechnicianEdit = {
     email: string | null,
     phone: string | null,
     street: string | null,
+    additional_street: string | null,
     postal_code: string | null,
+    administrative_area: string | null,
     locality: string | null,
-    country_id: number | null,
-    user_id?: number,
+    country: Raw<Country>,
     note: string | null,
     roles: Array<Role['id']>,
 };

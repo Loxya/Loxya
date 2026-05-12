@@ -1,8 +1,11 @@
+@use '~@/themes/default/style/globals';
+
 .EventDetailsMaterials {
     $block: &;
 
     display: flex;
     flex-direction: column;
+    padding: 0 globals.$spacing-small;
 
     &__missing {
         margin-bottom: 20px;

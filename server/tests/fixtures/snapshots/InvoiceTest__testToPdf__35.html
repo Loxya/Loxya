@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <base href="http://loxya.test/" />
+        <meta charset="UTF-8" />
+        <title>Avoir n° 2026-00002</title>
+        <meta name="generator" content="Loxya" />
+
+        <style type="text/css">
+            embedded-xml {
+                display: block;
+                margin: 30px;
+                padding: 15px;
+                background: #1e1e2e;
+                border-radius: 10px;
+                color: #cdd6f4;
+                line-height: 1.6;
+                font-size: 14px;
+                font-family: monospace;
+                white-space: pre;
+                overflow-x: auto;
+            }
+        </style>
+
+        <style type="text/css">
+            @page {
+                @bottom-right {
+                    content: "Page " counter(page) " / " counter(pages) "";
+                }
+            }
+        </style>
+        <style type="text/css">
+            :root {
+                --page-margin: 9mm 8mm 11mm;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            html {
+                font-family: "DejaVu Sans", sans-serif;
+                font-weight: 400;
+                font-size: 9pt;
+            }
+
+            @page {
+                size: A4;
+                margin: var(--page-margin);
+                @bottom-right {
+                    white-space: nowrap;
+                    font-size: 8pt;
+                    color: #666;
+                }
+            }
+            .__document {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                min-height: 100%;
+                align-items: safe center;
+                justify-content: safe center;
+                padding: 30px;
+                background-color: #eef0f4;
+                overflow: auto;
+                gap: 30px;
+            }
+            .__document__preview {
+                flex-shrink: 0;
+                columns: 210mm/297mm;
+                width: 210mm;
+                column-fill: auto;
+                box-decoration-break: clone;
+                gap: 20px;
+            }
+            .__document__preview__content {
+                box-decoration-break: clone;
+                -webkit-box-decoration-break: clone;
+                padding: var(--page-margin);
+                background-color: #fff;
+                min-height: 297mm;
+                box-shadow: 0 1.5mm 8mm rgba(0, 0, 0, 0.06);
+                border-radius: 3.5mm;
+            }
+            .__document__xml {
+                width: 100%;
+                margin: 0;
+            }
+
+            @media print {
+                img {
+                    image-rendering: pixelated;
+                }
+            }
+        </style>
+
+        <style type="text/css">
+            :root {
+                --color-accent: #951919;
+                --background-accent: #fffdf9;
+            }
+        </style>
+        <style type="text/css">
+            @charset "UTF-8";
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 400;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/regular.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 400;
+                font-style: italic;
+                src: url("fonts/pdf/plus-jakarta-sans/italic/regular.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 500;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/medium.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 600;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/semi-bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 700;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Plus Jakarta Sans";
+                font-weight: 800;
+                font-style: normal;
+                src: url("fonts/pdf/plus-jakarta-sans/extra-bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 400;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/regular.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 500;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/medium.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 600;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/semi-bold.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-weight: 700;
+                font-style: normal;
+                src: url("fonts/pdf/jetbrains-mono/bold.ttf") format("truetype");
+            }
+            :root {
+                --page-margin: 11mm 13mm 18mm;
+                --font-base: "Plus Jakarta Sans", sans-serif;
+                --font-mono: "JetBrains Mono", monospace;
+                --color-base: #374151;
+                --color-secondary: #6b7280;
+                --color-tertiary: #9ca3af;
+                --color-emphasis: #111827;
+                --separator-color: #f1f2f4;
+                --emphasis-background: #f9fafb;
+                --emphasis-separator-color: #e5e7eb;
+                --emphasis-primary-background: #323947;
+                --emphasis-primary-color: #fff;
+                --border-radius: 2mm;
+                font-size: 16px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            @page {
+                @top-center {
+                    content: element(watermark);
+                }
+                @bottom-center {
+                    content: element(main-footer);
+                }
+            }
+            html {
+                color: var(--color-base);
+                font-family: var(--font-base);
+                -webkit-font-smoothing: antialiased;
+                font-weight: 400;
+                line-height: 1.55;
+            }
+
+            .watermark {
+                position: running(watermark);
+                color: rgba(17, 24, 39, 0.1);
+                font-family: var(--font-base);
+                font-size: 75pt;
+                font-weight: 800;
+                letter-spacing: 0.01em;
+                line-height: 1;
+                text-transform: uppercase;
+                transform: translateY(143mm) rotate(-30deg);
+                white-space: nowrap;
+            }
+            @media screen {
+                .watermark {
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    transform: translate(-50%, 143mm) rotate(-30deg);
+                    z-index: 1000;
+                }
+            }
+
+            .header {
+                display: grid;
+                align-items: start;
+                grid-template-columns: 1fr 1fr;
+                gap: 10mm;
+            }
+            .header__right {
+                display: flex;
+                flex-direction: column;
+                min-height: 100%;
+                gap: 4mm;
+            }
+            .header__right__main {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: safe center;
+            }
+
+            .main-infos {
+                display: flex;
+                flex-direction: column;
+                padding-top: 3.5mm;
+                border-top: 1px solid var(--separator-color);
+                font-size: 0.7rem;
+                gap: 0.5mm;
+            }
+            .main-infos__item {
+                white-space: nowrap;
+            }
+            .main-infos__item__label,
+            .main-infos__item__value {
+                display: inline;
+            }
+            .main-infos__item__label {
+                color: var(--color-secondary);
+            }
+            .main-infos__item__label::after {
+                content: " :";
+            }
+            .main-infos__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+            }
+
+            .meta {
+                display: flex;
+                flex-direction: column;
+                text-align: right;
+                gap: 2.7mm;
+            }
+            .meta__title {
+                display: flex;
+                flex-direction: column;
+                line-height: 1;
+                gap: 2.5mm;
+            }
+            .meta__title__type {
+                display: block;
+                color: var(--color-accent);
+                font-size: 0.6rem;
+                font-weight: 700;
+                letter-spacing: 0.7mm;
+                text-transform: uppercase;
+            }
+            .meta__title__number {
+                display: block;
+                color: var(--color-emphasis);
+                font-family: var(--font-mono);
+                font-size: 1.3rem;
+                font-weight: 700;
+            }
+            .meta__title__number--placeholder {
+                color: var(--color-tertiary);
+                font-family: var(--font-base);
+                font-size: 0.85rem;
+                font-style: italic;
+                font-weight: 500;
+            }
+            .meta__data {
+                display: flex;
+                flex-direction: column;
+                font-size: 0.7rem;
+                gap: 0.5mm;
+            }
+            .meta__data__item {
+                white-space: nowrap;
+            }
+            .meta__data__item__label,
+            .meta__data__item__value {
+                display: inline;
+            }
+            .meta__data__item__label {
+                color: var(--color-tertiary);
+            }
+            .meta__data__item__label::after {
+                content: " :";
+            }
+            .meta__data__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+            }
+
+            .seller {
+                display: flex;
+                flex-direction: column;
+                gap: 4mm;
+            }
+            .seller__logo__image {
+                max-width: 75mm;
+                max-height: 20mm;
+            }
+            .seller__infos {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5mm;
+            }
+            .seller__name {
+                color: var(--color-emphasis);
+                font-size: 1.35rem;
+                font-weight: 800;
+                line-height: 1.1;
+            }
+            .seller__address {
+                font-size: 0.75rem;
+                font-style: normal;
+                line-height: 1.7;
+            }
+            .seller__contact,
+            .seller__identifiers {
+                display: flex;
+                flex-direction: column;
+                color: var(--color-secondary);
+                font-size: 0.65rem;
+                list-style: none;
+            }
+            .seller__identifiers {
+                gap: 0.5mm;
+            }
+
+            .buyer {
+                padding: 5mm 6mm 4mm;
+                border-radius: var(--border-radius);
+                background: var(--emphasis-background);
+            }
+            .buyer__heading {
+                margin-bottom: 2mm;
+                color: var(--color-accent);
+                font-size: 0.55rem;
+                font-weight: 700;
+                letter-spacing: 0.7mm;
+                text-transform: uppercase;
+            }
+            .buyer__infos {
+                display: flex;
+                flex-direction: column;
+                color: var(--color-secondary);
+                gap: 1.3mm;
+            }
+            .buyer__name {
+                color: var(--color-emphasis);
+                font-size: 0.95rem;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+            .buyer__address {
+                font-size: 0.73rem;
+                font-style: normal;
+                line-height: 1.7;
+            }
+            .buyer__identifiers {
+                display: flex;
+                flex-direction: column;
+                color: var(--color-tertiary);
+                font-size: 0.65rem;
+                list-style: none;
+                gap: 0.5mm;
+            }
+            .buyer__extras {
+                display: flex;
+                flex-direction: column;
+                margin-top: 0.5mm;
+                padding-top: 2mm;
+                border-top: 1px solid var(--emphasis-separator-color);
+                font-size: 0.7rem;
+                gap: 0.5mm;
+            }
+            .buyer__extras__item {
+                white-space: nowrap;
+            }
+            .buyer__extras__item__label,
+            .buyer__extras__item__value {
+                display: inline;
+            }
+            .buyer__extras__item__label {
+                color: var(--color-tertiary);
+            }
+            .buyer__extras__item__label::after {
+                content: " :";
+            }
+            .buyer__extras__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+            }
+
+            .main-title {
+                display: flex;
+                flex-direction: column;
+                margin-top: 6mm;
+                gap: 0.5mm;
+            }
+            .main-title__main {
+                color: var(--color-emphasis);
+                font-size: 0.95rem;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+            .main-title__subtitle {
+                color: var(--color-secondary);
+                font-size: 0.75rem;
+            }
+            .main-title__subtitle__part {
+                display: inline-block;
+                font-weight: 500;
+            }
+            .main-title__subtitle__part__key {
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .main-title__subtitle__part__key::after {
+                content: " :";
+            }
+            .main-title__subtitle__part__value {
+                margin-left: 2px;
+            }
+            .main-title__subtitle__part + .main-title__subtitle__part::before {
+                content: "•";
+                margin: 0 1.3mm 0 1.1mm;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+
+            .line-table {
+                margin-top: 4mm;
+            }
+            .line-table__title {
+                margin-bottom: 2mm;
+                margin-left: 1mm;
+                color: var(--color-secondary);
+                font-size: 0.625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+                break-after: avoid;
+            }
+            .line-table__table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .line-table__table__header__cell,
+            .line-table__table__body__cell {
+                text-align: left;
+            }
+            .line-table__table__header__cell:first-child,
+            .line-table__table__body__cell:first-child {
+                padding-left: 3mm;
+            }
+            .line-table__table__header__cell:last-child,
+            .line-table__table__body__cell:last-child {
+                padding-right: 3mm;
+            }
+            .line-table__table__header__cell--qty,
+            .line-table__table__body__cell--qty {
+                width: 10mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--reference,
+            .line-table__table__body__cell--reference {
+                width: 25mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--unit-price,
+            .line-table__table__body__cell--unit-price {
+                width: 20mm;
+                text-align: right;
+            }
+            .line-table__table__header__cell--tax,
+            .line-table__table__body__cell--tax {
+                width: 20mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--discount,
+            .line-table__table__body__cell--discount {
+                width: 14.6mm;
+                text-align: center;
+            }
+            .line-table__table__header__cell--total,
+            .line-table__table__body__cell--total {
+                width: 20mm;
+                text-align: right;
+            }
+            .line-table__table__header {
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                break-after: avoid;
+            }
+            .line-table__table__header__cell {
+                padding: 2.3mm 2mm;
+                background: var(--emphasis-background);
+                white-space: nowrap;
+            }
+            .line-table__table__header__cell:first-child {
+                border-top-left-radius: var(--border-radius);
+            }
+            .line-table__table__header__cell:last-child {
+                border-top-right-radius: var(--border-radius);
+            }
+            .line-table__table__body {
+                font-size: 0.7rem;
+            }
+            .line-table__table__body__header:first-child .line-table__table__body__header__cell {
+                border-top: 0;
+            }
+            .line-table__table__body__header__cell {
+                padding: 2mm 3mm;
+                background: var(--background-accent);
+                color: var(--color-accent);
+                font-size: 0.6875rem;
+                font-weight: 500;
+                letter-spacing: 0.1em;
+                break-after: avoid;
+            }
+            .line-table__table__body__row:last-child .line-table__table__body__cell {
+                border-bottom: 1px solid var(--separator-color);
+            }
+            .line-table__table__body__row + .line-table__table__body__row .line-table__table__body__cell {
+                border-top: 1px solid var(--separator-color);
+            }
+            .line-table__table__body__cell {
+                padding: 3mm 2mm;
+                vertical-align: middle;
+            }
+            .line-table__table__body__cell--designation {
+                font-size: 0.75rem;
+                font-weight: 600;
+                line-height: 1.4;
+                word-break: break-all;
+            }
+            .line-table__table__body__cell--qty,
+            .line-table__table__body__cell--reference,
+            .line-table__table__body__cell--unit-price,
+            .line-table__table__body__cell--discount,
+            .line-table__table__body__cell--total {
+                font-family: var(--font-mono);
+                white-space: nowrap;
+            }
+            .line-table__table__footer {
+                color: var(--color-secondary);
+                font-size: 0.65rem;
+                font-style: italic;
+            }
+            .line-table__table__footer__cell {
+                padding: 1mm 3mm 0;
+            }
+            .line-table__table__footer__data__item {
+                display: inline-block;
+                font-weight: 500;
+            }
+            .line-table__table__footer__data__item__key {
+                display: inline-block;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__footer__data__item__key::after {
+                content: " :";
+            }
+            .line-table__table__footer__data__item__value {
+                display: inline-block;
+                margin-left: 2px;
+            }
+            .line-table__table__footer__data__item__value--numeric {
+                font-family: var(--font-mono);
+            }
+            .line-table__table__footer__data__item + .line-table__table__footer__data__item::before {
+                content: "•";
+                margin: 0 1.3mm 0 1.1mm;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__item__name {
+                display: flex;
+                flex-direction: column;
+                font-size: 0.75rem;
+                font-weight: 600;
+                gap: 0.3mm;
+            }
+            .line-table__table__item__name__sub {
+                display: inline-block;
+                color: var(--color-secondary);
+                font-size: 0.6rem;
+                font-weight: 500;
+            }
+            .line-table__table__item__name__sub__part__key {
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__item__name__sub__part__key::after {
+                content: " :";
+            }
+            .line-table__table__item__name__sub__part__value {
+                margin-left: 2px;
+                word-break: break-all;
+            }
+            .line-table__table__item__name__sub__part__value--numeric {
+                font-family: var(--font-mono);
+            }
+            .line-table__table__item__name__sub__part + .line-table__table__item__name__sub__part::before {
+                content: "•";
+                margin: 0 1.3mm 0 1.1mm;
+                color: var(--color-tertiary);
+                font-weight: 400;
+            }
+            .line-table__table__item__description {
+                margin-top: 1mm;
+                color: var(--color-secondary);
+                font-size: 0.7rem;
+                font-weight: 400;
+                font-style: italic;
+            }
+            .line-table__table__item__discount--empty {
+                color: var(--color-tertiary);
+            }
+            .line-table__table__item__tax--empty {
+                color: var(--color-tertiary);
+            }
+            .line-table__table__item__tax--standard {
+                font-family: var(--font-mono);
+            }
+            .line-table__table__item__tax--exempt {
+                font-size: 0.68rem;
+            }
+            .line-table__table__item__tax__part + .line-table__table__item__tax__part::before {
+                content: "+";
+                margin: 0 1mm;
+                color: var(--color-secondary);
+            }
+            .line-table + .line-table {
+                margin-top: 6mm;
+            }
+
+            .summary {
+                display: grid;
+                align-items: start;
+                margin-top: 6mm;
+                grid-template-columns: 1fr 1fr;
+                break-inside: avoid;
+                gap: 8mm;
+            }
+
+            .global-tax-exemption {
+                color: var(--color-tertiary);
+                font-size: 0.6875rem;
+                font-style: italic;
+                line-height: 1.75;
+            }
+
+            .vat-breakdown {
+                width: 100%;
+                padding: 4.5mm 5.5mm;
+                border-radius: var(--border-radius);
+                background: var(--emphasis-background);
+            }
+            .vat-breakdown__title {
+                margin-bottom: 2mm;
+                color: var(--color-secondary);
+                font-size: 0.625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+            .vat-breakdown__table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .vat-breakdown__table__header__cell,
+            .vat-breakdown__table__body__cell {
+                text-align: left;
+            }
+            .vat-breakdown__table__header__cell:first-child,
+            .vat-breakdown__table__body__cell:first-child {
+                padding-left: 0;
+            }
+            .vat-breakdown__table__header__cell:last-child,
+            .vat-breakdown__table__body__cell:last-child {
+                padding-right: 0;
+            }
+            .vat-breakdown__table__header__cell--base,
+            .vat-breakdown__table__header__cell--total,
+            .vat-breakdown__table__body__cell--base,
+            .vat-breakdown__table__body__cell--total {
+                width: 18mm;
+                text-align: right;
+            }
+            .vat-breakdown__table__header {
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+            }
+            .vat-breakdown__table__header__cell {
+                padding: 1.8mm 2mm;
+                border-bottom: 1px solid var(--emphasis-separator-color);
+                white-space: nowrap;
+            }
+            .vat-breakdown__table__body {
+                font-size: 0.6875rem;
+            }
+            .vat-breakdown__table__body__row--exempt .vat-breakdown__table__body__cell--rate {
+                font-family: var(--font-base);
+                white-space: normal;
+            }
+            .vat-breakdown__table__body__row + .vat-breakdown__table__body__row .vat-breakdown__table__body__cell {
+                border-top: 1px solid var(--emphasis-separator-color);
+            }
+            .vat-breakdown__table__body__cell {
+                padding: 2mm;
+                font-family: var(--font-mono);
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+            .vat-breakdown__table__body__cell--rate {
+                white-space: nowrap;
+            }
+            .vat-breakdown__table__body__cell--base {
+                color: var(--color-secondary);
+            }
+            .vat-breakdown__notes {
+                margin-top: 2.5mm;
+                color: var(--color-secondary);
+                font-size: 0.65rem;
+                font-style: italic;
+                line-height: 1.6;
+                list-style: none;
+            }
+            .vat-breakdown__notes__item {
+                display: inline-flex;
+                flex-direction: row;
+                gap: 0.5mm;
+            }
+
+            .totals {
+                width: 100%;
+            }
+            .totals__lines {
+                padding: 0 2mm;
+            }
+            .totals__lines__item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 2.3mm 0;
+                border-bottom: 1px solid var(--separator-color);
+                gap: 3mm;
+            }
+            .totals__lines__item__label {
+                font-size: 0.781rem;
+            }
+            .totals__lines__item__value {
+                color: var(--color-emphasis);
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            .totals__lines__item--text .totals__lines__item__value {
+                font-family: var(--font-base);
+                white-space: normal;
+            }
+            .totals__grand {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 2mm;
+                padding: 3.5mm 5mm;
+                border-radius: var(--border-radius);
+                background: var(--emphasis-primary-background);
+                color: var(--emphasis-primary-color);
+                gap: 3mm;
+            }
+            .totals__grand__label {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.1;
+                opacity: 0.8;
+                gap: 0.5mm;
+            }
+            .totals__grand__label__main {
+                display: block;
+                font-size: 1rem;
+                font-weight: 600;
+            }
+            .totals__grand__label__sup {
+                display: block;
+                font-size: 0.75rem;
+            }
+            .totals__grand__value {
+                color: var(--emphasis-color);
+                font-family: var(--font-mono);
+                font-size: 1.1rem;
+                font-weight: 700;
+            }
+
+            .extras {
+                display: grid;
+                width: 100%;
+                margin-top: 6mm;
+                grid-template-columns: 1fr 1fr;
+                gap: 8mm;
+            }
+            .extras__box {
+                width: 100%;
+                padding: 4.5mm 5mm;
+                border: 1px solid var(--separator-color);
+                border-radius: var(--border-radius);
+                break-inside: avoid;
+            }
+            .extras__box__title {
+                margin-bottom: 1.5mm;
+                color: var(--color-secondary);
+                font-size: 0.625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+            .extras__box__content {
+                font-size: 0.6875rem;
+            }
+            .extras__payment-infos__methods__label {
+                color: var(--color-tertiary);
+            }
+            .extras__payment-infos__methods__label::after {
+                content: " :";
+            }
+            .extras__payment-infos__methods__values {
+                margin-left: 2px;
+                color: var(--color-emphasis);
+            }
+            .extras__payment-infos__bank {
+                margin-top: 3mm;
+                text-align: center;
+            }
+            .extras__payment-infos__bank__title {
+                margin-bottom: 1.5mm;
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                font-weight: 700;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+            .extras__payment-infos__bank__iban {
+                color: var(--color-emphasis);
+                font-family: var(--font-mono);
+                font-size: 0.781rem;
+                font-weight: 700;
+            }
+            .extras__payment-infos__bank__details {
+                display: flex;
+                justify-content: center;
+                margin-top: 0.5mm;
+                color: var(--color-tertiary);
+                font-size: 0.625rem;
+                gap: 1.5mm;
+            }
+            .extras__payment-infos__bank__details__item__label,
+            .extras__payment-infos__bank__details__item__value {
+                display: inline;
+            }
+            .extras__payment-infos__bank__details__item__label::after {
+                content: " :";
+            }
+            .extras__payment-infos__bank__details__item__value {
+                margin-left: 2px;
+                font-weight: 600;
+                word-break: break-all;
+            }
+            .extras__payment-infos__bank__details__item + .extras__payment-infos__bank__details__item::before {
+                content: "—";
+                margin-right: 1.5mm;
+            }
+            .extras__properties {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                font-size: 0.6875rem;
+                gap: 1.5mm 8mm;
+            }
+            .extras__properties__item__label,
+            .extras__properties__item__value {
+                display: inline;
+            }
+            .extras__properties__item__label {
+                color: var(--color-tertiary);
+                word-break: break-all;
+            }
+            .extras__properties__item__label::after {
+                content: " :";
+            }
+            .extras__properties__item__value {
+                margin-left: 2px;
+                color: var(--color-base);
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .extras__legal-mentions {
+                display: flex;
+                flex-direction: column;
+                align-self: flex-end;
+                color: var(--color-tertiary);
+                font-size: 0.67rem;
+                line-height: 1.4;
+                gap: 2mm;
+            }
+            .extras__legal-mentions__part--special {
+                color: var(--color-secondary);
+            }
+            .extras--without-boxes,
+            .extras--with-all-boxes {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .extras--without-boxes .extras__box,
+            .extras--with-all-boxes .extras__box {
+                flex: 1;
+            }
+            .extras--without-boxes .extras__legal-mentions,
+            .extras--with-all-boxes .extras__legal-mentions {
+                align-self: auto;
+                width: 100%;
+                text-align: center;
+            }
+
+            .main-footer {
+                position: running(main-footer);
+                padding-top: 2mm;
+                border-top: 1px solid var(--separator-color);
+                color: var(--color-tertiary);
+                font-size: 0.5625rem;
+                line-height: 1.85;
+                text-align: center;
+                word-break: break-all;
+            }
+            @media screen {
+                .main-footer {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="__document">
+            <div class="__document__preview">
+                <div class="__document__preview__content">
+                    <footer class="main-footer">
+                        Testing corp. | SARL au capital de 1 000 € | Code APE : 7729Z | RCS TestGrandeVille 543210080<br />
+                        5 rue des tests 05555 Testville | N° TVA : FR85543210080
+                    </footer>
+
+                    <header class="header">
+                        <div class="header__left">
+                            <div class="seller">
+                                <div class="seller__logo">
+                                    <img src="img/logo/test/logo-wide.png" class="seller__logo__image" />
+                                </div>
+                                <div class="seller__infos">
+                                    <h2 class="seller__name">Testing corp.</h2>
+                                    <address class="seller__address">
+                                        5 rue des tests<br />
+                                        05555 Testville<br />
+                                        France
+                                    </address>
+                                    <ul class="seller__identifiers">
+                                        <li class="seller__identifiers__item">N° SIRET : 54321008020145</li>
+                                        <li class="seller__identifiers__item">N° TVA : FR85543210080</li>
+                                    </ul>
+                                    <ul class="seller__contact">
+                                        <li class="seller__contact__item">contact@testing-corp.dev</li>
+
+                                        <li class="seller__contact__item">01 23 45 67 89</li>
+                                    </ul>
+                                </div>
+                                <dl class="main-infos">
+                                    <div class="main-infos__item">
+                                        <dt class="main-infos__item__label">Type de vente</dt>
+                                        <dd class="main-infos__item__value">Prestation de services</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="header__right">
+                            <div class="meta">
+                                <h1 class="meta__title">
+                                    <span class="meta__title__type">Avoir</span>
+                                    <span class="meta__title__number">2026-00002</span>
+                                </h1>
+                                <dl class="meta__data">
+                                    <div class="meta__data__item">
+                                        <dt class="meta__data__item__label">Date d&#039;émission</dt>
+                                        <dd class="meta__data__item__value">22 octobre 2026</dd>
+                                    </div>
+                                    <div class="meta__data__item">
+                                        <dt class="meta__data__item__label">Facture associée</dt>
+                                        <dd class="meta__data__item__value">2021-00003 (01/08/2021)</dd>
+                                    </div>
+                                </dl>
+                            </div>
+
+                            <div class="header__right__main">
+                                <div class="buyer">
+                                    <div class="buyer__heading">Bénéficiaire</div>
+                                    <div class="buyer__infos">
+                                        <h2 class="buyer__name">Roger Rabbit</h2>
+                                        <dl class="buyer__extras">
+                                            <div class="buyer__extras__item">
+                                                <dt class="buyer__extras__item__label">Référence</dt>
+                                                <dd class="buyer__extras__item__value">0002</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="main-title">
+                        <h1 class="main-title__main">Avoir sur la facture n° 2021-00003</h1>
+                    </div>
+
+                    <div class="line-table">
+                        <table class="line-table__table">
+                            <thead class="line-table__table__header">
+                                <tr class="line-table__table__header__row">
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--designation">Désignation</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--qty">Qté</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--unit-price">P.U. H.T.</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--tax">T.V.A.</th>
+                                    <th class="line-table__table__header__cell line-table__table__header__cell--total">Total H.T.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="line-table__table__body">
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">Prestation principale</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">-1 000,00 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20 %</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">-1 000,00 €</td>
+                                </tr>
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">Remise commerciale</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">100,00 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20 %</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">100,00 €</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="summary">
+                        <div class="summary__left">
+                            <div class="vat-breakdown">
+                                <div class="vat-breakdown__title">Détails de la T.V.A.</div>
+                                <table class="vat-breakdown__table">
+                                    <thead class="vat-breakdown__table__header">
+                                        <tr class="vat-breakdown__table__header__row">
+                                            <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--rate">Taux</th>
+                                            <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--base">Base</th>
+                                            <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--total">Montant</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="vat-breakdown__table__body">
+                                        <tr class="vat-breakdown__table__body__row vat-breakdown__table__body__row--standard">
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--rate">20 %</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">-900,00 €</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">-180,00 €</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="totals">
+                            <dl class="totals__lines">
+                                <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Total H.T.</dt>
+                                    <dd class="totals__lines__item__value">-900,00 €</dd>
+                                </div>
+
+                                <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Total T.V.A.</dt>
+                                    <dd class="totals__lines__item__value">-180,00 €</dd>
+                                </div>
+                            </dl>
+                            <div class="totals__grand">
+                                <span class="totals__grand__label">
+                                    <span class="totals__grand__label__sup"> Total T.T.C.</span>
+                                    <span class="totals__grand__label__main">Net à déduire</span>
+                                </span>
+                                <span class="totals__grand__value">-1 080,00 €</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="extras extras--without-boxes">
+                        <div class="extras__legal-mentions">
+                            <p class="extras__legal-mentions__part">TVA acquittée sur les débits. Les règlements reçus avant la date d&#039;échéance ne donneront pas lieu à escompte. Tout retard de paiement engendre une pénalité exigible à compter de la date d&#039;échéance, calculée sur la base de trois fois le taux d&#039;intérêt légal. Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 €.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

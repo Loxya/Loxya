@@ -1,0 +1,140 @@
+<?php
+/*
+ * Copyright (c) Alexandre Gomes Gaigalas <alganet@gmail.com>
+ * SPDX-License-Identifier: MIT
+ */
+declare(strict_types=1);
+
+namespace Respect\Validation\Exceptions;
+
+use InvalidArgumentException;
+use Respect\Validation\Message\Formatter;
+use function key;
+
+/**
+ * Default exception class for rule validations.
+ *
+ * @author Alexandre Gomes Gaigalas <alganet@gmail.com>
+ * @author Henrique Moody <henriquemoody@gmail.com>
+ */
+class ValidationException extends InvalidArgumentException implements Exception
+{
+    public const MODE_DEFAULT = 'default';
+    public const MODE_NEGATIVE = 'negative';
+    public const STANDARD = 'standard';
+
+    /**
+     * Contains the default templates for exception message.
+     *
+     * @var string[][]
+     */
+    protected $defaultTemplates = [
+        self::MODE_DEFAULT => [
+            self::STANDARD => '{{name}} must be valid',
+        ],
+        self::MODE_NEGATIVE => [
+            self::STANDARD => '{{name}} must not be valid',
+        ],
+    ];
+
+    /** @var mixed */
+    private $input;
+
+    /** @var string */
+    private $mode = self::MODE_DEFAULT;
+
+    /** @var mixed[] */
+    private $params = [];
+
+    /** @var Formatter */
+    private $formatter;
+
+    /** @var string */
+    private $template;
+
+    /**
+     * @param mixed $input
+     * @param mixed[] $params
+     */
+    public function __construct($input, array $params, Formatter $formatter)
+    {
+        $this->input = $input;
+        $this->params = $params;
+        $this->formatter = $formatter;
+        $this->template = $this->chooseTemplate();
+
+        parent::__construct($this->createMessage());
+    }
+
+    /**
+     * @return mixed[]
+     */
+    public function getParams(): array
+    {
+        return $this->params;
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getParam(string $name)
+    {
+        return $this->params[$name] ?? null;
+    }
+
+    public function setParam(string $name, mixed $value): void
+    {
+        $this->params[$name] = $value;
+    }
+
+    public function updateMode(string $mode): void
+    {
+        $this->mode = $mode;
+        $this->message = $this->createMessage();
+    }
+
+    public function updateTemplate(string $template): void
+    {
+        $this->template = $template;
+        $this->message = $this->createMessage();
+    }
+
+    public function setName(string $name): void
+    {
+        $this->params['name'] = $name;
+        $this->message = $this->createMessage();
+    }
+
+    /**
+     * @param mixed[] $params
+     */
+    public function updateParams(array $params): void
+    {
+        $this->params = $params;
+        $this->message = $this->createMessage();
+    }
+
+    public function hasCustomTemplate(): bool
+    {
+        return isset($this->defaultTemplates[$this->mode][$this->template]) === false;
+    }
+
+    protected function chooseTemplate(): string
+    {
+        return (string) key($this->defaultTemplates[$this->mode]);
+    }
+
+    private function createMessage(): string
+    {
+        return $this->formatter->format(
+            $this->defaultTemplates[$this->mode][$this->template] ?? $this->template,
+            $this->input,
+            $this->params,
+        );
+    }
+
+    public function __toString(): string
+    {
+        return $this->getMessage();
+    }
+}

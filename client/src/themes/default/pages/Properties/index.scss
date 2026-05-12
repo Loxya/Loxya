@@ -23,9 +23,6 @@
 
             &--is-totalisable {
                 width: 120px;
-
-                // - Important pour surcharger la définition du <th> de `.VueTables`.
-                // stylelint-disable-next-line declaration-no-important
                 text-align: center !important;
             }
 

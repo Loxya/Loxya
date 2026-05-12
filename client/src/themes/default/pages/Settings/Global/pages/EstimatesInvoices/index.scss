@@ -2,13 +2,33 @@
 
 .EstimatesInvoicesGlobalSettings {
     &__form {
+        margin-bottom: 64px;
+
         .FormField {
             --label-width: 200px;
         }
     }
 
+    &__display-options {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: globals.$spacing-medium;
+        gap: globals.$spacing-medium;
+
+        &__fieldset {
+            flex: 1;
+            min-width: 400px;
+            margin: 0 !important;
+        }
+    }
+
     &__actions {
-        margin-top: globals.$spacing-large;
+        position: fixed;
+        left: 500px;
+        bottom: 0;
+        right: 0;
+        padding: globals.$spacing-medium globals.$spacing-small;
+        background-color: globals.$bg-color-body;
         text-align: center;
     }
 }

@@ -54,11 +54,9 @@ const TechnicianEdit = defineComponent({
                 return __('page.technician-edit.title-create');
             }
 
-            if (!isFetched || !technician) {
-                return __('page.technician-edit.title-edit-simple');
-            }
-
-            return __('page.technician-edit.title-edit', { name: technician.full_name });
+            return isFetched && technician !== null
+                ? __('page.technician-edit.title-edit', { name: technician.full_name })
+                : __('page.technician-edit.title-edit-simple');
         },
     },
     errorCaptured(error: unknown) {
@@ -99,6 +97,7 @@ const TechnicianEdit = defineComponent({
 
         async fetchData() {
             if (this.isNew) {
+                this.technician = null;
                 this.isFetched = true;
                 return;
             }

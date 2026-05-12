@@ -1,0 +1,485 @@
+@use '~@/themes/default/style/globals';
+@use 'sass:color';
+
+.BillingEditorMaterials {
+    $block: &;
+
+    &__header,
+    &__item {
+        display: grid;
+        align-items: center;
+        grid-template-columns: minmax(305px, 1fr) 260px 115px 235px 85px 95px 41px;
+        grid-template-areas: 'name price quantity taxes discount total actions';
+        column-gap: 10px;
+    }
+
+    &__header {
+        padding: globals.$spacing-small 10px;
+        border-bottom: 2px solid #383838;
+        color: globals.$text-soft-color;
+        font-weight: 600;
+
+        &__cell {
+            &--name {
+                grid-area: name;
+            }
+
+            &--price {
+                grid-area: price;
+            }
+
+            &--quantity {
+                text-align: center;
+                grid-area: quantity;
+            }
+
+            &--taxes {
+                overflow: hidden;
+                text-align: center;
+                grid-area: taxes;
+            }
+
+            &--discount {
+                grid-area: discount;
+            }
+
+            &--total {
+                text-align: right;
+                grid-area: total;
+            }
+
+            &--actions {
+                grid-area: actions;
+            }
+        }
+    }
+
+    &__items {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__item {
+        padding: globals.$spacing-small 10px;
+        border-bottom: 1px solid globals.$divider-color;
+        color: globals.$text-base-color;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &__legend {
+            display: none;
+        }
+
+        &__field {
+            min-width: 0;
+
+            &__label {
+                display: none;
+            }
+
+            &__value {
+                display: block;
+            }
+
+            &--name {
+                grid-area: name;
+            }
+
+            &--price {
+                grid-area: price;
+            }
+
+            &--quantity {
+                text-align: center;
+                grid-area: quantity;
+            }
+
+            &--taxes {
+                text-align: center;
+                grid-area: taxes;
+            }
+
+            &--discount {
+                grid-area: discount;
+            }
+
+            &--total {
+                text-align: right;
+                grid-area: total;
+            }
+        }
+
+        &__name {
+            $sub-block: &;
+
+            display: block;
+            font-weight: 600;
+
+            &__name {
+                display: block;
+
+                &--unsynced {
+                    margin-bottom: 4px;
+                }
+            }
+
+            &__reference {
+                display: block;
+                color: globals.$text-light-color;
+                font-weight: 400;
+            }
+
+            &--hidden {
+                #{$sub-block}__name {
+                    color: globals.$text-light-color;
+                }
+
+                #{$sub-block}__reference {
+                    color: globals.$text-muted-color;
+                }
+            }
+        }
+
+        &__price {
+            display: flex;
+            align-items: center;
+            gap: globals.$spacing-small;
+            white-space: nowrap;
+
+            &__static-value {
+                width: 100px;
+                padding: 0 14px;
+            }
+
+            &__input {
+                width: 100px;
+                padding: 1px;
+                border-radius: 4px;
+
+                &--unsynced {
+                    outline: 1px dashed color.adjust(globals.$primary-color, $alpha: -0.3);
+                }
+            }
+
+            &__degressive-rate {
+                min-width: 40px;
+
+                @include globals.icon('times') {
+                    margin-right: globals.$spacing-thin;
+                    color: globals.$text-soft-color;
+                    font-size: 0.7rem;
+                }
+            }
+
+            &__total {
+                font-weight: 500;
+
+                @include globals.icon('equals') {
+                    margin-right: 10px;
+                    color: globals.$text-soft-color;
+                    font-size: 0.7rem;
+                }
+            }
+        }
+
+        &__quantity {
+            font-weight: 500;
+        }
+
+        &__obsolete-tax {
+            text-align: center;
+
+            &__title,
+            &__details {
+                display: block;
+            }
+
+            &__title {
+                margin-bottom: 5px;
+                font-weight: 500;
+                text-decoration: underline;
+                text-underline-offset: 3px;
+                text-decoration-style: wavy;
+                text-decoration-color: globals.$primary-color;
+            }
+
+            &__details {
+                color: globals.$text-soft-color;
+                font-size: 0.9rem;
+                font-style: italic;
+            }
+        }
+
+        &__tax {
+            $sub-block: &;
+
+            display: block;
+            padding: 1px;
+            border-radius: 4px;
+
+            &__input {
+                width: 100%;
+            }
+
+            &--static {
+                @include globals.line-clamp(2);
+
+                display: inline-flex;
+                flex-direction: column;
+                padding: 0 14px;
+                border-radius: 0;
+                text-align: center;
+                word-break: break-word;
+
+                #{$sub-block}__value,
+                #{$sub-block}__details {
+                    display: block;
+                }
+
+                #{$sub-block}__details {
+                    color: globals.$text-soft-color;
+                    font-size: 0.9rem;
+                    font-style: italic;
+                }
+            }
+
+            &--unsynced {
+                outline: 1px dashed color.adjust(globals.$primary-color, $alpha: -0.3);
+            }
+        }
+
+        &__discount {
+            &__static-value {
+                padding: 0 14px;
+            }
+
+            &--not-applicable {
+                margin: 0;
+                color: globals.$text-light-color;
+                font-style: italic;
+            }
+        }
+
+        &__total-without-taxes {
+            font-weight: 600;
+        }
+
+        &__name__name,
+        &__name__reference,
+        &__price__degressive-rate {
+            &--unsynced {
+                text-decoration: underline;
+                text-underline-offset: 3px;
+                text-decoration-style: wavy;
+                text-decoration-color: globals.$primary-color;
+            }
+        }
+
+        &__actions {
+            display: flex;
+            justify-content: flex-end;
+            grid-area: actions;
+        }
+    }
+
+    &__empty {
+        padding: globals.$spacing-large;
+        border-radius: globals.$border-radius-normal;
+        background-color: globals.$bg-color-emphasis-warning;
+        color: globals.$color-emphasis-warning-base;
+
+        &__title {
+            margin: 0 0 globals.$spacing-medium;
+            font-size: 1.2rem;
+            font-weight: 500;
+            line-height: 1;
+
+            @include globals.icon('exclamation-triangle') {
+                margin-right: globals.$spacing-small;
+            }
+        }
+
+        &__content {
+            margin: 0;
+            white-space: pre-line;
+        }
+    }
+
+    //
+    // - État: Sans taxes.
+    //
+
+    &--no-taxes {
+        #{$block}__header,
+        #{$block}__item {
+            grid-template-columns: minmax(305px, 1fr) 260px 115px 85px 95px 41px;
+            grid-template-areas: 'name price quantity discount total actions';
+        }
+    }
+
+    //
+    // - Mode compact
+    //
+
+    &--compact {
+        #{$block}__header {
+            display: none;
+        }
+
+        #{$block}__items {
+            gap: globals.$spacing-medium;
+        }
+
+        #{$block}__item {
+            align-items: stretch;
+            min-width: min-content;
+            padding: globals.$spacing-medium globals.$spacing-large;
+            border: none;
+            border-radius: globals.$border-radius-large;
+            background: globals.$bg-color-emphasis-light;
+            grid-template-columns: minmax(275px, 320px) 130px minmax(235px, 1fr) 140px;
+            grid-template-areas:
+                'legend legend legend legend'
+                'price quantity taxes discount'
+                'total total total total';
+            gap: globals.$spacing-medium;
+
+            &__legend {
+                display: flex;
+                align-items: center;
+                padding: 0 0 globals.$spacing-small;
+                border-bottom: 1px solid globals.$divider-color;
+                gap: globals.$spacing-small;
+                grid-area: legend;
+
+                #{$block}__item__name {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                }
+
+                &__actions {
+                    flex: 0 0 auto;
+                    margin-left: auto;
+                }
+            }
+
+            &__field {
+                display: flex;
+                flex-direction: column;
+                text-align: left;
+
+                &--name {
+                    display: none;
+                }
+
+                &--quantity,
+                &--taxes {
+                    text-align: left;
+                }
+
+                &__label {
+                    flex: 0 0 auto;
+                    display: block;
+                    overflow: hidden;
+                    margin-bottom: globals.$spacing-thin;
+                    color: globals.$text-soft-color;
+                    font-size: 0.9rem;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+
+                &__value {
+                    flex: 1 1 auto;
+                    display: grid;
+                    align-items: center;
+                    min-width: 0;
+                }
+
+                &--total {
+                    flex-direction: row;
+                    align-items: baseline;
+                    justify-content: flex-end;
+                    padding-top: globals.$spacing-medium;
+                    border-top: 1px dashed globals.$divider-color;
+                    text-align: right;
+                    gap: globals.$spacing-small;
+
+                    #{$block}__item__field__label {
+                        flex: 0 0 auto;
+                        margin: 0;
+                        color: globals.$text-soft-color;
+                        font-size: 1.1rem;
+
+                        &::after {
+                            content: ' :';
+                        }
+                    }
+
+                    #{$block}__item__field__value {
+                        flex: 0 0 auto;
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                    }
+                }
+            }
+
+            &__price {
+                &__static-value {
+                    width: auto;
+                    padding: 0;
+                }
+            }
+
+            &__tax {
+                &--static {
+                    padding: 0;
+                    text-align: left;
+                }
+            }
+
+            &__discount {
+                &__static-value {
+                    padding: 0;
+                }
+            }
+
+            &__actions {
+                display: none;
+            }
+        }
+
+        //
+        // - État: Sans taxes.
+        //
+
+        &#{$block}--no-taxes {
+            #{$block}__item {
+                grid-template-columns: minmax(275px, 1fr) 130px 140px;
+                grid-template-areas:
+                    'legend legend legend'
+                    'price quantity discount'
+                    'total total total';
+            }
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (width >= 1600px) {
+        &__header,
+        &__item {
+            grid-template-columns: minmax(305px, 1fr) 270px 115px 235px 85px 95px 41px;
+        }
+
+        &#{$block}--no-taxes {
+            #{$block}__header,
+            #{$block}__item {
+                grid-template-columns: minmax(305px, 1fr) 270px 115px 85px 95px 41px;
+            }
+        }
+    }
+}

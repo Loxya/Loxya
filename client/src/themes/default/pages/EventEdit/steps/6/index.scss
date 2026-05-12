@@ -1,11 +1,24 @@
 @use '~@/themes/default/style/globals';
 
 .EventEditStepOverview {
-    $spacing: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    height: 100%;
+    gap: globals.$spacing-medium;
 
-    max-width: 1000px;
-    min-width: 500px;
-    margin: 0 auto;
+    &__wrapper {
+        flex: 1;
+        overflow: auto;
+        height: 100%;
+        padding: 0 globals.$spacing-large;
+    }
+
+    &__content {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
 
     &__confirmation {
         margin-top: globals.$spacing-large;
@@ -33,14 +46,16 @@
 
     &__actions {
         display: flex;
-        justify-content: space-between;
-        margin-top: globals.$spacing-large;
-        padding-top: globals.$spacing-large;
-        border-top: 1px solid globals.$divider-color;
+        flex-wrap: wrap;
+        justify-content: space-evenly;
+        width: 100%;
+        padding: globals.$spacing-small 0;
         gap: globals.$spacing-small;
 
         &__right {
             display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
             gap: globals.$spacing-small;
         }
     }

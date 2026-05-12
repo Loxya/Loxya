@@ -1,3 +1,5 @@
+import type Day from '@/utils/day';
+import type Period from '@/utils/period';
 import type { UndefinedOnPartialDeep } from 'type-fest';
 
 /** Type de données dans un champ personnalisé. */
@@ -26,6 +28,14 @@ export enum CustomFieldType {
     /** Un champ permettant de spécifier une date. */
     DATE = 'date',
 }
+
+//
+// - Filtres
+//
+
+type SimpleFilterValue = string | number | Array<string | number> | boolean | Day | Period;
+type ComplexFilterValue = { operator: string, value: SimpleFilterValue };
+export type FilterValue = SimpleFilterValue | ComplexFilterValue;
 
 //
 // - Types liés à la pagination / tri.

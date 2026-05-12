@@ -7,29 +7,12 @@
 
     &__main {
         display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: globals.$spacing-medium;
+        align-items: stretch;
+        gap: globals.$spacing-small;
 
-        &__filters {
-            display: flex;
-            align-items: stretch;
-            gap: globals.$spacing-small;
-
-            &__center-date {
-                // stylelint-disable-next-line declaration-no-important
-                display: none !important;
-
-                // stylelint-disable-next-line declaration-no-important
-                width: 180px !important;
-            }
-        }
-
-        &__actions {
-            display: flex;
-            align-items: center;
-            margin-left: auto;
-            gap: globals.$spacing-small;
+        &__center-date {
+            display: none !important;
+            width: 180px !important;
         }
     }
 
@@ -39,30 +22,9 @@
 
     @media (min-width: globals.$screen-mobile) {
         &__main {
-            &__filters {
-                &__center-date {
-                    // stylelint-disable-next-line declaration-no-important
-                    display: block !important;
-                }
+            &__center-date {
+                display: block !important;
             }
-        }
-    }
-
-    @media (min-width: globals.$screen-tablet) {
-        &__main {
-            flex-direction: column-reverse;
-
-            &__filters {
-                &__loading {
-                    display: flex;
-                }
-            }
-        }
-    }
-
-    @media (width >= 1200px) {
-        &__main {
-            flex-direction: row;
         }
     }
 }

@@ -76,7 +76,7 @@ final class Property extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkEntities($value)
+    public function checkEntities(mixed $value)
     {
         if (!is_array($value)) {
             if (!V::notEmpty()->stringType()->validate($value)) {
@@ -90,7 +90,7 @@ final class Property extends BaseModel implements Serializable
             ->validate($value);
     }
 
-    public function checkConfig($value)
+    public function checkConfig(mixed $value)
     {
         if (!is_array($value)) {
             if (!V::nullable(V::json())->validate($value)) {
@@ -218,7 +218,7 @@ final class Property extends BaseModel implements Serializable
             : null;
     }
 
-    public function getConfigAttribute($value): array
+    public function getConfigAttribute(mixed $value): array
     {
         $config = $this->castAttribute('config', $value);
         return $config ?? [];
@@ -325,7 +325,7 @@ final class Property extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
         'name',
         'type',
     ];
@@ -380,7 +380,7 @@ final class Property extends BaseModel implements Serializable
         switch ($this->type) {
             case CustomFieldType::STRING->value:
             case CustomFieldType::TEXT->value:
-                $value = V::oneOf(V::stringType(), V::number())->validate($rawValue)
+                $value = V::anyOf(V::stringType(), V::number())->validate($rawValue)
                     ? (string) $rawValue
                     : null;
                 break;
@@ -454,6 +454,7 @@ final class Property extends BaseModel implements Serializable
         $data->delete([
             'config',
             'is_totalisable',
+            'is_searchable',
             'created_at',
             'updated_at',
         ]);

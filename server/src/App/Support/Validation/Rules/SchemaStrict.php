@@ -24,9 +24,9 @@ final class SchemaStrict extends AbstractRule implements NonNegatable
     /** @var Key[] */
     private array $keyRules;
 
-    public function __construct(Validatable ...$validatables)
+    public function __construct(?Validatable ...$validatables)
     {
-        $this->keyRules = array_map([$this, 'getKeyRule'], $validatables);
+        $this->keyRules = array_map([$this, 'getKeyRule'], array_filter($validatables));
     }
 
     /**

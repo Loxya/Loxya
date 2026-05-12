@@ -3,18 +3,53 @@
 .CompanyEditForm {
     $block: &;
 
-    &__locality {
+    &__legal-name {
+        display: flex;
+        flex-direction: column;
+        margin: globals.$spacing-medium 0;
+        gap: globals.$spacing-thin;
+
+        #{$block}__is-public-entity {
+            margin-top: 0 !important;
+        }
+    }
+
+    &__legal-numbers {
         display: flex;
         margin: globals.$spacing-medium 0;
+        gap: 10px;
 
-        #{$block}__postal-code {
-            flex: unset;
-            width: 120px;
+        #{$block}__registration-id,
+        #{$block}__vat-number,
+        #{$block}__service-code {
+            flex: 1;
+            margin: 0;
+        }
+    }
+
+    &__address {
+        margin-bottom: globals.$spacing-medium;
+
+        &__group {
+            display: flex;
+            gap: 10px;
+
+            & + & {
+                margin-top: globals.$spacing-medium;
+            }
         }
 
-        #{$block}__city {
+        &__part {
             flex: 1;
-            margin: 0 0 0 10px;
+            margin: 0 !important;
+
+            &--administrative-area {
+                max-width: 250px;
+            }
+
+            &--postal-code {
+                max-width: 140px;
+            }
         }
     }
 }

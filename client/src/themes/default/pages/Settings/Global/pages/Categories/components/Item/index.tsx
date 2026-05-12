@@ -148,7 +148,7 @@ const CategoriesGlobalSettingsItem = defineComponent({
 
             // TODO: À migrer vers une vraie modale.
             //       (qui ne se ferme pas quand on a des erreurs de formulaire notamment)
-            const { value } = await prompt(title, {
+            const value = await prompt(title, {
                 placeholder: __('page.settings.categories.subcategory-name'),
                 inputValue: isCreate ? undefined : previousName,
                 confirmButtonText: isCreate ? __('page.settings.categories.create-subcategory') : undefined,

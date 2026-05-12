@@ -1,0 +1,3 @@
+count: "Enregistrements {from} à {to} sur {count}|{count} enregistrements|Un enregistrement"
+previous: "Précédent"
+next: "Suivant"

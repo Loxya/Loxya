@@ -145,8 +145,8 @@ class Str extends StrCore
     /**
      * Définit une fabrique personnalisée pour la génération de code numérique.
      *
-     * @param callable|null $factory  Une fonction de rappel qui retourne un code numérique.
-     *                                Si `null`, la fabrique sera désactivée.
+     * @param callable|null $factory Une fonction de rappel qui retourne un code numérique.
+     *                               Si `null`, la fabrique sera désactivée.
      */
     public static function createNumericCodeUsing(?callable $factory = null): void
     {
@@ -165,7 +165,7 @@ class Str extends StrCore
     /**
      * Gèle un code numérique pour les appels suivants à `numericCode()`.
      *
-     * @param int          $length    La longueur du code gelé.
+     * @param int           $length   La longueur du code gelé.
      * @param \Closure|null $callback Si un callback est fourni, les codes numériques ne seront
      *                                "gelés" que lors de l'appel du callback et "dégelés" après.
      *
@@ -244,5 +244,23 @@ class Str extends StrCore
         static::createShortidNormally();
         static::createUlidsNormally();
         static::createUuidsNormally();
+    }
+
+    /**
+     * Supprime, si présent, un ou plusieurs suffixes donnés à la fin d'une chaîne.
+     *
+     * @param  string       $subject La chaîne dont on veut retirer certains suffixes.
+     * @param  string|array $needles Suffixe(s) à retirer si présent(s) en fin de chaîne.
+     *
+     * @return string La chaîne tronquée si un suffixe correspond, sinon la chaîne originale.
+     */
+    public static function chopEnd(string $subject, string|array $needles): string
+    {
+        foreach ((array) $needles as $needle) {
+            if (str_ends_with($subject, $needle)) {
+                return substr($subject, 0, -strlen($needle));
+            }
+        }
+        return $subject;
     }
 }

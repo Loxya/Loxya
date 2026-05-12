@@ -21,8 +21,13 @@
         }
     }
 
+    &__warning {
+        width: 100%;
+        margin-bottom: globals.$spacing-large;
+    }
+
     &__no-invoice,
-    &__regenerate {
+    &__create-new {
         color: globals.$text-light-color;
         font-style: italic;
         text-align: center;
@@ -39,7 +44,26 @@
         }
     }
 
-    &__regenerate {
+    &__list {
+        width: 100%;
+        max-width: 600px;
+        margin: 0;
+        padding: 0;
+        font-size: 1.1rem;
+
+        &__item {
+            width: 100%;
+            list-style: none;
+
+            & + & {
+                margin-top: globals.$spacing-small;
+                padding-top: globals.$spacing-small;
+                border-top: 1px solid globals.$divider-color;
+            }
+        }
+    }
+
+    &__create-new {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -49,33 +73,8 @@
             margin: 0;
         }
 
-        &__link {
-            margin-top: 5px;
-        }
-    }
-
-    &__previous-invoices {
-        margin-top: globals.$spacing-large;
-
-        &__title {
-            margin-top: 0;
-            text-align: center;
-        }
-
-        &__list {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-
-            &__item {
-                width: 100%;
-                list-style: none;
-
-                & + & {
-                    margin-top: globals.$spacing-medium;
-                }
-            }
+        &__button {
+            margin-top: globals.$spacing-small;
         }
     }
 }

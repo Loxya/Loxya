@@ -4,31 +4,13 @@ declare(strict_types=1);
 namespace Loxya\Support;
 
 use Loxya\Config\Config;
-use Loxya\Console\App as CliApp;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\StreamOutput;
 
 final class Install
 {
-    protected const INSTALL_FILE = CONFIG_FOLDER . '/install.json';
-
-    // - Voir dans `SetupController` pour les étapes d'exécution.
-    public const INSTALL_STEPS = [
-        'welcome',
-        'coreSettings',
-        'settings',
-        'company',
-        'database',
-        'dbStructure',
-        'adminUser',
-        'categories',
-        'end',
-    ];
-
     public const MIN_PHP_VERSION = '8.1';
     public const MAX_PHP_VERSION = '8.3';
 
-    public const REQUIRED_EXTENSIONS = [
+    public const REQUIRED_PHP_EXTENSIONS = [
         'bcmath',
         'curl',
         'dom',
@@ -45,206 +27,96 @@ final class Install
         'xml',
     ];
 
-    protected const VALUE_TYPES = [
-        'enableCORS' => 'boolean',
-        'displayErrorDetails' => 'boolean',
-        'useRouterCache' => 'boolean',
-        'sessionExpireHours' => 'integer',
-        'maxItemsPerPage' => 'integer',
-    ];
-
-    protected const LEGACY_DATA = [
-        'defaultTags',
-        'companyData.vatRate',
-        'degressiveRateFunction',
-    ];
-
-    public static function getStep(): string
+    /**
+     * Indique si l'application a été configurée (base de données, etc) ou non.
+     *
+     * @return bool `true` si l'application a été configurée, `false` sinon.
+     */
+    public static function isConfigured(): bool
     {
-        $installData = static::_getInstallData();
-        return $installData['step'] ?? 'welcome';
+        return Config::customConfigExists();
     }
 
-    public static function setInstallProgress(string $step, ?array $stepData = null): array
+    /**
+     * Indique si l'installation de l'application est complète ou non.
+     *
+     * @return bool `true` si l'installation est complète, `false` sinon.
+     */
+    public static function isComplete(): bool
     {
-        if (!in_array($step, self::INSTALL_STEPS, true)) {
-            throw new \InvalidArgumentException(sprintf('Unknown step: %s', $step));
+        return static::isConfigured();
+    }
+
+    /**
+     * Récupère les informations concernant la version et les
+     * extensions PHP requises pour l'installation de l'application.
+     *
+     * @return array{
+     *     isValid: bool,
+     *     version: array{
+     *         current: string,
+     *         min: string,
+     *         max: string,
+     *         isValid: bool,
+     *         isBelowMin: bool,
+     *         isAboveMax: bool
+     *     },
+     *     extensions: array{
+     *         current: string[],
+     *         required: string[],
+     *         missing: string[],
+     *         isValid: bool
+     *     }
+     * } Les contraintes et l'état de conformité du système PHP.
+     */
+    public static function getPhpConstraintData(): array
+    {
+        $phpVersion = PHP_VERSION;
+        if (str_contains(PHP_VERSION, '+')) {
+            $phpVersion = substr(PHP_VERSION, 0, strpos(PHP_VERSION, '+'));
         }
 
-        $installData = static::_getInstallData();
-
-        if ($stepData === null) {
-            $installData['step'] = $step;
-            $installData['data'][$step] = [];
-
-            return static::_saveInstallData($installData);
-        }
-
-        $stepIndex = array_search($step, self::INSTALL_STEPS, true);
-        $nextStep = self::INSTALL_STEPS[$stepIndex + 1] ?? 'end';
-
-        foreach ($stepData as $key => $value) {
-            $keyType = self::VALUE_TYPES[$key] ?? null;
-            if ($keyType === 'boolean') {
-                $stepData[$key] = (bool) $value;
-            }
-            if ($keyType === 'integer') {
-                $stepData[$key] = (int) $value;
-            }
-            if ($keyType === 'float') {
-                $stepData[$key] = (float) $value;
-            }
-        }
-
-        $installData['step'] = $nextStep;
-        $installData['data'][$step] = $stepData;
-
-        return static::_saveInstallData($installData);
-    }
-
-    public static function getSettingsFromInstallData(): array
-    {
-        $installData = static::_getInstallData();
-
-        $settings = array_merge(
-            $installData['data']['coreSettings'],
-            $installData['data']['settings'],
-        );
-        $settings['db'] = $installData['data']['database'];
-        $settings['companyData'] = $installData['data']['company'];
-
-        // - Legacy data.
-        foreach (static::LEGACY_DATA as $legacyField) {
-            if (!Config::has($legacyField)) {
-                continue;
-            }
-
-            Arr::set(
-                $settings,
-                sprintf('legacy.%s', $legacyField),
-                Config::get($legacyField),
-            );
-        }
-
-        return $settings;
-    }
-
-    public static function getMigrationsStatus(): array
-    {
-        $output = self::_executePhinxCommand('status');
-        return self::_formatPhinxStatusOutput($output);
-    }
-
-    public static function migrateDatabase(): array
-    {
-        return self::_executePhinxCommand('migrate');
-    }
-
-    public static function getAllCurrencies(): array
-    {
-        // @phpstan-ignore-next-line include.fileNotFound
-        return require MIGRATIONS_FOLDER . DS . 'data' . DS . 'currencies.php';
-    }
-
-    public static function getAllCountries(): array
-    {
-        // @phpstan-ignore-next-line include.fileNotFound
-        return require MIGRATIONS_FOLDER . DS . 'data' . DS . 'countries.php';
-    }
-
-    // ------------------------------------------------------
-    // -
-    // -    Méthodes internes
-    // -
-    // ------------------------------------------------------
-
-    protected static function _getInstallData(): array
-    {
-        $defaultInstallData = ['step' => null, 'data' => []];
-
-        if (!file_exists(self::INSTALL_FILE)) {
-            return $defaultInstallData;
-        }
-
-        $rawInstallData = json_decode(@file_get_contents(self::INSTALL_FILE), true);
-        if (!is_array($rawInstallData)) {
-            return $defaultInstallData;
-        }
-
-        $installData = Arr::defaults(
-            Arr::only($rawInstallData, ['step', 'data']),
-            $defaultInstallData,
+        $isVersionBelowMin = version_compare(PHP_VERSION, Install::MIN_PHP_VERSION, '<');
+        $isVersionAboveMax = version_compare(
+            // - Réduit la version de PHP courante à la même précision que la contrainte max.
+            //   (e.g. Version de PHP : `8.3.4` / Contrainte : `8.4` => `8.3`)
+            implode('.', array_slice(
+                explode('.', $phpVersion),
+                0,
+                count(explode('.', Install::MAX_PHP_VERSION)),
+            )),
+            Install::MAX_PHP_VERSION,
+            '>',
         );
 
-        // - Rétro-compatibilité.
-        foreach (static::INSTALL_STEPS as $step) {
-            if (array_key_exists($step, $installData['data'])) {
-                continue;
-            }
+        // - Extensions.
+        $loadedExtensions = get_loaded_extensions();
+        $requiredExtensions = Install::REQUIRED_PHP_EXTENSIONS;
+        $missingExtensions = array_diff($requiredExtensions, $loadedExtensions);
 
-            $stepLegacyKey = sprintf('config_%s', $step);
-            if (!array_key_exists($stepLegacyKey, $rawInstallData)) {
-                continue;
-            }
-            $installData['data'][$step] = $rawInstallData[$stepLegacyKey];
-        }
+        // - L'installation respecte-t-elle les contraintes liées à PHP ?
+        $isValid = !$isVersionBelowMin && !$isVersionAboveMax && empty($missingExtensions);
 
-        return $installData;
-    }
+        return [
+            'isValid' => $isValid,
+            'version' => [
+                'current' => $phpVersion,
+                'min' => Install::MIN_PHP_VERSION,
+                'max' => Install::MAX_PHP_VERSION,
 
-    protected static function _saveInstallData(array $installData): array
-    {
-        $installDataAsJson = json_encode($installData, Config::JSON_OPTIONS);
-        if (!file_put_contents(self::INSTALL_FILE, $installDataAsJson)) {
-            throw new \RuntimeException(
-                "Unable to write JSON install data file. Check write access to configuration folder.",
-            );
-        }
-        return $installData;
-    }
+                // - Checks.
+                'isValid' => !$isVersionBelowMin && !$isVersionAboveMax,
+                'isBelowMin' => $isVersionBelowMin,
+                'isAboveMax' => $isVersionAboveMax,
+            ],
+            'extensions' => [
+                'current' => $loadedExtensions,
+                'required' => $requiredExtensions,
+                'missing' => $missingExtensions,
 
-    protected static function _executePhinxCommand(string $command): array
-    {
-        if (!in_array($command, ['status', 'migrate', 'rollback'], true)) {
-            throw new \InvalidArgumentException("Unknown migration command.", 2);
-        }
-
-        // - Permet l'exécution des longues migrations.
-        set_time_limit(3600);
-
-        $stream = fopen('php://temp', 'w+');
-        $exitCode = (new CliApp())->doRun(
-            new ArrayInput([sprintf('migrations:%s', $command)]),
-            new StreamOutput($stream),
-        );
-        $output = stream_get_contents($stream, -1, 0);
-        fclose($stream);
-
-        if (!in_array($exitCode, [0, 3], true)) {
-            throw new \RuntimeException($output, $exitCode);
-        }
-
-        return explode(PHP_EOL, $output);
-    }
-
-    protected static function _formatPhinxStatusOutput($output)
-    {
-        $start = array_search(str_repeat('-', 82), $output, true);
-        $lines = array_splice($output, $start + 1);
-
-        $status = [];
-        foreach ($lines as $line) {
-            if ($line === '') {
-                continue;
-            }
-            $infos = array_filter(array_map('trim', explode('  ', trim($line))));
-
-            $status[] = [
-                'table' => end($infos),
-                'state' => $infos[0],
-            ];
-        }
-
-        return $status;
+                // - Checks
+                'isValid' => empty($missingExtensions),
+            ],
+        ];
     }
 }

@@ -50,7 +50,7 @@ final class AllowUncategorizedMaterials extends AbstractMigration
         $qb
             ->update(sprintf('%smaterials', $prefix))
             ->set('category_id', $category['id'])
-            ->where(['category_id IS' => null])
+            ->whereNull('category_id')
             ->execute();
 
         $materials

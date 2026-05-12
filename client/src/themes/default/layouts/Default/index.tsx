@@ -1,7 +1,10 @@
 import './index.scss';
 import { defineComponent } from 'vue';
-import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import {
+    SetGlobalSidebarStateKey,
+    SetGlobalLoadingKey,
+} from './_constants';
 
 type Data = {
     isLoading: boolean,
@@ -13,7 +16,14 @@ const DefaultLayout = defineComponent({
     name: 'DefaultLayout',
     provide(this: any) {
         return {
-            'setGlobalLoading': (isLoading: boolean) => {
+            [SetGlobalSidebarStateKey as symbol]: (isOpen: boolean | 'toggle') => {
+                if (isOpen === 'toggle') {
+                    this.isSidebarOpened = !this.isSidebarOpened;
+                    return;
+                }
+                this.isSidebarOpened = isOpen;
+            },
+            [SetGlobalLoadingKey as symbol]: (isLoading: boolean) => {
                 this.isLoading = isLoading;
             },
         };
@@ -25,6 +35,11 @@ const DefaultLayout = defineComponent({
     computed: {
         isLogged(): boolean {
             return this.$store.getters['auth/isLogged'];
+        },
+    },
+    watch: {
+        $route() {
+            this.isSidebarOpened = false;
         },
     },
     methods: {
@@ -46,9 +61,7 @@ const DefaultLayout = defineComponent({
         const children = this.$slots.default;
         const {
             isLogged,
-            isLoading,
             isSidebarOpened,
-            handleSidebarToggle,
         } = this;
 
         return (
@@ -59,19 +72,16 @@ const DefaultLayout = defineComponent({
                     />
                 )}
                 <div class="DefaultLayout__body">
-                    {isLogged && (
-                        <Header
-                            onToggleMenu={handleSidebarToggle}
-                            showLoading={isLoading}
-                        />
-                    )}
-                    <div class="DefaultLayout__body__content">
-                        {children}
-                    </div>
+                    {children}
                 </div>
             </div>
         );
     },
 });
+
+export {
+    SetGlobalSidebarStateKey,
+    SetGlobalLoadingKey,
+} from './_constants';
 
 export default DefaultLayout;

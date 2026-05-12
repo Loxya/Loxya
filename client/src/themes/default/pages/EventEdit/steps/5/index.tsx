@@ -1,4 +1,5 @@
 import './index.scss';
+import { Step } from '..';
 import debounce from 'lodash/debounce';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import { RequestError } from '@/globals/requester';
@@ -7,16 +8,19 @@ import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import apiEvents from '@/stores/api/events';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import Button from '@/themes/default/components/Button';
-import InvoiceEditor, {
+import Alert from '@/themes/default/components/Alert';
+import BillingEditor, {
     hasBillingChanged,
     getEmbeddedBilling,
-} from '@/themes/default/components/InvoiceEditor';
+} from '@/themes/default/components/BillingEditor';
 
-import type { ComponentRef, PropType } from 'vue';
+import type { Location } from 'vue-router';
 import type { DebouncedMethod } from 'lodash';
-import type { Booking } from '@/stores/api/bookings';
+import type { ComponentRef, PropType } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
-import type { BillingData } from '@/themes/default/components/InvoiceEditor';
+import type { Beneficiary } from '@/stores/api/beneficiaries';
+import type { Booking, BookingMaterial } from '@/stores/api/bookings';
+import type { BillingData } from '@/themes/default/components/BillingEditor';
 
 type Props = {
     /** L'événement en cours d'édition. */
@@ -66,6 +70,24 @@ const EventEditStepBilling = defineComponent({
                 ...this.event,
             };
         },
+
+        mainBeneficiary(): Beneficiary | null {
+            return [...this.event.beneficiaries].shift() ?? null;
+        },
+
+        isBillingEmpty(): boolean {
+            const { booking } = this;
+
+            if ((booking.extras ?? []).length > 0) {
+                return false;
+            }
+
+            return booking.materials.every((material: BookingMaterial<true>) => (
+                material.unit_price.isZero() &&
+                material.total_without_taxes.isZero() &&
+                (material.material.is_hidden_on_bill ?? false)
+            ));
+        },
     },
     created() {
         this.debouncedSave = debounce(
@@ -103,14 +125,14 @@ const EventEditStepBilling = defineComponent({
             if (this.isSaving) {
                 return;
             }
-            this.saveAndGoToStep(4);
+            this.saveAndGoToStep(Step.MATERIALS);
         },
 
         handleNextClick() {
             if (this.isSaving) {
                 return;
             }
-            this.saveAndGoToStep(6);
+            this.saveAndGoToStep(Step.SUMMARY);
         },
 
         // ------------------------------------------------------
@@ -119,8 +141,12 @@ const EventEditStepBilling = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async saveAndGoToStep(nextStep: number) {
-            const $editor = this.$refs.editor as ComponentRef<typeof InvoiceEditor>;
+        async saveAndGoToStep(nextStep: Step) {
+            if (this.isSaving) {
+                return;
+            }
+
+            const $editor = this.$refs.editor as ComponentRef<typeof BillingEditor>;
             if ($editor !== undefined) {
                 try {
                     await this.save($editor.values, true);
@@ -180,23 +206,69 @@ const EventEditStepBilling = defineComponent({
             __,
             booking,
             validationErrors,
+            mainBeneficiary,
+            isBillingEmpty,
             handleChange,
             handlePrevClick,
             handleNextClick,
             handleGlobalChange,
         } = this;
 
+        const renderEmptyBillingWarning = (): JSX.Element | null => {
+            // - Note: si le matériel est vide, une alerte sera déjà affichée dans le `BillingEditor`.
+            if (!isBillingEmpty || booking.materials.length === 0) {
+                return null;
+            }
+
+            return (
+                <Alert type="warning" class="EventEditStepBilling__warning">
+                    {__('warnings.empty-billing')}
+                </Alert>
+            );
+        };
+
+        const renderIncompleteBeneficiaryWarning = (): JSX.Element | null => {
+            if (mainBeneficiary === null || mainBeneficiary.is_invoiceable) {
+                return null;
+            }
+
+            const beneficiaryName = mainBeneficiary.company !== null
+                ? mainBeneficiary.company.legal_name
+                : mainBeneficiary.full_name;
+
+            const beneficiaryLocation: Location = mainBeneficiary.company !== null
+                ? { name: 'edit-company', params: { id: mainBeneficiary.company.id.toString() } }
+                : { name: 'edit-beneficiary', params: { id: mainBeneficiary.id.toString() } };
+
+            return (
+                <Alert
+                    type="warning"
+                    action={{
+                        label: __('warnings.beneficiary-not-invoiceable.action'),
+                        target: beneficiaryLocation,
+                    }}
+                    class="EventEditStepBilling__warning"
+                >
+                    {__('warnings.beneficiary-not-invoiceable.message', { name: beneficiaryName })}
+                </Alert>
+            );
+        };
+
         return (
             <div class="EventEditStepBilling">
-                <InvoiceEditor
-                    ref="editor"
-                    class="EventEditStepBilling__editor"
-                    booking={booking}
-                    errors={validationErrors}
-                    onMaterialResynced={handleGlobalChange}
-                    onExtraResynced={handleGlobalChange}
-                    onChange={handleChange}
-                />
+                <div class="EventEditStepBilling__wrapper">
+                    {renderEmptyBillingWarning()}
+                    {renderIncompleteBeneficiaryWarning()}
+                    <BillingEditor
+                        ref="editor"
+                        class="EventEditStepBilling__editor"
+                        context={booking}
+                        errors={validationErrors}
+                        onMaterialResynced={handleGlobalChange}
+                        onExtraResynced={handleGlobalChange}
+                        onChange={handleChange}
+                    />
+                </div>
                 <section class="EventEditStepBilling__actions">
                     <Button
                         type="default"

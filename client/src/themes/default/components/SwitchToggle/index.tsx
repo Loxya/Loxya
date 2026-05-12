@@ -1,11 +1,12 @@
 import './index.scss';
 import invariant from 'invariant';
 import { z } from '@/utils/validation';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
 import Icon from '@/themes/default/components/Icon';
+import { DisabledKey } from '@/themes/default/components/@constants';
 
 import type { SchemaInfer } from '@/utils/validation';
-import type { PropType } from 'vue';
+import type { Injected, PropType } from 'vue';
 
 const SwitchOptionSchema = z.strictObject({
     /** Le libellé lié à l'option. */
@@ -78,12 +79,13 @@ type Props<T extends SwitchOptions = SwitchOptions> = {
     onChange?(newValue: T[number]['value']): void,
 };
 
+type InstanceProperties = {
+    injectedDisabled: Injected<typeof DisabledKey>,
+};
+
 /** Un sélecteur entre deux options exclusives. */
 const SwitchToggle = defineComponent({
     name: 'SwitchToggle',
-    inject: {
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Required<Props>['name']>,
@@ -121,7 +123,7 @@ const SwitchToggle = defineComponent({
         },
     },
     emits: ['input', 'change'],
-    setup(props) {
+    setup(props): InstanceProperties {
         const { options, value } = props;
 
         invariant(
@@ -134,17 +136,16 @@ const SwitchToggle = defineComponent({
             `The provided value should match one of the options value, received \`${value.toString()}\` instead.`,
         );
 
-        return {};
+        return {
+            injectedDisabled: inject(DisabledKey, computed(() => false)),
+        };
     },
     computed: {
         inheritedDisabled(): boolean | string {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return this.injectedDisabled;
         },
 
         disabledReason(): string | null {

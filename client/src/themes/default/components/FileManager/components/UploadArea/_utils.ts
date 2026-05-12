@@ -12,7 +12,7 @@ export enum FileError {
 }
 
 export const getFileError = (file: File): FileError | null => {
-    if (!config.authorizedFileTypes.includes(file.type)) {
+    if (!config.allowedFileTypes.includes(file.type)) {
         return FileError.TYPE_NOT_ALLOWED;
     }
 

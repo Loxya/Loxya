@@ -25,19 +25,25 @@ use Loxya\Contracts\Bookable;
 use Loxya\Contracts\Pdfable;
 use Loxya\Contracts\PeriodInterface;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Casts\AsDecimal;
+use Loxya\Models\Enums\EstimateStatus;
 use Loxya\Models\Enums\Group;
+use Loxya\Models\Enums\InvoiceStatus;
 use Loxya\Models\Traits\Caching;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Services\Auth;
 use Loxya\Services\I18n;
 use Loxya\Support\Assert;
 use Loxya\Support\Collections\MaterialsCollection;
-use Loxya\Support\Pdf\Pdf;
+use Loxya\Support\Invoicing\StrictTaxRegime;
+use Loxya\Support\Invoicing\TaxRegime;
+use Loxya\Support\Invoicing\VatExemptionCode\VatExemptionCodeInterface;
+use Loxya\Support\Pdf\Document as PdfDocument;
+use Loxya\Support\Pdf\PdfInterface;
 use Loxya\Support\Period;
 use Loxya\Support\Str;
 use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
 use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
@@ -45,7 +51,42 @@ use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
 /**
  * Événement.
  *
+ * // - Tax type.
+ * @phpstan-type TaxDataSpecial array{
+ *     type: value-of<TaxRegime>,
+ *     reason: list<string>,
+ *     base: Decimal,
+ * }
+ * @phpstan-type TaxDataStandard array{
+ *     type: value-of<TaxRegime>,
+ *     name?: string,
+ *     value: Decimal,
+ *     base: Decimal,
+ *     total: Decimal,
+ * }
+ * @phpstan-type TaxData TaxDataSpecial|TaxDataStandard
+ *
+ * // - Discount type.
+ * @phpstan-type TaxDataSpecialDiscount array{
+ *     type: value-of<TaxRegime>,
+ *     reason: list<string>,
+ * }
+ * @phpstan-type TaxDataStandardDiscount array{
+ *     type: value-of<TaxRegime>,
+ *     name?: string,
+ *     value: Decimal,
+ * }
+ * @phpstan-type TaxDataDiscount TaxDataSpecialDiscount|TaxDataStandardDiscount
+ * @phpstan-type DiscountData array{
+ *    base: Decimal,
+ *    value: Decimal,
+ *    total: Decimal,
+ *    tax: TaxDataDiscount,
+ * }
+ *
  * @property-read ?int $id
+ * @property-read Beneficiary|null $main_beneficiary
+ * @property-read Beneficiary|null $mainBeneficiary
  * @property string $title
  * @property string|null $reference
  * @property string|null $description
@@ -58,13 +99,18 @@ use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
  * @property string $mobilization_start_date
  * @property string $mobilization_end_date
  * @property Period $mobilization_period
- * @property Decimal|null $global_discount_rate
  * @property-read Decimal|null $total_without_global_discount
+ * @property Decimal|null $global_discount_rate
+ * @property-read list<DiscountData>|null $global_discount_breakdown
  * @property-read Decimal|null $total_global_discount
  * @property-read Decimal|null $total_without_taxes
- * @property-read array|null $total_taxes
+ * @property-read value-of<TaxRegime>|null $global_tax_regime
+ * @property-read value-of<VatExemptionCodeInterface>|null $global_tax_exemption_code
+ * @property-read string|null $global_tax_exemption_reason
+ * @property-read list<TaxData>|null $total_taxes
  * @property-read Decimal|null $total_with_taxes
  * @property-read Decimal $total_replacement
+ * @property-read Decimal $total_weight
  * @property string $currency
  * @property-read int $materials_count
  * @property-read bool $is_editable
@@ -115,13 +161,14 @@ use Symfony\Contracts\Cache\ItemInterface as CacheItemInterface;
  * @method static Builder|static search(string|string[] $term)
  * @method static Builder|static inProgress()
  * @method static Builder|static endingToday()
- * @method static Builder|static returnInventoryTodo()
+ * @method static Builder|static returnInventoryTodo(bool $lax = false)
  * @method static Builder|static inPeriod(PeriodInterface $period, bool $withOverdue = false)
  * @method static Builder|static closureSameOrAfter(string|\DateTimeInterface $date)
  * @method static Builder|static havingMaterialInPark(int $parkId)
  * @method static Builder|static notReturned(PeriodInterface $period)
  * @method static Builder|static withInvolvedUser(User $user, bool $checkBeneficiaries = true)
  * @method static Builder|static onlyWithMaterialsSelectableBy(User $user)
+ * @method static Builder|static prepareSerialize(string $format)
  */
 final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 {
@@ -199,7 +246,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     // -
     // ------------------------------------------------------
 
-    public function checkReference($value)
+    public function checkReference(mixed $value)
     {
         V::create()
             ->nullable(V::alnum('.,-/_ ')->length(1, 64))
@@ -220,7 +267,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return !$alreadyExists ?: 'reference-already-in-use';
     }
 
-    public function checkOperationStartDate($value)
+    public function checkOperationStartDate(mixed $value)
     {
         if (!V::notEmpty()->dateTime()->validate($value)) {
             return false;
@@ -237,7 +284,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             : $startDate->format('i:s') === '00:00';
     }
 
-    public function checkOperationEndDate($value)
+    public function checkOperationEndDate(mixed $value)
     {
         $dateChecker = V::notEmpty()->dateTime();
         if (!$dateChecker->validate($value)) {
@@ -263,7 +310,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return $endDate->isAfter($startDateRaw) ?: 'end-date-must-be-after-start-date';
     }
 
-    public function checkMobilizationStartDate($value)
+    public function checkMobilizationStartDate(mixed $value)
     {
         $dateChecker = V::notEmpty()->dateTime();
         if (!$dateChecker->validate($value)) {
@@ -311,7 +358,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return true;
     }
 
-    public function checkMobilizationEndDate($value)
+    public function checkMobilizationEndDate(mixed $value)
     {
         $dateChecker = V::notEmpty()->dateTime();
         if (!$dateChecker->validate($value)) {
@@ -368,13 +415,13 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return true;
     }
 
-    public function checkColor($value)
+    public function checkColor(mixed $value)
     {
         $colorChecker = V::regex('/^#?[0-9a-f]{6}$/i');
         return $colorChecker->validate($value) ?: 'invalid-hexadecimal-color';
     }
 
-    public function checkGlobalDiscountRate($value)
+    public function checkGlobalDiscountRate(mixed $value)
     {
         if (!$this->is_billable) {
             return V::nullType();
@@ -390,7 +437,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         );
     }
 
-    public function checkCurrency($value)
+    public function checkCurrency(mixed $value)
     {
         return V::create()
             ->notEmpty()
@@ -398,7 +445,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             ->validate($value);
     }
 
-    public function checkIsArchived($value)
+    public function checkIsArchived(mixed $value)
     {
         V::boolType()->check($value);
 
@@ -425,7 +472,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return $isPastAndInventoryDone ?: 'event-cannot-be-archived';
     }
 
-    public function checkDepartureInventoryAuthorId($value)
+    public function checkDepartureInventoryAuthorId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -442,7 +489,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return User::includes($value);
     }
 
-    public function checkDepartureInventoryDatetime($value)
+    public function checkDepartureInventoryDatetime(mixed $value)
     {
         $dateChecker = V::nullable(V::dateTime());
         if (!$dateChecker->validate($value)) {
@@ -454,7 +501,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             : true;
     }
 
-    public function checkReturnInventoryAuthorId($value)
+    public function checkReturnInventoryAuthorId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -471,7 +518,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return User::includes($value);
     }
 
-    public function checkReturnInventoryDatetime($value)
+    public function checkReturnInventoryDatetime(mixed $value)
     {
         $dateChecker = V::nullable(V::dateTime());
         if (!$dateChecker->validate($value)) {
@@ -483,7 +530,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             : true;
     }
 
-    public function checkManagerId($value)
+    public function checkManagerId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -496,7 +543,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return User::includes($value);
     }
 
-    public function checkAuthorId($value)
+    public function checkAuthorId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -551,15 +598,13 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     public function invoices(): MorphMany
     {
         return $this->morphMany(Invoice::class, 'booking')
-            ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc');
+            ->customOrderBy('date', 'desc');
     }
 
     public function estimates(): MorphMany
     {
         return $this->morphMany(Estimate::class, 'booking')
-            ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc');
+            ->customOrderBy('date', 'desc');
     }
 
     public function documents(): MorphMany
@@ -601,8 +646,12 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
     public $appends = [
         'total_without_global_discount',
+        'global_discount_breakdown',
         'total_global_discount',
         'total_without_taxes',
+        'global_tax_regime',
+        'global_tax_exemption_code',
+        'global_tax_exemption_reason',
         'total_taxes',
         'total_with_taxes',
         'materials_count',
@@ -637,6 +686,11 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         'updated_at' => 'immutable_datetime',
         'deleted_at' => 'immutable_datetime',
     ];
+
+    public function getMainBeneficiaryAttribute(): Beneficiary|null
+    {
+        return $this->beneficiaries->first();
+    }
 
     public function getMobilizationPeriodAttribute(): Period
     {
@@ -819,20 +873,63 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             ->toScale(2, RoundingMode::UNNECESSARY);
     }
 
+    /** @return list<DiscountData>|null */
+    public function getGlobalDiscountBreakdownAttribute(): array|null
+    {
+        if (!$this->is_billable) {
+            return null;
+        }
+
+        // - Lorsqu'il y a un seul régime de taxe globale ...
+        if ($this->global_tax_regime !== null) {
+            $base = $this->total_without_global_discount;
+            if ($base->isLessThanOrEqualTo(0) || $this->global_discount_rate->isZero()) {
+                return [];
+            }
+
+            $value = $base
+                ->multipliedBy($this->global_discount_rate->dividedBy(100, 6))
+                ->toScale(2, RoundingMode::HALF_UP);
+
+            $total = $base
+                ->minus($value)
+                ->toScale(2, RoundingMode::UNNECESSARY);
+
+            return [[
+                'base' => $base,
+                'value' => $value,
+                'total' => $total,
+                'tax' => [
+                    'type' => $this->global_tax_regime,
+                    'reason' => $this->global_tax_exemption_code !== null
+                        ? [$this->global_tax_exemption_code]
+                        : [],
+                ],
+            ]];
+        }
+
+        // - Sinon, on récupère le breakdown par taxe.
+        return $this->getGlobalDiscountBreakdown(raw: false);
+    }
+
     public function getTotalGlobalDiscountAttribute(): Decimal|null
     {
         if (!$this->is_billable) {
             return null;
         }
 
-        if ($this->total_without_global_discount->isLessThanOrEqualTo(0)) {
+        if (empty($this->global_discount_breakdown)) {
             return Decimal::zero()->toScale(2);
         }
 
-        return $this->total_without_global_discount
-            ->multipliedBy($this->global_discount_rate->dividedBy(100, 6))
-            // @see https://wiki.dolibarr.org/index.php?title=VAT_setup,_calculation_and_rounding_rules
-            ->toScale(2, RoundingMode::HALF_UP);
+        return collect($this->global_discount_breakdown)
+            ->reduce(
+                static fn (Decimal $total, array $item) => (
+                    $total->plus($item['value'])
+                ),
+                Decimal::zero(),
+            )
+            ->toScale(2, RoundingMode::UNNECESSARY);
     }
 
     public function getTotalWithoutTaxesAttribute(): Decimal|null
@@ -843,44 +940,120 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         return $this->total_without_global_discount
             ->minus($this->total_global_discount)
-            // @see https://wiki.dolibarr.org/index.php?title=VAT_setup,_calculation_and_rounding_rules
-            ->toScale(2, RoundingMode::HALF_UP);
+            ->toScale(2, RoundingMode::UNNECESSARY);
     }
 
-    public function getTotalTaxesAttribute(): array|null
+    /** @return value-of<TaxRegime>|null */
+    public function getGlobalTaxRegimeAttribute(): string|null
     {
         if (!$this->is_billable) {
+            return null;
+        }
+
+        $isVatExempted = Config::get('organization.isVatExempted', false);
+        if (!$isVatExempted) {
+            return null;
+        }
+
+        // - Si aucune raison d'exonération n'est renseignée, on considère
+        //   que l'organisation est hors champ de T.V.A.
+        $hasExemptionReason = (
+            Config::get('organization.vatExemptionCode') !== null ||
+            Config::get('organization.vatExemptionReason') !== null
+        );
+        return $hasExemptionReason
+            ? TaxRegime::EXEMPTED->value
+            : TaxRegime::OUT_OF_SCOPE->value;
+    }
+
+    /** @return value-of<VatExemptionCodeInterface>|null */
+    public function getGlobalTaxExemptionCodeAttribute(): string|null
+    {
+        if (!$this->is_billable) {
+            return null;
+        }
+
+        $isVatExempted = Config::get('organization.isVatExempted', false);
+        return $isVatExempted ? Config::get('organization.vatExemptionCode')?->value : null;
+    }
+
+    public function getGlobalTaxExemptionReasonAttribute(): string|null
+    {
+        if (!$this->is_billable) {
+            return null;
+        }
+
+        $isVatExempted = Config::get('organization.isVatExempted', false);
+        return $isVatExempted ? Config::get('organization.vatExemptionReason') : null;
+    }
+
+    /** @return list<TaxData>|null */
+    public function getTotalTaxesAttribute(): array|null
+    {
+        // - Seul l'absence de régime global autorise les taxes par ligne.
+        if (!$this->is_billable || $this->global_tax_regime !== null) {
             return null;
         }
 
         /** @var CoreCollection<array-key, EventMaterial|EventExtra> $lines */
         $lines = (new CoreCollection())
             ->concat($this->materials)
-            ->concat($this->extras);
+            ->concat($this->extras)
+            ->reject(static fn ($line) => (
+                $line instanceof EventMaterial
+                && $line->material->is_hidden_on_bill
+                && $line->unit_price->isZero()
+                && $line->total_without_taxes->isZero()
+            ));
 
+        $discountBreakdown = $this->getGlobalDiscountBreakdown(raw: true);
         $rawTaxes = $lines->reduce(
-            static function (array $currentTaxes, EventMaterial|EventExtra $line) {
-                if ($line->taxes === null) {
+            static function (array $currentTaxes, EventMaterial|EventExtra $line) use ($discountBreakdown) {
+                // - Exemptions "explicites" ou la ligne n'a pas de taxe définie
+                //   avec un régime standard, si c'est le cas, elle est exemptée sans motif.
+                if ($line->tax_regime !== TaxRegime::STANDARD->value || empty($line->taxes)) {
+                    $regime = $line->tax_regime === TaxRegime::STANDARD->value
+                        ? TaxRegime::EXEMPTED->value
+                        : $line->tax_regime;
+
+                    if (array_key_exists($regime, $currentTaxes)) {
+                        return $currentTaxes;
+                    }
+
+                    if (!array_key_exists($regime, $discountBreakdown)) {
+                        throw new \LogicException("Unexpected missing discount entry for a billing line.");
+                    }
+                    $discountData = $discountBreakdown[$regime];
+
+                    $currentTaxes[$regime] = [
+                        'type' => $discountData['tax']['type'],
+                        'reason' => $discountData['tax']['reason'],
+                        'base' => $discountData['total'],
+                    ];
+
                     return $currentTaxes;
                 }
 
+                // - Taxes normales.
                 foreach ($line->taxes as $tax) {
-                    $identifier = md5(serialize([$tax['name'], $tax['is_rate'], $tax['value']]));
-                    if (!array_key_exists($identifier, $currentTaxes)) {
-                        $currentTaxes[$identifier] = array_merge($tax, [
-                            'total' => Decimal::zero(),
-                        ]);
+                    $identifier = md5(serialize([
+                        $line->tax_regime,
+                        $tax['name'] ?? null,
+                        (string) $tax['value']->toScale(3, RoundingMode::UNNECESSARY),
+                    ]));
+                    if (array_key_exists($identifier, $currentTaxes)) {
+                        continue;
                     }
 
-                    /** @var Decimal $currentTaxAmount */
-                    $currentTaxAmount = &$currentTaxes[$identifier]['total'];
-                    $currentTaxAmount = $currentTaxAmount->plus(
-                        !$tax['is_rate']
-                            ? Decimal::of($tax['value'])->multipliedBy($line->quantity)
-                            : $line->total_without_taxes->multipliedBy(
-                                Decimal::of($tax['value'])->dividedBy(100, 5),
-                            ),
-                    );
+                    if (!array_key_exists($identifier, $discountBreakdown)) {
+                        throw new \LogicException("Unexpected missing discount entry for a billing line.");
+                    }
+                    $discountData = $discountBreakdown[$identifier];
+
+                    $currentTaxes[$identifier] = array_merge($tax, [
+                        'type' => $line->tax_regime,
+                        'base' => $discountData['total'],
+                    ]);
                 }
 
                 return $currentTaxes;
@@ -888,44 +1061,33 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             [],
         );
 
-        $taxes = [];
-        foreach ($rawTaxes as $rawTax) {
-            /** @var Decimal $total */
-            $total = $rawTax['total']->toScale(2, RoundingMode::HALF_UP);
-
-            if ($rawTax['is_rate']) {
-                /** @var Decimal $totalGlobalDiscount */
-                $totalGlobalDiscount = $total
-                    ->multipliedBy($this->global_discount_rate->dividedBy(100, 6))
-                    ->toScale(2, RoundingMode::HALF_UP);
-
-                $total = $total
-                    ->minus($totalGlobalDiscount)
-                    ->toScale(2, RoundingMode::HALF_UP);
-            }
-
-            if ($total->isZero()) {
-                continue;
-            }
-
-            $taxes[] = array_replace($rawTax, compact('total'));
-        }
-
         $collator = new \Collator(container('i18n')->getLocale());
-        usort($taxes, static function ($a, $b) use ($collator) {
-            if ($a['is_rate'] xor $b['is_rate']) {
-                return $a['is_rate'] ? -1 : 1;
-            }
+        return collect($rawTaxes)
+            ->map(static function (array $rawTax) {
+                if ($rawTax['type'] === TaxRegime::STANDARD->value) {
+                    $rawTax['total'] = $rawTax['base']
+                        ->multipliedBy(Decimal::of($rawTax['value'])->dividedBy(100, 5))
+                        ->toScale(2, RoundingMode::HALF_UP);
+                }
+                return $rawTax;
+            })
+            ->sort(static function ($a, $b) use ($collator) {
+                $aIsExemption = $a['type'] !== TaxRegime::STANDARD->value;
+                $bIsExemption = $b['type'] !== TaxRegime::STANDARD->value;
+                if ($aIsExemption || $bIsExemption) {
+                    if ($aIsExemption xor $bIsExemption) {
+                        return $aIsExemption ? 1 : -1;
+                    }
+                    return $a['type'] <=> $b['type'];
+                }
 
-            $result = $collator->compare($a['name'], $b['name']);
-            if ($result !== 0 || !$a['is_rate'] || !$b['is_rate']) {
-                return $result;
-            }
-
-            return Decimal::of($a['value'])->compareTo($b['value']);
-        });
-
-        return $taxes;
+                $result = $collator->compare($a['name'] ?? '', $b['name'] ?? '');
+                return $result === 0
+                    ? Decimal::of($b['value'])->compareTo($a['value'])
+                    : $result;
+            })
+            ->values()
+            ->all();
     }
 
     public function getTotalWithTaxesAttribute(): Decimal|null
@@ -934,10 +1096,12 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             return null;
         }
 
-        return (new CoreCollection($this->total_taxes))
+        return (new CoreCollection($this->total_taxes ?? []))
             ->reduce(
                 static fn (Decimal $currentTotal, array $tax) => (
-                    $currentTotal->plus($tax['total'])
+                    $tax['type'] === TaxRegime::STANDARD->value
+                        ? $currentTotal->plus($tax['total'])
+                        : $currentTotal
                 ),
                 $this->total_without_taxes,
             )
@@ -955,6 +1119,18 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                 Decimal::zero(),
             )
             ->toScale(2, RoundingMode::UNNECESSARY);
+    }
+
+    public function getTotalWeightAttribute(): Decimal
+    {
+        return $this->materials
+            ->reduce(
+                static fn (Decimal $currentTotal, EventMaterial $material) => (
+                    $currentTotal->plus($material->total_weight ?? Decimal::zero())
+                ),
+                Decimal::zero(),
+            )
+            ->toScale(3, RoundingMode::UNNECESSARY);
     }
 
     public function getIsEditableAttribute(): bool
@@ -1231,6 +1407,139 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         return $this->mobilization_period->getEndDate();
     }
 
+    public function getGlobalDiscountBreakdown(bool $raw = false): array|null
+    {
+        // - Seul l'absence de régime global autorise les taxes par ligne.
+        if (!$this->is_billable || $this->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - S'il n'y a pas de remise globale, on s'arrête là.
+        if (!$raw && $this->global_discount_rate->isZero()) {
+            return [];
+        }
+        $globalDiscountRate = $this->global_discount_rate->dividedBy(100, 6);
+
+        /** @var CoreCollection<array-key, EventMaterial|EventExtra> $lines */
+        $lines = (new CoreCollection())
+            ->concat($this->materials)
+            ->concat($this->extras)
+            ->reject(static fn ($line) => (
+                $line instanceof EventMaterial
+                && $line->material->is_hidden_on_bill
+                && $line->unit_price->isZero()
+                && $line->total_without_taxes->isZero()
+            ));
+
+        $groups = [];
+        foreach ($lines as $line) {
+            // - Pas de remise sur une ligne négative.
+            if (!$raw && $line->total_without_taxes->isLessThanOrEqualTo(0)) {
+                continue;
+            }
+
+            //
+            // -- Discount breakdown
+            //
+
+            $taxes = collect($line->taxes ?? [])
+                ->sort(static fn ($a, $b) => (
+                    Decimal::of($a['value'])->compareTo($b['value'])
+                ))
+                ->values()
+                ->all();
+
+            // - Exemptions "explicites" ou la ligne n'a pas de taxe à taux définie
+            //   avec un régime standard, si c'est le cas, la remise globale s'applique
+            //   sur une exemption.
+            if ($line->tax_regime !== TaxRegime::STANDARD->value || empty($taxes)) {
+                [$regime, $exemptionCode] = $line->tax_regime !== TaxRegime::STANDARD->value
+                    ? [$line->tax_regime, $line->tax_exemption_code]
+                    : [TaxRegime::EXEMPTED->value, null];
+
+                if (!array_key_exists($regime, $groups)) {
+                    $groups[$regime] = [
+                        'base' => Decimal::zero(),
+                        'tax' => [
+                            'type' => $regime,
+                            'reason' => [],
+                        ],
+                    ];
+                }
+                if ($exemptionCode !== null && !in_array($exemptionCode, $groups[$regime]['tax']['reason'], true)) {
+                    $groups[$regime]['tax']['reason'][] = $exemptionCode;
+                }
+
+                /** @var Decimal $currentBase */
+                $currentBase = &$groups[$regime]['base'];
+                $currentBase = $currentBase->plus($line->total_without_taxes);
+
+                continue;
+            }
+
+            $taxesCount = count($taxes);
+            $distributedBase = $line->total_without_taxes
+                ->dividedBy($taxesCount, 8, RoundingMode::DOWN);
+
+            $allocatedBase = Decimal::zero();
+            foreach ($taxes as $index => $tax) {
+                $isLast = $index === $taxesCount - 1;
+
+                $identifier = md5(serialize([
+                    $line->tax_regime,
+                    $tax['name'] ?? null,
+                    (string) $tax['value']->toScale(3, RoundingMode::UNNECESSARY),
+                ]));
+                if (!array_key_exists($identifier, $groups)) {
+                    $groups[$identifier] = [
+                        'base' => Decimal::zero(),
+                        'tax' => array_merge($tax, [
+                            'type' => $line->tax_regime,
+                        ]),
+                    ];
+                }
+
+                /** @var Decimal $currentBase */
+                $currentBase = &$groups[$identifier]['base'];
+                $currentBase = $currentBase->plus($distributedBase);
+                $allocatedBase = $allocatedBase->plus($distributedBase);
+
+                // - Reliquat ajouté au groupe du plus gros taux (qui est le dernier vu le tri plus haut).
+                if ($isLast) {
+                    $baseRemainder = $line->total_without_taxes->minus($allocatedBase);
+                    $currentBase = $currentBase->plus($baseRemainder);
+                }
+            }
+        }
+
+        $groups = collect($groups)
+            ->map(static function (array $group) use ($globalDiscountRate) {
+                $base = $group['base']->toScale(2, RoundingMode::UNNECESSARY);
+
+                $value = Decimal::max($group['base'], 0)
+                    ->multipliedBy($globalDiscountRate)
+                    ->toScale(2, RoundingMode::HALF_UP);
+
+                $total = $base
+                    ->minus($value)
+                    ->toScale(2, RoundingMode::UNNECESSARY);
+
+                return [
+                    'base' => $base,
+                    'value' => $value,
+                    'total' => $total,
+                    'tax' => $group['tax'],
+                ];
+            })
+            ->sort(static fn ($a, $b) => (
+                Decimal::of($b['value'])->compareTo($a['value'])
+            ));
+
+        return !$raw
+            ? $groups->values()->all()
+            : $groups->all();
+    }
+
     // ------------------------------------------------------
     // -
     // -    Setters
@@ -1298,6 +1607,12 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         }
     }
 
+    public function setDescriptionAttribute(mixed $value): void
+    {
+        $value = is_string($value) ? trim($value) : $value;
+        $this->attributes['description'] = $value === '' ? null : $value;
+    }
+
     public function setNoteAttribute(mixed $value): void
     {
         $value = is_string($value) ? trim($value) : $value;
@@ -1320,22 +1635,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             $data['global_discount_rate'] = null;
         }
 
-        $this->fill($data);
-
-        $validationErrors = [];
-        if (!$this->isValid()) {
-            $validationErrors = $this->validationErrors();
-        }
-
-        $hasPeriodChanged = (
-            !($oldOperationPeriod?->isSame($this->operation_period) ?? true) ||
-            !($oldMobilizationPeriod?->isSame($this->mobilization_period) ?? true)
-        );
-
-        if (!empty($validationErrors)) {
-            throw new ValidationException($validationErrors);
-        }
-        $this->save();
+        $this->fill($data)->save();
 
         // - Bénéficiaires
         if (isset($data['beneficiaries'])) {
@@ -1343,14 +1643,18 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             try {
                 $this->syncBeneficiaries($data['beneficiaries']);
-            } catch (ValidationException $e) {
-                throw new ValidationException([
+            } catch (ValidationsException $e) {
+                throw new ValidationsException([
                     'beneficiaries' => $e->getValidationErrors(),
                 ]);
             }
         }
 
         // - Techniciens
+        $hasPeriodChanged = (
+            !($oldOperationPeriod?->isSame($this->operation_period) ?? true) ||
+            !($oldMobilizationPeriod?->isSame($this->mobilization_period) ?? true)
+        );
         if (isFeatureEnabled(Feature::TECHNICIANS)) {
             $technicians = null;
             if (isset($data['technicians'])) {
@@ -1376,8 +1680,8 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             if ($technicians !== null) {
                 try {
                     $this->syncTechnicians($technicians);
-                } catch (ValidationException $e) {
-                    throw new ValidationException([
+                } catch (ValidationsException $e) {
+                    throw new ValidationsException([
                         'technicians' => $e->getValidationErrors(),
                     ]);
                 }
@@ -1392,8 +1696,8 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             try {
                 $this->syncMaterials($data['materials']);
-            } catch (ValidationException $e) {
-                throw new ValidationException([
+            } catch (ValidationsException $e) {
+                throw new ValidationsException([
                     'materials' => $e->getValidationErrors(),
                 ]);
             }
@@ -1405,8 +1709,8 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             try {
                 $this->syncExtras($data['extras']);
-            } catch (ValidationException $e) {
-                throw new ValidationException([
+            } catch (ValidationsException $e) {
+                throw new ValidationsException([
                     'extras' => $e->getValidationErrors(),
                 ]);
             }
@@ -1478,7 +1782,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                 ->all();
 
             if (!empty($errors)) {
-                throw new ValidationException($errors);
+                throw new ValidationsException($errors);
             }
 
             $this->technicians()->saveMany($technicians);
@@ -1488,12 +1792,17 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
     public function syncMaterials(array $materialsData): static
     {
+        $sellerCountry = Config::getOrganizationCountry();
+
         $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('id'),
             new Rule\Key('quantity', V::intVal()->min(0)),
             new Rule\Key('unit_price', null, false),
             new Rule\Key('discount_rate', null, false),
             new Rule\Key('degressive_rate', null, false),
+            new Rule\Key('tax_regime', null, false),
+            new Rule\Key('tax_exemption_code', null, false),
+            new Rule\Key('tax_id', null, false),
             new Rule\Key('taxes', null, false),
         ));
         if (!$schema->validate($materialsData)) {
@@ -1538,6 +1847,9 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             $unitPrice = null;
             $degressiveRate = null;
             $discountRate = null;
+            $taxRegime = null;
+            $taxExemptionCode = null;
+            $taxId = null;
             $taxes = null;
             if ($this->is_billable) {
                 $unitPrice = $materialData['unit_price']
@@ -1558,16 +1870,101 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         ?? $durationDays;
                 }
 
+                $hasExplicitTax = (
+                    array_key_exists('tax_regime', $materialData) ||
+                    array_key_exists('tax_exemption_code', $materialData) ||
+                    array_key_exists('tax_id', $materialData) ||
+                    array_key_exists('taxes', $materialData)
+                );
+
+                // - Récupération du régime de taxe.
+                if (array_key_exists('tax_regime', $materialData)) {
+                    $taxRegime = $materialData['tax_regime'];
+                } elseif ($this->global_tax_regime !== null) {
+                    $taxRegime = null;
+                } elseif ($savedEventMaterial !== null) {
+                    $taxRegime = $savedEventMaterial->tax_regime;
+                } elseif (!$hasExplicitTax) {
+                    if ($this->mainBeneficiary === null) {
+                        $taxRegime = TaxRegime::STANDARD->value;
+                    } else {
+                        $defaultTaxRegime = $sellerCountry->getLineDefaultTaxRegime(
+                            $this->mainBeneficiary,
+                            isService: true,
+                        );
+                        $taxRegime = $defaultTaxRegime instanceof StrictTaxRegime
+                            ? $defaultTaxRegime->regime->value
+                            : $defaultTaxRegime->value;
+                    }
+                } else {
+                    $taxRegime = null;
+                }
+                $hasTaxRegimeChanged = $taxRegime !== $savedEventMaterial?->tax_regime;
+
+                // - Récupération du code d'exemption.
+                if (array_key_exists('tax_exemption_code', $materialData)) {
+                    $taxExemptionCode = $materialData['tax_exemption_code'];
+                } elseif ($this->global_tax_regime !== null) {
+                    $taxExemptionCode = null;
+                } elseif ($savedEventMaterial !== null) {
+                    $taxExemptionCode = !$hasTaxRegimeChanged
+                        ? $savedEventMaterial->tax_exemption_code
+                        : null;
+                } elseif (!$hasExplicitTax) {
+                    if ($this->mainBeneficiary === null) {
+                        $taxExemptionCode = null;
+                    } else {
+                        $defaultTaxRegime = $sellerCountry->getLineDefaultTaxRegime(
+                            $this->mainBeneficiary,
+                            isService: true,
+                        );
+                        $taxExemptionCode = $defaultTaxRegime instanceof StrictTaxRegime
+                            ? $defaultTaxRegime->exemptionCode->value
+                            : null;
+                    }
+                } else {
+                    $taxExemptionCode = null;
+                }
+
+                // - Récupération de l'identifiant de la taxe.
+                if (array_key_exists('tax_id', $materialData)) {
+                    $taxId = $materialData['tax_id'];
+                } elseif ($this->global_tax_regime !== null) {
+                    $taxId = null;
+                } elseif ($savedEventMaterial !== null) {
+                    $taxId = !$hasTaxRegimeChanged
+                        ? $savedEventMaterial->tax_id
+                        : null;
+                } elseif (!$hasExplicitTax) {
+                    $taxId = $taxRegime === TaxRegime::STANDARD->value
+                        ? $material->tax?->id
+                        : null;
+                } else {
+                    $taxId = null;
+                }
+
                 // - Récupération des taxes à persister pour le matériel d'événement.
-                //   Note: Vu que la valeur enregistrée peut-être `null` pour signifier
-                //   l'absence de taxe, on vérifie l'existence de la données plutôt ue
-                //   la valeur `null`.
+                $hasTaxChanged = $hasTaxRegimeChanged || $taxId !== $savedEventMaterial?->tax_id;
                 if (array_key_exists('taxes', $materialData)) {
                     $taxes = $materialData['taxes'];
-                } elseif ($savedEventMaterial !== null) {
-                    $taxes = $savedEventMaterial?->taxes;
+
+                // - S'il y a une exemption globale, pas de taxes par ligne.
+                } elseif ($this->global_tax_regime !== null) {
+                    $taxes = null;
+
+                // - Si la valeur n'a pas changé, on garde l'existant.
+                } elseif ($savedEventMaterial !== null && !$hasTaxChanged) {
+                    $taxes = $savedEventMaterial->taxes;
+
+                // - Si un régime de taxe non-standard est défini, pas de taxes.
+                } elseif ($taxRegime !== TaxRegime::STANDARD->value) {
+                    $taxes = null;
+
+                // - Sinon, on utilise la taxe choisie / héritée.
                 } else {
-                    $taxes = $material->tax?->asFlatArray();
+                    $taxes = $taxId !== null
+                        ? Tax::find($taxId)?->asFlatArray()
+                        : null;
                 }
             }
 
@@ -1600,6 +1997,9 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                 'unit_price' => $unitPrice,
                 'discount_rate' => $discountRate,
                 'degressive_rate' => $degressiveRate,
+                'tax_regime' => $taxRegime,
+                'tax_exemption_code' => $taxExemptionCode,
+                'tax_id' => $taxId,
                 'taxes' => $taxes,
                 'unit_replacement_price' => $unitReplacementPrice,
                 'quantity_departed' => $quantityDeparted,
@@ -1641,11 +2041,15 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         }
 
         $schema = V::arrayType()->each(new SchemaStrict(
-            new Rule\Key('id', null, false),
+            new Rule\Key('uuid', V::uuid()),
+            new Rule\Key('is_service'),
             new Rule\Key('description'),
             new Rule\Key('quantity', V::intVal()->min(1)),
-            new Rule\Key('unit_price', null, false),
-            new Rule\Key('tax_id', null, false),
+            new Rule\Key('unit_price'),
+            new Rule\Key('discount_rate'),
+            new Rule\Key('tax_regime'),
+            new Rule\Key('tax_exemption_code'),
+            new Rule\Key('tax_id'),
             new Rule\Key('taxes', null, false),
         ));
         if (!$schema->validate($extraLinesData)) {
@@ -1653,55 +2057,54 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         }
 
         /** @var Collection<int, EventExtra> $savedExtraLines */
-        $savedExtraLines = $this->extras()->get()
-            ->keyBy('id');
+        $savedExtraLines = $this->extras()->get()->keyBy('uuid');
 
         $extraLines = new CoreCollection();
         foreach ($extraLinesData as $index => $extraLineData) {
-            $savedExtraLine = isset($extraLineData['id'])
-                ? $savedExtraLines->get($extraLineData['id'])
-                : null;
+            $savedExtraLine = $savedExtraLines->get($extraLineData['uuid']);
 
-            $unitPrice = null;
-            $liveTax = null;
-            $taxes = null;
-            if ($this->is_billable) {
-                $unitPrice = $extraLineData['unit_price']
-                    ?? $savedExtraLine?->unit_price
-                    ?? Decimal::zero();
+            // - Récupération des taxes à persister.
+            $hasTaxRegimeChanged = $extraLineData['tax_regime'] !== $savedExtraLine?->tax_regime;
+            $hasTaxChanged = $hasTaxRegimeChanged || $extraLineData['tax_id'] !== $savedExtraLine?->tax_id;
+            if (array_key_exists('taxes', $extraLineData)) {
+                $taxes = $extraLineData['taxes'];
 
-                $liveTax = $savedExtraLine?->liveTax;
-                if (array_key_exists('tax_id', $extraLineData)) {
-                    $liveTax = $extraLineData['tax_id'] !== null
-                        ? Tax::find($extraLineData['tax_id'])
-                        : null;
-                }
+            // - S'il y a une exemption globale, pas de taxes par ligne.
+            } elseif ($this->global_tax_regime !== null) {
+                $taxes = null;
 
-                if (array_key_exists('taxes', $extraLineData)) {
-                    $taxes = $extraLineData['taxes'];
-                } elseif ($savedExtraLine !== null) {
-                    $taxes = $savedExtraLine?->taxes;
-                } else {
-                    $taxes = $liveTax?->asFlatArray();
-                }
+            // - Si la valeur n'a pas changé, on garde l'existant.
+            } elseif ($savedExtraLine !== null && !$hasTaxChanged) {
+                $taxes = $savedExtraLine->taxes;
+
+            // - Si un régime de taxe non-standard est défini, pas de taxes.
+            } elseif ($extraLineData['tax_regime'] !== TaxRegime::STANDARD->value) {
+                $taxes = null;
+
+            // - Sinon, on utilise la taxe choisie.
+            } else {
+                $taxes = $extraLineData['tax_id'] !== null
+                    ? Tax::find($extraLineData['tax_id'])?->asFlatArray()
+                    : null;
             }
 
             $extraLines->put($index, tap(
                 $savedExtraLine ?? new EventExtra(),
-                static function (EventExtra $extraLine) use ($extraLineData, $unitPrice, $liveTax, $taxes) {
+                fn (EventExtra $extraLine) => (
                     $extraLine->fill([
+                        'uuid' => $extraLineData['uuid'],
+                        'event_id' => $this->id,
+                        'is_service' => $extraLineData['is_service'],
                         'description' => $extraLineData['description'],
                         'quantity' => $extraLineData['quantity'],
-                        'unit_price' => $unitPrice,
+                        'unit_price' => $extraLineData['unit_price'],
+                        'discount_rate' => $extraLineData['discount_rate'],
+                        'tax_regime' => $extraLineData['tax_regime'],
+                        'tax_exemption_code' => $extraLineData['tax_exemption_code'],
+                        'tax_id' => $extraLineData['tax_id'],
                         'taxes' => $taxes,
-                    ]);
-
-                    if ($liveTax !== null) {
-                        $extraLine->liveTax()->associate($liveTax);
-                    } else {
-                        $extraLine->liveTax()->dissociate();
-                    }
-                },
+                    ])
+                ),
             ));
         }
 
@@ -1716,7 +2119,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                 ->all();
 
             if (!empty($errors)) {
-                throw new ValidationException($errors);
+                throw new ValidationsException($errors);
             }
 
             $this->extras()->saveMany($extraLines);
@@ -1737,15 +2140,23 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     new Rule\Key('id'),
                     new Rule\Key('unit_price'),
                     new Rule\Key('discount_rate'),
+                    new Rule\Key('tax_regime'),
+                    new Rule\Key('tax_exemption_code'),
+                    new Rule\Key('tax_id'),
+                    new Rule\Key('taxes', null, false),
                 )),
             ),
             new Rule\Key(
                 'extras',
                 V::arrayType()->each(new SchemaStrict(
-                    new Rule\Key('id', null, false),
+                    new Rule\Key('uuid', V::uuid()),
+                    new Rule\Key('is_service'),
                     new Rule\Key('description'),
                     new Rule\Key('quantity', V::intVal()->min(1)),
                     new Rule\Key('unit_price'),
+                    new Rule\Key('discount_rate'),
+                    new Rule\Key('tax_regime'),
+                    new Rule\Key('tax_exemption_code'),
                     new Rule\Key('tax_id'),
                     new Rule\Key('taxes', null, false),
                 )),
@@ -1772,18 +2183,51 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             // - Lignes de matériel.
             foreach ($billingData['materials'] as $materialData) {
                 $savedEventMaterial = $savedEventMaterials->get($materialData['id']);
+                if ($savedEventMaterial === null) {
+                    throw new \InvalidArgumentException("Some material with billing data does not exist in the event.");
+                }
 
-                $savedEventMaterial->unit_price = $materialData['unit_price'];
-                $savedEventMaterial->discount_rate = $materialData['discount_rate'];
+                // - Récupération des taxes à persister pour le matériel d'événement.
+                $hasTaxRegimeChanged = $materialData['tax_regime'] !== $savedEventMaterial->tax_regime;
+                $hasTaxIdChanged = $materialData['tax_id'] !== $savedEventMaterial->tax_id;
+                $hasCustomTaxChanged = $hasTaxRegimeChanged || $hasTaxIdChanged;
+                if (array_key_exists('taxes', $materialData)) {
+                    $taxes = $materialData['taxes'];
 
-                $this->materials()->save($savedEventMaterial);
+                // - S'il y a une exemption globale, pas de taxes par ligne.
+                } elseif ($this->global_tax_regime !== null) {
+                    $taxes = null;
+
+                // - Si la valeur n'a pas changé, on garde l'existant.
+                } elseif (!$hasCustomTaxChanged) {
+                    $taxes = $savedEventMaterial->taxes;
+
+                // - Si un régime de taxe non-standard est défini, pas de taxes.
+                } elseif ($materialData['tax_regime'] !== TaxRegime::STANDARD->value) {
+                    $taxes = null;
+
+                // - Sinon, on utilise la taxe choisie.
+                } else {
+                    $taxes = $materialData['tax_id'] !== null
+                        ? Tax::find($materialData['tax_id'])?->asFlatArray()
+                        : null;
+                }
+
+                $savedEventMaterial->update([
+                    'unit_price' => $materialData['unit_price'],
+                    'discount_rate' => $materialData['discount_rate'],
+                    'tax_regime' => $materialData['tax_regime'],
+                    'tax_exemption_code' => $materialData['tax_exemption_code'],
+                    'tax_id' => $materialData['tax_id'],
+                    'taxes' => $taxes,
+                ]);
             }
 
             // - Lignes extras.
             try {
                 $this->syncExtras($billingData['extras']);
-            } catch (ValidationException $e) {
-                throw new ValidationException([
+            } catch (ValidationsException $e) {
+                throw new ValidationsException([
                     'extras' => $e->getValidationErrors(),
                 ]);
             }
@@ -1794,6 +2238,78 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
             return $this->refresh();
         });
+    }
+
+    public function resynchronizeTaxes(): static
+    {
+        if (!$this->is_billable) {
+            throw new \LogicException("Cannot resync taxes of a non billable event.");
+        }
+
+        /** @var CoreCollection<array-key, EventMaterial|EventExtra> $lines */
+        $lines = (new CoreCollection())
+            ->concat($this->materials)
+            ->concat($this->extras);
+
+        // - Si la demande a une exemption de taxe globale, on reset toutes les taxes.
+        if ($this->global_tax_regime !== null) {
+            foreach ($lines as $line) {
+                $line->update([
+                    'tax_regime' => null,
+                    'tax_exemption_code' => null,
+                    'tax_id' => null,
+                    'taxes' => null,
+                ]);
+            }
+            return $this->refresh();
+        }
+
+        //
+        // - Sans régime d'exemption global.
+        //
+
+        $mainBeneficiary = $this->mainBeneficiary;
+        $sellerCountry = Config::getOrganizationCountry();
+
+        foreach ($lines as $line) {
+            $isService = $line instanceof EventExtra
+                ? $line->is_service
+                : true;
+
+            // - Si le régime de taxe est encore applicable, on ne fait rien.
+            $allowedRegimes = [
+                TaxRegime::STANDARD->value,
+                TaxRegime::EXEMPTED->value,
+            ];
+            if ($mainBeneficiary !== null) {
+                $allowedRegimes = array_map(
+                    static fn (TaxRegime|StrictTaxRegime $regime) => (
+                        $regime instanceof StrictTaxRegime
+                            ? $regime->regime->value
+                            : $regime->value
+                    ),
+                    $sellerCountry->getLineAvailableTaxRegimes($mainBeneficiary, $isService),
+                );
+            }
+            if (in_array($line->tax_regime, $allowedRegimes, true)) {
+                continue;
+            }
+
+            // - Sinon, on reset à la valeur automatique.
+            $isDefaultStandardTaxRegime = $line->default_tax_regime === TaxRegime::STANDARD->value;
+            $line->update([
+                'tax_regime' => $line->default_tax_regime,
+                'tax_exemption_code' => $line->default_tax_exemption_code,
+                'tax_id' => $line->default_tax_id,
+                'taxes' => (
+                    $isDefaultStandardTaxRegime
+                        ? ($line->defaultTax?->asFlatArray() ?? [])
+                        : null
+                ),
+            ]);
+        }
+
+        return $this->refresh();
     }
 
     public function updateDepartureInventory(array $inventoryData): static
@@ -1864,7 +2380,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         if (!empty($errors)) {
             $this->refresh();
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         try {
@@ -1873,7 +2389,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     $eventMaterial->save();
                 }
             });
-        } catch (ValidationException) {
+        } catch (ValidationsException) {
             // - Les erreurs de validation sont censées être gérées pour chaque matériel dans le code au-dessus.
             //   On ne peut pas laisser passer des erreurs de validation non formatées.
             throw new \LogicException("Unexpected validation errors occurred while saving the departure inventory.");
@@ -2070,7 +2586,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         if (!empty($errors)) {
             $this->refresh();
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         try {
@@ -2079,7 +2595,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     $eventMaterial->save();
                 }
             });
-        } catch (ValidationException) {
+        } catch (ValidationsException) {
             // - Ls erreurs de validation sont censées être gérées pour chaque matériel dans le code au-dessus.
             //   On ne peut pas laisser passer des erreurs de validation non formatées.
             throw new \LogicException("Unexpected validation errors occurred while saving the return inventory.");
@@ -2318,6 +2834,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         $materialData = array_merge($materialData, [
                             'unit_price' => $eventMaterial->unit_price,
                             'discount_rate' => $eventMaterial->discount_rate,
+                            'tax_regime' => $eventMaterial->tax_regime,
+                            'tax_exemption_code' => $eventMaterial->tax_exemption_code,
+                            'tax_id' => $eventMaterial->tax_id,
+                            'taxes' => $eventMaterial->taxes,
                         ]);
                     }
 
@@ -2349,9 +2869,13 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             if ($this->is_billable && $keepBillingData) {
                 $extraLines = $this->extras
                     ->map(static fn (EventExtra $extraLine) => [
+                        'is_service' => $extraLine->is_service,
                         'description' => $extraLine->description,
                         'quantity' => $extraLine->quantity,
                         'unit_price' => $extraLine->unit_price,
+                        'discount_rate' => $extraLine->discount_rate,
+                        'tax_regime' => $extraLine->tax_regime,
+                        'tax_exemption_code' => $extraLine->tax_exemption_code,
                         'tax_id' => $extraLine->tax_id,
                         'taxes' => $extraLine->taxes,
                     ])
@@ -2457,6 +2981,43 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     ))
             ))
             ->orderBy('mobilization_start_date', 'asc');
+    }
+
+    public function scopePrepareSerialize(Builder $query, string $format = self::SERIALIZE_DEFAULT): Builder
+    {
+        switch ($format) {
+            case self::SERIALIZE_BOOKING_EXCERPT:
+            case self::SERIALIZE_BOOKING_SUMMARY:
+                $query->with([
+                    'author',
+                    'manager',
+                    'beneficiaries',
+                    'technicians',
+                    'positions',
+                    'materials' => [
+                        'material',
+                    ],
+                ]);
+                break;
+
+            case self::SERIALIZE_BOOKING_DEFAULT:
+            case self::SERIALIZE_DETAILS:
+                $query->with([
+                    'author',
+                    'manager',
+                    'beneficiaries',
+                    'technicians',
+                    'positions',
+                    'departureInventoryAuthor',
+                    'returnInventoryAuthor',
+                    'materials' => [
+                        'material',
+                    ],
+                ]);
+                break;
+        }
+
+        return $query;
     }
 
     public function scopeInPeriod(Builder $rootQuery, PeriodInterface $period, bool $withOverdue = false): Builder
@@ -2639,8 +3200,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
     // -
     // ------------------------------------------------------
 
-    public function toPdf(I18n $i18n, string $sortedBy = 'lists'): Pdf
+    public function toPdf(?I18n $i18n = null, string $sortedBy = 'lists'): PdfInterface
     {
+        $i18n ??= container('i18n');
+
         $supportedSorts = ['lists', 'parks'];
         if (!in_array($sortedBy, $supportedSorts, true)) {
             throw new \InvalidArgumentException(vsprintf(
@@ -2649,17 +3212,9 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             ));
         }
 
-        // - Société.
-        $company = Config::get('companyData');
-        $company = array_replace($company, [
-            'country' => ($company['country'] ?? null) !== null
-                ? Country::tryFromCode($company['country'])
-                : null,
-        ]);
-
         $pdfName = Str::slugify(implode('-', [
             $i18n->translate('release-sheet'),
-            $company['name'],
+            Config::get('organization.name'),
             $this->title ?: $this->id,
         ]));
 
@@ -2688,10 +3243,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             'now' => CarbonImmutable::now(),
             'event' => $this,
             'beneficiaries' => $this->beneficiaries,
-            'company' => $company,
             'sortedBy' => $sortedBy,
             'materialsSorted' => $materialsSorted,
             'materialDisplayMode' => $displayMode,
+            'totalWeight' => $this->total_weight,
             'totalisableProperties' => $this->totalisable_properties,
             'customText' => Setting::getWithKey('eventSummary.customText'),
             'showLegalNumbers' => Setting::getWithKey('eventSummary.showLegalNumbers'),
@@ -2725,7 +3280,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
             $data['technicians'] = array_values($technicians);
         }
 
-        return Pdf::createFromTemplate('event-summary', $i18n, $pdfName, $data);
+        return PdfDocument::createFromTemplate('event-summary', $i18n, $pdfName, $data);
     }
 
     // ------------------------------------------------------
@@ -2736,6 +3291,10 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
     public function serialize(string $format = self::SERIALIZE_DEFAULT): array
     {
+        $user = Auth::user();
+        $isTeamMember = Auth::is([Group::ADMINISTRATION, Group::SUPERVISION, Group::OPERATION]);
+        $isReadonlyMember = Auth::is([Group::READONLY_PLANNING_GENERAL]);
+
         /** @var Event $event */
         $event = tap(clone $this, static function (Event $event) use ($format) {
             $event->append(['operation_period', 'mobilization_period']);
@@ -2748,6 +3307,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'technicians',
                         'positions',
                         'total_replacement',
+                        'total_weight',
                         'materials',
                         'departure_inventory_author',
                         'return_inventory_author',
@@ -2764,40 +3324,90 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     }
                     break;
 
-                case self::SERIALIZE_DEFAULT:
-                    $event->append([
-                        'beneficiaries',
-                        'has_materials',
+                case self::SERIALIZE_SUMMARY:
+                    $event->unappend([
+                        'total_without_global_discount',
+                        'global_discount_breakdown',
+                        'total_global_discount',
+                        'total_without_taxes',
+                        'global_tax_regime',
+                        'global_tax_exemption_code',
+                        'global_tax_exemption_reason',
+                        'total_taxes',
+                        'total_with_taxes',
                     ]);
+                    break;
+
+                case self::SERIALIZE_DEFAULT:
+                    $event
+                        ->append([
+                            'beneficiaries',
+                            'has_materials',
+                        ])
+                        ->unappend([
+                            'total_without_global_discount',
+                            'global_discount_breakdown',
+                            'total_global_discount',
+                            'total_without_taxes',
+                            'global_tax_regime',
+                            'global_tax_exemption_code',
+                            'global_tax_exemption_reason',
+                            'total_taxes',
+                            'total_with_taxes',
+                        ]);
                     break;
 
                 case self::SERIALIZE_BOOKING_EXCERPT:
-                    $event->append([
-                        'manager',
-                        'beneficiaries',
-                        'technicians',
-                        'has_materials',
-                        'has_not_returned_materials',
-                        'has_unassigned_mandatory_positions',
-                        'categories',
-                        'parks',
-                        'author',
-                    ]);
+                    $event
+                        ->append([
+                            'manager',
+                            'beneficiaries',
+                            'technicians',
+                            'has_materials',
+                            'has_not_returned_materials',
+                            'has_unassigned_mandatory_positions',
+                            'categories',
+                            'parks',
+                            'author',
+                        ])
+                        ->unappend([
+                            'total_without_global_discount',
+                            'global_discount_breakdown',
+                            'total_global_discount',
+                            'total_without_taxes',
+                            'global_tax_regime',
+                            'global_tax_exemption_code',
+                            'global_tax_exemption_reason',
+                            'total_taxes',
+                            'total_with_taxes',
+                        ]);
                     break;
 
                 case self::SERIALIZE_BOOKING_SUMMARY:
-                    $event->append([
-                        'manager',
-                        'beneficiaries',
-                        'technicians',
-                        'has_materials',
-                        'has_not_returned_materials',
-                        'has_missing_materials',
-                        'has_unassigned_mandatory_positions',
-                        'categories',
-                        'parks',
-                        'author',
-                    ]);
+                    $event
+                        ->append([
+                            'manager',
+                            'beneficiaries',
+                            'technicians',
+                            'has_materials',
+                            'has_not_returned_materials',
+                            'has_missing_materials',
+                            'has_unassigned_mandatory_positions',
+                            'categories',
+                            'parks',
+                            'author',
+                        ])
+                        ->unappend([
+                            'total_without_global_discount',
+                            'global_discount_breakdown',
+                            'total_global_discount',
+                            'total_without_taxes',
+                            'global_tax_regime',
+                            'global_tax_exemption_code',
+                            'global_tax_exemption_reason',
+                            'total_taxes',
+                            'total_with_taxes',
+                        ]);
                     break;
 
                 case self::SERIALIZE_BOOKING_DEFAULT:
@@ -2816,6 +3426,7 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'has_deleted_materials',
                         'has_unassigned_mandatory_positions',
                         'total_replacement',
+                        'total_weight',
                         'author',
                     ]);
                     if ($event->is_billable) {
@@ -2843,11 +3454,6 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     'materials_count',
                     'currency',
                     'global_discount_rate',
-                    'total_without_global_discount',
-                    'total_global_discount',
-                    'total_without_taxes',
-                    'total_taxes',
-                    'total_with_taxes',
                     'note',
                     'created_at',
                     'updated_at',
@@ -2859,11 +3465,6 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                     'currency',
                     'departure_inventory_datetime',
                     'global_discount_rate',
-                    'total_without_global_discount',
-                    'total_global_discount',
-                    'total_without_taxes',
-                    'total_taxes',
-                    'total_with_taxes',
                 ]);
                 break;
 
@@ -2878,11 +3479,6 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'currency',
                         'is_billable',
                         'global_discount_rate',
-                        'total_without_global_discount',
-                        'total_global_discount',
-                        'total_without_taxes',
-                        'total_taxes',
-                        'total_with_taxes',
                         'note',
                         'updated_at',
                     ]);
@@ -2895,11 +3491,6 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
                         'departure_inventory_datetime',
                         'currency',
                         'global_discount_rate',
-                        'total_without_global_discount',
-                        'total_global_discount',
-                        'total_without_taxes',
-                        'total_taxes',
-                        'total_with_taxes',
                         'note',
                         'updated_at',
                     ]);
@@ -2913,31 +3504,50 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
         // - Si l'utilisateur n'est pas un membre de l'équipe, et qu'il
         //   n'est pas bénéficiaire de l'événement, on enlève les devis
         //   et les factures du payload.
-        $user = Auth::user();
         $canSeeBilling = (
-            Auth::is([Group::ADMINISTRATION, Group::SUPERVISION, Group::OPERATION]) ||
+            $isTeamMember ||
             (
                 $user !== null &&
-                Auth::is([
-                    Group::READONLY_PLANNING_GENERAL,
-                ]) &&
+                $isReadonlyMember &&
                 $user->beneficiary?->isAssignedToEvent($event)
             )
         );
         if (!$canSeeBilling) {
             $data->delete(['estimates', 'invoices']);
+        } elseif (!$isTeamMember) {
+            // - Les brouillons ne sont pas accessibles par les utilisateurs non-membres de l'équipe.
+            $hiddenStatusesMap = [
+                'estimates' => [
+                    EstimateStatus::DRAFT->value,
+                    EstimateStatus::OBSOLETE->value,
+                ],
+                'invoices' => [
+                    InvoiceStatus::DRAFT->value,
+                    InvoiceStatus::OBSOLETE->value,
+                ],
+            ];
+            foreach ($hiddenStatusesMap as $entity => $hiddenStatuses) {
+                if (!$data->has($entity)) {
+                    continue;
+                }
+
+                $data->set($entity, array_values(array_filter(
+                    $data->get($entity) ?? [],
+                    static fn (array $entry) => (
+                        !in_array($entry['status'], $hiddenStatuses, true)
+                    ),
+                )));
+            }
         }
 
         // - Si l'utilisateur n'est pas un membre de l'équipe, qu'il
         //   n'est pas le chef de projet, ou un technicien assigné à l'événement,
         //   on enlève les notes du payload.
         $canSeeNotes = (
-            Auth::is([Group::ADMINISTRATION, Group::SUPERVISION, Group::OPERATION]) ||
+            $isTeamMember ||
             (
                 $user !== null &&
-                Auth::is([
-                    Group::READONLY_PLANNING_GENERAL,
-                ]) &&
+                $isReadonlyMember &&
                 $event->manager?->is($user) ||
                 (
                     isFeatureEnabled(Feature::TECHNICIANS) &&
@@ -2953,10 +3563,14 @@ final class Event extends BaseModel implements Serializable, Bookable, Pdfable
 
         if (!$event->is_billable) {
             $data->delete([
-                'global_discount_rate',
                 'total_without_global_discount',
+                'global_discount_rate',
+                'global_discount_breakdown',
                 'total_global_discount',
                 'total_without_taxes',
+                'global_tax_regime',
+                'global_tax_exemption_code',
+                'global_tax_exemption_reason',
                 'total_taxes',
                 'total_with_taxes',
             ]);

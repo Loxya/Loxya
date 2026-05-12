@@ -1,54 +1,65 @@
-export type ColumnsDisplay = Record<string, boolean>;
+import { z } from '@/utils/validation';
 
-const STORAGE_KEY_PREFIX = 'vuetables_';
+import type { SchemaInfer } from '@/utils/validation';
 
-const getStoredState = (tableName: string): Record<string, any> | null => {
-    const storedTableState = localStorage.getItem(`${STORAGE_KEY_PREFIX}${tableName}`);
+const schema = z
+    .object({
+        columns: z.record(z.string(), z.boolean()).optional(),
+        orderBy: z
+            .object({
+                column: z.union([z.string(), z.literal(false), z.undefined()]).transform(
+                    (value: string | false | undefined): string | undefined => (
+                        typeof value === 'string' ? value : undefined
+                    ),
+                ),
+                ascending: z.union([z.boolean(), z.undefined()]),
+            })
+            .nullish()
+            .transform((rawOrderBy) => (
+                rawOrderBy !== undefined && rawOrderBy !== null && rawOrderBy.column !== undefined
+                    ? { column: rawOrderBy.column, ascending: rawOrderBy.ascending ?? true }
+                    : undefined
+            )),
+
+        // - Legacy.
+        userControlsColumns: z.boolean().optional(),
+        userColumnsDisplay: z.string().array().optional(),
+    })
+    .transform((rawState) => ({
+        orderBy: rawState.orderBy ?? null,
+        columns: rawState.columns === undefined && rawState.userControlsColumns
+            ? Object.fromEntries((rawState.userColumnsDisplay ?? [])
+                .map((column: string) => [column, true]))
+            : (rawState.columns ?? {}),
+    }));
+
+type State = SchemaInfer<typeof schema>;
+
+const getStateKey = (tableName: string, legacy: boolean = false): string => (
+    legacy ? `vuetables_${tableName}` : `Table--${tableName}`
+);
+
+export const getStoredState = (tableName: string): State | null => {
+    const storedTableState = (
+        localStorage.getItem(getStateKey(tableName))
+            ?? localStorage.getItem(getStateKey(tableName, true))
+    );
     if (!storedTableState) {
         return null;
     }
 
-    let tableState;
+    let storedState;
     try {
-        tableState = JSON.parse(storedTableState);
+        storedState = schema.parse(JSON.parse(storedTableState));
     } catch {
-        localStorage.removeItem(`${STORAGE_KEY_PREFIX}${tableName}`);
+        localStorage.removeItem(getStateKey(tableName));
+        localStorage.removeItem(getStateKey(tableName, true));
         return null;
     }
 
-    return tableState ?? null;
+    return storedState ?? null;
 };
 
-export const getLegacySavedSearch = (tableName: string): string | null => {
-    const tableState = getStoredState(tableName);
-    return tableState?.query || null;
+export const storeState = (tableName: string, state: State): void => {
+    localStorage.setItem(getStateKey(tableName), JSON.stringify(state));
 };
-
-const getSavedColumnsDisplay = (tableName: string, columns: ColumnsDisplay): ColumnsDisplay => {
-    const tableState = getStoredState(tableName);
-    if (!tableState) {
-        return columns;
-    }
-
-    const { userColumnsDisplay } = tableState;
-    if (!userColumnsDisplay) {
-        return columns;
-    }
-
-    return Object.fromEntries(
-        Object.keys(columns).map((column: string) => (
-            [column, userColumnsDisplay.includes(column)]
-        )),
-    );
-};
-
-export const initColumnsDisplay = (tableName: string | undefined, columns: ColumnsDisplay): string[] => (
-    Object
-        .entries((
-            tableName !== undefined
-                ? getSavedColumnsDisplay(tableName, columns)
-                : columns
-        ))
-        .filter(([, visible]: [string, boolean]) => visible)
-        .map(([name]: [string, boolean]) => name)
-);

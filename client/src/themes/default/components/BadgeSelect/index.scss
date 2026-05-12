@@ -1,0 +1,143 @@
+@use '~@/themes/default/style/globals';
+@use 'sass:map';
+@use 'sass:color';
+
+.BadgeSelect {
+    $block: &;
+
+    display: inline-flex;
+
+    &__selection {
+        @extend %reset-button;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 100px;
+        padding: 6px 10px;
+        border-radius: globals.$border-radius-normal;
+        background-color: rgb(148 163 184 / 16%);
+        color: #cbd5f5;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        gap: globals.$spacing-small;
+        transition: opacity 200ms ease;
+        white-space: nowrap;
+
+        &:hover {
+            opacity: 0.85;
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        // stylelint-disable-next-line order/order
+        @include globals.icon('caret-down', 'solid', true) {
+            flex: 0 0 auto;
+            font-size: 0.9rem;
+        }
+
+        //
+        // - État sélectionné
+        //
+
+        &--warning {
+            background-color: globals.$label-warning-background-color;
+            color: globals.$label-warning-color;
+        }
+
+        &--info {
+            background-color: globals.$label-info-background-color;
+            color: globals.$label-info-color;
+        }
+
+        &--success {
+            background-color: globals.$label-success-background-color;
+            color: globals.$label-success-color;
+        }
+
+        &--danger {
+            background-color: globals.$label-danger-background-color;
+            color: globals.$label-danger-color;
+        }
+    }
+
+    &__dropdown {
+        position: absolute;
+        z-index: map.get(globals.$layers, 'dropdowns');
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        min-width: 160px;
+        padding: globals.$spacing-thin;
+        border-radius: globals.$border-radius-normal;
+        background: globals.$dropdown-background-color;
+        box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+        row-gap: globals.$spacing-thin;
+
+        &__option {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: globals.$border-radius-normal;
+            background: transparent;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+
+            &:hover {
+                background-color: rgb(255 255 255 / 8%);
+            }
+
+            &--selected {
+                background-color: rgb(255 255 255 / 12%);
+                font-weight: 600;
+            }
+
+            &--warning {
+                color: globals.$label-warning-color;
+            }
+
+            &--info {
+                color: globals.$label-info-color;
+            }
+
+            &--success {
+                color: globals.$label-success-color;
+            }
+
+            &--danger {
+                color: globals.$label-danger-color;
+            }
+        }
+    }
+
+    //
+    // - États
+    //
+
+    &--dropdown-open {
+        #{$block}__selection::after {
+            content: globals.icon-code('caret-up');
+        }
+    }
+
+    &--readonly {
+        #{$block}__selection {
+            cursor: default;
+
+            &:hover {
+                opacity: 1;
+            }
+
+            &::after {
+                display: none;
+            }
+        }
+    }
+}

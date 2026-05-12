@@ -2,10 +2,7 @@
 export { Variant } from './@constants';
 
 // - Types
-export type { Column } from './@types';
-
-// - Utils
-export { getLegacySavedSearch } from './@utils';
+export type { Columns, Column } from './@types';
 
 // - Tables
 export { default as ServerTable } from './Server';

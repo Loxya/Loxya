@@ -6,7 +6,7 @@ import type { PropType } from 'vue';
 import type { Choice } from '..';
 
 /** Taille des choix du switch. */
-export enum SwitchHeroSize {
+export enum Size {
     /** Choix de taille normale. */
     DEFAULT = 'default',
 
@@ -33,8 +33,8 @@ type Props = {
     /** Est-ce que l'élément est sélectionné ? */
     selected: boolean,
 
-    /** La taille du choix ({@see {@link SwitchHeroSize}}). */
-    size: SwitchHeroSize,
+    /** La taille du choix ({@see {@link Size}}). */
+    size: Size | `${Size}`,
 
     /**
      * Fonction appelée lorsqu'un l'élément est sélectionné.
@@ -93,10 +93,10 @@ const SwitchHeroItem = defineComponent({
             $t: __,
             icon,
             title,
-            description,
+            size,
             examples,
             selected,
-            size,
+            description,
             handleClick,
         } = this;
 
@@ -107,7 +107,7 @@ const SwitchHeroItem = defineComponent({
                 aria-checked={selected}
                 onClick={handleClick}
                 class={['SwitchHeroItem', {
-                    'SwitchHeroItem--large': size === SwitchHeroSize.LARGE,
+                    'SwitchHeroItem--large': size === Size.LARGE,
                     'SwitchHeroItem--selected': selected,
                 }]}
             >

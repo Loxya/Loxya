@@ -59,7 +59,7 @@ const EventDetailsMaterials = defineComponent({
                     />
                 </div>
                 <div class="EventDetailsMaterials__totals">
-                    <Totals booking={event} />
+                    <Totals booking={event} withReplacementAmount withWeight />
                 </div>
             </div>
         );

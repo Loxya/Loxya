@@ -8,7 +8,7 @@ use Loxya\Models\EventTechnician;
 
 final class EventTechnicianObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function created(EventTechnician $eventTechnician): void
     {

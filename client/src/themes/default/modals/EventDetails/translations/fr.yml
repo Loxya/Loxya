@@ -46,48 +46,128 @@ estimates:
     no-estimate-help: Il n'y a aucun devis pour le moment.
     no-beneficiary-billable-help: >-
         Vous ne pouvez pas créer de devis pour un événement qui n'a pas de bénéficiaire.
-    create-estimate-help: >-
-        Vous pouvez créer un devis au nom du premier bénéficiaire de l'événement
-        en cliquant sur le bouton ci-dessous.
     contact-someone-to-create-estimate: >-
         Si besoin, contactez un membre de l'équipe pour lui demander d'éditer un devis.
-    create-estimate: Créer un devis...
-    create-new-help: >-
-        Vous pouvez créer un nouveau devis en cliquant sur le bouton ci-dessous.
-    create-new-estimate: Créer un nouveau devis...
-    error-while-generating: Une erreur inattendue s'est produite lors de la génération du devis, veuillez ré-essayer.
-    estimate-created: Le devis a bien été créé.
 
-    item:
-        title: 'Devis du {date} à {hour}'
-        deleted: Le devis a été supprimé.
-        confirm-delete: "Voulez-vous vraiment supprimer ce devis\_?"
+    actions:
+        create:
+            label: Créer un devis...
+            help: >-
+                Vous pouvez créer un devis au nom du premier bénéficiaire de l'événement
+                en cliquant sur le bouton ci-dessous.
+        create-new:
+            label: Créer un nouveau devis...
+            help: >-
+                Vous pouvez créer un nouveau devis en cliquant sur le bouton ci-dessous.
 
-invoices:
-    previous-invoices: Anciennes factures
-    no-invoice-help: Il n'y a aucune facture pour le moment.
-    no-beneficiary-billable-help: >-
-        Vous ne pouvez pas créer de facture pour un événement qui n'a pas de bénéficiaire.
-    create-invoice-help: >-
-        Vous pouvez créer une facture au nom du premier bénéficiaire de l'événement
-        en cliquant sur le bouton ci-dessous.
-    contact-someone-to-create-invoice: >-
-        Si besoin, contactez un membre de l'équipe pour lui demander d'éditer la facture.
-    create-invoice: Créer une facture...
-    confirm-create: "Confirmez-vous vouloir générer une nouvelle facture maintenant\_?"
-    regenerate-help: >-
-        Vous pouvez créer une nouvelle facture en cliquant sur le bouton ci-dessous.
-    create-new-invoice: Créer une nouvelle facture...
-    error-while-generating: Une erreur inattendue s'est produite lors de la génération de la facture, veuillez ré-essayer.
-    invoice-created: La facture a bien été créée.
+    warnings:
+        beneficiary-not-invoiceable:
+            message:
+                with-estimates:
+                    "Le bénéficiaire «\_{name}\_» a des données de facturation incomplètes ou invalides.\n
+                    Pour pouvoir générer un nouveau devis, veuillez compléter ou corriger ses données."
+                without-estimates:
+                    "Le bénéficiaire «\_{name}\_» a des données de facturation incomplètes ou invalides.\n
+                    Pour pouvoir générer un devis, veuillez compléter ou corriger ses données."
+            action: Modifier sa fiche
+
+        empty:
+            message: |-
+                La facturation de cet événement ne contient aucune ligne affichée.
+                Pour pouvoir générer un devis, veuillez ajouter du matériel ou des lignes depuis l'éditeur.
+            action: Modifier la facturation
 
     item:
         title:
-            invoice: "Facture n°\_{number}, générée le {date}"
-            credit-note: "Avoir n°\_{number}, générée le {date}"
-        download:
-            invoice: Télécharger la facture
-            credit-note: Télécharger l'avoir
+            with-number: "Devis n°\_{number}"
+            without-number: "Devis du {date} à {hour}"
+
+    modals:
+        create:
+            title: "Nouveau devis pour l'événement «\_{name}\_»"
+            action: Créer le devis
+            created: Le devis a bien été créé.
+            fields:
+                lang:
+                    label: Langue du devis
+                    options:
+                        fr: Français
+                        en: Anglais
+                special-mentions: Mentions spéciales
+                due-date:
+                    label: Date d'échéance
+                    placeholder: "Validité de {days} jours"
+
+invoices:
+    no-invoice-help: Il n'y a aucune facture pour le moment.
+    no-beneficiary-billable-help: >-
+        Vous ne pouvez pas créer de facture pour un événement qui n'a pas de bénéficiaire.
+    contact-someone-to-create-invoice: >-
+        Si besoin, contactez un membre de l'équipe pour lui demander d'éditer la facture.
+
+    actions:
+        create:
+            label: Créer une facture...
+            help: >-
+                Vous pouvez créer une facture au nom du premier bénéficiaire de l'événement
+                en cliquant sur le bouton ci-dessous.
+        create-new:
+            label: Créer une nouvelle facture...
+            help: >-
+                Vous pouvez créer une nouvelle facture en cliquant sur le bouton ci-dessous.
+
+    warnings:
+        beneficiary-not-invoiceable:
+            message:
+                with-invoices:
+                    "Le bénéficiaire «\_{name}\_» a des données de facturation incomplètes ou invalides.\n
+                    Pour pouvoir générer une nouvelle facture, veuillez compléter ou corriger ses données."
+                without-invoices:
+                    "Le bénéficiaire «\_{name}\_» a des données de facturation incomplètes ou invalides.\n
+                    Pour pouvoir générer une facture, veuillez compléter ou corriger ses données."
+            action: Modifier sa fiche
+
+        empty:
+            message: |-
+                La facturation de cet événement ne contient aucune ligne affichée.
+                Pour pouvoir générer une facture, veuillez ajouter du matériel ou des lignes depuis l'éditeur.
+            action: Modifier la facturation
+
+    item:
+        title:
+            invoice: "Facture n°\_{number}"
+            correction: "Facture rectificative n°\_{number}"
+            prepayment-invoice: "Facture d'acompte n°\_{number}"
+            prepayment-credit-note: "Avoir n°\_{number}"
+            credit-note: "Avoir n°\_{number}"
+
+            draft:
+                invoice: "Facture du {date} à {hour}"
+                correction: "Facture rectificative du {date} à {hour}"
+                prepayment-invoice: "Facture d'acompte du {date} à {hour}"
+                prepayment-credit-note: "Avoir du {date} à {hour}"
+                credit-note: "Avoir du {date} à {hour}"
+
+    modals:
+        create:
+            title: "Nouvelle facture pour l'événement «\_{name}\_»"
+            action: Créer la facture
+            created: La facture a bien été créée.
+            fields:
+                order-number: Numéro de bon de commande
+                special-mentions: Mentions spéciales
+                lang:
+                    label: Langue de la facture
+                    options:
+                        fr: Français
+                        en: Anglais
+                due-date:
+                    label: Date d'échéance
+                    placeholder:
+                        immediately: Paiement à réception
+                        with-delay:
+                            - "Paiement sous {days} jour"
+                            - "Paiement sous {days} jours"
 
 documents:
     confirm-permanently-delete: "Voulez-vous vraiment supprimer définitivement ce document\_?"

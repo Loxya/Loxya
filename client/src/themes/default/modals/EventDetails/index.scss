@@ -4,6 +4,10 @@
     $block: &;
 
     position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    height: 100%;
     min-width: 850px;
 
     &__close {
@@ -15,9 +19,12 @@
         flex: 1;
     }
 
-    &__content {
+    &__body {
+        flex: 1;
         display: flex;
         flex-direction: column;
+        overflow: auto;
+        height: 100%;
         padding: 20px;
     }
 
@@ -26,7 +33,12 @@
     //
 
     &--not-ready {
-        #{$block}__content {
+        display: flex;
+        flex-direction: column;
+        min-height: 350px;
+
+        #{$block}__body {
+            flex: 1;
             padding-bottom: 50px;
         }
     }

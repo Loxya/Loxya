@@ -86,13 +86,17 @@ const pages: Array<Page | RouteConfig> = [
             requiresGroups: [Group.ADMINISTRATION],
         },
     },
-    config.billingMode !== BillingMode.NONE && {
+    (config.billingMode !== BillingMode.NONE && !config.organization.isVatExempted) && {
         name: 'global-settings:taxes',
         path: 'taxes',
         component: TaxesSettings,
         meta: {
             icon: 'percentage',
-            title: 'page.settings.taxes.title',
+            title: (
+                !config.organization.country.hasSimpleVatSystem
+                    ? 'page.settings.taxes.title.default'
+                    : 'page.settings.taxes.title.simple'
+            ),
             requiresGroups: [Group.ADMINISTRATION],
         },
     },

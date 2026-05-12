@@ -1,0 +1,76 @@
+@use '~@/themes/default/style/globals';
+
+.AddPaymentModal {
+    &__header {
+        display: flex;
+        align-items: center;
+        padding: 0.7rem 1rem;
+        background-color: globals.$bg-color-emphasis;
+        gap: globals.$spacing-medium;
+        user-select: none;
+
+        &__title {
+            flex: 1;
+            overflow: hidden;
+            margin: 0;
+            font-size: 1.3rem;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        &__close-button {
+            flex: 0 0 auto;
+        }
+    }
+
+    &__body {
+        padding:
+            globals.$spacing-small
+            globals.$spacing-large
+            globals.$spacing-large;
+    }
+
+    &__amount {
+        margin-bottom: globals.$spacing-medium;
+
+        &__taxes-breakdown {
+            margin-top: globals.$spacing-small;
+            padding: globals.$spacing-medium;
+            border-radius: globals.$border-radius-normal;
+            background-color: globals.$bg-color-emphasis;
+
+            &__title {
+                margin: 0;
+                margin-bottom: globals.$spacing-small;
+                font-size: 1rem;
+                font-weight: 600;
+            }
+
+            &__list {
+                @extend %reset-list;
+
+                display: flex;
+                flex-direction: column;
+                gap: globals.$spacing-thin;
+
+                &__item {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: globals.$spacing-medium;
+
+                    &__amount {
+                        font-weight: 500;
+                    }
+                }
+            }
+        }
+    }
+
+    &__footer {
+        display: flex;
+        justify-content: center;
+        padding: 1.5rem globals.$spacing-medium;
+        background-color: rgb(0 0 0 / 10%);
+        gap: globals.$spacing-small;
+    }
+}

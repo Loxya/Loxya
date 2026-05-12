@@ -5,10 +5,14 @@ namespace Loxya\Console;
 
 use DI\Container;
 use Loxya\Config\Config;
+use Loxya\Console\Command\Core\HelpCommand;
+use Loxya\Console\Command\Core\ListCommand;
 use Loxya\Kernel;
+use Loxya\Services\I18n;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Command\ListCommand;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -17,6 +21,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class App extends BaseApplication
 {
+    use Concerns\ConfiguresPrompts;
+
     private Container $container;
 
     private $commandsRegistered = false;
@@ -27,16 +33,8 @@ final class App extends BaseApplication
         $this->container = Kernel::boot()->getContainer();
 
         parent::__construct('Loxya', Config::getVersion());
-
-        /* phpcs:disable Generic.Files.LineLength.TooLong */
-        $inputDefinition = $this->getDefinition();
-        $inputDefinition->addOption(new InputOption('env', 'e', InputOption::VALUE_REQUIRED, "L'environnement à utiliser.", Config::getEnv()));
-        /* phpcs:enable Generic.Files.LineLength.TooLong */
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function doRun(InputInterface $input, OutputInterface $output)
     {
         $this->registerCommands();
@@ -45,12 +43,11 @@ final class App extends BaseApplication
             $this->renderRegistrationErrors($input, $output);
         }
 
+        $this->configurePrompts($input, $output);
+
         return parent::doRun($input, $output);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function find(string $name)
     {
         $this->registerCommands();
@@ -58,9 +55,6 @@ final class App extends BaseApplication
         return parent::find($name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function get(string $name)
     {
         $this->registerCommands();
@@ -68,9 +62,6 @@ final class App extends BaseApplication
         return parent::get($name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function all(?string $namespace = null)
     {
         $this->registerCommands();
@@ -78,9 +69,6 @@ final class App extends BaseApplication
         return parent::all($namespace);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function add(Command $command)
     {
         $this->registerCommands();
@@ -94,9 +82,6 @@ final class App extends BaseApplication
     // -
     // ------------------------------------------------------
 
-    /**
-     * {@inheritdoc}
-     */
     protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output)
     {
         if (!$command instanceof ListCommand) {
@@ -116,6 +101,31 @@ final class App extends BaseApplication
         }
 
         return $returnCode;
+    }
+
+    protected function getDefaultInputDefinition(): InputDefinition
+    {
+        $translate = function (string $key): string {
+            /** @var I18n $i18n */
+            $i18n = $this->container->get('i18n');
+            return $i18n->translate(sprintf('console.global-args.%s', $key));
+        };
+
+        return new InputDefinition([
+            new InputArgument('command', InputArgument::REQUIRED, $translate('command')),
+            new InputOption('--env', '-e', InputOption::VALUE_REQUIRED, $translate('env'), Config::getEnv()),
+            new InputOption('--help', '-h', InputOption::VALUE_NONE, $translate('help')),
+            new InputOption('--quiet', '-q', InputOption::VALUE_NONE, $translate('quiet')),
+            new InputOption('--version', '-V', InputOption::VALUE_NONE, $translate('version')),
+        ]);
+    }
+
+    protected function getDefaultCommands(): array
+    {
+        return [
+            new HelpCommand(),
+            new ListCommand(),
+        ];
     }
 
     protected function registerCommands(): void

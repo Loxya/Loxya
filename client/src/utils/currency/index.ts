@@ -4,18 +4,18 @@ import currencies from './_data';
 import type { CurrencyData } from './_data';
 
 class Currency {
-    private _name: string;
+    private readonly _name: string;
 
-    private _code: string;
+    private readonly _code: string;
 
-    private _symbol: string | undefined;
+    private readonly _symbol: string | undefined;
 
     constructor(code: string | Currency) {
         this._code = !(code instanceof Currency)
             ? code.toUpperCase()
             : code.code;
 
-        // - Retrieve the currency data.
+        // - Récupère les données de la devise.
         const data: CurrencyData | undefined = currencies.find(
             (_datum: CurrencyData) => _datum.code === this._code,
         );
@@ -26,27 +26,27 @@ class Currency {
     }
 
     /**
-     * Returns the currency name.
+     * Retourne le nom de la devise.
      *
-     * @returns The currency name.
+     * @returns Le nom de la devise.
      */
     public get name(): string {
         return this._name;
     }
 
     /**
-     * Returns the currency code.
+     * Retourne le code de la devise.
      *
-     * @returns The currency code.
+     * @returns Le code de la devise.
      */
     public get code(): string {
         return this._code;
     }
 
     /**
-     * Returns the currency symbol.
+     * Retourne le symbole de la devise.
      *
-     * @returns The currency symbol.
+     * @returns Le symbole de la devise.
      */
     public get symbol(): string {
         return this._symbol ?? this._code;

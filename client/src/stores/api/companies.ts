@@ -1,10 +1,10 @@
 import { z } from '@/utils/validation';
 import requester from '@/globals/requester';
 import { withPaginationEnvelope } from './@schema';
-import { CountrySchema } from './countries';
 
+import type { Raw } from 'vue';
+import type Country from '@/utils/country';
 import type { SchemaInfer } from '@/utils/validation';
-import type { Country } from './countries';
 import type { PaginatedData, ListingParams } from './@types';
 
 // ------------------------------------------------------
@@ -16,14 +16,19 @@ import type { PaginatedData, ListingParams } from './@types';
 export const CompanySchema = z.strictObject({
     id: z.number(),
     legal_name: z.string(),
+    is_public_entity: z.boolean(),
     registration_id: z.string().nullable(),
-    phone: z.string().nullable(),
+    vat_number: z.string().nullable(),
+    invoice_identifier: z.string().nullable(),
+    service_code: z.string().nullable(),
+    phone: z.phone().nullable(),
     street: z.string().nullable(),
+    additional_street: z.string().nullable(),
     postal_code: z.string().nullable(),
+    administrative_area: z.string().nullable(),
     locality: z.string().nullable(),
-    country_id: z.number().nullable(),
-    country: z.lazy(() => CountrySchema).nullable(),
-    full_address: z.string().nullable(),
+    country: z.country(),
+    address: z.string().nullable(),
     note: z.string().nullable(),
 });
 
@@ -40,13 +45,19 @@ export type Company = SchemaInfer<typeof CompanySchema>;
 //
 
 export type CompanyEdit = {
-    legal_name: string,
+    legal_name: string | null,
+    is_public_entity: boolean,
     registration_id: string | null,
+    vat_number: string | null,
+    invoice_identifier: string | null,
+    service_code: string | null,
     phone: string | null,
     street: string | null,
+    additional_street: string | null,
     postal_code: string | null,
+    administrative_area: string | null,
     locality: string | null,
-    country_id: Country['id'] | null,
+    country: Raw<Country>,
     note: string | null,
 };
 

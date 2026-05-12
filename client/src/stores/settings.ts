@@ -41,24 +41,18 @@ const getDefaults = (): Settings => ({
         defaultTax: null,
     },
     estimates: {
-        showBookingDescription: false,
-        showMobilizationPeriod: false,
         showTotalReplacementPrice: false,
         showTotalisableProperties: false,
-        showPictures: false,
         showDescriptions: false,
         showReplacementPrices: true,
-        showUnitPrices: true,
+        specialMentions: null,
     },
     invoices: {
-        showBookingDescription: false,
-        showMobilizationPeriod: false,
         showTotalReplacementPrice: false,
         showTotalisableProperties: false,
-        showPictures: false,
         showDescriptions: false,
         showReplacementPrices: true,
-        showUnitPrices: true,
+        specialMentions: null,
     },
 });
 

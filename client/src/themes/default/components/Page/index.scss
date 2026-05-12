@@ -1,4 +1,5 @@
 @use '~@/themes/default/style/globals';
+@use 'sass:math';
 
 .Page {
     $block: &;
@@ -10,65 +11,58 @@
     justify-content: flex-start;
     overflow: auto;
     height: 100%;
-    padding: globals.$spacing-small globals.$spacing-medium globals.$spacing-medium;
-    gap: globals.$spacing-medium;
 
     &__header {
+        position: sticky;
+        z-index: 2;
+        top: 0;
         flex: 0 0 auto;
-        display: flex;
-        flex-wrap: wrap-reverse;
-        align-items: center;
-        justify-content: flex-start;
-        gap: globals.$spacing-small globals.$spacing-large;
+        padding-bottom: globals.$spacing-medium;
+        background-color: globals.$bg-color-body;
 
-        &__content {
-            flex: 1;
+        &__sub {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            max-width: 100%;
-            gap: globals.$spacing-small;
-        }
-
-        &__help {
-            @extend %reset-p;
-
-            @include globals.line-clamp(3);
-
-            display: inline-flex;
+            flex-wrap: wrap-reverse;
             align-items: center;
-            min-width: 250px;
-            color: globals.$help-text-color;
-            white-space: pre-line;
+            justify-content: flex-start;
+            padding: 0 globals.$spacing-medium;
+            padding-top: globals.$spacing-small;
+            gap: globals.$spacing-small globals.$spacing-large;
 
-            @include globals.icon('info-circle') {
-                margin-right: globals.$spacing-small;
-                font-size: 1.2rem;
+            &__content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                max-width: 100%;
+                gap: globals.$spacing-small;
             }
 
-            //
-            // - Variantes
-            //
+            &__help {
+                @extend %reset-p;
 
-            &--error {
-                @include globals.icon('exclamation-triangle');
+                @include globals.line-clamp(3);
 
-                color: globals.$text-danger-color;
-                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                min-width: 250px;
+                color: globals.$help-text-color;
+                white-space: pre-line;
+
+                @include globals.icon('info-circle') {
+                    margin-right: globals.$spacing-small;
+                    font-size: 1.2rem;
+                }
             }
-        }
-
-        &__actions {
-            flex-shrink: 0;
-            display: flex;
-            margin-left: auto;
-            gap: globals.$spacing-small;
         }
     }
 
     &__body {
         flex: 1;
+        overflow: auto;
         width: 100%;
+        padding: 0 globals.$spacing-medium;
+        padding-bottom: globals.$spacing-medium;
     }
 
     //
@@ -88,7 +82,12 @@
     //
 
     @media (min-width: globals.$screen-tablet) {
-        padding: globals.$spacing-medium;
-        gap: globals.$spacing-medium;
+        &__header__sub {
+            padding-top: globals.$spacing-medium;
+        }
+
+        &__body {
+            padding-bottom: globals.$spacing-medium;
+        }
     }
 }

@@ -4,6 +4,11 @@ import { computed, defineComponent } from 'vue';
 import { RawTokenSchema } from './_schemas';
 import Icon from '@/themes/default/components/Icon';
 import generateUniqueId from 'lodash/uniqueId';
+import {
+    TokenKind,
+    SearchPortalIdKey,
+    AlignSearchPortalKey,
+} from './_constants';
 
 import type { PropType } from 'vue';
 
@@ -58,10 +63,10 @@ type InstanceProperties = {
 /* Champ de recherche. */
 const Search = defineComponent({
     name: 'Search',
-    provide() {
+    provide(this: any) {
         return {
-            searchPortalId: computed(() => this.portalId),
-            alignSearchPortal: ($target: HTMLElement) => {
+            [SearchPortalIdKey as symbol]: computed(() => this.portalId),
+            [AlignSearchPortalKey as symbol]: ($target: HTMLElement) => {
                 this.alignPortal($target);
             },
         };
@@ -147,7 +152,7 @@ const Search = defineComponent({
 
         // ------------------------------------------------------
         // -
-        // -    Public API
+        // -    API Publique
         // -
         // ------------------------------------------------------
 
@@ -223,15 +228,20 @@ const Search = defineComponent({
 export type {
     RawToken as Token,
     RawCustomToken as CustomToken,
-    TokenDefinition,
+    RawTokenDefinition as TokenDefinition,
     TokenOptions,
+    TokenOperator,
     TokenOption,
     TokenValue,
 } from './_types';
 
 export {
+    createTokenDefinitionSchema,
     TokenDefinitionSchema,
     TokenValueSchema,
+    TokenOperatorValueSchema,
 } from './_schemas';
+
+export { TokenKind };
 
 export default Search;

@@ -4,6 +4,69 @@ Tous les changements notables sur le projet sont documentés dans ce fichier.
 
 Ce projet adhère au principe du [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.0 (UNRELEASED)
+
+- Le logiciel requiert désormais la présence de `weasyprint` pour la génération des PDF.  
+  Ce changement remplace l’ancien moteur interne, dont les capacités de personnalisation 
+  étaient limitées, afin de permettre une évolution plus avancée des documents, notamment 
+  dans le cadre du déploiement de la facturation électronique.
+- L'assistant d'installation doit maintenant être lancé en ligne de commande sur le serveur,
+  avec la commande `./bin/console install`.
+- Les devis et factures sont maintenant sauvegardés "physiquement" et non plus générés à la volée.
+  Ceci pour satisfaire aux exigences d'inaltérabilité de ces documents.
+- Ajoute la possibilité d'effectuer des recherches sur les caractéristiques spéciales du matériel,
+  et prend en charge différents opérateurs ("plus petit que", "égal à", "plus grand que"...)
+  pour ces recherches, quand le type de donnée de la caractéristique le permet.
+- Dans le sélecteur de matériel de l'édition des événements, le message affichant les quantités
+  en excédent est en rouge. Si la quantité restante est de 0, le message est toujours en orange.
+- Dans la liste du matériel manquant de la fenêtre d'un événement, il est maintenant possible de
+  cliquer sur un matériel de cette liste pour en consulter les informations détaillées de ce
+  matériel et ses utilisations.
+- Les champs "Poids" et "Pays d'origine" ont été ajoutés dans les informations du matériel. Si
+  ces informations existaient déjà dans les caractéristiques spéciales (avec le même nom), lors de la
+  mise à jour de Loxya, elles seront copiées dans les nouveaux champs correspondants, pour chaque
+  matériel, et supprimées des caractéristiques spéciales.
+- Dans l'onglet "Matériel" de la fenêtre d'un événement, il est maintenant possible
+  de cliquer sur le nom de chaque matériel de la liste pour ouvrir sa fiche directement.
+- Ajoute la prise en charge de la facturation électronique au format Factur-X dans les factures françaises.  
+  Les factures générées intègrent désormais automatiquement les données structurées dans son format le plus
+  avancé pour la France (EXTENDED-CTC-FR). Ceci prépare le terrain pour la transmission électronique des
+  factures (E-invoicing / e-reporting). Vous pouvez en savoir plus sur la facturation électronique dans
+  Loxya en consultant notre page dédiée : https://loxya.com/e-invoicing-fr
+- Ajoute la prise en charge de la facturation électronique au format UBL (Peppol BIS Billing 3.0).  
+  Le XML est téléchargeable depuis la fenêtre de détails de la facture, en complément du PDF.
+- Les fiches des sociétés bénéficiaires disposent de nouveaux champs pour la facturation : 
+  - Il est maintenant possible d'indiquer si la société est un organisme public puis 
+    de renseigner un code de service. 
+  - Si votre client vous le communique, vous pouvez dorénavant renseigner un identifiant de 
+    routage personnalisé pour l'acheminement des factures électroniques.
+- Lors de la création d'une facture, il est désormais possible de renseigner un numéro de bon 
+  de commande fourni par le client, de spécifier explicitement la langue à utiliser, la date
+  d'expiration (ou le délai) et des mentions spéciales personnalisées pour cette facture.
+- Vous pouvez indiquer l'état d'avancement de vos devis et factures avec la prise en charge
+  de différents statuts (en attente, envoyé, accepté, ...). Ceux-ci seront complétés par des
+  statuts "automatiques" en fonction des informations du devis / facture et des retours
+  de la facturation électronique à terme. Par exemple, si une facture a dépassé sa date
+  limite de paiement, son statut passera en "En retard".
+- Ajoute la possibilité de créer des devis et factures "à la volée" depuis leurs pages de 
+  listing, sans avoir à les rattacher à un événement.
+- Les devis disposent désormais d'un numéro unique au format `D-{année}-{séquence}` (ex. : 
+  `D-2026-00001`), à l'image des factures. Les devis créés avant cette version conservent 
+  leur fonctionnement précédent et n'auront pas de numéro associé.
+- Les devis et factures sont désormais créés à l'état de "brouillon" et n'obtiennent leur
+  numéro et leur date d'émission qu'au moment de leur finalisation. Cela vous laisse la
+  possibilité de vérifier le document avant qu'il devienne officiel.
+- Corrige la récupération de la configuration serveur personnalisée.
+- L'interface a été amélioré, notamment le défilement des pages.
+- Corrige le problème de fonctionnement des boutons sur écran tactile dans les fenêtres modales.
+- Dans l'étape "récapitulatif" de l'édition d'un booking, un bouton "inventaire de départ" permet d'y
+  accéder directement sans avoir à repasser par le planning. Ce bouton n'est affiché que si la date de
+  début de mobilisation est dans le jour courant.
+- Permet la re-synchronisation des prix de remplacement dans le matériel des événements,
+  quand le prix de remplacement du matériel a été modifié.
+- Sur la page "Matériel", la période choisie pour l'affichage des quantités disponibles est désormais
+  conservée entre les visites de la page (au même titre que les autres filtres de recherche).
+
 ## 1.2.1 (2025-09-13)
 
 - Corrige l'affichage des images du matériel dans les documents générés par Loxya.

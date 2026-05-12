@@ -6,7 +6,6 @@
     justify-content: center;
     height: 100%;
 
-    /* stylelint-disable declaration-no-important */
     &__item {
         &--not-confirmed {
             opacity: globals.$calendar-event-not-confirmed-opacity;
@@ -17,5 +16,4 @@
             color: globals.$calendar-event-past-text-color !important;
         }
     }
-    /* stylelint-enable declaration-no-important */
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ruleset>
     <file>./src</file>
+    <file>./libs</file>
     <file>./tests</file>
 
     <config name="testVersion" value="8.1-" />
@@ -147,6 +148,7 @@
                 <element value="@version"/>
             </property>
         </properties>
+        <exclude-pattern>./libs/*</exclude-pattern>
     </rule>
 
     <!-- Control structures -->

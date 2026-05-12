@@ -5,6 +5,7 @@ import parseInteger from '@/utils/parseInteger';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
 import { RequestError, HttpCode } from '@/globals/requester';
 import Page from '@/themes/default/components/Page';
+import Alert from '@/themes/default/components/Alert';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import { Tabs, Tab } from '@/themes/default/components/Tabs';
@@ -28,7 +29,7 @@ type Data = {
     beneficiary: BeneficiaryDetails | null,
     isLoading: boolean,
     isFetched: boolean,
-    selectedTabIndex: number,
+    selectedTab: TabName,
     criticalError: ErrorType | null,
 };
 
@@ -41,34 +42,27 @@ const BeneficiaryView = defineComponent({
             beneficiary: null,
             isLoading: false,
             isFetched: false,
-            selectedTabIndex: 0,
+            selectedTab: TabName.INFO,
             criticalError: null,
         };
     },
     computed: {
-        pageTitle(): string | undefined {
-            const { $t: __, isFetched, beneficiary } = this;
+        pageTitle(): string {
+            const { __, isFetched, beneficiary } = this;
 
             return isFetched && beneficiary
-                ? __('page.beneficiary-view.title', { name: beneficiary.full_name })
-                : __('page.beneficiary-view.title-simple');
+                ? __('title', { name: beneficiary.full_name })
+                : __('title-simple');
         },
 
-        withBilling(): boolean {
+        isBillingEnabled(): boolean {
             return config.billingMode !== BillingMode.NONE;
         },
 
-        tabsIndexes(): string[] {
-            const tabs = Object.values(TabName);
-            return !this.withBilling
-                ? tabs.filter((tab: string) => tab !== TabName.BILLING)
-                : tabs;
-        },
-
         tabsActions(): JSX.Element[] {
-            const { $t: __, id, tabsIndexes, selectedTabIndex } = this;
+            const { __, id, selectedTab } = this;
 
-            switch (tabsIndexes[selectedTabIndex]) {
+            switch (selectedTab) {
                 case TabName.INFO: {
                     return [
                         <Button
@@ -79,7 +73,7 @@ const BeneficiaryView = defineComponent({
                             }}
                             collapsible
                         >
-                            {__('action-edit')}
+                            {__('global.action-edit')}
                         </Button>,
                     ];
                 }
@@ -99,9 +93,9 @@ const BeneficiaryView = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleTabChanged(index: number) {
-            this.selectedTabIndex = index;
-            this.$router.replace(this.tabsIndexes[index]);
+        handleTabChanged(id: TabName) {
+            this.selectedTab = id;
+            this.$router.replace(id);
         },
 
         // ------------------------------------------------------
@@ -112,8 +106,8 @@ const BeneficiaryView = defineComponent({
 
         selectTabFromRouting() {
             const { hash } = this.$route;
-            if (hash && this.tabsIndexes.includes(hash)) {
-                this.selectedTabIndex = this.tabsIndexes.indexOf(hash);
+            if (hash && (Object.values(TabName) as string[]).includes(hash)) {
+                this.selectedTab = hash as TabName;
             }
         },
 
@@ -137,19 +131,28 @@ const BeneficiaryView = defineComponent({
                 this.isLoading = false;
             }
         },
+
+        __(key: string, params?: Record<string, number | string>, count?: number): string {
+            key = !key.startsWith('global.')
+                ? `page.beneficiary-view.${key}`
+                : key.replace(/^global\./, '');
+
+            return this.$t(key, params, count);
+        },
     },
     render() {
         const {
-            $t: __,
+            __,
+            id,
             pageTitle,
-            withBilling,
+            isBillingEnabled,
             tabsActions,
             isLoading,
             isFetched,
-            criticalError,
+            selectedTab,
             beneficiary,
+            criticalError,
             handleTabChanged,
-            selectedTabIndex,
         } = this;
 
         if (criticalError || !isFetched) {
@@ -160,26 +163,52 @@ const BeneficiaryView = defineComponent({
             );
         }
 
-        const { stats } = beneficiary!;
+        const { company, stats, is_invoiceable: isInvoiceable } = beneficiary!;
+
+        const renderNotInvoiceableWarning = (): JSX.Element | null => {
+            if (!isBillingEnabled || isInvoiceable) {
+                return null;
+            }
+
+            const translationKey = company !== null
+                ? 'warnings.not-invoiceable.with-company'
+                : 'warnings.not-invoiceable.without-company';
+
+            return (
+                <Alert
+                    type="warning"
+                    class="BeneficiaryView__not-invoiceable"
+                    action={{
+                        label: __(`${translationKey}.action`),
+                        target: (
+                            company !== null
+                                ? { name: 'edit-company', params: { id: company.id.toString() } }
+                                : { name: 'edit-beneficiary', params: { id: id.toString() } }
+                        ),
+                        icon: 'edit',
+                    }}
+                >
+                    {__(`${translationKey}.message`)}
+                </Alert>
+            );
+        };
 
         return (
             <Page name="beneficiary-view" title={pageTitle} loading={isLoading}>
                 <div class="BeneficiaryView">
-                    <Tabs
-                        actions={tabsActions}
-                        defaultIndex={selectedTabIndex}
-                        onChanged={handleTabChanged}
-                    >
-                        <Tab title={__('informations')} icon="info-circle">
+                    {renderNotInvoiceableWarning()}
+                    <Tabs defaultActive={selectedTab} actions={tabsActions} onChanged={handleTabChanged}>
+                        <Tab id={TabName.INFO} title={__('global.informations')} icon="info-circle">
                             <Infos beneficiary={beneficiary!} />
                         </Tab>
-                        {withBilling && (
-                            <Tab title={__('page.beneficiary-view.billing.title')} icon="file-invoice">
+                        {isBillingEnabled && (
+                            <Tab id={TabName.BILLING} title={__('billing.title')} icon="file-invoice">
                                 <Billing beneficiary={beneficiary!} />
                             </Tab>
                         )}
                         <Tab
-                            title={__('page.beneficiary-view.borrowings.title', { count: stats.borrowings })}
+                            id={TabName.BORROWINGS}
+                            title={__('borrowings.title', { count: stats.borrowings })}
                             icon="calendar-alt"
                         >
                             <Borrowings beneficiary={beneficiary!} />

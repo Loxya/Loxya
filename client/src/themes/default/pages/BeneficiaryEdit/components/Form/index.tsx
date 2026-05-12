@@ -1,16 +1,20 @@
 import './index.scss';
-import { defineComponent } from 'vue';
 import pick from 'lodash/pick';
+import { defineComponent } from 'vue';
 import cloneDeep from 'lodash/cloneDeep';
+import { AddressField } from '@/utils/address';
+import config, { BillingMode } from '@/globals/config';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Fieldset from '@/themes/default/components/Fieldset';
+import SelectCountry from '@/themes/default/components/SelectCountry';
 import Button from '@/themes/default/components/Button';
-import CompanySelect from './CompanySelect';
+import SelectCompany from './SelectCompany';
 
+import type Country from '@/utils/country';
 import type { ComponentRef, PropType } from 'vue';
-import type { Options } from '@/utils/formatOptions';
-import type { Country } from '@/stores/api/countries';
 import type { Company } from '@/stores/api/companies';
+import type { AddressFieldDefinition } from '@/utils/country';
 import type {
     BeneficiaryEdit,
     BeneficiaryDetails as Beneficiary,
@@ -44,27 +48,50 @@ type Data = {
     data: BeneficiaryEdit,
 };
 
-const DEFAULT_VALUES: BeneficiaryEdit = Object.freeze({
-    first_name: '',
-    last_name: '',
-    reference: '',
-    company_id: null,
-    phone: '',
-    email: '',
-    street: '',
-    postal_code: '',
-    locality: '',
-    country_id: null,
-    note: '',
-    pseudo: '',
-    password: '',
-});
+const getDefaults = (savedData: Beneficiary | null): BeneficiaryEdit => {
+    const BASE_DEFAULTS: BeneficiaryEdit = {
+        first_name: '',
+        last_name: '',
+        reference: null,
+        company_id: null,
+        phone: null,
+        email: null,
+        street: null,
+        additional_street: null,
+        postal_code: null,
+        administrative_area: null,
+        locality: null,
+        country: config.mainCountry,
+        note: null,
+        pseudo: '',
+        password: '',
+    };
+
+    const data = {
+        ...BASE_DEFAULTS,
+        ...pick(savedData ?? {}, Object.keys(BASE_DEFAULTS)),
+        email: savedData?.user?.email ?? savedData?.email ?? null,
+        country: savedData?.country ?? config.mainCountry,
+    };
+
+    if ((savedData?.phone ?? null) !== null) {
+        const shouldUseInternationalFormat = (
+            !data.country.isSame(config.mainCountry) ||
+            !savedData!.phone!.country?.isSame(config.mainCountry)
+        );
+        data.phone = shouldUseInternationalFormat
+            ? savedData!.phone!.formatInternational()
+            : savedData!.phone!.formatNational();
+    }
+
+    return data;
+};
 
 /** Formulaire d'édition d'un bénéficiaire. */
 const BeneficiaryEditForm = defineComponent({
     name: 'BeneficiaryEditForm',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         savedData: {
@@ -92,14 +119,8 @@ const BeneficiaryEditForm = defineComponent({
     },
     emits: ['cancel', 'submit'],
     data(): Data {
-        const data = {
-            ...DEFAULT_VALUES,
-            ...pick(this.savedData ?? {}, Object.keys(DEFAULT_VALUES)),
-            email: this.savedData?.user?.email ?? this.savedData?.email ?? null,
-        };
-
         return {
-            data,
+            data: getDefaults(this.savedData),
         };
     },
     computed: {
@@ -107,16 +128,29 @@ const BeneficiaryEditForm = defineComponent({
             return this.savedData === null;
         },
 
-        hasUserAccount(): boolean {
-            return !!this.savedData?.user;
+        addressFields(): AddressFieldDefinition[][] {
+            return this.data.country.getAddressFields(true);
         },
 
-        countriesOptions(): Options<Country> {
-            return this.$store.getters['countries/options'];
+        isBillingEnabled(): boolean {
+            return config.billingMode !== BillingMode.NONE;
         },
-    },
-    created() {
-        this.$store.dispatch('countries/fetch');
+
+        isAddressRequired(): boolean {
+            // - Si la facturation est désactivée, on ne rend pas les adresses obligatoires.
+            if (!this.isBillingEnabled) {
+                return false;
+            }
+
+            // - Si le bénéficiaire est lié à une société,
+            //   les exigences s'appliquent à la société.
+            if (this.data.company_id !== null) {
+                return false;
+            }
+
+            const sellerCountry = config.organization.country;
+            return sellerCountry.requireBuyerAddress(false);
+        },
     },
     mounted() {
         if (this.isNew) {
@@ -137,6 +171,24 @@ const BeneficiaryEditForm = defineComponent({
             this.data.company_id = companyId || null;
         },
 
+        handleChangeCountry(newCountry: Country) {
+            this.data.country = newCountry;
+
+            const fieldMap = {
+                [AddressField.ADDRESS_LINE1]: 'street',
+                [AddressField.ADDRESS_LINE2]: 'additional_street',
+                [AddressField.POSTAL_CODE]: 'postal_code',
+                [AddressField.ADMINISTRATIVE_AREA]: 'administrative_area',
+                [AddressField.LOCALITY]: 'locality',
+            } as const;
+            const newAddressFields = newCountry.getUsedAddressField();
+            Object.entries(fieldMap).forEach(([field, dataKey]) => {
+                if (!newAddressFields.includes(field as AddressField)) {
+                    this.data[dataKey] = null;
+                }
+            });
+        },
+
         handleSubmit(e: SubmitEvent) {
             e?.preventDefault();
 
@@ -153,46 +205,14 @@ const BeneficiaryEditForm = defineComponent({
             data,
             errors,
             savedData,
-            countriesOptions,
-            hasUserAccount,
+            isAddressRequired,
+            addressFields,
             isSaving,
             handleChangeCompany,
+            handleChangeCountry,
             handleSubmit,
             handleCancel,
         } = this;
-
-        const renderUserAccountSection = (): JSX.Element | null => {
-            if (!hasUserAccount) {
-                return null;
-            }
-            const user = savedData!.user!;
-
-            return (
-                <Fieldset title={__('page.beneficiary-edit.user-account')}>
-                    <div class="BeneficiaryEditForm__existing-user-help">
-                        {__('page.beneficiary-edit.existing-user-help')}
-                    </div>
-                    <div class="BeneficiaryEditForm__existing-user">
-                        <div class="BeneficiaryEditForm__existing-user__pseudo">
-                            <div class="BeneficiaryEditForm__existing-user__label">
-                                {__('pseudo')}
-                            </div>
-                            <div class="BeneficiaryEditForm__existing-user__value">
-                                {user.pseudo}
-                            </div>
-                        </div>
-                        <div class="BeneficiaryEditForm__existing-user__email">
-                            <div class="BeneficiaryEditForm__existing-user__label">
-                                {__('email')}
-                            </div>
-                            <div class="BeneficiaryEditForm__existing-user__value">
-                                {user.email}
-                            </div>
-                        </div>
-                    </div>
-                </Fieldset>
-            );
-        };
 
         return (
             <form
@@ -227,7 +247,7 @@ const BeneficiaryEditForm = defineComponent({
                     />
                 </Fieldset>
                 <Fieldset title={__('company')}>
-                    <CompanySelect
+                    <SelectCompany
                         defaultCompany={savedData?.company ?? null}
                         onChange={handleChangeCompany}
                     />
@@ -240,43 +260,116 @@ const BeneficiaryEditForm = defineComponent({
                         v-model={data.phone}
                         error={errors?.phone}
                     />
-                    <FormField
-                        label="email"
-                        type="email"
-                        autocomplete="off"
-                        v-model={data.email}
-                        error={errors?.email}
-                    />
-                    <FormField
-                        label="street"
-                        autocomplete="off"
-                        v-model={data.street}
-                        error={errors?.street}
-                    />
-                    <div class="BeneficiaryEditForm__locality">
-                        <FormField
-                            label="postal-code"
-                            class="BeneficiaryEditForm__postal-code"
-                            autocomplete="off"
-                            v-model={data.postal_code}
-                            error={errors?.postal_code}
-                        />
-                        <FormField
-                            label="city"
-                            class="BeneficiaryEditForm__city"
-                            autocomplete="off"
-                            v-model={data.locality}
-                            error={errors?.locality}
-                        />
+                    <div class="BeneficiaryEditForm__address">
+                        {addressFields.map((lineFields: AddressFieldDefinition[], index: number) => (
+                            <div key={index} class="BeneficiaryEditForm__address__group">
+                                {lineFields.map((field: AddressFieldDefinition) => {
+                                    switch (field.field) {
+                                        case AddressField.ADDRESS_LINE1: {
+                                            return (
+                                                <FormField
+                                                    label={__('street')}
+                                                    class={[
+                                                        'BeneficiaryEditForm__address__part',
+                                                        `BeneficiaryEditForm__address__part--street`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.street}
+                                                    error={errors?.street}
+                                                    required={isAddressRequired && field.required}
+                                                    onInput={(value: string) => {
+                                                        data.street = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.ADDRESS_LINE2: {
+                                            return (
+                                                <FormField
+                                                    label={__('additional-street')}
+                                                    class={[
+                                                        'BeneficiaryEditForm__address__part',
+                                                        `BeneficiaryEditForm__address__part--additional-street`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.additional_street}
+                                                    error={errors?.additional_street}
+                                                    required={isAddressRequired && field.required}
+                                                    onInput={(value: string) => {
+                                                        data.additional_street = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.POSTAL_CODE: {
+                                            return (
+                                                <FormField
+                                                    label={__(`postal-code.${field.type}`)}
+                                                    class={[
+                                                        'BeneficiaryEditForm__address__part',
+                                                        `BeneficiaryEditForm__address__part--postal-code`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.postal_code}
+                                                    error={errors?.postal_code}
+                                                    required={isAddressRequired && field.required}
+                                                    onInput={(value: string) => {
+                                                        data.postal_code = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.ADMINISTRATIVE_AREA: {
+                                            return (
+                                                <FormField
+                                                    label={__(`administrative-area.${field.type}`)}
+                                                    class={[
+                                                        'BeneficiaryEditForm__address__part',
+                                                        `BeneficiaryEditForm__address__part--administrative-area`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.administrative_area}
+                                                    error={errors?.administrative_area}
+                                                    required={isAddressRequired && field.required}
+                                                    onInput={(value: string) => {
+                                                        data.administrative_area = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        case AddressField.LOCALITY: {
+                                            return (
+                                                <FormField
+                                                    label={__(`locality.${field.type}`)}
+                                                    class={[
+                                                        'BeneficiaryEditForm__address__part',
+                                                        `BeneficiaryEditForm__address__part--locality`,
+                                                    ]}
+                                                    autocomplete="off"
+                                                    value={data.locality}
+                                                    error={errors?.locality}
+                                                    required={isAddressRequired && field.required}
+                                                    onInput={(value: string) => {
+                                                        data.locality = value;
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        default: {
+                                            return null;
+                                        }
+                                    }
+                                })}
+                            </div>
+                        ))}
                     </div>
-                    <FormField
-                        label="country"
-                        type="select"
-                        autocomplete="off"
-                        options={countriesOptions}
-                        v-model={data.country_id}
-                        error={errors?.country_id}
-                    />
+                    <FormField label="country" type="custom" error={errors?.country}>
+                        <SelectCountry
+                            placeholder={false}
+                            value={data.country}
+                            onChange={handleChangeCountry}
+                        />
+                    </FormField>
                 </Fieldset>
                 <Fieldset title={__('other-infos')}>
                     <FormField
@@ -287,7 +380,6 @@ const BeneficiaryEditForm = defineComponent({
                         error={errors?.note}
                     />
                 </Fieldset>
-                {renderUserAccountSection()}
                 <section class="Form__actions">
                     <Button htmlType="submit" type="primary" icon="save" loading={isSaving}>
                         {isSaving ? __('saving') : __('save')}

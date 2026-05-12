@@ -13,18 +13,13 @@ $bg-color-emphasis-danger: #552d2e;
 $bg-color-emphasis-warning: #644a2b;
 $bg-color-emphasis-success: #2b2d29;
 
-$bg-color-table-th: #2e2e2e;
-$bg-color-table-td: #363636;
-
 $bg-color-list-item: #2e2e2e;
 $bg-color-list-item-emphasis: #363636;
-
-$bg-color-side-menu-item-hover: #262626;
-$bg-color-side-menu-item-active: #242424;
 
 $bg-color-tooltip: rgb($bg-color-emphasis, 0.9);
 
 $interactive-element-default-background-color: #616161;
+$interactive-element-primary-background-color: #235b79;
 $interactive-element-success-background-color: #2c7d43;
 $interactive-element-warning-background-color: #be692d;
 $interactive-element-danger-background-color: #911d0a;
@@ -47,14 +42,14 @@ $text-warning-color: #ff9729;
 $help-text-color: #757575;
 
 $link-base-color: #fff;
-$link-hover-color: color.adjust($primary-color, $lightness: 10%);
+$link-hover-color: #d7d7d7;
 $link-active-color: #fff;
 
 $color-base-button: #e0e0e0;
 $color-hover-button: #fff;
 
 // - Couleurs utilisées avec une couleur de fond `$bg-color-emphasis-danger`.
-$color-emphasis-danger-base: #f7eded;
+$color-emphasis-danger-base: #ffdcdb;
 $color-emphasis-danger-soft: #dfb8b8;
 $color-emphasis-danger-emphasis: #ff644d;
 
@@ -74,3 +69,22 @@ $divider-emphasis: #423e42;
 
 /// Diviseur utilisé avec une couleur de fond `$bg-color-emphasis-danger`.
 $divider-emphasis-danger: #753e3f;
+
+//
+// - Libellés
+//
+
+$label-default-background-color: rgb(212 212 216 / 22%);
+$label-default-color: #f4f4f5;
+
+$label-warning-background-color: rgb(249 115 22 / 16%);
+$label-warning-color: #fdba74;
+
+$label-info-background-color: rgb(14 165 233 / 16%);
+$label-info-color: #7dd3fc;
+
+$label-success-background-color: rgb(34 197 94 / 16%);
+$label-success-color: #86efac;
+
+$label-danger-background-color: rgb(239 68 68 / 16%);
+$label-danger-color: #fca5a5;

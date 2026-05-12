@@ -121,14 +121,14 @@ final class Document extends BaseModel implements Serializable
         }
 
         $fileType = $file->getClientMediaType();
-        if (!in_array($fileType, Config::get('authorizedFileTypes'), true)) {
+        if (!in_array($fileType, Config::ALLOWED_FILE_TYPES, true)) {
             return 'file-type-not-allowed';
         }
 
         return true;
     }
 
-    public function checkEntityType($value)
+    public function checkEntityType(mixed $value)
     {
         // - Si les techniciens sont désactivés, il n'est pas possible
         //   d'assigner un document à cette entité.
@@ -151,7 +151,7 @@ final class Document extends BaseModel implements Serializable
             ->validate($value);
     }
 
-    public function checkEntityId($value)
+    public function checkEntityId(mixed $value)
     {
         V::notEmpty()->intVal()->check($value);
 
@@ -174,7 +174,7 @@ final class Document extends BaseModel implements Serializable
         };
     }
 
-    public function checkAuthorId($value)
+    public function checkAuthorId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -233,7 +233,7 @@ final class Document extends BaseModel implements Serializable
         'created_at' => 'immutable_datetime',
     ];
 
-    public function getNameAttribute($value): string
+    public function getNameAttribute(mixed $value): string
     {
         if ($this->file instanceof UploadedFileInterface) {
             return $this->file->getClientFilename();
@@ -241,7 +241,7 @@ final class Document extends BaseModel implements Serializable
         return $this->castAttribute('name', $value);
     }
 
-    public function getTypeAttribute($value): string
+    public function getTypeAttribute(mixed $value): string
     {
         if (!$this->isDirty('file')) {
             return $this->castAttribute('type', $value);
@@ -266,7 +266,7 @@ final class Document extends BaseModel implements Serializable
         return $getValue() ?? 'text/plain';
     }
 
-    public function getSizeAttribute($value): int
+    public function getSizeAttribute(mixed $value): int
     {
         if (!$this->isDirty('file')) {
             return $this->castAttribute('size', $value);

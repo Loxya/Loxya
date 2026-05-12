@@ -8,11 +8,12 @@ use Carbon\CarbonImmutable;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\ReturnPolicy;
 use Loxya\Models\Event;
+use Loxya\Support\Invoicing\TaxRegime;
 use Loxya\Support\Period;
 
 final class EventObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function created(Event $event): void
     {
@@ -45,7 +46,7 @@ final class EventObserver
         debug("[Event] Événement #%s modifié.", $event->id);
 
         $this->onUpdateSyncCache($event);
-        $this->onUpdateSyncEventMaterials($event);
+        $this->onUpdateSyncBilling($event);
         $this->onUpdateSyncDepartureInventories($event);
         $this->onUpdateSyncReturnInventories($event);
     }
@@ -94,13 +95,10 @@ final class EventObserver
             return;
         }
 
-        //
-        // - Supprime les factures et devis liés, ainsi que les entrées d'historique.
-        //   (Doit être géré manuellement car tables polymorphes)
-        //
-
-        $event->invoices->each->delete();
-        $event->estimates->each->delete();
+        // - Détache les factures et devis liés à l'événement supprimé.
+        //   (doit être géré manuellement car tables polymorphes)
+        $event->invoices()->update(['booking_id' => null]);
+        $event->estimates()->update(['booking_id' => null]);
     }
 
     // ------------------------------------------------------
@@ -185,7 +183,7 @@ final class EventObserver
         }
     }
 
-    private function onUpdateSyncEventMaterials(Event $event): void
+    private function onUpdateSyncBilling(Event $event): void
     {
         // - Si la facturabilité ou la période d'opération de l'événement n'ont pas changés, on ne va pas plus loin.
         $hasChangedIsBillable = $event->wasChanged(['is_billable']);
@@ -194,7 +192,11 @@ final class EventObserver
             return;
         }
 
-        dbTransaction(static function () use ($event, $hasChangedOperationPeriod, $hasChangedIsBillable) {
+        dbTransaction(static function () use (
+            $event,
+            $hasChangedOperationPeriod,
+            $hasChangedIsBillable,
+        ) {
             foreach ($event->materials as $eventMaterial) {
                 $material = $eventMaterial->material;
 
@@ -205,9 +207,20 @@ final class EventObserver
                     $eventMaterial->discount_rate = !$event->is_billable ? null : (
                         Decimal::zero()
                     );
-                    $eventMaterial->taxes = !$event->is_billable ? null : (
-                        $material->tax?->asFlatArray()
-                    );
+
+                    // - On regarde si on peut synchroniser les taxes, sinon on laisse à `null`.
+                    $eventMaterial->tax_regime = null;
+                    $eventMaterial->tax_exemption_code = null;
+                    $eventMaterial->tax_id = null;
+                    $eventMaterial->taxes = null;
+                    if ($event->is_billable && $event->global_tax_regime === null) {
+                        $eventMaterial->tax_regime = $eventMaterial->default_tax_regime;
+                        $eventMaterial->tax_exemption_code = $eventMaterial->default_tax_exemption_code;
+                        $eventMaterial->tax_id = $eventMaterial->default_tax_id;
+                        $eventMaterial->taxes = $eventMaterial->tax_regime === TaxRegime::STANDARD->value
+                            ? $eventMaterial->defaultTax?->asFlatArray() ?? []
+                            : null;
+                    }
                 }
 
                 if ($hasChangedIsBillable || $hasChangedOperationPeriod) {

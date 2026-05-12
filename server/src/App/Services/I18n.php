@@ -6,6 +6,7 @@ namespace Loxya\Services;
 use Loxya\Config\Config;
 use Loxya\Services\I18n\Loader;
 use Loxya\Services\I18n\LoaderInterface;
+use Loxya\Support\Arr;
 
 /**
  * I18n class.
@@ -43,11 +44,11 @@ final class I18n
      * région par défaut utilisée pour chacune d'elles.
      */
     public const AVAILABLE_LANGUAGES = [
-        'en' => 'GB',
-        'fr' => 'FR',
+        'fr' => 'fr-FR',
+        'en' => 'en-GB',
     ];
 
-    /**  Langue courante. */
+    /** Langue courante. */
     private string $language;
 
     /** Région de langue courante. */
@@ -78,21 +79,32 @@ final class I18n
     /**
      * Permet de récupérer une phrase traduite à partir d'une clé de traduction.
      *
-     * @param string $key - La clé de traduction.
-     * @param ?array $args - Les arguments supplémentaires à passer à la chaîne de traduite.
+     * @param string|array $key - La ou les clés de traduction à tester.
+     *                            Si plusieurs clés sont passés, la première qui
+     *                            retourne une valeur sera utilisée.
+     * @param mixed $args - Les arguments supplémentaires à passer à la chaîne de traduite.
+     * @param ?string $fallback - La valeur a retourner si la clé n'existe pas.
+     *                            Si non spécifiée, la clé d'origine sera retournée.
      *
-     * @return string - La phrase traduite si trouvée, la clé de traduction d'origine sinon.
+     * @return string - La phrase traduite si trouvée, sinon la valeur de `$fallback` si
+     *                  spécifiée, sinon la clé de traduction d'origine.
      */
-    public function translate(string $key, $args = null): string
+    public function translate(string|array $key, $args = null, ?string $fallback = null): string
     {
-        $string = $this->loader->has($key) ? $this->loader->get($key) : $key;
+        $keys = !is_array($key) ? [$key] : $key;
+        $existingKey = Arr::first($keys, fn ($key) => $this->loader->has($key));
+        if ($existingKey === null) {
+            return $fallback ?? current($keys);
+        }
+
+        $string = $this->loader->get($existingKey);
         if (isset($args)) {
             if (!is_array($args)) {
-                $args = func_get_args();
-                array_shift($args);
+                $args = [$args];
             }
-            $string = vsprintf($string, $args);
+            $string = static::interpolate($string, $args);
         }
+
         return $string;
     }
 
@@ -100,15 +112,26 @@ final class I18n
      * Permet de récupérer une phrase traduite dans un pluriel en particulier
      * grâce à `$count` à partir d'une clé de traduction.
      *
-     * @param string $key - La clé de traduction.
+     * @param string|array $key - La ou les clés de traduction à tester.
+     *                            Si plusieurs clés sont passés, la première qui
+     *                            retourne une valeur sera utilisée.
      * @param int $count - Le compte pour lequel on veut récupérer le pluriel.
-     * @param ?array $args - Les arguments supplémentaires à passer à la chaîne de traduite.
+     * @param mixed $args - Les arguments supplémentaires à passer à la chaîne de traduite.
+     * @param ?string $fallback - La valeur a retourner si la clé n'existe pas.
+     *                            Si non spécifiée, la clé d'origine sera retournée.
      *
-     * @return string - La phrase traduite si trouvée, la clé de traduction d'origine sinon.
+     * @return string - La phrase traduite si trouvée, sinon la valeur de `$fallback` si
+     *                  spécifiée, sinon la clé de traduction d'origine.
      */
-    public function plural(string $key, int $count, $args = null): string
+    public function plural(string|array $key, int $count, $args = null, ?string $fallback = null): string
     {
-        $string = $this->loader->has($key) ? $this->loader->get($key) : $key;
+        $keys = !is_array($key) ? [$key] : $key;
+        $existingKey = Arr::first($keys, fn ($key) => $this->loader->has($key));
+        if ($existingKey === null) {
+            return $fallback ?? current($keys);
+        }
+
+        $string = $this->loader->get($existingKey);
         $choices = is_array($string) ? $string : explode('|', $string);
 
         $args ??= [$count];
@@ -118,7 +141,7 @@ final class I18n
 
         $plural = static::pluralRule($this->language, $count);
         $string = $choices[$plural] ?? $choices[0];
-        return vsprintf($string, $args);
+        return static::interpolate($string, $args);
     }
 
     /**
@@ -171,6 +194,32 @@ final class I18n
         $userLanguage = Auth::isAuthenticated() ? Auth::user()->language : null;
         if ($userLanguage && static::isLanguageAvailable($userLanguage)) {
             return $userLanguage;
+        }
+
+        $isCli = isCli();
+        if ($isCli) {
+            // - Typiquement `fr_FR.UTF-8`.
+            foreach (['LC_ALL', 'LANG'] as $var) {
+                $rawValue = env($var);
+                if ($rawValue === null) {
+                    continue;
+                }
+
+                $rawValue = trim($rawValue);
+                if (empty($rawValue)) {
+                    continue;
+                }
+
+                // https://regex101.com/r/fvwhHQ/1
+                if (!preg_match('/^(?<locale>[a-z]{2,3})(?:[_.@-]|$)/i', $rawValue, $match)) {
+                    continue;
+                }
+
+                $locale = strtolower($match['locale']);
+                if (static::isLanguageAvailable($locale)) {
+                    return $locale;
+                }
+            }
         }
 
         // - Sinon, on recherche dans le header `Accept-Language`...
@@ -227,6 +276,25 @@ final class I18n
         $this->loader->setLanguage($languageParts['code']);
     }
 
+    private static function interpolate(string $string, array $args): string
+    {
+        if (empty($args)) {
+            return $string;
+        }
+
+        // - Placeholders numériques (rétro-compatibilité)
+        if (Arr::isList($args)) {
+            return vsprintf($string, $args);
+        }
+
+        // - Placeholders nommés.
+        $replacements = [];
+        foreach ($args as $key => $value) {
+            $replacements[sprintf('{%s}', $key)] = $value;
+        }
+        return strtr($string, $replacements);
+    }
+
     private static function isLanguageAvailable(string $language): bool
     {
         $code = static::getLanguageParts($language)['code'];
@@ -235,28 +303,32 @@ final class I18n
 
     private static function getLanguageParts(string $language): array
     {
-        $code = $language;
-        $region = null;
+        $getParts = static function ($locale) {
+            $code = $locale;
+            $region = null;
 
-        if (mb_strlen($language) > 2) {
-            if (str_contains($language, '-')) {
-                [$code, $region] = explode('-', $language, 2);
-            } elseif (str_contains($language, '_')) {
-                [$code, $region] = explode('_', $language, 2);
+            if (mb_strlen($locale) > 2) {
+                if (str_contains($locale, '-')) {
+                    [$code, $region] = explode('-', $locale, 2);
+                } elseif (str_contains($locale, '_')) {
+                    [$code, $region] = explode('_', $locale, 2);
+                }
             }
-        }
-        $code = strtolower($code);
+            $code = strtolower($code);
+            return compact('code', 'region');
+        };
+        $parts = $getParts($language);
 
         // - Si on a pas de région, on prend celle par défaut si définie.
-        if ($region === null && array_key_exists($code, static::AVAILABLE_LANGUAGES)) {
-            $region = static::AVAILABLE_LANGUAGES[$code];
+        if ($parts['region'] === null && array_key_exists($parts['code'], static::AVAILABLE_LANGUAGES)) {
+            $parts = $getParts(static::AVAILABLE_LANGUAGES[$parts['code']]);
         }
 
-        if ($region !== null) {
-            $region = strtoupper($region);
+        if ($parts['region'] !== null) {
+            $parts['region'] = strtoupper($parts['region']);
         }
 
-        return compact('code', 'region');
+        return $parts;
     }
 
     /**

@@ -1,33 +1,51 @@
 {% set company = beneficiary.company %}
-{%- if company is not empty ~%}
-<strong>{{ company.legal_name }}</strong><br />
-{% if company.registration_id is not empty %}
-{% set registrationNumberTranslationKey = (
-    company.country.code == 'FR'
-        ? 'company-registration-number.fr'
-        : 'company-registration-number.global'
+{% set hasLegalNumbers = (
+    company.registration_id is not empty or
+    company.vat_number is not empty
 ) %}
-{{ __(registrationNumberTranslationKey, company.registration_id) }}<br />
-{% endif %}
-{{ __('contact') }}&#32;
+<div class="spaceBottom2">
+    {%- if company is not empty ~%}
+    <strong>{{ company.legal_name }}</strong><br />
+    {{ __('contact-dots') }}&#32;
+    {%- endif -%}
+    {{ beneficiary.full_name }}<br />
+    {% if company.address is not empty ~%}
+        {{- company.address|nl2br }}<br />
+        {%~ if referenceCountry is not defined or not referenceCountry.isSame(company.country) %}
+            {{ company.country.getName(locale) }}<br />
+        {%~ endif %}
+    {% elseif beneficiary.address is not empty ~%}
+        {{- beneficiary.address|nl2br }}<br />
+        {%~ if referenceCountry is not defined or not referenceCountry.isSame(beneficiary.country) %}
+            {{ beneficiary.country.getName(locale) }}<br />
+        {%~ endif %}
+    {% endif -%}
+    {% if beneficiary.reference is not empty -%}
+        <small>({{ __('reference-value', beneficiary.reference) }})</small><br />
+    {% endif -%}
+</div>
+{%- if hasLegalNumbers ~%}
+<div class="spaceBottom2 size10">
+    {% if company.registration_id is not empty %}
+        {%- set registrationIdScheme = company.country.getCompanyIdentifierScheme(company.registration_id) -%}
+        {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+        {{ __(registrationIdTranslationKey, company.registration_id, __('business-registration-id.generic', company.registration_id)) }}<br />
+    {% endif %}
+    {% if company.vat_number is not empty %}
+        {%- set vatNumberTranslationKey = 'vat-number.' ~ (company.country.code ?? 'generic') -%}
+        {{- __(vatNumberTranslationKey, company.vat_number, __('vat-number.generic', company.vat_number)) }}<br />
+    {%~ endif %}
+</div>
 {%- endif -%}
-{{ beneficiary.full_name }}<br />
-{% if company.full_address is not empty ~%}
-    {{- company.full_address|nl2br }}<br />
-{% elseif beneficiary.full_address is not empty ~%}
-    {{- beneficiary.full_address|nl2br }}<br />
-{% endif -%}
-
-{% if beneficiary.reference is not empty -%}
-    <small>({{ __('beneficiary-reference', beneficiary.reference) }})</small><br />
-{% endif -%}
-
-{% if company.phone is not empty -%}
-    <small>{{ __('phone', company.phone) }}</small><br />
-{% elseif beneficiary.phone is not empty -%}
-    <small>{{ __('phone', beneficiary.phone) }}</small><br />
-{% endif -%}
-
-{% if beneficiary.email is not empty -%}
-    <small>{{ __('email', beneficiary.email) }}</small><br />
+{%- if company.phone is not empty or beneficiary.phone is not empty or beneficiary.email is not empty ~%}
+<div class="size8">
+    {% if company.phone is not empty -%}
+        {{ __('phone', company.phone|format_phone(company.country)) }}<br />
+    {% elseif beneficiary.phone is not empty -%}
+        {{ __('phone', beneficiary.phone|format_phone(beneficiary.country)) }}<br />
+    {% endif -%}
+    {% if beneficiary.email is not empty -%}
+        {{ __('email', beneficiary.email) }}<br />
+    {%- endif -%}
+</div>
 {%- endif -%}

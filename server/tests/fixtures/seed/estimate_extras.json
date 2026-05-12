@@ -2,16 +2,86 @@
     {
         "id": 1,
         "estimate_id": 1,
+        "is_service": true,
         "description": "Nettoyage post-événement",
         "unit_price": "135.50",
         "quantity": 5,
-        "total_without_taxes": "677.50",
+        "total_without_discount": "677.50",
+        "discount_rate": "10.0000",
+        "total_discount": "67.75",
+        "total_without_taxes": "609.75",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
         "taxes": [
-            {
-                "name": "T.V.A.",
-                "is_rate": true,
-                "value": "20.000"
-            }
+            { "value": "20.000" }
+        ]
+    },
+    {
+        "id": 2,
+        "estimate_id": 3,
+        "is_service": true,
+        "description": "Ajustement commercial",
+        "unit_price": "-50.00",
+        "quantity": 1,
+        "total_without_discount": "-50.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "-50.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ]
+    },
+    {
+        "id": 3,
+        "estimate_id": 4,
+        "is_service": true,
+        "description": "Repérage technique offert",
+        "unit_price": "0.00",
+        "quantity": 1,
+        "total_without_discount": "0.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "0.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ]
+    },
+    {
+        "id": 4,
+        "estimate_id": 5,
+        "is_service": true,
+        "description": "Prestation principale",
+        "unit_price": "1000.00",
+        "quantity": 1,
+        "total_without_discount": "1000.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "1000.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ]
+    },
+    {
+        "id": 5,
+        "estimate_id": 5,
+        "is_service": true,
+        "description": "Remise commerciale",
+        "unit_price": "-998.56",
+        "quantity": 1,
+        "total_without_discount": "-998.56",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "-998.56",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "10.000" }
         ]
     }
 ]

@@ -100,7 +100,7 @@ final class MaterialsCollectionTest extends TestCase
         $result = $collection->byParks();
 
         $expected = [
-            'default' => [
+            "Défaut" => [
                 'Console Yamaha CL3',
                 'Processeur DBX PA2',
                 'PAR64 LED',
@@ -109,7 +109,7 @@ final class MaterialsCollectionTest extends TestCase
                 'Behringer X Air XR18',
                 'Décor Thème Forêt',
             ],
-            'spare' => [
+            "Spare" => [
                 'Volkswagen Transporter',
             ],
         ];
@@ -129,7 +129,7 @@ final class MaterialsCollectionTest extends TestCase
         $result = $collection->byParks();
 
         $expected = [
-            'default' => [
+            "Défaut" => [
                 'Console Yamaha CL3',
                 'DBX PA2',
                 'Showtec SDS-6',

@@ -1,20 +1,29 @@
 @use '~@/themes/default/style/globals';
 
 .ParkEditForm {
-    $block: &;
+    &__address {
+        margin-bottom: globals.$spacing-medium;
 
-    &__locality {
-        display: flex;
-        margin: globals.$spacing-medium 0;
+        &__group {
+            display: flex;
+            gap: 10px;
 
-        #{$block}__postal-code {
-            flex: unset;
-            width: 120px;
+            & + & {
+                margin-top: globals.$spacing-medium;
+            }
         }
 
-        #{$block}__city {
+        &__part {
             flex: 1;
-            margin: 0 0 0 10px;
+            margin: 0 !important;
+
+            &--administrative-area {
+                max-width: 250px;
+            }
+
+            &--postal-code {
+                max-width: 140px;
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ import { ApiErrorCode } from '@/stores/api/@codes';
 import { RequestError } from '@/globals/requester';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 
 import type Period from '@/utils/period';
 import type DateTime from '@/utils/datetime';
@@ -28,6 +29,14 @@ type Props = {
 
     /** L'assignation à éditer. */
     assignment: EventTechnician,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param updatedAssignment - `EventTechnician` si modifiée, `null` si supprimée,
+     *                            `undefined` si l'utilisateur a fermé sans aller au bout.
+     */
+    onClose?(updatedAssignment?: EventTechnician | null): void,
 };
 
 type EditData = Omit<EventAssignmentEdit, 'technician_id'>;
@@ -49,10 +58,10 @@ const EventEditStepTechniciansAssignmentEdition = defineComponent({
     name: 'EventEditStepTechniciansAssignmentEdition',
     modal: {
         width: 600,
-        clickToClose: false,
+        dismissible: false,
     },
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         event: {
@@ -62,6 +71,11 @@ const EventEditStepTechniciansAssignmentEdition = defineComponent({
         assignment: {
             type: Object as PropType<Props['assignment']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
         },
     },
     emits: ['close'],

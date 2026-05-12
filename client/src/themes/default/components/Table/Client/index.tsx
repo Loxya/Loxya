@@ -1,29 +1,35 @@
 import '../index.scss';
-import clsx from 'clsx';
+import get from 'lodash/get';
 import warning from 'warning';
-import showModal from '@/utils/showModal';
+import clone from 'lodash/cloneDeep';
 import { defineComponent } from 'vue';
+import config from '@/globals/config';
 import generateUniqueId from 'lodash/uniqueId';
-import { initColumnsDisplay } from '../@utils';
+import Table from '../@components/Table';
 import { Variant } from '../@constants';
+import { storeState, getStoredState } from '../@utils';
 
 // - Modales
 import ColumnsSelector from '@/themes/default/modals/ColumnsSelector';
 
-import type { ClassValue } from 'clsx';
-import type { CreateElement, PropType } from 'vue';
-import type { Column, Columns } from './_types';
-import type { ColumnsDisplay } from '../@utils';
-import type { OrderBy, RenderFunction } from '../@types';
+import type { ComponentRef, CreateElement, PropType } from 'vue';
+import type { Column, Columns, ColumnSorter } from './_types';
 import type {
-    ColumnSorter,
-    ClientTableOptions,
-    ClientTableInstance,
-    RowClickEventPayload,
-    RowDragEventPayload,
-} from 'vue-tables-2-premium';
+    Datum,
+    Identifier,
+    OrderBy,
+    RawColumn,
+    RawColumns,
+    RawOrderBy,
+    EmptyMessage,
+    RenderFunction,
+} from '../@types';
 
-export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>> = {
+export type Props<
+    K extends string = 'id',
+    D extends Datum<K> = Datum<K>,
+    Cs extends Columns<D, K> = Columns<D, K>,
+> = {
     /**
      * Nom unique du tableau.
      *
@@ -40,12 +46,12 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      * représentant une colonne avec les informations permettant
      * d'afficher son header, de formater son contenu, etc.
      *
-     * Voir {@see {@link Column}} pour le format des données des colonnes.
+     * Voir {@see {@link Columns}} pour le format des données des colonnes.
      */
-    columns: TColumns,
+    columns: Cs,
 
     /** Les données du tableau. */
-    data: Datum[],
+    data: D[],
 
     /**
      * Le nom de la clé contenant l'identifiant unique de chaque
@@ -53,16 +59,27 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      *
      * @default 'id'
      */
-    uniqueKey?: string,
+    uniqueKey?: K,
 
     /**
      * Variante de la présentation du tableau.
      *
-     * Valeur acceptées:
-     * - `default`: Variante par défaut.
-     * - `minimalist`: Présentation minimaliste, sans fond ni séparateurs.
+     * Voir {@link Variant}
      */
-    variant?: Variant,
+    variant?: Variant | `${Variant}`,
+
+    /**
+     * Une fonction permettant de rendre la ligne de détails pour une ligne du tableau.
+     *
+     * Si cette prop. est spécifiée, le tableau sera réputé contenir des lignes de détails.
+     */
+    details?: RenderFunction<D, K>,
+
+    /**
+     * Les identifiants des lignes pour lesquelles le détails doit être ouvert
+     * lorsque le tableau propose une ligne de détails pour certaines lignes du tableau.
+     */
+    openDetails?: Identifier[],
 
     /**
      * Permet d'activer ou de désactiver la pagination.
@@ -72,11 +89,11 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
     paginated?: boolean,
 
     /**
-     * Permet d'activer ou de désactiver le redimensionnement du tableau.
+     * Le header du tableau doit-il rester visible lors du scroll ?
      *
-     * @default true
+     * @default false
      */
-    resizable?: boolean,
+    sticky?: boolean,
 
     /**
      * Permet d'activer ou de désactiver le réordonnancement des lignes du tableau.
@@ -84,6 +101,13 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      * @default false
      */
     orderable?: boolean,
+
+    /**
+     * Le tableau doit-il être sans ligne d'en tête ?
+     *
+     * @default false
+     */
+    headless?: boolean,
 
     /**
      * L'ordre dans lequel le tableau doit être triée initialement.
@@ -95,38 +119,67 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      *
      * Si cette prop. n'est pas passée, le tableau conservera son tri initial.
      */
-    defaultOrderBy?: OrderBy<TColumns> | OrderBy<TColumns>['column'],
+    defaultOrderBy?: OrderBy<D, Cs, K> | OrderBy<D, Cs, K>['column'],
 
     /**
      * Classe(s) qui seront ajoutées aux lignes du tableau.
      *
      * Différents formats sont acceptés:
      * - Les formats acceptés par défaut par Vue pour les classes.
-     *   ({@see {@link ClassValue}})
      * - Une fonction a qui le jeu de données de chaque ligne sera passé
      *   et qui devra renvoyer des classes dans les formats acceptés par
      *   Vue (cf. ci-dessus).
      */
-    rowClass?: ClassValue | ((row: Datum) => ClassValue),
+    rowClass?: JSX.NodeClass | ((row: D) => JSX.NodeClass),
+
+    /**
+     * Permet de customiser le contenu affiché lorsque le tableau est vide.
+     *
+     * Accepte soit une chaîne (= texte du message), soit un objet
+     * {@link EmptyMessage} pour customiser la variante / l'action.
+     */
+    emptyMessage?: string | EmptyMessage,
+
+    /**
+     * La page de départ, lorsque le tableau est affiché.
+     *
+     * @default 1
+     */
+    initialPage?: number,
+
+    /**
+     * Le nombre maximum d'enregistrements par page, pour
+     * surcharger la valeur par défaut de la configuration.
+     *
+     * @default {config.defaultPaginationLimit}
+     */
+    perPage?: number,
 
     /**
      * Fonction appelée lorsque l'utilisateur a cliqué sur une ligne.
      *
-     * @param row - Données de la ligne cliquée.
+     * @param datum - Données de la ligne cliquée.
      */
-    onRowClick?(row: Datum): void,
+    onRowClick?(datum: D): void,
 
     /**
      * Fonction appelée lorsque l'utilisateur a réordonné une ligne.
      *
-     * @param row - Données de la ligne déplacée.
+     * @param datum - Données de la ligne déplacée.
      * @param newIndex - Nouvel index de la ligne.
      */
-    onRowDrag?(row: Datum, newIndex: number): void,
+    onRowDrag?(datum: D, newIndex: number): void,
 };
 
 type InstanceProperties = {
     uniqueId: string | undefined,
+};
+
+type Data = {
+    page: number,
+    limit: number,
+    orderBy: RawOrderBy | null,
+    columnsDisplay: Record<string, boolean>,
 };
 
 /**
@@ -162,16 +215,28 @@ const ClientTable = defineComponent({
                 Object.values(Variant).includes(value as any)
             ),
         },
+        details: {
+            type: Function as PropType<Props['details']>,
+            default: undefined,
+        },
+        openDetails: {
+            type: Array as PropType<Required<Props>['openDetails']>,
+            default: () => [],
+        },
         paginated: {
             type: Boolean as PropType<Required<Props>['paginated']>,
             default: true,
         },
-        resizable: {
-            type: Boolean as PropType<Required<Props>['resizable']>,
-            default: true,
+        sticky: {
+            type: Boolean as PropType<Required<Props>['sticky']>,
+            default: false,
         },
         orderable: {
             type: Boolean as PropType<Required<Props>['orderable']>,
+            default: false,
+        },
+        headless: {
+            type: Boolean as PropType<Required<Props>['headless']>,
             default: false,
         },
         defaultOrderBy: {
@@ -189,6 +254,20 @@ const ClientTable = defineComponent({
             ] as PropType<Props['rowClass']>,
             default: undefined,
         },
+        emptyMessage: {
+            type: [String, Object] as PropType<Props['emptyMessage']>,
+            default: undefined,
+        },
+        initialPage: {
+            type: Number as PropType<Required<Props>['initialPage']>,
+            default: 1,
+            validator: (value: number) => value > 0,
+        },
+        perPage: {
+            type: Number as PropType<Required<Props>['perPage']>,
+            default: () => config.defaultPaginationLimit,
+            validator: (value: number) => value > 0,
+        },
         // eslint-disable-next-line vue/no-unused-properties
         onRowClick: {
             type: Function as PropType<Props['onRowClick']>,
@@ -204,152 +283,186 @@ const ClientTable = defineComponent({
     setup: (): InstanceProperties => ({
         uniqueId: undefined,
     }),
+    data(): Data {
+        const storedState = this.name !== undefined
+            ? getStoredState(this.name)
+            : null;
+
+        const limit = this.paginated ? Math.max(1, this.perPage) : Infinity;
+        const totalPages = this.paginated ? Math.ceil(this.data.length / limit) : 1;
+        const page = this.paginated ? Math.max(1, Math.min(this.initialPage, totalPages)) : 1;
+
+        return {
+            page,
+            limit,
+            columnsDisplay: storedState?.columns ?? {},
+            orderBy: storedState?.orderBy ?? (() => {
+                if (this.defaultOrderBy !== undefined) {
+                    const columnKey = typeof this.defaultOrderBy !== 'string'
+                        ? this.defaultOrderBy.column
+                        : this.defaultOrderBy;
+
+                    const ascending = typeof this.defaultOrderBy !== 'string'
+                        ? (this.defaultOrderBy.ascending ?? null)
+                        : null;
+
+                    const column = this.columns.find(
+                        (_column: Column) => _column.key === columnKey,
+                    );
+
+                    return {
+                        column: columnKey,
+                        ascending: ascending ?? !column?.defaultSortDesc,
+                    };
+                }
+                return null;
+            })(),
+        };
+    },
     computed: {
-        columnsKeys(): Array<Column['key']> {
-            return this.columns.map(({ key }: Column) => key);
+        displayedColumns(): string[] {
+            return this.columns
+                .filter((column: Column) => {
+                    const defaultVisible = !(column.defaultHidden ?? false);
+                    return this.columnsDisplay[column.key] ?? defaultVisible;
+                })
+                .map((column: Column) => column.key);
         },
 
-        columnsRenders(): Record<Column['key'], RenderFunction> {
+        normalizedColumns(): RawColumns {
+            const { displayedColumns } = this;
+
             return this.columns.reduce(
-                (acc: Record<Column['key'], RenderFunction>, column: Column) => {
-                    const rawRenderColumn = column.render;
-                    if (undefined === rawRenderColumn) {
+                (acc: RawColumns, column: Column) => {
+                    if (!displayedColumns.includes(column.key)) {
                         return acc;
                     }
 
-                    return {
-                        ...acc,
-                        [column.key]: (h: CreateElement, row: any, index: number): JSX.Node => {
-                            const renderedColumn = rawRenderColumn(h, row, index);
+                    const rawRender = column.render;
+                    const render = rawRender === undefined ? undefined : (
+                        (h: CreateElement, row: any, index: number): JSX.Node => {
+                            const renderedColumn = rawRender(h, row, index);
 
                             return column.key === 'actions'
                                 ? <div class="Table__cell__actions">{renderedColumn}</div>
                                 : renderedColumn;
-                        },
-                    };
+                        }
+                    );
+
+                    return acc.concat({
+                        key: column.key,
+                        title: column.title,
+                        sortable: !!column.sortable,
+                        class: column.class,
+                        render,
+                    });
                 },
-                {},
+                [],
             );
         },
 
-        columnsHeadings(): Record<Column['key'], string> {
-            return this.columns.reduce(
-                (acc: Record<Column['key'], string>, { key, title }: Column) => (
-                    { ...acc, [key]: title ?? '' }
-                ),
-                {},
-            );
-        },
-
-        columnsClasses(): Record<Column['key'], string> {
-            return this.columns.reduce(
-                (acc: Record<Column['key'], string>, column: Column) => {
-                    const columnClass = ['Table__cell', {
-                        'Table__cell--actions': column.key === 'actions',
-                    }];
-                    return { ...acc, [column.key]: `${clsx(columnClass, column.class)} ` };
-                },
-                {},
-            );
-        },
-
-        columnsSortable(): Array<Column['key']> {
-            return this.columns
-                .filter(({ sortable }: Column) => !!sortable)
-                .map(({ key }: Column) => key);
-        },
-
-        columnsSorting(): Record<string, ColumnSorter> {
+        columnsSorting(): Map<Column['key'], ColumnSorter> {
             return this.columns
                 .filter(({ sortable }: Column) => !!sortable)
                 .reduce(
-                    (acc: Record<Column['key'], ColumnSorter>, column: Column) => {
+                    (acc: Map<Column['key'], ColumnSorter>, column: Column) => {
                         const columnSorter = typeof column.sortable === 'function'
                             ? column.sortable
                             : undefined;
 
-                        return columnSorter !== undefined
-                            ? { ...acc, [column.key]: columnSorter }
-                            : acc;
+                        if (columnSorter !== undefined) {
+                            acc.set(column.key, columnSorter);
+                        }
+                        return acc;
                     },
-                    {},
+                    new Map<Column['key'], ColumnSorter>(),
                 );
         },
 
-        columnsDisplayed(): string[] {
-            const columnsDisplay = this.columns.reduce(
-                (acc: ColumnsDisplay, column: Column) => {
-                    const visible = !(column.defaultHidden ?? false);
-                    return { ...acc, [column.key]: visible };
-                },
-                {},
-            );
-            return initColumnsDisplay(this.name, columnsDisplay);
+        count(): number {
+            return this.data.length;
+        },
+
+        sortedData(): any[] {
+            let data = clone(this.data);
+
+            if (this.orderBy !== null) {
+                const { column, ascending } = this.orderBy;
+
+                const sorter = this.columnsSorting.get(column)?.(ascending) ?? (
+                    (a: unknown, b: unknown) => {
+                        let aVal = get(a, column, '');
+                        let bVal = get(b, column, '');
+
+                        const dir = ascending ? 1 : -1;
+                        if (typeof aVal === 'string') {
+                            aVal = aVal.toLowerCase();
+                        }
+                        if (typeof bVal === 'string') {
+                            bVal = bVal.toLowerCase();
+                        }
+                        return aVal > bVal ? dir : -dir;
+                    }
+                );
+                data = data.toSorted(sorter);
+            }
+
+            const offset = (this.page - 1) * this.limit;
+            return data.splice(offset, this.limit);
+        },
+
+        hasRowClickListener(): boolean {
+            return Boolean(this.$listeners.rowClick);
         },
 
         shouldPersistState(): boolean {
             return this.name !== undefined;
         },
 
-        options(): ClientTableOptions {
-            const {
-                uniqueKey,
-                rowClass,
-                paginated,
-                resizable,
-                orderable,
-                defaultOrderBy,
-                columnsHeadings,
-                columnsClasses,
-                columnsDisplayed,
-                columnsSortable,
-                columnsSorting,
-                columnsRenders,
-                shouldPersistState,
-            } = this;
-
-            const options: ClientTableOptions = {
-                uniqueKey,
-                orderable,
-                preserveState: shouldPersistState,
-                saveState: shouldPersistState,
-                sortable: columnsSortable,
-                headings: columnsHeadings,
-                templates: columnsRenders,
-                saveSearch: false,
-                columnsDropdown: false,
-                filterByColumn: false,
-                filterable: false,
-                customSorting: columnsSorting,
-                resizableColumns: resizable,
-                pagination: { show: paginated },
-                visibleColumns: columnsDisplayed,
-                columnsClasses,
-                rowClassCallback: (row: any): ClassValue => (
-                    clsx('Table__row', typeof rowClass === 'function' ? rowClass(row) : rowClass)
-                ),
-            };
-
-            if (!paginated) {
-                options.perPage = Infinity;
+        totalPages(): number {
+            if (!this.paginated) {
+                return 1;
             }
-
-            if (defaultOrderBy !== undefined) {
-                options.orderBy = typeof defaultOrderBy === 'string'
-                    ? { column: defaultOrderBy, ascending: true }
-                    : {
-                        column: defaultOrderBy.column,
-                        ascending: defaultOrderBy.ascending ?? true,
-                    };
+            return Math.ceil(this.count / this.limit);
+        },
+    },
+    watch: {
+        orderBy: {
+            deep: true,
+            immediate: true,
+            handler() {
+                if (this.shouldPersistState) {
+                    storeState(this.name!, {
+                        orderBy: this.orderBy,
+                        columns: this.columnsDisplay,
+                    });
+                }
+            },
+        },
+        columnsDisplay: {
+            deep: true,
+            immediate: true,
+            handler() {
+                if (this.shouldPersistState) {
+                    storeState(this.name!, {
+                        orderBy: this.orderBy,
+                        columns: this.columnsDisplay,
+                    });
+                }
+            },
+        },
+        data() {
+            if (this.page > this.totalPages) {
+                this.page = Math.max(1, this.totalPages);
             }
-
-            return options;
+        },
+        paginated(newPaginated: boolean) {
+            this.limit = newPaginated ? Math.max(1, this.perPage) : Infinity;
+            this.page = newPaginated ? Math.max(1, Math.min(this.initialPage, this.totalPages)) : 1;
         },
     },
     created() {
         const { $options } = this;
-
-        this.uniqueId = generateUniqueId(`${$options.name!}-`);
 
         warning(
             !this.orderable || !this.paginated,
@@ -357,6 +470,11 @@ const ClientTable = defineComponent({
             time will cause issues, as the user won't be able to reorder lines
             beyond the current paginated page.`,
         );
+
+        this.uniqueId = generateUniqueId(`${$options.name!}-`);
+
+        // - Binding
+        this.handleChangeVisibleColumns = this.handleChangeVisibleColumns.bind(this);
     },
     methods: {
         // ------------------------------------------------------
@@ -365,33 +483,52 @@ const ClientTable = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleRowClick({ row, event: e }: RowClickEventPayload) {
-            if (e.type === 'dblclick') {
-                return;
-            }
-
-            let currentElement: HTMLElement | null = e.target as HTMLElement;
-            while (currentElement && currentElement !== document.body) {
-                const { nodeName } = currentElement;
-                if (['A', 'BUTTON'].includes(nodeName)) {
-                    return;
-                }
-                currentElement = currentElement.parentElement;
-            }
-
-            this.$emit('rowClick', row);
+        handleRowClick(datum: Datum): void {
+            this.$emit('rowClick', datum);
         },
 
-        handleRowDrag({ row, newIndex }: RowDragEventPayload) {
+        handleRowDrag(datum: Datum, newIndex: number): void {
             if (!this.orderable) {
                 return;
             }
-            this.$emit('rowDrag', row, newIndex);
+            this.$emit('rowDrag', datum, newIndex);
         },
 
-        handleChangeVisibleColumns(newVisibleColumns: string[]) {
-            const $table = this.$refs.table as ClientTableInstance | undefined;
-            $table?.setVisibleColumns(newVisibleColumns);
+        handleOrderBy(columnKey: RawColumn['key']) {
+            const column = this.columns.find(
+                (_column: Column) => _column.key === columnKey,
+            );
+            if (column === undefined || !column.sortable) {
+                return;
+            }
+
+            this.page = 1;
+
+            const defaultAscending = !column?.defaultSortDesc;
+            if (this.orderBy === null) {
+                this.orderBy = {
+                    column: column.key,
+                    ascending: defaultAscending,
+                };
+                return;
+            }
+
+            this.orderBy.ascending = column.key === this.orderBy.column
+                ? !this.orderBy.ascending
+                : defaultAscending;
+
+            this.orderBy.column = column.key;
+        },
+
+        handleChangeVisibleColumns(newVisibleColumns: string[]): void {
+            this.columns.forEach((column: Column) => {
+                const visible = newVisibleColumns.includes(column.key);
+                this.$set(this.columnsDisplay, column.key, visible);
+            });
+        },
+
+        handlePaginate(newPage: number) {
+            this.setPage(newPage);
         },
 
         // ------------------------------------------------------
@@ -406,19 +543,54 @@ const ClientTable = defineComponent({
          * @param number - Le numéro de la page à afficher.
          */
         setPage(number: number): void {
-            const $table = this.$refs.table as ClientTableInstance | undefined;
-            $table?.setPage(number);
+            if (!this.paginated && number !== 1) {
+                throw new Error('Cannot set page of an unpaginated table.');
+            }
+
+            let page = Math.max(1, number);
+            if (this.totalPages > 0 && page > this.totalPages) {
+                page = this.totalPages;
+            }
+
+            this.page = page;
+        },
+
+        /**
+         * Permet de changer l'ordre des résultats du tableau.
+         *
+         * @param column - La colonne via laquelle il faut ordonner les résultats.
+         * @param ascending - Faut-il ordonner dans l'ordre ascendant ou descendant ?
+         */
+        setOrder(column: string, ascending: boolean) {
+            this.orderBy = { column, ascending };
+        },
+
+        /**
+         * Permet de changer le nombre de résultats par page du tableau
+         * (dans le cas ou celui-ci est paginé).
+         *
+         * @param number - La nouvelle limite de résultats.
+         */
+        setLimit(number: number) {
+            if (!this.paginated && number !== Infinity) {
+                throw new Error('Cannot set limit of an unpaginated table.');
+            }
+
+            this.limit = Math.max(1, number);
+            this.page = 1;
         },
 
         /**
          * Permet d'afficher le sélecteur de colonnes du tableau.
          */
         async showColumnsSelector(): Promise<void> {
+            const { columns, displayedColumns, handleChangeVisibleColumns } = this;
+
             const newVisibleColumns: string[] | undefined = (
-                await showModal(this.$modal, ColumnsSelector, {
-                    columns: this.columns,
-                    defaultSelected: this.columnsDisplayed,
-                    onChange: this.handleChangeVisibleColumns,
+                await this.$modal.show(ColumnsSelector, {
+                    columns,
+                    defaultSelected: displayedColumns,
+                    onChange: handleChangeVisibleColumns,
                 })
             );
 
@@ -427,37 +599,77 @@ const ClientTable = defineComponent({
                 return;
             }
 
-            this.handleChangeVisibleColumns(newVisibleColumns);
+            handleChangeVisibleColumns(newVisibleColumns);
         },
     },
     render() {
         const {
             name,
-            data,
+            page,
+            limit,
+            count,
+            sortedData,
             uniqueId,
             variant,
-            columnsKeys,
-            options,
+            sticky,
+            headless,
+            orderBy,
+            details,
+            openDetails,
+            uniqueKey,
+            rowClass,
+            emptyMessage,
+            orderable,
+            paginated,
+            normalizedColumns: columns,
+            hasRowClickListener,
             handleRowDrag,
             handleRowClick,
+            handleOrderBy,
+            handlePaginate,
         } = this;
 
         return (
-            <v-client-table
-                ref="table"
-                class={['Table', `Table--${variant}`]}
-                key={name ?? uniqueId}
-                name={name ?? uniqueId}
-                columns={columnsKeys}
-                options={options}
-                data={data}
+            <Table
+                key={name ?? uniqueId!}
+                page={page}
+                limit={limit}
+                count={count}
+                uniqueKey={uniqueKey}
+                variant={variant}
+                sticky={sticky}
+                headless={headless}
+                orderBy={orderBy}
+                clickable={hasRowClickListener}
+                orderable={orderable}
+                paginated={paginated}
+                columns={columns}
+                data={sortedData}
+                details={details}
+                openDetails={openDetails}
+                rowClass={rowClass}
+                emptyMessage={emptyMessage}
+                onOrderBy={handleOrderBy}
                 onRowClick={handleRowClick}
                 onRowDrag={handleRowDrag}
+                onPaginate={handlePaginate}
             />
         );
     },
 });
 
+//
+// - Exports
+//
+
 export { Variant };
 export type { Columns, Column };
-export default ClientTable;
+
+type ClientTableGeneric = <
+    D extends Datum<K>,
+    Cs extends Columns<D, K>,
+    K extends string = 'id',
+>(props: Props<K, D, Cs>) => JSX.Element;
+
+export type ClientTableRef = ComponentRef<typeof ClientTable>;
+export default ClientTable as any as ClientTableGeneric;

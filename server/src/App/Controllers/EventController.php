@@ -10,10 +10,8 @@ use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
 use Loxya\Config\Enums\Feature;
-use Loxya\Controllers\Traits\Crud;
 use Loxya\Errors\Exception\HttpConflictException;
 use Loxya\Errors\Exception\HttpUnprocessableEntityException;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Http\Request;
 use Loxya\Models\Document;
 use Loxya\Models\Enums\Group;
@@ -28,6 +26,7 @@ use Loxya\Services\I18n;
 use Loxya\Services\Logger;
 use Loxya\Services\Mailer;
 use Loxya\Support\Arr;
+use Loxya\Support\Validation\ValidationsException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpBadRequestException;
@@ -37,8 +36,6 @@ use Slim\Http\Response;
 
 final class EventController extends BaseController
 {
-    use Crud\SoftDelete;
-
     private I18n $i18n;
     protected Mailer $mailer;
     protected Logger $logger;
@@ -112,6 +109,7 @@ final class EventController extends BaseController
     public function getDocuments(Request $request, Response $response): ResponseInterface
     {
         $id = $request->getIntegerAttribute('id');
+
         $event = Event::findOrFail($id);
 
         return $response->withJson($event->documents, StatusCode::STATUS_OK);
@@ -130,16 +128,16 @@ final class EventController extends BaseController
 
     public function create(Request $request, Response $response): ResponseInterface
     {
-        $postData = Event::unserialize((array) $request->getParsedBody());
+        $postData = (array) $request->getParsedBody();
         if (empty($postData)) {
             throw new HttpBadRequestException($request, "No data was provided.");
         }
 
         try {
             $event = Event::new(array_replace($postData, ['author_id' => Auth::user()->id]));
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Event::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         return $response->withJson(static::_formatOne($event), StatusCode::STATUS_CREATED);
@@ -158,16 +156,16 @@ final class EventController extends BaseController
             throw new HttpUnprocessableEntityException($request, "This event is no longer editable.");
         }
 
-        $postData = EventTechnician::unserialize((array) $request->getParsedBody());
+        $postData = (array) $request->getParsedBody();
         if (empty($postData)) {
             throw new HttpBadRequestException($request, "No data was provided.");
         }
 
         try {
             $newAssignment = EventTechnician::new(array_replace($postData, ['event_id' => $id]));
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = EventTechnician::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         return $response->withJson($newAssignment, StatusCode::STATUS_CREATED);
@@ -191,16 +189,16 @@ final class EventController extends BaseController
         $assignment = $event->technicians()
             ->findOrFail($assignmentId);
 
-        $postData = EventTechnician::unserialize((array) $request->getParsedBody());
+        $postData = (array) $request->getParsedBody();
         if (empty($postData)) {
             throw new HttpBadRequestException($request, "No data was provided.");
         }
 
         try {
             $assignment->edit(Arr::except($postData, ['event_id']));
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = EventTechnician::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         return $response->withJson($assignment, StatusCode::STATUS_OK);
@@ -254,9 +252,9 @@ final class EventController extends BaseController
 
         try {
             $newPosition = EventPosition::new(array_replace($postData, ['event_id' => $id]));
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = EventPosition::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         return $response->withJson($newPosition, StatusCode::STATUS_CREATED);
@@ -300,16 +298,16 @@ final class EventController extends BaseController
             throw new HttpUnprocessableEntityException($request, "This event is no longer editable.");
         }
 
-        $postData = Event::unserialize((array) $request->getParsedBody());
+        $postData = (array) $request->getParsedBody();
         if (empty($postData)) {
             throw new HttpBadRequestException($request, "No data was provided.");
         }
 
         try {
             $event->edit($postData);
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Event::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         return $response->withJson(static::_formatOne($event), StatusCode::STATUS_OK);
@@ -336,7 +334,7 @@ final class EventController extends BaseController
         $originalEvent = Event::findOrFail($id);
 
         $postData = (array) $request->getParsedBody();
-        $eventData = Event::unserialize(Arr::except($postData, ['keepBillingData']));
+        $eventData = Arr::except($postData, ['keepBillingData']);
         $keepBillingData = is_bool($postData['keepBillingData'] ?? null)
             ? $postData['keepBillingData']
             : false;
@@ -347,9 +345,9 @@ final class EventController extends BaseController
 
         try {
             $newEvent = $originalEvent->duplicate($eventData, $keepBillingData, Auth::user());
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Event::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         $data = $newEvent->serialize(Event::SERIALIZE_DETAILS);
@@ -679,8 +677,27 @@ final class EventController extends BaseController
         $id = $request->getIntegerAttribute('id');
         $event = Event::findOrFail($id);
 
-        $estimate = Estimate::createFromBooking($event, Auth::user());
-        return $response->withJson($estimate, StatusCode::STATUS_CREATED);
+        $mainBeneficiary = $event->mainBeneficiary;
+        if ($mainBeneficiary === null || !$mainBeneficiary->is_invoiceable) {
+            throw new HttpUnprocessableEntityException($request, 'The beneficiary is missing / incomplete.');
+        }
+        if ($event->materials->isEmpty()) {
+            throw new HttpUnprocessableEntityException($request, 'The event is empty.');
+        }
+
+        $additionalData = Arr::only(
+            (array) $request->getParsedBody(),
+            ['lang', 'due_date', 'special_mentions'],
+        );
+
+        $estimate = Estimate::createFromBooking(
+            $event,
+            Auth::user(),
+            $additionalData,
+        );
+
+        $data = $estimate->serialize(Estimate::SERIALIZE_DETAILS);
+        return $response->withJson($data, StatusCode::STATUS_CREATED);
     }
 
     public function createInvoice(Request $request, Response $response): ResponseInterface
@@ -688,8 +705,32 @@ final class EventController extends BaseController
         $id = $request->getIntegerAttribute('id');
         $event = Event::findOrFail($id);
 
-        $invoice = Invoice::createFromBooking($event, Auth::user());
-        return $response->withJson($invoice, StatusCode::STATUS_CREATED);
+        $mainBeneficiary = $event->mainBeneficiary;
+        if ($mainBeneficiary === null || !$mainBeneficiary->is_invoiceable) {
+            throw new HttpUnprocessableEntityException($request, 'The beneficiary is missing / incomplete.');
+        }
+        if ($event->materials->isEmpty()) {
+            throw new HttpUnprocessableEntityException($request, 'The event is empty.');
+        }
+
+        $additionalData = Arr::only(
+            (array) $request->getParsedBody(),
+            [
+                'lang',
+                'due_date',
+                'order_number',
+                'special_mentions',
+            ],
+        );
+
+        $invoice = Invoice::createFromBooking(
+            $event,
+            Auth::user(),
+            $additionalData,
+        );
+
+        $data = $invoice->serialize(Invoice::SERIALIZE_DETAILS);
+        return $response->withJson($data, StatusCode::STATUS_CREATED);
     }
 
     public function attachDocument(Request $request, Response $response): ResponseInterface
@@ -736,12 +777,23 @@ final class EventController extends BaseController
     public function delete(Request $request, Response $response): ResponseInterface
     {
         $id = $request->getIntegerAttribute('id');
+
+        /** @var Event $event */
         $event = Event::withTrashed()
-            ->orWhere(static function ($query) {
+            ->where(static fn ($query) => (
                 $query
-                    ->where('is_confirmed', false)
-                    ->where('is_return_inventory_done', false);
-            })
+                    // - Les événements déjà soft-deleted peuvent
+                    //   être supprimés définitivement.
+                    ->whereNotNull('deleted_at')
+
+                    // - Sinon, seuls les non-confirmés et sans inventaire
+                    //   de retour effectué sont supprimables.
+                    ->orWhere(static fn ($subQuery) => (
+                        $subQuery
+                            ->where('is_confirmed', false)
+                            ->where('is_return_inventory_done', false)
+                    ))
+            ))
             ->findOrFail($id);
 
         $isDeleted = $event->trashed()
@@ -753,6 +805,22 @@ final class EventController extends BaseController
         }
 
         return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
+    }
+
+    public function restore(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $event = Event::query()
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        if (!$event->restore()) {
+            throw new \RuntimeException(sprintf("Unable to restore the event %d.", $id));
+        }
+
+        $data = static::_formatOne($event);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     // ------------------------------------------------------

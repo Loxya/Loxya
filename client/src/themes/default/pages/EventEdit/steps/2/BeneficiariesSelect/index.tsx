@@ -1,6 +1,5 @@
 import './index.scss';
 import { defineComponent } from 'vue';
-import VueSelect from 'vue-select';
 import debounce from 'lodash/debounce';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
 import formatOptions from '@/utils/formatOptions';
@@ -9,14 +8,13 @@ import Button from '@/themes/default/components/Button';
 import Fragment from '@/components/Fragment';
 import IconMessage from '@/themes/default/components/IconMessage';
 import FormField from '@/themes/default/components/FormField';
+import Select from '@/themes/default/components/Select';
 
-import type { ComponentRef, PropType } from 'vue';
+import type { PropType } from 'vue';
 import type { DebouncedMethod } from 'lodash';
 import type { Option, Options } from '@/utils/formatOptions';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
-
-// - Longueur minimale du texte lors d'une recherche.
-const MIN_SEARCH_CHARACTERS = 2;
+import type { SelectRef } from '@/themes/default/components/Select';
 
 type Props = {
     /**
@@ -109,8 +107,8 @@ const EventEditStepBeneficiariesSelect = defineComponent({
                 }
 
                 this.$nextTick(() => {
-                    const $input = this.$refs.input as ComponentRef<typeof VueSelect>;
-                    $input?.searchEl?.focus();
+                    const $input = this.$refs.input as SelectRef;
+                    $input?.focus();
                 });
             },
             immediate: true,
@@ -132,14 +130,6 @@ const EventEditStepBeneficiariesSelect = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSearch(search: string, setLoading: (isLoading: boolean) => void) {
-            if (search.length < MIN_SEARCH_CHARACTERS) {
-                return;
-            }
-            setLoading(true);
-            this.debouncedSearch!(search, setLoading);
-        },
-
         handleAddItem() {
             this.showNewItemForm = true;
         },
@@ -155,13 +145,14 @@ const EventEditStepBeneficiariesSelect = defineComponent({
             this.$emit('change', this.valuesIds);
         },
 
-        handleSelectNewValue(newValue: Option<Beneficiary> | null) {
-            const selectedValue = newValue !== null
-                ? this.beneficiaries.find(
-                    ({ id }: Beneficiary) => id === newValue.value,
-                )
-                : undefined;
+        handleSelectNewValue(value: Beneficiary['id'] | null) {
+            if (value === null) {
+                return;
+            }
 
+            const selectedValue = this.beneficiaries.find(
+                ({ id }: Beneficiary) => id === value,
+            );
             if (selectedValue === undefined) {
                 return;
             }
@@ -177,15 +168,13 @@ const EventEditStepBeneficiariesSelect = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async search(search: string, setLoading: (isLoading: boolean) => void) {
+        async search(search: string): Promise<void> {
             try {
                 const { data } = await apiBeneficiaries.all({ search, limit: 20 });
                 this.beneficiaries = data;
             } catch (error) {
                 // eslint-disable-next-line no-console
                 console.error(`Error while searching a beneficiary (term: "${search}").`, error);
-            } finally {
-                setLoading(false);
             }
         },
 
@@ -203,7 +192,7 @@ const EventEditStepBeneficiariesSelect = defineComponent({
             values,
             options,
             showNewItemForm,
-            handleSearch,
+            debouncedSearch,
             handleAddItem,
             handleRemoveItem,
             handleSelectNewValue,
@@ -264,46 +253,31 @@ const EventEditStepBeneficiariesSelect = defineComponent({
                         )}
                     >
                         <div class="EventEditStepBeneficiariesSelect__item">
-                            <VueSelect
+                            <Select
                                 ref="input"
                                 value={null}
-                                filterable={false}
                                 options={options}
-                                onSearch={handleSearch}
+                                searcher={debouncedSearch}
                                 onInput={handleSelectNewValue}
                                 class="EventEditStepBeneficiariesSelect__item__field"
                                 placeholder={__('global.please-choose')}
-                                scopedSlots={{
-                                    'no-options': ({ search }: { search: string }) => {
-                                        if (search.length === 0) {
-                                            return __('global.start-typing-to-search');
-                                        }
-
-                                        if (search.length > 0 && search.length < MIN_SEARCH_CHARACTERS) {
-                                            return __(
-                                                'global.type-at-least-count-chars-to-search',
-                                                { count: MIN_SEARCH_CHARACTERS - search.length },
-                                                MIN_SEARCH_CHARACTERS - search.length,
-                                            );
-                                        }
-
-                                        return (
-                                            <Fragment>
-                                                <p>{__('global.no-result-found-try-another-search')}</p>
-                                                <Button type="add" to={{ name: 'add-beneficiary' }}>
-                                                    {__('create-a-beneficiary')}
-                                                </Button>
-                                            </Fragment>
-                                        );
-                                    },
-                                    'option': ({ label }: Option<Beneficiary>) => (
-                                        <span class="EventEditStepBeneficiariesSelect__option">
-                                            <span class="EventEditStepBeneficiariesSelect__option__name">
-                                                {label}
-                                            </span>
+                                renderer={({ label }: Option<Beneficiary>) => (
+                                    <span class="EventEditStepBeneficiariesSelect__option">
+                                        <span class="EventEditStepBeneficiariesSelect__option__name">
+                                            {label}
                                         </span>
-                                    ),
-                                }}
+                                    </span>
+                                )}
+                                noOptionsRenderer={(currentSearch: string) => (
+                                    currentSearch.length === 0 ? null : (
+                                        <Fragment>
+                                            <p>{__('global.no-result-found-try-another-search')}</p>
+                                            <Button type="add" to={{ name: 'add-beneficiary' }}>
+                                                {__('create-a-beneficiary')}
+                                            </Button>
+                                        </Fragment>
+                                    )
+                                )}
                             />
                             <Button
                                 icon="ban"

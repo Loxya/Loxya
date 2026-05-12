@@ -1,48 +1,39 @@
 @use '~@/themes/default/style/globals';
 
 .EventEditStepBilling {
+    $block: &;
+
     display: flex;
+    flex-direction: column;
+    overflow: auto;
     height: 100%;
-    padding-bottom: 50px;
+    gap: globals.$spacing-medium;
+
+    &__wrapper {
+        flex: 1;
+        overflow: auto;
+        height: 100%;
+    }
+
+    &__warning {
+        & + & {
+            margin-top: globals.$spacing-medium;
+        }
+    }
 
     &__editor {
         flex: 1;
+
+        #{$block}__warning + & {
+            margin-top: globals.$spacing-large;
+        }
     }
 
     &__actions {
-        position: fixed;
-        left: 13px;
-        bottom: 0;
-        right: 13px;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        margin: 0;
-        padding: 1rem 1rem 1.5rem;
-        background: globals.$bg-color-body;
+        padding: globals.$spacing-small 0;
         gap: globals.$spacing-small;
-    }
-
-    //
-    // - Responsive
-    //
-
-    @media (min-width: globals.$screen-mobile) {
-        &__actions {
-            left: 63px;
-        }
-    }
-
-    @media (min-width: globals.$screen-tablet) {
-        &__actions {
-            left: 256px;
-        }
-    }
-
-    @media (min-width: globals.$screen-desktop) {
-        &__actions {
-            left: 376px;
-            gap: globals.$spacing-medium;
-        }
     }
 }

@@ -179,6 +179,18 @@ function isCli(): bool
 }
 
 /**
+ * Permet de savoir si on est actuellement dans un contexte
+ * d'exécution de test sur un environnement d'intégration continue.
+ *
+ * @return bool `true` si on est en mode test sur un environnement
+ *              d'intégration continue, `false` sinon.
+ */
+function isCI(): bool
+{
+    return Config::getEnv() === 'test' && !empty(env('CI'));
+}
+
+/**
  * Permet de savoir si une fonctionnalité est activée.
  *
  * @param Feature $feature La fonctionnalité à vérifier.

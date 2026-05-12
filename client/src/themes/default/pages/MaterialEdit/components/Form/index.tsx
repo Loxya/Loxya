@@ -7,14 +7,18 @@ import config, { BillingMode } from '@/globals/config';
 import apiProperties, { PropertyEntity } from '@/stores/api/properties';
 import formatOptions from '@/utils/formatOptions';
 import parseInteger from '@/utils/parseInteger';
+import SelectCountry from '@/themes/default/components/SelectCountry';
 import Fieldset from '@/themes/default/components/Fieldset';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Button from '@/themes/default/components/Button';
+import Fragment from '@/components/Fragment';
 import PropertyField from './PropertyField';
 
 import type { ComponentRef, PropType } from 'vue';
 import type { Settings } from '@/stores/api/settings';
 import type { Options } from '@/utils/formatOptions';
+import type Country from '@/utils/country';
 import type { Category, CategoryDetails } from '@/stores/api/categories';
 import type { ParkSummary } from '@/stores/api/parks';
 import type { Tax } from '@/stores/api/taxes';
@@ -69,6 +73,9 @@ const getDefaults = (
     savedData: Material | null,
     settings: Settings,
 ): MaterialEdit => {
+    const isTaxesEnabled = !config.organization.isVatExempted;
+    const isBillingEnabled = config.billingMode !== BillingMode.NONE;
+
     const BASE_DEFAULTS = {
         name: null,
         reference: null,
@@ -77,9 +84,15 @@ const getDefaults = (
         category_id: null,
         sub_category_id: null,
         rental_price: null,
-        degressive_rate_id: settings?.billing.defaultDegressiveRate ?? null,
-        tax_id: settings?.billing.defaultTax ?? null,
+        degressive_rate_id: !isBillingEnabled ? null : (
+            settings?.billing.defaultDegressiveRate ?? null
+        ),
+        tax_id: !isBillingEnabled || !isTaxesEnabled ? null : (
+            settings?.billing.defaultTax ?? null
+        ),
         replacement_price: null,
+        weight: null,
+        origin_country: null,
         stock_quantity: 1,
         out_of_order_quantity: 0,
         is_hidden_on_bill: false,
@@ -93,6 +106,8 @@ const getDefaults = (
         ...pick(savedData ?? {}, Object.keys(BASE_DEFAULTS)),
         rental_price: savedData?.rental_price?.toString() ?? null,
         replacement_price: savedData?.replacement_price?.toString() ?? null,
+        weight: savedData?.weight?.toString() ?? null,
+        origin_country: savedData?.origin_country ?? null,
         properties: Object.fromEntries((savedData?.properties ?? []).map(
             ({ id, value }: PropertyWithValue) => [id, value],
         )),
@@ -103,7 +118,7 @@ const getDefaults = (
 const MaterialEditForm = defineComponent({
     name: 'MaterialEditForm',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         savedData: {
@@ -140,8 +155,17 @@ const MaterialEditForm = defineComponent({
         };
     },
     computed: {
-        showBilling(): boolean {
+        isBillingEnabled(): boolean {
             return config.billingMode !== BillingMode.NONE;
+        },
+
+        isTaxesEnabled(): boolean {
+            return !config.organization.isVatExempted;
+        },
+
+        isSimpleVatSystem(): boolean {
+            const { country } = config.organization;
+            return !!country.hasSimpleVatSystem;
         },
 
         showSubCategories(): boolean {
@@ -193,14 +217,24 @@ const MaterialEditForm = defineComponent({
         },
 
         degressiveRatesOptions(): Options<DegressiveRate> {
+            if (!this.isBillingEnabled) {
+                return [];
+            }
             return this.$store.getters['degressiveRates/options'];
         },
 
         taxesOptions(): Options<Tax> {
+            if (!this.isBillingEnabled || !this.isTaxesEnabled) {
+                return [];
+            }
             return this.$store.getters['taxes/options'];
         },
 
         currentRentalPrice(): Decimal | null {
+            if (!this.isBillingEnabled) {
+                return null;
+            }
+
             return this.data.rental_price !== null
                 ? new Decimal(this.data.rental_price)
                 : null;
@@ -216,9 +250,15 @@ const MaterialEditForm = defineComponent({
     },
     mounted() {
         this.$store.dispatch('parks/fetch');
-        this.$store.dispatch('taxes/fetch');
         this.$store.dispatch('categories/fetch');
-        this.$store.dispatch('degressiveRates/fetch');
+
+        if (this.isBillingEnabled) {
+            this.$store.dispatch('degressiveRates/fetch');
+
+            if (this.isTaxesEnabled) {
+                this.$store.dispatch('taxes/fetch');
+            }
+        }
 
         this.fetchProperties();
 
@@ -251,8 +291,9 @@ const MaterialEditForm = defineComponent({
                 }
             }
 
-            if (config.billingMode === BillingMode.NONE) {
+            if (!this.isBillingEnabled) {
                 rawData.rental_price = null;
+                rawData.degressive_rate_id = null;
                 rawData.tax_id = null;
             }
 
@@ -286,6 +327,10 @@ const MaterialEditForm = defineComponent({
             }
         },
 
+        handleChangeMadeInCountry(newMadeInCountry: Country | null) {
+            this.data.origin_country = newMadeInCountry;
+        },
+
         handlePropertyChange(id: Property['id'], newValue: PropertyWithValue['value']) {
             this.$set(this.data.properties, id, newValue);
         },
@@ -304,7 +349,7 @@ const MaterialEditForm = defineComponent({
             ) ?? 'none';
 
             try {
-                this.allProperties = await apiProperties.all(categoryId, PropertyEntity.MATERIAL);
+                this.allProperties = await apiProperties.all(PropertyEntity.MATERIAL, categoryId);
 
                 // - Supprime les données de caractéristique obsolètes dans les données du formulaire.
                 Object.keys(this.data.properties).forEach((id: string) => {
@@ -320,10 +365,18 @@ const MaterialEditForm = defineComponent({
                 this.criticalError = new Error('Unable to retrieve the list of special properties.');
             }
         },
+
+        __(key: string, params?: Record<string, number | string>, count?: number): string {
+            key = !key.startsWith('global.')
+                ? `page.material-edit.${key}`
+                : key.replace(/^global\./, '');
+
+            return this.$t(key, params, count);
+        },
     },
     render() {
         const {
-            $t: __,
+            __,
             data,
             errors,
             isSaving,
@@ -335,13 +388,16 @@ const MaterialEditForm = defineComponent({
             degressiveRatesOptions,
             showParksSelector,
             showSubCategories,
-            showBilling,
+            isSimpleVatSystem,
+            isBillingEnabled,
+            isTaxesEnabled,
             allProperties,
             currentRentalPrice,
             handleSubmit,
             handleCancel,
             handleCategoryChange,
             handleRentalPriceChange,
+            handleChangeMadeInCountry,
             handlePropertyChange,
         } = this;
 
@@ -357,14 +413,14 @@ const MaterialEditForm = defineComponent({
                 <Fieldset>
                     <FormField
                         ref="inputName"
-                        label="name"
+                        label={__('global.name')}
                         v-model={data.name}
                         error={errors?.name}
-                        help={__('page.material-edit.help-name')}
+                        help={__('help-name')}
                         required
                     />
                     <FormField
-                        label="reference"
+                        label={__('global.reference')}
                         v-model={data.reference}
                         error={errors?.reference}
                         required
@@ -375,7 +431,7 @@ const MaterialEditForm = defineComponent({
                         }]}
                     >
                         <FormField
-                            label="category"
+                            label={__('global.category')}
                             type="select"
                             class="MaterialEditForm__main-category"
                             options={categoriesOptions}
@@ -385,7 +441,7 @@ const MaterialEditForm = defineComponent({
                         />
                         {showSubCategories && (
                             <FormField
-                                label="sub-category"
+                                label={__('global.sub-category')}
                                 type="select"
                                 class="MaterialEditForm__sub-category"
                                 options={subCategoriesOptions}
@@ -395,7 +451,7 @@ const MaterialEditForm = defineComponent({
                         )}
                     </div>
                     <FormField
-                        label="description"
+                        label={__('global.description')}
                         type="textarea"
                         rows={5}
                         v-model={data.description}
@@ -403,12 +459,12 @@ const MaterialEditForm = defineComponent({
                     />
                 </Fieldset>
                 <Fieldset
-                    title={__('stock-infos')}
+                    title={__('global.stock-infos')}
                 >
                     <div class="MaterialEditForm__park">
                         {showParksSelector && (
                             <FormField
-                                label="park"
+                                label={__('global.park')}
                                 type="select"
                                 class="MaterialEditForm__park-selector"
                                 options={parksOptions}
@@ -421,7 +477,7 @@ const MaterialEditForm = defineComponent({
                     </div>
                     <div class="MaterialEditForm__quantities">
                         <FormField
-                            label="stock-quantity"
+                            label={__('global.stock-quantity')}
                             type="number"
                             step={1}
                             class="MaterialEditForm__stock-quantity"
@@ -430,7 +486,7 @@ const MaterialEditForm = defineComponent({
                             required
                         />
                         <FormField
-                            label="out-of-order-quantity"
+                            label={__('global.out-of-order-quantity')}
                             type="number"
                             step={1}
                             class="MaterialEditForm__out-of-order-quantity"
@@ -439,77 +495,112 @@ const MaterialEditForm = defineComponent({
                         />
                     </div>
                 </Fieldset>
-                {showBilling && (
-                    <Fieldset title={__('billing-infos')}>
+                {isBillingEnabled && (
+                    <Fieldset title={__('global.billing-infos')}>
                         <div class="MaterialEditForm__billing">
-                            <FormField
-                                label="rental-price"
-                                type="number"
-                                addon={__('page.material-edit.currency-per-day', {
-                                    currency: config.currency.symbol,
-                                })}
-                                class="MaterialEditForm__price"
-                                error={errors?.rental_price}
-                                onInput={handleRentalPriceChange}
-                                value={data.rental_price}
-                                required
-                            />
-                            <div class="MaterialEditForm__billing__switches">
-                                <FormField
-                                    label="discountable"
-                                    type="switch"
-                                    class="MaterialEditForm__billing__switches__item"
-                                    v-model={data.is_discountable}
-                                    error={errors?.is_discountable}
-                                />
-                                <FormField
-                                    label="hidden-on-invoice"
-                                    type="switch"
-                                    class="MaterialEditForm__billing__switches__item"
-                                    v-model={data.is_hidden_on_bill}
-                                    error={errors?.is_hidden_on_bill}
-                                    disabled={(
-                                        (currentRentalPrice?.greaterThan(0) ?? false)
-                                            ? __('price-must-be-zero')
-                                            : false
-                                    )}
-                                />
-                            </div>
-                            <div class="MaterialEditForm__billing__parameters">
-                                <FormField
-                                    type="select"
-                                    label={__('page.material-edit.fields.tax.label')}
-                                    placeholder={__('page.material-edit.fields.tax.placeholder')}
-                                    class="MaterialEditForm__billing__parameters__item"
-                                    options={taxesOptions}
-                                    v-model={data.tax_id}
-                                    error={errors?.tax_id}
-                                />
-                                <FormField
-                                    type="select"
-                                    label={__('page.material-edit.fields.degressive-rate.label')}
-                                    placeholder={__('page.material-edit.fields.degressive-rate.placeholder')}
-                                    class="MaterialEditForm__billing__parameters__item"
-                                    options={degressiveRatesOptions}
-                                    v-model={data.degressive_rate_id}
-                                    error={errors?.degressive_rate_id}
-                                />
-                            </div>
+                            {(() => {
+                                const degressiveRateField = (
+                                    <FormField
+                                        type="select"
+                                        label={__('fields.degressive-rate.label')}
+                                        placeholder={__('fields.degressive-rate.placeholder')}
+                                        class="MaterialEditForm__billing__parameters__item"
+                                        options={degressiveRatesOptions}
+                                        v-model={data.degressive_rate_id}
+                                        error={errors?.degressive_rate_id}
+                                    />
+                                );
+
+                                return (
+                                    <Fragment>
+                                        <div class="MaterialEditForm__billing__parameters">
+                                            <FormField
+                                                label={__('global.rental-price')}
+                                                type="number"
+                                                class="MaterialEditForm__billing__parameters__item"
+                                                addon={__('currency-per-day', {
+                                                    currency: config.currency.symbol,
+                                                })}
+                                                error={errors?.rental_price}
+                                                onInput={handleRentalPriceChange}
+                                                value={data.rental_price}
+                                                required
+                                            />
+                                            {!isTaxesEnabled && degressiveRateField}
+                                        </div>
+                                        <div class="MaterialEditForm__billing__switches">
+                                            <FormField
+                                                label={__('global.discountable')}
+                                                type="switch"
+                                                class="MaterialEditForm__billing__switches__item"
+                                                v-model={data.is_discountable}
+                                                error={errors?.is_discountable}
+                                            />
+                                            <FormField
+                                                label={__('global.hidden-on-invoice')}
+                                                type="switch"
+                                                class="MaterialEditForm__billing__switches__item"
+                                                v-model={data.is_hidden_on_bill}
+                                                error={errors?.is_hidden_on_bill}
+                                                disabled={(
+                                                    (currentRentalPrice?.greaterThan(0) ?? false)
+                                                        ? __('global.price-must-be-zero')
+                                                        : false
+                                                )}
+                                            />
+                                        </div>
+                                        {isTaxesEnabled && (
+                                            <div class="MaterialEditForm__billing__parameters">
+                                                <FormField
+                                                    type="select"
+                                                    label={__(`fields.tax.label.${isSimpleVatSystem ? 'simple' : 'default'}`)}
+                                                    placeholder={__(`fields.tax.placeholder.${isSimpleVatSystem ? 'simple' : 'default'}`)}
+                                                    class="MaterialEditForm__billing__parameters__item"
+                                                    options={taxesOptions}
+                                                    v-model={data.tax_id}
+                                                    error={errors?.tax_id}
+                                                />
+                                                {degressiveRateField}
+                                            </div>
+                                        )}
+                                    </Fragment>
+                                );
+                            })()}
                         </div>
                     </Fieldset>
                 )}
                 <Fieldset
-                    title={__('extra-infos')}
-                    help={__('page.material-edit.fields-changes-depending-on-category')}
+                    title={__('global.extra-infos')}
+                    help={__('fields-changes-depending-on-category')}
                 >
                     <FormField
-                        label="replacement-price"
+                        label={__('global.replacement-price')}
                         type="number"
                         addon={config.currency.symbol}
                         class="MaterialEditForm__price"
                         v-model={data.replacement_price}
                         error={errors?.replacement_price}
                     />
+                    <FormField
+                        label={__('global.weight')}
+                        type="number"
+                        addon={config.measurementUnits.materials.weight}
+                        step={0.001}
+                        class="MaterialEditForm__weight"
+                        v-model={data.weight}
+                        error={errors?.weight}
+                    />
+                    <FormField
+                        type="custom"
+                        label={__('global.origin-country')}
+                        error={errors?.origin_country}
+                    >
+                        <SelectCountry
+                            placeholder={false}
+                            value={data.origin_country}
+                            onChange={handleChangeMadeInCountry}
+                        />
+                    </FormField>
                     {allProperties.map((property: PropertyDetails) => (
                         <PropertyField
                             key={property.id}
@@ -521,7 +612,7 @@ const MaterialEditForm = defineComponent({
                         />
                     ))}
                     <FormField
-                        label="notes"
+                        label={__('global.notes')}
                         type="textarea"
                         v-model={data.note}
                         error={errors?.note}
@@ -529,10 +620,10 @@ const MaterialEditForm = defineComponent({
                 </Fieldset>
                 <section class="Form__actions">
                     <Button htmlType="submit" type="primary" icon="save" loading={isSaving}>
-                        {isSaving ? __('saving') : __('save')}
+                        {isSaving ? __('global.saving') : __('global.save')}
                     </Button>
                     <Button icon="ban" onClick={handleCancel}>
-                        {__('cancel')}
+                        {__('global.cancel')}
                     </Button>
                 </section>
             </form>

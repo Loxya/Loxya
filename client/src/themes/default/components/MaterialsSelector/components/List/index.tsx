@@ -1,11 +1,12 @@
 import './index.scss';
 import Decimal from 'decimal.js';
+import isTruthy from '@/utils/isTruthy';
 import stringIncludes from '@/utils/stringIncludes';
 import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
-import config from '@/globals/config';
 import formatAmount from '@/utils/formatAmount';
 import { UNCATEGORIZED } from '@/stores/api/materials';
+import { ClientTable } from '@/themes/default/components/Table';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 import MaterialPopover from '@/themes/default/components/Popover/Material';
 import Dropdown from '@/themes/default/components/Dropdown';
@@ -18,13 +19,14 @@ import isMaterialResyncable from '../../utils/isMaterialResyncable';
 import store from '../../store';
 
 import type { Tag } from '@/stores/api/tags';
-import type { PropType } from 'vue';
-import type { ClientTableInstance } from 'vue-tables-2-premium';
+import type { PropType, CreateElement } from 'vue';
 import type { RentalPrice } from '../../utils/getRentalPriceData';
+import type { ClientTableRef, Columns } from '@/themes/default/components/Table/Client';
 import type { SourceMaterial, Filters } from '../../_types';
 
+type FilterPredicate = (material: SourceMaterial) => boolean;
 type FilterResolver<T extends keyof Filters> = (
-    (material: SourceMaterial, filter: NonNullable<Filters[T]>) => boolean
+    (filter: NonNullable<Filters[T]>) => FilterPredicate
 );
 
 type Props = {
@@ -36,6 +38,9 @@ type Props = {
 
     /** Doit-on afficher les informations liées à la facturation ? */
     withBilling: boolean,
+
+    /** Doit-on permettre la resynchronisation ? */
+    withResync: boolean,
 
     /**
      * Est-ce que le mode "modification uniquement" est activé ?
@@ -63,10 +68,8 @@ type Props = {
 };
 
 type Data = {
-    tableOptions: any,
+    openChildRows: Array<SourceMaterial['id']>,
 };
-
-const NO_PAGINATION_LIMIT = 100_000;
 
 /** Liste de matériel d'un événement ou d'une réservation. */
 const MaterialsSelectorList = defineComponent({
@@ -82,6 +85,10 @@ const MaterialsSelectorList = defineComponent({
         },
         withBilling: {
             type: Boolean as PropType<Props['withBilling']>,
+            required: true,
+        },
+        withResync: {
+            type: Boolean as PropType<Props['withResync']>,
             required: true,
         },
         isEditOnly: {
@@ -103,69 +110,70 @@ const MaterialsSelectorList = defineComponent({
         'requestResyncMaterialData',
         'requestShowAllMaterials',
     ],
-    data(): Data {
-        const { filters } = this;
-
-        return {
-            tableOptions: {
-                filterable: false,
-                columnsDropdown: false,
-                preserveState: false,
-                filterByColumn: false,
-                showChildRowToggler: false,
-                orderBy: { column: 'name', ascending: true },
-                perPage: filters.onlySelected ? NO_PAGINATION_LIMIT : config.defaultPaginationLimit,
-                sortable: ['name'],
-                columnsClasses: {
-                    'child-toggler': 'MaterialsSelectorList__col MaterialsSelectorList__col--child-toggler ',
-                    'quantity': 'MaterialsSelectorList__col MaterialsSelectorList__col--quantity ',
-                    'name': 'MaterialsSelectorList__col MaterialsSelectorList__col--name ',
-                    'availability': 'MaterialsSelectorList__col MaterialsSelectorList__col--availability ',
-                    'price': 'MaterialsSelectorList__col MaterialsSelectorList__col--price ',
-                    'quantity-input': 'MaterialsSelectorList__col MaterialsSelectorList__col--quantity-input ',
-                    'amount': 'MaterialsSelectorList__col MaterialsSelectorList__col--amount ',
-                    'actions': 'MaterialsSelectorList__col MaterialsSelectorList__col--actions ',
-                },
-                rowClassCallback: () => 'MaterialsSelectorList__item',
-                initFilters: filters,
-            },
-        };
-    },
+    data: (): Data => ({
+        openChildRows: [],
+    }),
     computed: {
         filteredMaterials(): SourceMaterial[] {
             const { materials, filters } = this;
 
             const filterResolvers: { [T in keyof Filters]: FilterResolver<T> } = {
-                search: ({ name, reference }: SourceMaterial, rawTerms: Filters['search']) => {
+                search: (rawTerms: Filters['search']) => {
                     const terms = rawTerms.filter(
                         (term: string) => term.trim().length > 1,
                     );
                     if (terms.length === 0) {
-                        return true;
+                        return () => true;
                     }
 
-                    return terms.some((term: string) => (
-                        stringIncludes(name, term) ||
-                        stringIncludes(reference, term)
-                    ));
+                    return ({ name, reference }: SourceMaterial) => (
+                        terms.some((term: string) => (
+                            stringIncludes(name, term) ||
+                            stringIncludes(reference, term)
+                        ))
+                    );
                 },
-                park: (material: SourceMaterial, parkId: NonNullable<Filters['park']>) => (
-                    material.park_id === parkId
+                park: (parkId: NonNullable<Filters['park']>) => (
+                    (material: SourceMaterial) => (
+                        material.park_id === parkId
+                    )
                 ),
-                category: (material: SourceMaterial, categoryId: NonNullable<Filters['category']>) => (
-                    (material.category_id === null && categoryId === UNCATEGORIZED) ||
-                    material.category_id === categoryId
+                category: (categoryId: NonNullable<Filters['category']>) => (
+                    (material: SourceMaterial) => (
+                        (material.category_id === null && categoryId === UNCATEGORIZED) ||
+                        material.category_id === categoryId
+                    )
                 ),
-                subCategory: (material: SourceMaterial, subCategoryId: NonNullable<Filters['subCategory']>) => (
-                    material.sub_category_id === subCategoryId
+                subCategory: (subCategoryId: NonNullable<Filters['subCategory']>) => (
+                    (material: SourceMaterial) => (
+                        material.sub_category_id === subCategoryId
+                    )
                 ),
-                tags: (material: SourceMaterial, tags: Filters['tags']) => (
-                    tags.length === 0 || material.tags.some((tag: Tag) => tags.includes(tag.id))
+                tags: (tags: Filters['tags']) => (
+                    (material: SourceMaterial) => (
+                        tags.length === 0 || material.tags.some((tag: Tag) => tags.includes(tag.id))
+                    )
                 ),
-                onlySelected: (material: SourceMaterial, isOnlySelected: Filters['onlySelected']) => (
-                    !isOnlySelected || this.getQuantity(material) > 0
+                onlySelected: (isOnlySelected: Filters['onlySelected']) => (
+                    (material: SourceMaterial) => (
+                        !isOnlySelected || this.getQuantity(material) > 0
+                    )
                 ),
             };
+
+            const predicates: FilterPredicate[] = (
+                (Object.entries(filters) as Array<[keyof Filters, unknown]>)
+                    .filter(([, filterValue]: [keyof Filters, unknown]) => {
+                        if (Array.isArray(filterValue)) {
+                            return filterValue.length > 0;
+                        }
+                        return ![undefined, null, ''].includes(filterValue as any);
+                    })
+                    .map(([key, filterValue]: [keyof Filters, unknown]) => {
+                        const resolverFactory = filterResolvers[key];
+                        return (resolverFactory as any)(filterValue) as FilterPredicate;
+                    })
+            );
 
             return materials.filter((material: SourceMaterial): boolean => {
                 // - Si le matériel n'est pas editable et n'est pas déjà inclut dans la liste
@@ -180,11 +188,7 @@ const MaterialsSelectorList = defineComponent({
                     return false;
                 }
 
-                return !(Object.entries(filterResolvers) as Array<[keyof Filters, FilterResolver<keyof Filters>]>).some(
-                    <T extends keyof Filters>([field, filterResolver]: [T, FilterResolver<T>]) => (
-                        filters[field] ? !filterResolver(material, filters[field]) : false
-                    ),
-                );
+                return predicates.every((predicate: FilterPredicate) => predicate(material));
             });
         },
 
@@ -207,36 +211,273 @@ const MaterialsSelectorList = defineComponent({
             return this.filteredMaterials.length === 0;
         },
 
-        columns(): string[] {
-            const { withBilling } = this;
+        columns(): Columns<SourceMaterial> {
+            const {
+                __,
+                getQuantity,
+                setQuantity,
+                withBilling,
+                withResync,
+                isMaterialEditable,
+                isMaterialDeletable,
+                handleResyncMaterialData,
+            } = this;
 
             return [
-                'quantity',
-                'name',
-                'availability',
-                withBilling && 'price',
-                'quantity-input',
-                withBilling && 'amount',
-                'actions',
-            ].filter(Boolean) as string[];
+                {
+                    key: 'quantity',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--quantity',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => (
+                        getQuantity(material) > 0 ? `${getQuantity(material)}\u00A0×` : null
+                    ),
+                },
+                {
+                    key: 'name',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--name',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => {
+                        const isNameUnsynced = material.overrides !== null
+                            ? material.overrides.name !== material.name
+                            : false;
+
+                        const isReferenceUnsynced = material.overrides !== null
+                            ? material.overrides.reference !== material.reference
+                            : false;
+
+                        const label: JSX.Element = (
+                            <span
+                                ref={`items[${material.id}]`}
+                                class="MaterialsSelectorList__item__name"
+                            >
+                                <span
+                                    class={[
+                                        'MaterialsSelectorList__item__name__name',
+                                        {
+                                            'MaterialsSelectorList__item__name__name--unsynced': (
+                                                isNameUnsynced && !material.is_deleted
+                                            ),
+                                        },
+                                    ]}
+                                >
+                                    {material.overrides !== null ? material.overrides.name : material.name}
+                                </span>
+                                <span
+                                    class={[
+                                        'MaterialsSelectorList__item__name__reference',
+                                        {
+                                            'MaterialsSelectorList__item__name__reference--unsynced': (
+                                                isReferenceUnsynced && !material.is_deleted
+                                            ),
+                                        },
+                                    ]}
+                                >
+                                    {__('global.ref-ref', {
+                                        reference: material.overrides !== null
+                                            ? material.overrides.reference
+                                            : material.reference,
+                                    })}
+                                </span>
+                            </span>
+                        );
+
+                        return material.is_deleted ? label : (
+                            <MaterialPopover material={material}>
+                                {label}
+                            </MaterialPopover>
+                        );
+                    },
+                },
+                {
+                    key: 'availability',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--availability',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => (
+                        isMaterialEditable(material)
+                            ? (
+                                <Availability
+                                    material={material}
+                                />
+                            )
+                            : null
+                    ),
+                },
+                withBilling && {
+                    key: 'price',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--price',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => {
+                        if (!withBilling) {
+                            return null;
+                        }
+
+                        const rentalPriceData = getRentalPriceData(material);
+                        const isUnsynced = !withResync || rentalPriceData.override === null ? false : (
+                            !rentalPriceData.override.currency.isSame(rentalPriceData.sync.currency) ||
+                            !rentalPriceData.override.rentalPrice.equals(rentalPriceData.sync.rentalPrice)
+                        );
+                        const rentalPrice = isUnsynced ? rentalPriceData.override! : rentalPriceData.sync;
+
+                        return (
+                            <Fragment>
+                                <span
+                                    class={[
+                                        'MaterialsSelectorList__item__price',
+                                        {
+                                            'MaterialsSelectorList__item__price--unsynced': (
+                                                !material.is_deleted && isUnsynced
+                                            ),
+                                        },
+                                    ]}
+                                >
+                                    <span class="MaterialsSelectorList__item__price__value">
+                                        {formatAmount(rentalPrice.rentalPrice, rentalPrice.currency)}
+                                    </span>
+                                    {rentalPriceData.isPeriodPrice && (
+                                        <Icon
+                                            name="info-circle"
+                                            class="MaterialsSelectorList__item__price__details"
+                                            tooltip={((): string => {
+                                                const _rentalPrice = rentalPrice as RentalPrice<true>;
+                                                const formattedUnitPrice = formatAmount(_rentalPrice.unitPrice, _rentalPrice.currency);
+                                                return `${formattedUnitPrice} x ${_rentalPrice.degressiveRate.toString()}`;
+                                            })()}
+                                        />
+                                    )}
+                                </span>
+                                &nbsp;<Icon name="times" />
+                            </Fragment>
+                        );
+                    },
+                },
+                {
+                    key: 'quantity-input',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--quantity-input',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => (
+                        isMaterialEditable(material)
+                            ? (
+                                <Quantity
+                                    material={material}
+                                    quantity={getQuantity(material)}
+                                    onChange={setQuantity}
+                                />
+                            )
+                            : getQuantity(material)
+                    ),
+                },
+                withBilling && {
+                    key: 'amount',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--amount',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => {
+                        if (!withBilling) {
+                            return null;
+                        }
+
+                        const quantity = getQuantity(material);
+                        const rentalPriceData = getRentalPriceData(material);
+
+                        const totalPriceSync = rentalPriceData.sync.rentalPrice
+                            .times(quantity)
+                            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+                        let totalPriceOverride = null;
+                        if (rentalPriceData.override !== null) {
+                            totalPriceOverride = rentalPriceData.override.rentalPrice
+                                .times(quantity)
+                                .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+                        }
+
+                        const isUnsynced = !withResync || totalPriceOverride === null ? false : (
+                            !rentalPriceData.override!.currency.isSame(rentalPriceData.sync.currency) ||
+                            !totalPriceOverride.equals(totalPriceSync)
+                        );
+
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+                        const totalPrice = isUnsynced ? totalPriceOverride! : totalPriceSync;
+                        const currency = isUnsynced
+                            ? rentalPriceData.override!.currency
+                            : rentalPriceData.sync.currency;
+
+                        return (
+                            <span
+                                class={[
+                                    'MaterialsSelectorList__item__total-price',
+                                    {
+                                        'MaterialsSelectorList__item__total-price--unsynced': (
+                                            !material.is_deleted && isUnsynced
+                                        ),
+                                    },
+                                ]}
+                            >
+                                {formatAmount(totalPrice, currency)}
+                            </span>
+                        );
+                    },
+                },
+                {
+                    key: 'actions',
+                    class: [
+                        'MaterialsSelectorList__col',
+                        'MaterialsSelectorList__col--actions',
+                    ],
+                    render: (h: CreateElement, material: SourceMaterial) => {
+                        const isSelected = getQuantity(material) > 0;
+                        const isDeletable = isMaterialDeletable(material);
+                        const isResyncable = withResync && isMaterialResyncable(material, withBilling);
+                        if (!isMaterialEditable(material) || !isSelected) {
+                            return null;
+                        }
+
+                        if (!isResyncable && !isDeletable) {
+                            return null;
+                        }
+
+                        return (
+                            <Dropdown>
+                                {isResyncable && (
+                                    <Button
+                                        icon="sync-alt"
+                                        onClick={() => { handleResyncMaterialData(material.id); }}
+                                    >
+                                        {__('actions.resync-material-data')}
+                                    </Button>
+                                )}
+                                {isDeletable && (
+                                    <Button
+                                        type="delete"
+                                        onClick={() => { setQuantity(material, 0); }}
+                                    >
+                                        {__('actions.remove-material')}
+                                    </Button>
+                                )}
+                            </Dropdown>
+                        );
+                    },
+                },
+            ].filter(isTruthy);
         },
     },
     watch: {
-        filters(newFilters: Filters, oldFilters: Filters) {
-            const $table = (this.$refs.table as ClientTableInstance | undefined);
+        filters() {
+            const $table = this.$refs.table as ClientTableRef;
             if ($table === undefined) {
                 return;
             }
-
             $table.setPage(1);
-
-            if (oldFilters.onlySelected !== newFilters.onlySelected) {
-                $table.setLimit(
-                    newFilters.onlySelected
-                        ? NO_PAGINATION_LIMIT
-                        : config.defaultPaginationLimit,
-                );
-            }
         },
     },
     methods: {
@@ -247,10 +488,15 @@ const MaterialsSelectorList = defineComponent({
         // ------------------------------------------------------
 
         handleResyncMaterialData(materialId: SourceMaterial['id']) {
+            if (!this.withResync) {
+                return;
+            }
+
             const material = this.materials.find(({ id }: SourceMaterial) => id === materialId);
             if (!material || !isMaterialResyncable(material, this.withBilling)) {
                 return;
             }
+
             this.$emit('requestResyncMaterialData', material.id);
         },
 
@@ -337,19 +583,13 @@ const MaterialsSelectorList = defineComponent({
             __,
             filters,
             columns,
-            filteredMaterials,
+            openChildRows,
+            isEditOnly,
             isMaterialsEmpty,
             isSelectionEmpty,
             isFilteredEmpty,
-            isEditOnly,
-            tableOptions,
-            getQuantity,
-            setQuantity,
-            withBilling,
-            isMaterialEditable,
-            isMaterialDeletable,
+            filteredMaterials,
             handleShowAllMaterials,
-            handleResyncMaterialData,
         } = this;
 
         const isEmpty = (
@@ -409,214 +649,16 @@ const MaterialsSelectorList = defineComponent({
             <div class={classNames}>
                 {renderState()}
                 <div class="MaterialsSelectorList__table">
-                    <v-client-table
+                    <ClientTable
                         ref="table"
-                        data={filteredMaterials}
+                        variant="light"
                         columns={columns}
-                        options={tableOptions}
-                        scopedSlots={{
-                            'name': ({ row: material }: { row: SourceMaterial }) => {
-                                const isNameUnsynced = material.overrides !== null
-                                    ? material.overrides.name !== material.name
-                                    : false;
-
-                                const isReferenceUnsynced = material.overrides !== null
-                                    ? material.overrides.reference !== material.reference
-                                    : false;
-
-                                const label: JSX.Element = (
-                                    <span
-                                        ref={`items[${material.id}]`}
-                                        class="MaterialsSelectorList__item__name"
-                                    >
-                                        <span
-                                            class={[
-                                                'MaterialsSelectorList__item__name__name',
-                                                {
-                                                    'MaterialsSelectorList__item__name__name--unsynced': (
-                                                        isNameUnsynced && !material.is_deleted
-                                                    ),
-                                                },
-                                            ]}
-                                        >
-                                            {material.overrides !== null ? material.overrides.name : material.name}
-                                        </span>
-                                        <span
-                                            class={[
-                                                'MaterialsSelectorList__item__name__reference',
-                                                {
-                                                    'MaterialsSelectorList__item__name__reference--unsynced': (
-                                                        isReferenceUnsynced && !material.is_deleted
-                                                    ),
-                                                },
-                                            ]}
-                                        >
-                                            {__('global.ref-ref', {
-                                                reference: material.overrides !== null
-                                                    ? material.overrides.reference
-                                                    : material.reference,
-                                            })}
-                                        </span>
-                                    </span>
-                                );
-
-                                return material.is_deleted ? label : (
-                                    <MaterialPopover material={material}>
-                                        {label}
-                                    </MaterialPopover>
-                                );
-                            },
-                            'quantity': ({ row: material }: { row: SourceMaterial }) => (
-                                getQuantity(material) > 0 ? `${getQuantity(material)}\u00A0×` : null
-                            ),
-                            'availability': ({ row: material }: { row: SourceMaterial }) => (
-                                isMaterialEditable(material)
-                                    ? (
-                                        <Availability
-                                            // NOTE: Problème dans `vue-tables-2` qui utilise des indexes dans les `key`
-                                            // @see https://github.com/matfish2/vue-tables-2/blob/master/templates/VtTableBody.vue#L9
-                                            key={`${material.id}--availability`}
-                                            material={material}
-                                        />
-                                    )
-                                    : null
-                            ),
-                            'price': ({ row: material }: { row: SourceMaterial }) => {
-                                if (!withBilling) {
-                                    return null;
-                                }
-
-                                const rentalPriceData = getRentalPriceData(material);
-                                const isUnsynced = rentalPriceData.override === null ? false : (
-                                    !rentalPriceData.override.currency.isSame(rentalPriceData.sync.currency) ||
-                                    !rentalPriceData.override.rentalPrice.equals(rentalPriceData.sync.rentalPrice)
-                                );
-                                const rentalPrice = isUnsynced ? rentalPriceData.override! : rentalPriceData.sync;
-
-                                return (
-                                    <Fragment>
-                                        <span
-                                            class={[
-                                                'MaterialsSelectorList__item__price',
-                                                {
-                                                    'MaterialsSelectorList__item__price--unsynced': (
-                                                        !material.is_deleted && isUnsynced
-                                                    ),
-                                                },
-                                            ]}
-                                        >
-                                            <span class="MaterialsSelectorList__item__price__value">
-                                                {formatAmount(rentalPrice.rentalPrice, rentalPrice.currency)}
-                                            </span>
-                                            {rentalPriceData.isPeriodPrice && (
-                                                <Icon
-                                                    name="info-circle"
-                                                    class="MaterialsSelectorList__item__price__details"
-                                                    tooltip={((): string => {
-                                                        const _rentalPrice = rentalPrice as RentalPrice<true>;
-                                                        const formattedUnitPrice = formatAmount(_rentalPrice.unitPrice, _rentalPrice.currency);
-                                                        return `${formattedUnitPrice} x ${_rentalPrice.degressiveRate.toString()}`;
-                                                    })()}
-                                                />
-                                            )}
-                                        </span>
-                                        &nbsp;<Icon name="times" />
-                                    </Fragment>
-                                );
-                            },
-                            'quantity-input': ({ row: material }: { row: SourceMaterial }) => (
-                                isMaterialEditable(material)
-                                    ? (
-                                        <Quantity
-                                            // NOTE: Problème dans `vue-tables-2` qui utilise des indexes dans les `key`
-                                            // @see https://github.com/matfish2/vue-tables-2/blob/master/templates/VtTableBody.vue#L9
-                                            key={`${material.id}--quantity`}
-                                            material={material}
-                                            quantity={getQuantity(material)}
-                                            onChange={setQuantity}
-                                        />
-                                    )
-                                    : getQuantity(material)
-                            ),
-                            'amount': ({ row: material }: { row: SourceMaterial }) => {
-                                if (!withBilling) {
-                                    return null;
-                                }
-
-                                const quantity = getQuantity(material);
-                                const rentalPriceData = getRentalPriceData(material);
-
-                                const totalPriceSync = rentalPriceData.sync.rentalPrice
-                                    .times(quantity)
-                                    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-
-                                let totalPriceOverride = null;
-                                if (rentalPriceData.override !== null) {
-                                    totalPriceOverride = rentalPriceData.override.rentalPrice
-                                        .times(quantity)
-                                        .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-                                }
-
-                                const isUnsynced = totalPriceOverride === null ? false : (
-                                    !rentalPriceData.override!.currency.isSame(rentalPriceData.sync.currency) ||
-                                    !totalPriceOverride.equals(totalPriceSync)
-                                );
-
-                                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                                const totalPrice = isUnsynced ? totalPriceOverride! : totalPriceSync;
-                                const currency = isUnsynced
-                                    ? rentalPriceData.override!.currency
-                                    : rentalPriceData.sync.currency;
-
-                                return (
-                                    <span
-                                        class={[
-                                            'MaterialsSelectorList__item__total-price',
-                                            {
-                                                'MaterialsSelectorList__item__total-price--unsynced': (
-                                                    !material.is_deleted && isUnsynced
-                                                ),
-                                            },
-                                        ]}
-                                    >
-                                        {formatAmount(totalPrice, currency)}
-                                    </span>
-                                );
-                            },
-                            'actions': ({ row: material }: { row: SourceMaterial }) => {
-                                const isSelected = getQuantity(material) > 0;
-                                const isDeletable = isMaterialDeletable(material);
-                                const isResyncable = isMaterialResyncable(material, withBilling);
-                                if (!isMaterialEditable(material) || !isSelected) {
-                                    return null;
-                                }
-
-                                if (!isResyncable && !isDeletable) {
-                                    return null;
-                                }
-
-                                return (
-                                    <Dropdown>
-                                        {isResyncable && (
-                                            <Button
-                                                icon="sync-alt"
-                                                onClick={() => { handleResyncMaterialData(material.id); }}
-                                            >
-                                                {__('actions.resync-material-data')}
-                                            </Button>
-                                        )}
-                                        {isDeletable && (
-                                            <Button
-                                                type="delete"
-                                                onClick={() => { setQuantity(material, 0); }}
-                                            >
-                                                {__('actions.remove-material')}
-                                            </Button>
-                                        )}
-                                    </Dropdown>
-                                );
-                            },
-                        }}
+                        defaultOrderBy="name"
+                        data={filteredMaterials}
+                        openDetails={openChildRows}
+                        paginated={!filters.onlySelected}
+                        rowClass="MaterialsSelectorList__item"
+                        headless
                     />
                 </div>
             </div>

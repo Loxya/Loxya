@@ -1,0 +1,128 @@
+subtotal: Subtotal
+discount-rate: Discount in %
+total-without-taxes: Total excl. taxes
+total-vat: Total VAT
+tax: Tax
+total-with-taxes: Total incl. taxes
+total: Total
+
+tax-state:
+    none:
+        label: None
+        details: Exempt without reason
+        inline: None (exempt without reason)
+    exempted:
+        label:
+            default: Exempted
+            other: Other exemption…
+        reason:
+            none: No reason specified
+    reverse-charge: Reverse charge
+    reverse-charge-supply: Intra-com. supply
+    export: Export
+    out-of-scope: Out of scope
+
+lists:
+    materials:
+        title: Materials
+
+        columns:
+            name: Name
+            unit-price-period: Unit price period
+            quantity: Quantity
+            discount: Discount
+            taxes:
+                default: Taxe(s)
+                simple: VAT
+            total-without-taxes: Total excl. taxes
+            total: Total
+
+        empty:
+            title: No materials
+            content: |
+                No materials has been selected and therefore cannot be invoiced.
+                Add materials to customize the billing if necessary.
+
+        not-discountable-reset-warning:
+            This equipment is normally not discountable.
+            By resetting the discount, you will no longer be able to change it. Would you like to continue?
+
+        actions:
+            resync-data: Resynchronize data...
+
+        discount-not-applicable: Discount not applicable
+        obsolete-tax: Obsolete / Removed tax
+
+    extras:
+        title: Additional lines
+        default-title: "Additional line #{index}"
+
+        columns:
+            name: Name
+            type: Type
+            unit-price: Unit price
+            quantity: Quantity
+            discount: Discount
+            taxes:
+                default: Taxe(s)
+                simple: VAT
+            total-without-taxes: Total excl. taxes
+            total: Total
+
+        type:
+            service: Service
+            good: Good
+            allowance: Allowance
+
+        actions:
+            add-line: Add a line
+            resync-data: Resynchronize data...
+            remove-line: Remove this line
+
+        obsolete-tax: Obsolete / Removed tax
+        empty:
+            default: There are no additional lines yet.
+            standalone: There are no lines yet.
+
+modals:
+    #
+    # - Resynchronisation des données d'un matériel
+    #
+
+    resync-material-data:
+        title: 'Data resynchronisation of material "{name}"'
+        nothing-to-resynchronize: There is no data to resynchronize.
+        resynchronize-data: Resynchronize selected data
+        selected-data-resynchronized: The selected data has been successfully resynchronized.
+        tax-free: Tax-free
+
+        fields:
+            name: Name
+            reference: Reference
+            unit_price: Unit price
+            unit_replacement_price: Replacement price
+            degressive_rate: Degressive rate
+            taxes: Taxe(s)
+
+    #
+    # - Resynchronisation des données d'un extra
+    #
+
+    resync-extra-data:
+        title: 'Data resynchronisation of line "{name}"'
+        nothing-to-resynchronize: There is no data to resynchronize.
+        resynchronize-data: Resynchronize selected data
+        selected-data-resynchronized: The selected data has been successfully resynchronized.
+        tax-free: Tax-free
+
+        fields:
+            taxes: Taxe(s)
+
+    #
+    # - Sélection de motif d'exemption
+    #
+
+    select-exemption-code:
+        title: VAT exemption reason
+        description: Select the exemption reason to apply.
+        no-reason: No reason

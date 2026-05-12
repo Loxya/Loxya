@@ -14,14 +14,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\Feature;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Enums\BookingViewMode;
 use Loxya\Models\Enums\Group;
 use Loxya\Models\Enums\TechniciansViewMode;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Services\I18n;
+use Loxya\Support\Address;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
 use Loxya\Support\Hash;
+use Loxya\Support\Str;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -35,11 +39,12 @@ use Loxya\Support\Validation\Validator as V;
  * @property string $email
  * @property-read string|null $phone
  * @property-read string|null $street
+ * @property-read string|null $additional_street
  * @property-read string|null $postal_code
+ * @property-read string|null $administrative_area
  * @property-read string|null $locality
- * @property-read int|null $country_id
- * @property-read Country|null $country
- * @property-read string|null $full_address
+ * @property-read Address $address
+ * @property-read Country $country
  * @property string $group
  * @property string $password
  * @property string $language
@@ -100,7 +105,7 @@ final class User extends BaseModel implements Serializable
             'email' => V::custom([$this, 'checkEmail']),
             'group' => V::custom([$this, 'checkGroup']),
             'password' => V::custom([$this, 'checkPassword']),
-            'language' => V::nullable(V::in(['en', 'fr'])),
+            'language' => V::nullable(V::in(array_keys(I18n::AVAILABLE_LANGUAGES))),
             'default_bookings_view' => V::nullable(V::enumValue(BookingViewMode::class)),
             'default_technicians_view' => V::nullable(V::enumValue(TechniciansViewMode::class)),
             'disable_contextual_popovers' => V::nullable(V::boolType()),
@@ -114,7 +119,7 @@ final class User extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkPseudo($value)
+    public function checkPseudo(mixed $value)
     {
         V::notEmpty()
             ->alnum('-', '_', '.')
@@ -132,7 +137,7 @@ final class User extends BaseModel implements Serializable
         return !$alreadyExists ?: 'user-pseudo-already-in-use';
     }
 
-    public function checkPassword($value)
+    public function checkPassword(mixed $value)
     {
         V::notEmpty()->stringType()->check($value);
 
@@ -145,10 +150,10 @@ final class User extends BaseModel implements Serializable
             return $rawPasswordRule;
         }
 
-        return V::oneOf($rawPasswordRule, V::hashed());
+        return V::anyOf($rawPasswordRule, V::hashed());
     }
 
-    public function checkGroup($value)
+    public function checkGroup(mixed $value)
     {
         return V::create()
             ->notEmpty()
@@ -161,7 +166,7 @@ final class User extends BaseModel implements Serializable
             ->validate($value);
     }
 
-    public function checkEmail($value)
+    public function checkEmail(mixed $value)
     {
         V::notEmpty()
             ->email()
@@ -283,6 +288,17 @@ final class User extends BaseModel implements Serializable
         return $this->person->street;
     }
 
+    public function getAdditionalStreetAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The user\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->additional_street;
+    }
+
     public function getPostalCodeAttribute(): string|null
     {
         if (!$this->person) {
@@ -292,6 +308,17 @@ final class User extends BaseModel implements Serializable
             );
         }
         return $this->person->postal_code;
+    }
+
+    public function getAdministrativeAreaAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The user\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->administrative_area;
     }
 
     public function getLocalityAttribute(): string|null
@@ -305,18 +332,7 @@ final class User extends BaseModel implements Serializable
         return $this->person->locality;
     }
 
-    public function getCountryIdAttribute(): int|null
-    {
-        if (!$this->person) {
-            throw new \LogicException(
-                'The user\'s related person is missing, ' .
-                'this relation should always be defined.',
-            );
-        }
-        return $this->person->country_id;
-    }
-
-    public function getCountryAttribute(): Country|null
+    public function getCountryAttribute(): Country
     {
         if (!$this->person) {
             throw new \LogicException(
@@ -327,15 +343,15 @@ final class User extends BaseModel implements Serializable
         return $this->person->country;
     }
 
-    public function getFullAddressAttribute(): string|null
+    public function getAddressAttribute(): Address
     {
         if (!$this->person) {
             throw new \LogicException(
-                'The beneficiary\'s related person is missing, ' .
+                'The user\'s related person is missing, ' .
                 'this relation should always be defined.',
             );
         }
-        return $this->person->full_address;
+        return $this->person->address;
     }
 
     public function getBeneficiaryAttribute(): Beneficiary|null
@@ -409,7 +425,8 @@ final class User extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
+        'full_name',
         'pseudo',
         'email',
         'group',
@@ -447,6 +464,21 @@ final class User extends BaseModel implements Serializable
         });
     }
 
+    public function scopeCustomOrderBy(Builder $query, string $column, string $direction = 'asc'): Builder
+    {
+        Assert::inArray($column, ['full_name', 'pseudo', 'email', 'group'], "Invalid order field.");
+        Assert::inArray($direction, ['asc', 'desc'], "Invalid direction.");
+
+        if ($column !== 'full_name') {
+            return $query->orderBy($column, $direction);
+        }
+
+        $subQuery = Person::selectRaw('CONCAT(last_name, \' \', first_name) as full_name')
+            ->whereColumn('user_id', 'users.id');
+
+        return $query->orderBy($subQuery, $direction);
+    }
+
     // ------------------------------------------------------
     // -
     // -    Méthodes liées à une "entity"
@@ -473,15 +505,22 @@ final class User extends BaseModel implements Serializable
             try {
                 $this->fill($data)->save();
                 $personData['email'] = $this->email;
-            } catch (ValidationException $e) {
+            } catch (ValidationsException $e) {
                 $validationErrors = $e->getValidationErrors();
                 $hasFailed = true;
             }
 
             // - Personne
             try {
-                Person::updateOrCreate(['user_id' => $this->id], $personData);
-            } catch (ValidationException $e) {
+                $person = Person::firstOrNew(['user_id' => $this->id]);
+                if (!$person->exists) {
+                    $defaultCountry = Config::get('mainCountry');
+                    $personData = array_replace($personData, [
+                        'country' => $defaultCountry,
+                    ]);
+                }
+                $person->fill($personData)->save();
+            } catch (ValidationsException $e) {
                 $hasFailed = true;
                 $validationErrors = array_merge($validationErrors, [
                     'person' => $e->getValidationErrors(),
@@ -489,7 +528,7 @@ final class User extends BaseModel implements Serializable
             }
 
             if ($hasFailed) {
-                throw new ValidationException($validationErrors);
+                throw new ValidationsException($validationErrors);
             }
 
             return $this->refresh();
@@ -504,6 +543,7 @@ final class User extends BaseModel implements Serializable
 
     public static function fromLogin(string $identifier, string $password): static
     {
+        /** @var User $user */
         $user = static::where('email', $identifier)
             ->orWhere('pseudo', $identifier)
             ->firstOrFail();
@@ -530,6 +570,45 @@ final class User extends BaseModel implements Serializable
         }
     }
 
+    /**
+     * Permet de créer un pseudo unique à partir d'un prénom et d'un
+     * nom en prenant la première lettre du prénom et le nom au complet
+     * (e.g. `g.dupont`).
+     *
+     * Si le pseudo est déjà utilisé, un nombre sera ajouté à la fin du
+     * pseudo (e.g. `g.dupont1`).
+     *
+     * @param string $firstName Le prénom à utiliser pour générer le pseudo.
+     * @param string $lastName  Le nom à utiliser pour générer le pseudo.
+     *
+     * @return string Le pseudo, unique.
+     */
+    public static function createPseudoFromName(string $firstName, string $lastName): string
+    {
+        Assert::notEmpty($firstName, 'The first name should not be empty');
+        Assert::notEmpty($lastName, 'The last name should not be empty');
+
+        // - Crée un pseudo avec la première lettre du prénom,
+        //   un point et le nom complete (e.g. `g.dupont`).
+        $pseudo = $basePseudo = vsprintf('%s.%s', [
+            substr(Str::slugify($firstName, ''), 0, 1),
+            substr(Str::slugify($lastName), 0, 90),
+        ]);
+
+        // - Si le pseudo existe déjà, ajoute un nombre à la fin (e.g. `g.dupont2`).
+        $doExists = static fn (string $pseudo) => (
+            static::query()
+                ->where('pseudo', $pseudo)
+                ->exists()
+        );
+        $numberSuffix = 1;
+        while ($doExists($pseudo)) {
+            $pseudo = $basePseudo . ++$numberSuffix;
+        }
+
+        return $pseudo;
+    }
+
     // ------------------------------------------------------
     // -
     // -    Serialization
@@ -542,11 +621,12 @@ final class User extends BaseModel implements Serializable
             if (in_array($format, [self::SERIALIZE_SESSION, self::SERIALIZE_DETAILS], true)) {
                 $user->append([
                     'street',
+                    'additional_street',
                     'postal_code',
+                    'administrative_area',
                     'locality',
-                    'country_id',
                     'country',
-                    'full_address',
+                    'address',
                 ]);
             }
         });

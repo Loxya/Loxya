@@ -8,30 +8,6 @@
     flex-direction: column;
     height: 100%;
 
-    &__link {
-        padding: 10px 0;
-
-        // - `!important`, pour surcharger la définition globale du `<a>`.
-        // stylelint-disable-next-line declaration-no-important
-        color: globals.$text-base-color !important;
-
-        &:hover {
-            // - `!important`, pour surcharger la définition globale du `<a>`.
-            // stylelint-disable-next-line declaration-no-important
-            color: globals.$link-hover-color !important;
-        }
-    }
-
-    &:not(&--trashed) {
-        #{$block}__row {
-            cursor: pointer;
-
-            &:hover > #{$block}__cell {
-                background-color: color.adjust(globals.$bg-color-table-td, $lightness: 5%);
-            }
-        }
-    }
-
     &__cell {
         &__empty {
             color: globals.$text-light-color;
@@ -59,15 +35,11 @@
 
         &--rental-price,
         &--replacement-price {
-            // - Important pour surcharger la définition du <th> de `.VueTables`.
-            // stylelint-disable-next-line declaration-no-important
             text-align: right !important;
         }
 
         &--quantity,
         &--quantity-broken {
-            // - Important pour surcharger la définition du <th> de `.VueTables`.
-            // stylelint-disable-next-line declaration-no-important
             text-align: center !important;
         }
 
@@ -95,6 +67,23 @@
             &--park,
             &--description {
                 display: table-cell;
+            }
+        }
+    }
+
+    &__item {
+        &__name {
+            display: block;
+            font-weight: 600;
+
+            &__name {
+                display: block;
+            }
+
+            &__reference {
+                display: block;
+                color: globals.$text-light-color;
+                font-weight: 400;
             }
         }
     }

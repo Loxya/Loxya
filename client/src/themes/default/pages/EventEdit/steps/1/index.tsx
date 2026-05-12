@@ -1,4 +1,5 @@
 import './index.scss';
+import { Step } from '..';
 import pick from 'lodash/pick';
 import Period from '@/utils/period';
 import upperFirst from 'lodash/upperFirst';
@@ -12,6 +13,7 @@ import apiEvents from '@/stores/api/events';
 import Alert from '@/themes/default/components/Alert';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Fieldset from '@/themes/default/components/Fieldset';
 import ManagerSelect from './ManagerSelect';
 import getBookingColor, {
@@ -81,7 +83,7 @@ const hasDirtyData = (savedData: EventDetails | null, pendingData: EditedData): 
 const EventEditStepInfos = defineComponent({
     name: 'EventEditStepInfos',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         event: {
@@ -420,7 +422,7 @@ const EventEditStepInfos = defineComponent({
             try {
                 const data = await doRequest();
                 this.$emit('updateEvent', data);
-                this.$emit('goToStep', 2);
+                this.$emit('goToStep', Step.BENEFICIARIES);
             } catch (error) {
                 const { __ } = this;
 
@@ -480,180 +482,174 @@ const EventEditStepInfos = defineComponent({
 
         return (
             <form class="EventEditStepInfos" onSubmit={handleSubmit}>
-                <Fieldset>
-                    <FormField
-                        ref="inputTitle"
-                        label="title"
-                        v-model={data.title}
-                        onInput={handleChange}
-                        error={validationErrors?.title}
-                        required
-                    />
-                    <div class="EventEditStepInfos__operation-period">
-                        <div class="EventEditStepInfos__operation-period__dates">
+                <div class="EventEditStepInfos__wrapper">
+                    <div class="EventEditStepInfos__content">
+                        <Fieldset>
                             <FormField
-                                label={__('operation-period')}
-                                type={(
-                                    (data.operation_period?.isFullDays ?? operationPeriodIsFullDays)
-                                        ? 'date' : 'datetime'
-                                )}
-                                v-model={data.operation_period}
-                                error={validationErrors?.operation_period}
-                                onChange={handleOperationPeriodChange}
-                                withFullDaysToggle
-                                withoutMinutes
+                                ref="inputTitle"
+                                label="title"
+                                v-model={data.title}
+                                onInput={handleChange}
+                                error={validationErrors?.title}
                                 required
-                                range
                             />
-                        </div>
-                        {(duration !== undefined && duration > 0) && (
-                            <div class="EventEditStepInfos__operation-period__duration">
-                                {__('global.duration-days', { duration }, duration)}
+                            <div class="EventEditStepInfos__operation-period">
+                                <div class="EventEditStepInfos__operation-period__dates">
+                                    <FormField
+                                        label={__('operation-period')}
+                                        type={(
+                                            (data.operation_period?.isFullDays ?? operationPeriodIsFullDays)
+                                                ? 'date' : 'datetime'
+                                        )}
+                                        v-model={data.operation_period}
+                                        error={validationErrors?.operation_period}
+                                        onChange={handleOperationPeriodChange}
+                                        withFullDaysToggle
+                                        withoutMinutes
+                                        required
+                                        range
+                                    />
+                                </div>
+                                {(duration !== undefined && duration > 0) && (
+                                    <div class="EventEditStepInfos__operation-period__duration">
+                                        {__('global.duration-days', { duration }, duration)}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                    {canSyncPeriods && (
-                        <FormField
-                            type="switch"
-                            label={__('sync-mobilization-period')}
-                            value={shouldSyncPeriods}
-                            onChange={handleSyncPeriodsChange}
-                            required
-                        />
-                    )}
-                    {(!canSyncPeriods || !shouldSyncPeriods) && (
-                        <FormField
-                            label={__('mobilization-period')}
-                            help={__('mobilization-period-help')}
-                            type="datetime"
-                            v-model={data.mobilization_period}
-                            error={validationErrors?.mobilization_period}
-                            readonly={((): boolean | 'start' | 'end' => {
-                                if (!isDepartureInventoryDone && !isReturnInventoryDone) {
-                                    return false;
-                                }
-                                if (isDepartureInventoryDone && isReturnInventoryDone) {
-                                    return true;
-                                }
-                                return isDepartureInventoryDone ? 'start' : 'end';
-                            })()}
-                            minDate={(
-                                isDepartureInventoryDone
-                                    ? data.mobilization_period?.start
-                                    : undefined
-                            )}
-                            maxDate={(
-                                isReturnInventoryDone
-                                    ? data.mobilization_period?.end
-                                    : undefined
-                            )}
-                            onChange={handleChange}
-                            required
-                            range
-                        />
-                    )}
-                    {readonlyMobilizationPeriodWarning !== null && (
-                        <Alert
-                            type="info"
-                            class={[
-                                'EventEditStepInfos__warning',
-                                'EventEditStepInfos__warning--mobilization-period-readonly',
-                            ]}
-                        >
-                            {readonlyMobilizationPeriodWarning}
-                        </Alert>
-                    )}
-                    {technicianTransferWarning !== null && (
-                        <Alert
-                            type={hasAssignmentCriticalImpactingChange ? 'warning' : 'info'}
-                            class={[
-                                'EventEditStepInfos__warning',
-                                'EventEditStepInfos__warning--technician-transfer',
-                            ]}
-                        >
-                            {technicianTransferWarning}
-                        </Alert>
-                    )}
-                </Fieldset>
-                <Fieldset title={__('global.event-details')}>
-                    <FormField
-                        label="location"
-                        v-model={data.location}
-                        class="EventEditStepInfos__location"
-                        onInput={handleChange}
-                        error={validationErrors?.location}
-                    />
-                    <FormField
-                        label="description"
-                        type="textarea"
-                        v-model={data.description}
-                        class="EventEditStepInfos__description"
-                        onInput={handleChange}
-                        error={validationErrors?.description}
-                    />
-                    <div class="EventEditStepInfos__roles">
-                        {canAssignManager && (
-                            <FormField
-                                type="custom"
-                                label={__('project-manager.label')}
-                                help={__('project-manager.help')}
-                                class="EventEditStepInfos__roles__item"
-                                error={validationErrors?.manager_id}
-                            >
-                                <ManagerSelect
-                                    defaultValue={event?.manager ?? null}
-                                    onChange={handleChangeManager}
+                            {canSyncPeriods && (
+                                <FormField
+                                    type="switch"
+                                    label={__('sync-mobilization-period')}
+                                    value={shouldSyncPeriods}
+                                    onChange={handleSyncPeriodsChange}
+                                    required
                                 />
-                            </FormField>
-                        )}
-                    </div>
-                    {allowBillingToggling && (
-                        <div class="EventEditStepInfos__is-billable">
+                            )}
+                            {(!canSyncPeriods || !shouldSyncPeriods) && (
+                                <FormField
+                                    label={__('mobilization-period')}
+                                    help={__('mobilization-period-help')}
+                                    type="datetime"
+                                    v-model={data.mobilization_period}
+                                    error={validationErrors?.mobilization_period}
+                                    readonly={((): boolean | 'start' | 'end' => {
+                                        if (!isDepartureInventoryDone && !isReturnInventoryDone) {
+                                            return false;
+                                        }
+                                        if (isDepartureInventoryDone && isReturnInventoryDone) {
+                                            return true;
+                                        }
+                                        return isDepartureInventoryDone ? 'start' : 'end';
+                                    })()}
+                                    minDate={(
+                                        isDepartureInventoryDone
+                                            ? data.mobilization_period?.start
+                                            : undefined
+                                    )}
+                                    maxDate={(
+                                        isReturnInventoryDone
+                                            ? data.mobilization_period?.end
+                                            : undefined
+                                    )}
+                                    onChange={handleChange}
+                                    required
+                                    range
+                                />
+                            )}
+                            {readonlyMobilizationPeriodWarning !== null && (
+                                <Alert
+                                    type="info"
+                                    class={[
+                                        'EventEditStepInfos__warning',
+                                        'EventEditStepInfos__warning--mobilization-period-readonly',
+                                    ]}
+                                >
+                                    {readonlyMobilizationPeriodWarning}
+                                </Alert>
+                            )}
+                            {technicianTransferWarning !== null && (
+                                <Alert
+                                    type={hasAssignmentCriticalImpactingChange ? 'warning' : 'info'}
+                                    class={[
+                                        'EventEditStepInfos__warning',
+                                        'EventEditStepInfos__warning--technician-transfer',
+                                    ]}
+                                >
+                                    {technicianTransferWarning}
+                                </Alert>
+                            )}
+                        </Fieldset>
+                        <Fieldset title={__('global.event-details')}>
                             <FormField
-                                label="is-billable"
-                                type="switch"
-                                v-model={data.is_billable}
-                                class="EventEditStepInfos__is-billable__input"
-                                onChange={handleChange}
-                                error={validationErrors?.is_billable}
+                                label="location"
+                                v-model={data.location}
+                                class="EventEditStepInfos__location"
+                                onInput={handleChange}
+                                error={validationErrors?.location}
                             />
-                            <div class="EventEditStepInfos__is-billable__help">
-                                <i class="fas fa-arrow-right" />&nbsp;
-                                {data.is_billable && __('global.is-billable-help')}
-                                {!data.is_billable && __('global.is-not-billable-help')}
+                            <FormField
+                                label="description"
+                                type="textarea"
+                                v-model={data.description}
+                                class="EventEditStepInfos__description"
+                                onInput={handleChange}
+                                error={validationErrors?.description}
+                            />
+                            <div class="EventEditStepInfos__roles">
+                                {canAssignManager && (
+                                    <FormField
+                                        type="custom"
+                                        label={__('project-manager.label')}
+                                        help={__('project-manager.help')}
+                                        class="EventEditStepInfos__roles__item"
+                                        error={validationErrors?.manager_id}
+                                    >
+                                        <ManagerSelect
+                                            defaultValue={event?.manager ?? null}
+                                            onChange={handleChangeManager}
+                                        />
+                                    </FormField>
+                                )}
                             </div>
-                        </div>
-                    )}
-                </Fieldset>
-                <Fieldset title={__('global.display-customization')}>
-                    <FormField
-                        label={__('color-on-calendar.label')}
-                        type="color"
-                        v-model={data.color}
-                        class="EventEditStepInfos__color"
-                        help={((): string | undefined => {
-                            // - Dans le cas ou c'est défini au niveau du booking (= ici donc), on ne met
-                            //   pas de placeholder + aide avec cette couleur vu que c'est censé être la
-                            //   valeur du champ.
-                            if (data.color !== null || colorDetails.reason === BookingColorReason.BOOKING_DEFINED) {
-                                return undefined;
-                            }
-
-                            return __('color-on-calendar.help.default');
-                        })()}
-                        placeholder={((): string | undefined => {
-                            // - Dans le cas ou c'est défini au niveau du booking (= ici donc), on ne met
-                            //   pas de placeholder + aide avec cette couleur vu que c'est censé être la
-                            //   valeur du champ.
-                            if (data.color !== null || colorDetails.reason === BookingColorReason.BOOKING_DEFINED) {
-                                return undefined;
-                            }
-                            return colorDetails.value?.toHexString();
-                        })()}
-                        onChange={handleChange}
-                        error={validationErrors?.color}
-                    />
-                </Fieldset>
+                            {allowBillingToggling && (
+                                <div class="EventEditStepInfos__is-billable">
+                                    <FormField
+                                        label="is-billable"
+                                        type="switch"
+                                        v-model={data.is_billable}
+                                        class="EventEditStepInfos__is-billable__input"
+                                        onChange={handleChange}
+                                        error={validationErrors?.is_billable}
+                                    />
+                                    <div class="EventEditStepInfos__is-billable__help">
+                                        <i class="fas fa-arrow-right" />&nbsp;
+                                        {data.is_billable && __('global.is-billable-help')}
+                                        {!data.is_billable && __('global.is-not-billable-help')}
+                                    </div>
+                                </div>
+                            )}
+                        </Fieldset>
+                        <Fieldset title={__('global.display-customization')}>
+                            <FormField
+                                label={__('color-on-calendar.label')}
+                                type="color"
+                                v-model={data.color}
+                                class="EventEditStepInfos__color"
+                                placeholder={((): string | undefined => {
+                                    // - Dans le cas ou c'est défini au niveau du booking (= ici donc), on ne met
+                                    //   pas de placeholder + aide avec cette couleur vu que c'est censé être la
+                                    //   valeur du champ.
+                                    if (data.color !== null || colorDetails.reason === BookingColorReason.BOOKING_DEFINED) {
+                                        return undefined;
+                                    }
+                                    return colorDetails.value?.toHexString();
+                                })()}
+                                onChange={handleChange}
+                                error={validationErrors?.color}
+                            />
+                        </Fieldset>
+                    </div>
+                </div>
                 <section class="EventEditStepInfos__actions">
                     <Button
                         htmlType="submit"

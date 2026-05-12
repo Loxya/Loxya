@@ -8,11 +8,12 @@ import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import Fieldset from '@/themes/default/components/Fieldset';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Button from '@/themes/default/components/Button';
 import { ApiErrorCode } from '@/stores/api/@codes';
 
 import type { UserSettings } from '@/stores/api/users';
-import type { Options } from '@/utils/formatOptions';
+import type { Options } from '@/themes/default/components/Select';
 
 type FormData = Pick<UserSettings, (
     | 'language'
@@ -42,7 +43,7 @@ const normalizeFormData = (savedData?: UserSettings): FormData => ({
 const InterfaceUserSettings = defineComponent({
     name: 'InterfaceUserSettings',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     data: (): Data => ({
         hasCriticalError: false,
@@ -64,12 +65,14 @@ const InterfaceUserSettings = defineComponent({
             return config.features.technicians;
         },
 
-        langsOptions: (): Options<{ id: 'fr' | 'en' }> => [
-            { label: 'Français', value: 'fr' },
-            { label: 'English', value: 'en' },
-        ],
+        langsOptions(): Options<'fr' | 'en'> {
+            return [
+                { label: 'Français', value: 'fr' },
+                { label: 'Anglais', value: 'en' },
+            ];
+        },
 
-        bookingsViewModesOptions(): Options<{ id: BookingsViewMode }> {
+        bookingsViewModesOptions(): Options<BookingsViewMode> {
             const { __ } = this;
 
             return [
@@ -84,7 +87,7 @@ const InterfaceUserSettings = defineComponent({
             ];
         },
 
-        techniciansViewModesOptions(): Options<{ id: TechniciansViewMode }> {
+        techniciansViewModesOptions(): Options<TechniciansViewMode> {
             const { __ } = this;
 
             return [

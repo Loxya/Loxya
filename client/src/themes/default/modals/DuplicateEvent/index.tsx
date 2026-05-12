@@ -3,6 +3,7 @@ import { RequestError } from '@/globals/requester';
 import config from '@/globals/config';
 import apiEvents from '@/stores/api/events';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 import Alert from '@/themes/default/components/Alert';
@@ -42,11 +43,10 @@ const DuplicateEvent = defineComponent({
     name: 'DuplicateEvent',
     modal: {
         width: 700,
-        draggable: true,
-        clickToClose: false,
+        dismissible: false,
     },
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         event: {

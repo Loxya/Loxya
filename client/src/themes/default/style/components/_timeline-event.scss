@@ -26,8 +26,6 @@
         font-weight: 600;
     }
 
-    // - La désactivation des `!important` est là pour surcharger le style core des éléments de timelines.
-    /* stylelint-disable declaration-no-important */
     &--past {
         --background-color: #{$calendar-event-past-color} !important;
         --color: $calendar-event-past-text-color !important;
@@ -62,7 +60,6 @@
             --background-color: #{$background-color} !important;
         }
     }
-    /* stylelint-enable declaration-no-important */
 
     &--in-progress {
         &,

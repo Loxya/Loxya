@@ -1,0 +1,8 @@
+@use '~@/themes/default/style/globals';
+
+@forward '~@/components/Modal' with (
+    $modal-border-radius: globals.$border-radius-large,
+    $modal-background: globals.$bg-color-body,
+    $modal-color: globals.$text-base-color,
+    $modal-shadow: #151515,
+);

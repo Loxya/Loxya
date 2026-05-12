@@ -1,9 +1,11 @@
 import './index.scss';
 import pick from 'lodash/pick';
-import cloneDeep from 'lodash/cloneDeep';
 import { defineComponent } from 'vue';
+import config from '@/globals/config';
+import cloneDeep from 'lodash/cloneDeep';
 import formatOptions from '@/utils/formatOptions';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 import { Group } from '@/stores/api/groups';
@@ -21,28 +23,56 @@ type Props = {
     isSaving?: boolean,
 
     /** Liste des erreurs de validation éventuelles. */
-    errors?: Partial<Record<keyof UserEdit, string>>,
+    errors?: Partial<Record<keyof UserEdit, string>> | null,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur soumet les changements.
+     *
+     * @param data - Les données soumises.
+     */
+    onSubmit?(data: UserEdit): void,
+
+    /**
+     * Fonction appelée lorsque l'utilisateur manifeste
+     * son souhait d'annuler l'edition.
+     */
+    onCancel?(): void,
 };
 
 type Data = {
     data: UserEdit,
 };
 
-const DEFAULT_VALUES: Data['data'] = Object.freeze({
-    first_name: '',
-    last_name: '',
-    pseudo: '',
-    email: '',
-    phone: '',
-    password: '',
-    group: Group.OPERATION,
-});
+const getDefaults = (savedData: UserDetails | null): UserEdit => {
+    const BASE_DEFAULTS: UserEdit = {
+        first_name: '',
+        last_name: '',
+        pseudo: '',
+        email: '',
+        phone: null,
+        password: '',
+        group: Group.OPERATION,
+    };
+
+    const data = {
+        ...BASE_DEFAULTS,
+        ...pick(savedData ?? {}, Object.keys(BASE_DEFAULTS)),
+    };
+
+    if ((savedData?.phone ?? null) !== null) {
+        data.phone = !savedData!.phone!.country?.isSame(config.mainCountry)
+            ? savedData!.phone!.formatInternational()
+            : savedData!.phone!.formatNational();
+    }
+
+    return data;
+};
 
 /** Formulaire d'édition d'un utilisateur. */
 const UserEditForm = defineComponent({
     name: 'UserEditForm',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         savedData: {
@@ -54,17 +84,23 @@ const UserEditForm = defineComponent({
             default: false,
         },
         errors: {
-            type: Object as PropType<Props['errors']>,
+            type: Object as PropType<Required<Props>['errors']>,
+            default: null,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onSubmit: {
+            type: Function as PropType<Props['onSubmit']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onCancel: {
+            type: Function as PropType<Props['onCancel']>,
             default: undefined,
         },
     },
-    emits: ['change', 'submit', 'cancel'],
+    emits: ['submit', 'cancel'],
     data(): Data {
-        const data: UserEdit = {
-            ...DEFAULT_VALUES,
-            ...pick(this.savedData ?? {}, Object.keys(DEFAULT_VALUES)),
-        };
-
+        const data = getDefaults(this.savedData);
         return {
             data,
         };
@@ -107,10 +143,6 @@ const UserEditForm = defineComponent({
         handleCancel() {
             this.$emit('cancel');
         },
-
-        handleGroupChange() {
-            this.$emit('change', cloneDeep(this.data));
-        },
     },
     render() {
         const {
@@ -122,7 +154,6 @@ const UserEditForm = defineComponent({
             groupsOptions,
             handleSubmit,
             handleCancel,
-            handleGroupChange,
         } = this;
 
         return (
@@ -169,7 +200,6 @@ const UserEditForm = defineComponent({
                         v-model={data.group}
                         options={groupsOptions}
                         error={errors?.group}
-                        onChange={handleGroupChange}
                         help={__('page.user.help-group')}
                         placeholder={false}
                         required

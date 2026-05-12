@@ -1,0 +1,11 @@
+<p>
+    <strong>{{ organization.name }}</strong>
+    {%- if organization.email is not empty -%}
+    <br />
+    {{ organization.email }}
+    {%- endif -%}
+    {%- if organization.phone is not empty -%}
+    <br />
+    {{ organization.phone|format_phone(organization.country) }}
+    {%- endif ~%}
+</p>

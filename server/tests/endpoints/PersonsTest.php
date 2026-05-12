@@ -19,11 +19,15 @@ final class PersonsTest extends ApiTestCase
                 'email' => 'tester@loxya.com',
                 'phone' => null,
                 'street' => "1, somewhere av.",
-                'postal_code' => '1234',
+                'additional_street' => null,
+                'postal_code' => '12340',
+                'administrative_area' => null,
                 'locality' => "Megacity",
-                'country_id' => 1,
-                'country' => CountriesTest::data(1),
-                'full_address' => "1, somewhere av.\n1234 Megacity",
+                'country' => 'FR',
+                'address' => implode("\n", [
+                    "1, somewhere av.",
+                    "12340 Megacity",
+                ]),
             ],
             [
                 'id' => 2,
@@ -34,56 +38,67 @@ final class PersonsTest extends ApiTestCase
                 'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => null,
+                'administrative_area' => null,
                 'locality' => null,
-                'country_id' => null,
-                'country' => null,
-                'full_address' => null,
+                'country' => 'FR',
+                'address' => null,
             ],
             [
                 'id' => 3,
                 'user_id' => null,
-                'first_name' => 'Client',
-                'last_name' => 'Benef',
-                'full_name' => 'Client Benef',
-                'email' => 'client@beneficiaires.com',
-                'phone' => '+33123456789',
+                'first_name' => 'Élise',
+                'last_name' => 'Faure',
+                'full_name' => 'Élise Faure',
+                'email' => 'elise@loxya.fr',
+                'phone' => '+3211223344',
                 'street' => '156 bis, avenue des tests poussés',
+                'additional_street' => "Étage 3, Porte 2",
                 'postal_code' => '88080',
+                'administrative_area' => null,
                 'locality' => 'Wazzaville',
-                'country_id' => null,
-                'country' => null,
-                'full_address' => "156 bis, avenue des tests poussés\n88080 Wazzaville",
+                'country' => 'FR',
+                'address' => implode("\n", [
+                    "156 bis, avenue des tests poussés",
+                    "Étage 3, Porte 2",
+                    "88080 Wazzaville",
+                ]),
             ],
             [
                 'id' => 4,
                 'user_id' => null,
                 'first_name' => 'Jean',
-                'last_name' => 'Technicien',
-                'full_name' => 'Jean Technicien',
-                'email' => 'client@technicien.com',
+                'last_name' => 'Garcia',
+                'full_name' => 'Jean Garcia',
+                'email' => 'jg@loxya.fr',
                 'phone' => '+33645698520',
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => null,
+                'administrative_area' => null,
                 'locality' => null,
-                'country_id' => 2,
-                'country' => CountriesTest::data(2),
-                'full_address' => null,
+                'country' => 'CH',
+                'address' => null,
             ],
             [
                 'id' => 5,
                 'user_id' => null,
-                'first_name' => 'Alphonse',
-                'last_name' => 'Latour',
-                'full_name' => 'Alphonse Latour',
-                'email' => 'alphonse@latour.test',
-                'phone' => null,
-                'street' => null,
-                'postal_code' => null,
-                'locality' => null,
-                'country_id' => null,
-                'country' => null,
-                'full_address' => null,
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'full_name' => 'John Doe',
+                'email' => 'john@doe.test',
+                'phone' => '+17705555765',
+                'street' => "47 W 13th St",
+                'additional_street' => null,
+                'postal_code' => '10011',
+                'administrative_area' => 'NY',
+                'locality' => "New York",
+                'address' => implode("\n", [
+                    "47 W 13th St",
+                    "New York, NY 10011",
+                ]),
+                'country' => 'US',
             ],
             [
                 'id' => 6,
@@ -92,13 +107,17 @@ final class PersonsTest extends ApiTestCase
                 'last_name' => 'Berluc',
                 'full_name' => 'Henry Berluc',
                 'email' => 'visitor@loxya.com',
-                'phone' => '+33724000000',
+                'phone' => '+33794589321',
                 'street' => '30 avenue du chateau',
+                'additional_street' => null,
                 'postal_code' => '75000',
+                'administrative_area' => null,
                 'locality' => 'Paris',
-                'country_id' => 1,
-                'country' => CountriesTest::data(1),
-                'full_address' => "30 avenue du chateau\n75000 Paris",
+                'country' => 'FR',
+                'address' => implode("\n", [
+                    "30 avenue du chateau",
+                    "75000 Paris",
+                ]),
             ],
             [
                 'id' => 7,
@@ -109,11 +128,12 @@ final class PersonsTest extends ApiTestCase
                 'email' => 'external@loxya.com',
                 'phone' => '+33786325500',
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => null,
+                'administrative_area' => null,
                 'locality' => null,
-                'country_id' => null,
-                'country' => null,
-                'full_address' => null,
+                'country' => 'BE',
+                'address' => null,
             ],
             [
                 'id' => 8,
@@ -124,11 +144,15 @@ final class PersonsTest extends ApiTestCase
                 'email' => 'alex.dupont@loxya.com',
                 'phone' => '+33678901234',
                 'street' => "15 Rue de l'Église",
+                'additional_street' => null,
                 'postal_code' => '75001',
+                'administrative_area' => null,
                 'locality' => 'Paris',
-                'country_id' => 1,
-                'country' => CountriesTest::data(1),
-                'full_address' => "15 Rue de l'Église\n75001 Paris",
+                'country' => 'FR',
+                'address' => implode("\n", [
+                    "15 Rue de l'Église",
+                    "75001 Paris",
+                ]),
             ],
         ]);
     }
@@ -138,14 +162,14 @@ final class PersonsTest extends ApiTestCase
         $this->client->get('/api/persons');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(8, [
-            self::data(3),
             self::data(6),
+            self::data(5),
             self::data(8),
             self::data(7),
+            self::data(3),
             self::data(1),
-            self::data(5),
-            self::data(2),
             self::data(4),
+            self::data(2),
         ]);
     }
 
@@ -155,7 +179,7 @@ final class PersonsTest extends ApiTestCase
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(2, [
             self::data(1), // - Jean Fountain
-            self::data(4), // - Jean Technicien
+            self::data(4), // - Jean Garcia
         ]);
 
         $this->client->get('/api/persons?search=jean fou');
@@ -164,10 +188,10 @@ final class PersonsTest extends ApiTestCase
             self::data(1), // - Jean Fountain
         ]);
 
-        $this->client->get('/api/persons?search=technicien jean');
+        $this->client->get('/api/persons?search=garcia jean');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(1, [
-            self::data(4), // - Jean Technicien
+            self::data(4), // - Jean Garcia
         ]);
     }
 
@@ -178,8 +202,8 @@ final class PersonsTest extends ApiTestCase
         $this->assertResponseHasKeyEquals('pagination.perPage', 2);
         $this->assertResponseHasKeyEquals('pagination.total.pages', 4);
         $this->assertResponsePaginatedData(8, [
-            self::data(3),
             self::data(6),
+            self::data(5),
         ]);
     }
 }

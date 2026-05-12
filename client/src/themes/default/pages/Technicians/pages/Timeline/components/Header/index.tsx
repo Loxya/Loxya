@@ -1,11 +1,8 @@
 import './index.scss';
 import Day from '@/utils/day';
 import { defineComponent, markRaw } from 'vue';
-import { TechniciansViewMode } from '@/stores/api/users';
 import Button from '@/themes/default/components/Button';
-import Dropdown from '@/themes/default/components/Dropdown';
 import DatePicker from '@/themes/default/components/DatePicker';
-import ViewModeSwitch from '../../../../components/ViewModeSwitch';
 import FiltersPanel, { FiltersSchema } from '../Filters';
 
 import type { Filters } from '../Filters';
@@ -149,52 +146,32 @@ const TechniciansPlanningHeader = defineComponent({
 
         return (
             <div class="TechniciansPlanningHeader">
-                <div class="ScheduleCalendarHeader__main">
-                    <div class="TechniciansPlanningHeader__main__filters">
-                        <DatePicker
-                            type="date"
-                            value={centerDate}
-                            onInput={handleChangeCenterDate}
-                            class="TechniciansPlanningHeader__main__filters__center-date"
-                            withSnippets
-                        />
-                        <Button
-                            type="transparent"
-                            icon="compress-arrows-alt"
-                            class="TechniciansPlanningHeader__main__filters__button"
-                            onClick={handleSetTodayDate}
-                            disabled={isToday}
-                            collapsible
-                        >
-                            {__('global.center-on-today')}
-                        </Button>
-                        <Button
-                            type="transparent"
-                            icon="sync-alt"
-                            class="TechniciansPlanningHeader__main__filters__button"
-                            onClick={handleRefresh}
-                            disabled={isLoading}
-                            collapsible
-                        >
-                            {__('global.action-refresh')}
-                        </Button>
-                    </div>
-                    <div class="TechniciansPlanningHeader__main__actions">
-                        <ViewModeSwitch mode={TechniciansViewMode.TIMELINE} />
-                        <Button
-                            type="add"
-                            icon="user-plus"
-                            to={{ name: 'add-technician' }}
-                            collapsible
-                        >
-                            {__('page.action-add')}
-                        </Button>
-                        <Dropdown>
-                            <Button icon="tools" to={{ name: 'roles' }}>
-                                {__('page.manage-roles')}
-                            </Button>
-                        </Dropdown>
-                    </div>
+                <div class="TechniciansPlanningHeader__main">
+                    <DatePicker
+                        type="date"
+                        value={centerDate}
+                        onInput={handleChangeCenterDate}
+                        class="TechniciansPlanningHeader__main__center-date"
+                        withSnippets
+                    />
+                    <Button
+                        type="transparent"
+                        icon="compress-arrows-alt"
+                        onClick={handleSetTodayDate}
+                        disabled={isToday}
+                        collapsible
+                    >
+                        {__('global.center-on-today')}
+                    </Button>
+                    <Button
+                        type="transparent"
+                        icon="sync-alt"
+                        onClick={handleRefresh}
+                        disabled={isLoading}
+                        collapsible
+                    >
+                        {__('global.action-refresh')}
+                    </Button>
                 </div>
                 <FiltersPanel
                     values={filters}

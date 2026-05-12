@@ -1,16 +1,21 @@
 import './index.scss';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
 import generateUniqueId from 'lodash/uniqueId';
+import { DisabledKey, InvalidKey } from '@/themes/default/components/@constants';
 
-import type { PropType } from 'vue';
+import type { Injected, PropType } from 'vue';
 
-type Option = {
+type Option<T extends string | number = string | number> = {
     /** Le libellé qui sera affiché pour cette option. */
     label: string,
 
     /** La valeur de l'option. */
-    value: string,
+    value: T,
 };
+
+export type Options<T extends string | number = string | number> = (
+    Array<Option<T>>
+);
 
 type Props = {
     /**
@@ -28,7 +33,7 @@ type Props = {
      * Doit être fournie sous forme de tableau d'objet (Une option = Un objet).
      * Voir le type {@link Option} pour plus de détails sur le format de chaque option.
      */
-    options: Option[],
+    options: Options,
 
     /**
      * Valeur actuellement sélectionnée.
@@ -60,6 +65,8 @@ type Props = {
 
 type InstanceProperties = {
     uniqueId: string | undefined,
+    injectedInvalid: Injected<typeof InvalidKey>,
+    injectedDisabled: Injected<typeof DisabledKey>,
 };
 
 type Data = {
@@ -69,10 +76,6 @@ type Data = {
 /** Groupe de champ de formulaire de type "radio". */
 const Radio = defineComponent({
     name: 'Radio',
-    inject: {
-        'input.invalid': { default: false },
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -123,6 +126,8 @@ const Radio = defineComponent({
     emits: ['input', 'change'],
     setup: (): InstanceProperties => ({
         uniqueId: undefined,
+        injectedInvalid: inject(InvalidKey, computed(() => false)),
+        injectedDisabled: inject(DisabledKey, computed(() => false)),
     }),
     data: (): Data => ({
         componentKey: 0,
@@ -132,20 +137,14 @@ const Radio = defineComponent({
             if (this.invalid !== undefined) {
                 return this.invalid;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'];
+            return this.injectedInvalid;
         },
 
         inheritedDisabled(): boolean {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
     },
     created() {

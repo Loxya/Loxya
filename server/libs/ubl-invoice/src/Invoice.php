@@ -1,0 +1,1311 @@
+<?php
+declare(strict_types=1);
+
+namespace NumNum\UBL;
+
+use Carbon\Carbon;
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use InvalidArgumentException;
+use Sabre\Xml\Reader;
+use Sabre\Xml\Writer;
+use Sabre\Xml\XmlDeserializable;
+use Sabre\Xml\XmlSerializable;
+use function Sabre\Xml\Deserializer\mixedContent;
+
+class Invoice implements XmlSerializable, XmlDeserializable
+{
+    public $xmlTagName = "Invoice";
+
+    private $UBLVersionID = "2.1";
+
+    private $customizationID = "1.0";
+
+    private $profileID;
+
+    private $id;
+
+    private $copyIndicator;
+
+    private $issueDate;
+
+    private ?DateTime $issueTime;
+
+    protected $invoiceTypeCode = InvoiceTypeCode::INVOICE;
+
+    /** @var string[] */
+    private array $notes = [];
+
+    private $taxPointDate;
+
+    private $dueDate;
+
+    private $paymentTerms;
+
+    private $accountingSupplierParty;
+
+    private $accountingCustomerParty;
+
+    private $accountingCustomerPartyContact;
+
+    private $payeeParty;
+
+    /** @var PaymentMeans[] $paymentMeans */
+    private $paymentMeans;
+
+    private $taxTotal;
+
+    private $legalMonetaryTotal;
+
+    /** @var InvoiceLine[] $invoiceLines */
+    protected $invoiceLines;
+
+    private $allowanceCharges;
+
+    private $additionalDocumentReferences = [];
+
+    private $projectReference;
+
+    private $documentCurrencyCode = "EUR";
+
+    private $taxCurrencyCode;
+
+    private $buyerReference;
+
+    private $accountingCostCode;
+
+    private $invoicePeriod;
+
+    /** @var BillingReference[] */
+    private array $billingReferences = [];
+
+    private $delivery;
+
+    private $orderReference;
+
+    private $contractDocumentReference;
+
+    private $despatchDocumentReference;
+
+    private $receiptDocumentReference;
+
+    private $originatorDocumentReference;
+
+    // phpcs:ignore SlevomatCodingStandard.Functions.DisallowEmptyFunction
+    final public function __construct() {}
+
+    /**
+     * @return string
+     */
+    public function getUBLVersionId(): ?string
+    {
+        return $this->UBLVersionID;
+    }
+
+    /**
+     * @param string $UBLVersionID
+     *                             eg. '2.0', '2.1', '2.2', ...
+     *
+     * @return static
+     */
+    public function setUBLVersionId(?string $UBLVersionID)
+    {
+        $this->UBLVersionID = $UBLVersionID;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param string|null $id
+     *
+     * @return static
+     */
+    public function setId(?string $id)
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCustomizationId(): ?string
+    {
+        return $this->customizationID;
+    }
+
+    /**
+     * @param string|null $customizationID
+     *
+     * @return static
+     */
+    public function setCustomizationId(?string $customizationID)
+    {
+        $this->customizationID = $customizationID;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProfileId(): ?string
+    {
+        return $this->profileID;
+    }
+
+    /**
+     * @param string|null $profileID
+     *
+     * @return static
+     */
+    public function setProfileId(?string $profileID)
+    {
+        $this->profileID = $profileID;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCopyIndicator(): bool
+    {
+        return $this->copyIndicator;
+    }
+
+    /**
+     * @param bool $copyIndicator
+     *
+     * @return static
+     */
+    public function setCopyIndicator(bool $copyIndicator)
+    {
+        $this->copyIndicator = $copyIndicator;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getIssueDate(): ?DateTime
+    {
+        return $this->issueDate;
+    }
+
+    /**
+     * @param DateTime $issueDate
+     *
+     * @return static
+     */
+    public function setIssueDate(?DateTime $issueDate)
+    {
+        $this->issueDate = $issueDate;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getIssueTime(): ?DateTime
+    {
+        return $this->issueTime ?? null;
+    }
+
+    /**
+     * @param DateTime $issueTime
+     *
+     * @return static
+     */
+    public function setIssueTime(?DateTime $issueTime = null): static
+    {
+        $this->issueTime = $issueTime;
+
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getDueDate(): ?DateTime
+    {
+        return $this->dueDate;
+    }
+
+    /**
+     * @param DateTime|null $dueDate
+     *
+     * @return static
+     */
+    public function setDueDate(?DateTime $dueDate)
+    {
+        $this->dueDate = $dueDate;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDocumentCurrencyCode(): ?string
+    {
+        return $this->documentCurrencyCode;
+    }
+
+    /**
+     * @param string|null $currencyCode
+     *
+     * @return static
+     */
+    public function setDocumentCurrencyCode(?string $currencyCode = "EUR")
+    {
+        $this->documentCurrencyCode = $currencyCode;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTaxCurrencyCode(): ?string
+    {
+        return $this->taxCurrencyCode;
+    }
+
+    /**
+     * @param string|null $currencyCode
+     *
+     * @return static
+     */
+    public function setTaxCurrencyCode(?string $currencyCode)
+    {
+        $this->taxCurrencyCode = $currencyCode;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getInvoiceTypeCode(): ?int
+    {
+        return $this->invoiceTypeCode;
+    }
+
+    /**
+     * @param int $invoiceTypeCode
+     *                             See also: src/InvoiceTypeCode.php
+     *
+     * @return static
+     */
+    public function setInvoiceTypeCode(?int $invoiceTypeCode)
+    {
+        $this->invoiceTypeCode = $invoiceTypeCode;
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getNotes(): array
+    {
+        return $this->notes;
+    }
+
+    /**
+     * Replace any existing notes with the given single note.
+     *
+     * @param ?string $note
+     *
+     * @return static
+     */
+    public function setNote(?string $note)
+    {
+        $this->notes = $note !== null ? [$note] : [];
+        return $this;
+    }
+
+    /**
+     * @return static
+     */
+    public function addNote(string $note, ?string $subjectCode = null)
+    {
+        $this->notes[] = $subjectCode !== null
+            ? sprintf('#%s#%s', $subjectCode, $note)
+            : $note;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getTaxPointDate(): ?DateTime
+    {
+        return $this->taxPointDate;
+    }
+
+    /**
+     * @param DateTime|null $taxPointDate
+     *
+     * @return static
+     */
+    public function setTaxPointDate(?DateTime $taxPointDate)
+    {
+        $this->taxPointDate = $taxPointDate;
+        return $this;
+    }
+
+    /**
+     * @return PaymentTerms
+     */
+    public function getPaymentTerms(): ?PaymentTerms
+    {
+        return $this->paymentTerms;
+    }
+
+    /**
+     * @param ?PaymentTerms $paymentTerms
+     *
+     * @return static
+     */
+    public function setPaymentTerms(?PaymentTerms $paymentTerms)
+    {
+        $this->paymentTerms = $paymentTerms;
+        return $this;
+    }
+
+    /**
+     * @return AccountingParty
+     */
+    public function getAccountingSupplierParty(): ?AccountingParty
+    {
+        return $this->accountingSupplierParty;
+    }
+
+    /**
+     * @param AccountingParty $accountingSupplierParty
+     *
+     * @return static
+     */
+    public function setAccountingSupplierParty(
+        AccountingParty $accountingSupplierParty,
+    ) {
+        $this->accountingSupplierParty = $accountingSupplierParty;
+        return $this;
+    }
+
+    /**
+     * @return AccountingParty
+     */
+    public function getAccountingCustomerParty(): ?AccountingParty
+    {
+        return $this->accountingCustomerParty;
+    }
+
+    /**
+     * @param AccountingParty $accountingCustomerParty
+     *
+     * @return static
+     */
+    public function setAccountingCustomerParty(
+        AccountingParty $accountingCustomerParty,
+    ) {
+        $this->accountingCustomerParty = $accountingCustomerParty;
+        return $this;
+    }
+
+    /**
+     * @return ?Contact
+     */
+    public function getAccountingCustomerPartyContact(): ?Contact
+    {
+        return $this->accountingCustomerPartyContact;
+    }
+
+    /**
+     * @param Contact $accountingCustomerPartyContact
+     *
+     * @return Invoice
+     */
+    public function setAccountingCustomerPartyContact(
+        Contact $accountingCustomerPartyContact,
+    ): Invoice {
+        $this->accountingCustomerPartyContact = $accountingCustomerPartyContact;
+        return $this;
+    }
+
+    /**
+     * @return PayeeParty
+     */
+    public function getPayeeParty(): ?PayeeParty
+    {
+        return $this->payeeParty;
+    }
+
+    /**
+     * @param PayeeParty $payeeParty
+     *
+     * @return static
+     */
+    public function setPayeeParty(?PayeeParty $payeeParty)
+    {
+        $this->payeeParty = $payeeParty;
+        return $this;
+    }
+
+    /**
+     * @return PaymentMeans[]
+     */
+    public function getPaymentMeans(): ?array
+    {
+        return $this->paymentMeans;
+    }
+
+    /**
+     * @param PaymentMeans[] $paymentMeans
+     *
+     * @return static
+     */
+    public function setPaymentMeans(array $paymentMeans)
+    {
+        $this->paymentMeans = $paymentMeans;
+        return $this;
+    }
+
+    /**
+     * @return TaxTotal
+     */
+    public function getTaxTotal(): ?TaxTotal
+    {
+        return $this->taxTotal;
+    }
+
+    /**
+     * @param TaxTotal $taxTotal
+     *
+     * @return static
+     */
+    public function setTaxTotal(TaxTotal $taxTotal)
+    {
+        $this->taxTotal = $taxTotal;
+        return $this;
+    }
+
+    /**
+     * @return LegalMonetaryTotal
+     */
+    public function getLegalMonetaryTotal(): ?LegalMonetaryTotal
+    {
+        return $this->legalMonetaryTotal;
+    }
+
+    /**
+     * @param LegalMonetaryTotal $legalMonetaryTotal
+     *
+     * @return static
+     */
+    public function setLegalMonetaryTotal(
+        LegalMonetaryTotal $legalMonetaryTotal,
+    ) {
+        $this->legalMonetaryTotal = $legalMonetaryTotal;
+        return $this;
+    }
+
+    /**
+     * @return InvoiceLine[]|null
+     */
+    public function getInvoiceLines(): ?array
+    {
+        return $this->invoiceLines;
+    }
+
+    /**
+     * @param InvoiceLine[] $invoiceLines
+     *
+     * @return static
+     */
+    public function setInvoiceLines(array $invoiceLines)
+    {
+        $this->invoiceLines = $invoiceLines;
+        return $this;
+    }
+
+    /**
+     * @return AllowanceCharge[]
+     */
+    public function getAllowanceCharges(): ?array
+    {
+        return $this->allowanceCharges;
+    }
+
+    /**
+     * @param AllowanceCharge[] $allowanceCharges
+     *
+     * @return static
+     */
+    public function setAllowanceCharges(array $allowanceCharges)
+    {
+        $this->allowanceCharges = $allowanceCharges;
+        return $this;
+    }
+
+    /**
+     * @return AdditionalDocumentReference
+     *
+     * @deprecated Deprecated since v1.16 - Replace implementation with setAdditionalDocumentReference or addAdditionalDocumentReference to add/set a single AdditionalDocumentReference
+     */
+    public function getAdditionalDocumentReference(): ?AdditionalDocumentReference
+    {
+        return $this->additionalDocumentReferences[0] ?? null;
+    }
+
+    /**
+     * @return array<AdditionalDocumentReference>
+     */
+    public function getAdditionalDocumentReferences(): array
+    {
+        return $this->additionalDocumentReferences ?? [];
+    }
+
+    /**
+     * @param AdditionalDocumentReference $additionalDocumentReference
+     *
+     * @return static
+     */
+    public function setAdditionalDocumentReference(
+        AdditionalDocumentReference $additionalDocumentReference,
+    ) {
+        $this->additionalDocumentReferences = [$additionalDocumentReference];
+        return $this;
+    }
+
+    /**
+     * @param AdditionalDocumentReference[] $additionalDocumentReference
+     *
+     * @return static
+     */
+    public function setAdditionalDocumentReferences(
+        array $additionalDocumentReference,
+    ) {
+        $this->additionalDocumentReferences = $additionalDocumentReference;
+        return $this;
+    }
+
+    /**
+     * @param AdditionalDocumentReference $additionalDocumentReference
+     *
+     * @return static
+     */
+    public function addAdditionalDocumentReference(
+        AdditionalDocumentReference $additionalDocumentReference,
+    ) {
+        $this->additionalDocumentReferences[] = $additionalDocumentReference;
+        return $this;
+    }
+
+    /**
+     * @param ProjectReference $projectReference
+     *
+     * @return Invoice
+     */
+    public function setProjectReference(
+        ProjectReference $projectReference,
+    ): Invoice {
+        $this->projectReference = $projectReference;
+        return $this;
+    }
+
+    /**
+     * @return ProjectReference projectReference
+     */
+    public function getProjectReference(): ?ProjectReference
+    {
+        return $this->projectReference;
+    }
+
+    /**
+     * @param string $buyerReference
+     *
+     * @return static
+     */
+    public function setBuyerReference(?string $buyerReference)
+    {
+        $this->buyerReference = $buyerReference;
+        return $this;
+    }
+
+    /**
+     * @return string buyerReference
+     */
+    public function getBuyerReference(): ?string
+    {
+        return $this->buyerReference;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getAccountingCostCode(): ?string
+    {
+        return $this->accountingCostCode;
+    }
+
+    /**
+     * @param string|null $accountingCostCode
+     *
+     * @return static
+     */
+    public function setAccountingCostCode(?string $accountingCostCode)
+    {
+        $this->accountingCostCode = $accountingCostCode;
+        return $this;
+    }
+
+    /**
+     * @return InvoicePeriod|null
+     */
+    public function getInvoicePeriod(): ?InvoicePeriod
+    {
+        return $this->invoicePeriod;
+    }
+
+    /**
+     * @param InvoicePeriod $invoicePeriod
+     *
+     * @return static
+     */
+    public function setInvoicePeriod(?InvoicePeriod $invoicePeriod)
+    {
+        $this->invoicePeriod = $invoicePeriod;
+        return $this;
+    }
+
+    /**
+     * Get all references to the invoice(s) that is/are being credited
+     *
+     * @return BillingReference[]
+     */
+    public function getBillingReferences(): array
+    {
+        return $this->billingReferences;
+    }
+
+    /**
+     * Replace any existing references with the given list.
+     *
+     * @param BillingReference[] $billingReferences
+     *
+     * @return static
+     */
+    public function setBillingReferences(array $billingReferences)
+    {
+        $this->billingReferences = array_values($billingReferences);
+        return $this;
+    }
+
+    /**
+     * Add a reference to an invoice that is being credited.
+     *
+     * @return static
+     */
+    public function addBillingReference(BillingReference $billingReference)
+    {
+        $this->billingReferences[] = $billingReference;
+        return $this;
+    }
+
+    /**
+     * @return Delivery
+     */
+    public function getDelivery(): ?Delivery
+    {
+        return $this->delivery;
+    }
+
+    /**
+     * @param Delivery $delivery
+     *
+     * @return static
+     */
+    public function setDelivery(?Delivery $delivery)
+    {
+        $this->delivery = $delivery;
+        return $this;
+    }
+
+    /**
+     * @return OrderReference
+     */
+    public function getOrderReference(): ?OrderReference
+    {
+        return $this->orderReference;
+    }
+
+    /**
+     * @param OrderReference $orderReference
+     *
+     * @return static
+     */
+    public function setOrderReference(?OrderReference $orderReference)
+    {
+        $this->orderReference = $orderReference;
+        return $this;
+    }
+
+    /**
+     * @return ContractDocumentReference
+     */
+    public function getContractDocumentReference(): ?ContractDocumentReference
+    {
+        return $this->contractDocumentReference;
+    }
+
+    /**
+     * @param ContractDocumentReference $contractDocumentReference
+     *
+     * @return static
+     */
+    public function setContractDocumentReference(
+        ?ContractDocumentReference $contractDocumentReference,
+    ) {
+        $this->contractDocumentReference = $contractDocumentReference;
+        return $this;
+    }
+
+    /**
+     * @return DespatchDocumentReference
+     */
+    public function getDespatchDocumentReference(): ?DespatchDocumentReference
+    {
+        return $this->despatchDocumentReference;
+    }
+
+    /**
+     * @param DespatchDocumentReference $despatchDocumentReference
+     *
+     * @return static
+     */
+    public function setDespatchDocumentReference(
+        ?DespatchDocumentReference $despatchDocumentReference,
+    ) {
+        $this->despatchDocumentReference = $despatchDocumentReference;
+        return $this;
+    }
+
+    /**
+     * @return ReceiptDocumentReference
+     */
+    public function getReceiptDocumentReference(): ?ReceiptDocumentReference
+    {
+        return $this->receiptDocumentReference;
+    }
+
+    /**
+     * @param ReceiptDocumentReference $receiptDocumentReference
+     *
+     * @return static
+     */
+    public function setReceiptDocumentReference(
+        ?ReceiptDocumentReference $receiptDocumentReference,
+    ) {
+        $this->receiptDocumentReference = $receiptDocumentReference;
+        return $this;
+    }
+
+    /**
+     * @return OriginatorDocumentReference
+     */
+    public function getOriginatorDocumentReference(): ?OriginatorDocumentReference
+    {
+        return $this->originatorDocumentReference;
+    }
+
+    /**
+     * @param OriginatorDocumentReference $originatorDocumentReference
+     *
+     * @return static
+     */
+    public function setOriginatorDocumentReference(
+        ?OriginatorDocumentReference $originatorDocumentReference,
+    ) {
+        $this->originatorDocumentReference = $originatorDocumentReference;
+        return $this;
+    }
+
+    /**
+     * The validate function that is called during xml writing to valid the data of the object.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException An error with information about required data that is missing to write the XML
+     */
+    public function validate()
+    {
+        if ($this->id === null) {
+            throw new InvalidArgumentException("Missing invoice id");
+        }
+
+        if (!$this->issueDate instanceof DateTime) {
+            throw new InvalidArgumentException("Invalid invoice issueDate");
+        }
+
+        if ($this->invoiceTypeCode === null) {
+            throw new InvalidArgumentException(
+                "Missing invoice invoiceTypeCode",
+            );
+        }
+
+        if ($this->accountingSupplierParty === null) {
+            throw new InvalidArgumentException(
+                "Missing invoice accountingSupplierParty",
+            );
+        }
+
+        if ($this->accountingCustomerParty === null) {
+            throw new InvalidArgumentException(
+                "Missing invoice accountingCustomerParty",
+            );
+        }
+
+        if ($this->invoiceLines === null) {
+            throw new InvalidArgumentException("Missing invoice lines");
+        }
+
+        if ($this->legalMonetaryTotal === null) {
+            throw new InvalidArgumentException(
+                "Missing invoice LegalMonetaryTotal",
+            );
+        }
+    }
+
+    /**
+     * The xmlSerialize method is called during xml writing.
+     *
+     * @param Writer $writer
+     *
+     * @return void
+     */
+    public function xmlSerialize(Writer $writer): void
+    {
+        $this->validate();
+
+        $writer->write([
+            Schema::CBC . "UBLVersionID" => $this->UBLVersionID,
+            Schema::CBC . "CustomizationID" => $this->customizationID,
+        ]);
+
+        if ($this->profileID !== null) {
+            $writer->write([
+                Schema::CBC . "ProfileID" => $this->profileID,
+            ]);
+        }
+
+        $writer->write([
+            Schema::CBC . "ID" => $this->id,
+        ]);
+
+        if ($this->copyIndicator !== null) {
+            $writer->write([
+                Schema::CBC . "CopyIndicator" => $this->copyIndicator
+                    ? "true"
+                    : "false",
+            ]);
+        }
+
+        $writer->write([
+            Schema::CBC . "IssueDate" => $this->issueDate->format("Y-m-d"),
+        ]);
+
+        if (isset($this->issueTime)) {
+            $writer->write([
+                Schema::CBC . 'IssueTime' => $this->issueTime->format('H:i:s'),
+            ]);
+        }
+
+        if ($this->dueDate !== null && $this->xmlTagName === "Invoice") {
+            $writer->write([
+                Schema::CBC . "DueDate" => $this->dueDate->format("Y-m-d"),
+            ]);
+        }
+
+        // DebitNote does not have a TypeCode element in UBL 2.1
+        if ($this->invoiceTypeCode !== null && $this->xmlTagName !== 'DebitNote') {
+            $writer->write([
+                Schema::CBC .
+                $this->xmlTagName .
+                "TypeCode" => $this->invoiceTypeCode,
+            ]);
+        }
+
+        foreach ($this->notes as $note) {
+            $writer->write([
+                Schema::CBC . "Note" => $note,
+            ]);
+        }
+
+        if ($this->taxPointDate !== null) {
+            $writer->write([
+                Schema::CBC . "TaxPointDate" => $this->taxPointDate->format(
+                    "Y-m-d",
+                ),
+            ]);
+        }
+
+        $writer->write([
+            Schema::CBC . "DocumentCurrencyCode" => $this->documentCurrencyCode,
+        ]);
+
+        if ($this->accountingCostCode !== null) {
+            $writer->write([
+                Schema::CBC . "AccountingCostCode" => $this->accountingCostCode,
+            ]);
+        }
+
+        if ($this->buyerReference !== null) {
+            $writer->write([
+                Schema::CBC . "BuyerReference" => $this->buyerReference,
+            ]);
+        }
+
+        if ($this->invoicePeriod !== null) {
+            $writer->write([
+                Schema::CAC . "InvoicePeriod" => $this->invoicePeriod,
+            ]);
+        }
+
+        if ($this->orderReference !== null) {
+            $writer->write([
+                Schema::CAC . "OrderReference" => $this->orderReference,
+            ]);
+        }
+
+        foreach ($this->billingReferences as $billingReference) {
+            $writer->write([
+                Schema::CAC . "BillingReference" => $billingReference,
+            ]);
+        }
+
+        if ($this->contractDocumentReference !== null) {
+            $writer->write([
+                Schema::CAC .
+                "ContractDocumentReference" => $this->contractDocumentReference,
+            ]);
+        }
+
+        if ($this->despatchDocumentReference !== null) {
+            $writer->write([
+                Schema::CAC .
+                "DespatchDocumentReference" => $this->despatchDocumentReference,
+            ]);
+        }
+
+        if ($this->receiptDocumentReference !== null) {
+            $writer->write([
+                Schema::CAC .
+                "ReceiptDocumentReference" => $this->receiptDocumentReference,
+            ]);
+        }
+
+        if (!empty($this->additionalDocumentReferences)) {
+            foreach ($this->additionalDocumentReferences as $additionalDocumentReference) {
+                $writer->write([
+                    Schema::CAC .
+                    "AdditionalDocumentReference" => $additionalDocumentReference,
+                ]);
+            }
+        }
+
+        if ($this->originatorDocumentReference !== null) {
+            $writer->write([
+                Schema::CAC .
+                "OriginatorDocumentReference" => $this->originatorDocumentReference,
+            ]);
+        }
+
+        if ($this->projectReference !== null) {
+            $writer->write([
+                Schema::CAC . "ProjectReference" => $this->projectReference,
+            ]);
+        }
+
+        $writer->write([
+            Schema::CAC .
+            "AccountingSupplierParty" => $this->accountingSupplierParty,
+            Schema::CAC .
+            "AccountingCustomerParty" => $this->accountingCustomerParty,
+        ]);
+
+        if ($this->payeeParty !== null) {
+            $writer->write([
+                Schema::CAC . "PayeeParty" => $this->payeeParty,
+            ]);
+        }
+
+        if ($this->delivery !== null) {
+            $writer->write([
+                Schema::CAC . "Delivery" => $this->delivery,
+            ]);
+        }
+
+        if ($this->paymentMeans !== null) {
+            foreach ($this->paymentMeans as $paymentMeans) {
+                $writer->write([
+                    Schema::CAC . $paymentMeans->xmlTagName => $paymentMeans,
+                ]);
+            }
+        }
+
+        if ($this->paymentTerms !== null) {
+            $writer->write([
+                Schema::CAC . "PaymentTerms" => $this->paymentTerms,
+            ]);
+        }
+
+        if ($this->allowanceCharges !== null) {
+            foreach ($this->allowanceCharges as $allowanceCharge) {
+                $writer->write([
+                    Schema::CAC . "AllowanceCharge" => $allowanceCharge,
+                ]);
+            }
+        }
+
+        if ($this->taxTotal !== null) {
+            $writer->write([
+                Schema::CAC . "TaxTotal" => $this->taxTotal,
+            ]);
+        }
+
+        // DebitNote uses RequestedMonetaryTotal instead of LegalMonetaryTotal
+        $monetaryTotalTagName = $this->xmlTagName === 'DebitNote' ? 'RequestedMonetaryTotal' : 'LegalMonetaryTotal';
+        $writer->write([
+            Schema::CAC . $monetaryTotalTagName => $this->legalMonetaryTotal,
+        ]);
+
+        foreach ($this->invoiceLines as $invoiceLine) {
+            $writer->write([
+                Schema::CAC . $invoiceLine->xmlTagName => $invoiceLine,
+            ]);
+        }
+    }
+
+    /**
+     * The xmlDeserialize method is called during xml reading.
+     *
+     * @param Reader $reader
+     *
+     * @return static
+     */
+    public static function xmlDeserialize(Reader $reader)
+    {
+        $mixedContent = mixedContent($reader);
+
+        return static::deserializedTag($mixedContent);
+    }
+
+    protected static function deserializedTag(array $mixedContent)
+    {
+        $collection = new ArrayCollection($mixedContent);
+
+        /** @var ?AccountingParty $accountingSupplierParty */
+        $accountingSupplierParty = ReaderHelper::getTagValue(
+            Schema::CAC . "AccountingSupplierParty",
+            $collection,
+        );
+
+        /** @var ?AccountingParty $accountingCustomerParty */
+        $accountingCustomerParty = ReaderHelper::getTagValue(
+            Schema::CAC . "AccountingCustomerParty",
+            $collection,
+        );
+
+        /** @var ?TaxTotal $taxTotal */
+        $taxTotal = ReaderHelper::getTagValue(
+            Schema::CAC . "TaxTotal",
+            $collection,
+        );
+
+        /** @var ?LegalMonetaryTotal $legalMonetaryTotal */
+        $legalMonetaryTotal = ReaderHelper::getTagValue(
+            Schema::CAC . "LegalMonetaryTotal",
+            $collection,
+        );
+
+        return (new static())
+            ->setUBLVersionId(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "UBLVersionID",
+                    $collection,
+                ),
+            )
+            ->setId(ReaderHelper::getTagValue(Schema::CBC . "ID", $collection))
+            ->setCustomizationId(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "CustomizationID",
+                    $collection,
+                ),
+            )
+            ->setProfileId(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "ProfileID",
+                    $collection,
+                ),
+            )
+            ->setCopyIndicator(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "CopyIndicator",
+                    $collection,
+                ) ?? false,
+            )
+            ->setIssueDate(
+                Carbon::parse(
+                    ReaderHelper::getTagValue(
+                        Schema::CBC . "IssueDate",
+                        $collection,
+                    ),
+                )->toDateTime(),
+            )
+            ->setIssueTime(
+                Carbon::parse(
+                    ReaderHelper::getTagValue(
+                        Schema::CBC . "IssueTime",
+                        $collection,
+                    ),
+                )->toDateTime(),
+            )
+            ->setDueDate(
+                ($dueDate = ReaderHelper::getTagValue(
+                    Schema::CBC . "DueDate",
+                    $collection,
+                )) !== null ? Carbon::parse($dueDate)->toDateTime() : null,
+            )
+            ->setDocumentCurrencyCode(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "DocumentCurrencyCode",
+                    $collection,
+                ),
+            )
+            ->setTaxCurrencyCode(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "TaxCurrencyCode",
+                    $collection,
+                ),
+            )
+            ->setInvoiceTypeCode(
+                ($typeCode = ReaderHelper::getTagValue(
+                    Schema::CBC . "InvoiceTypeCode",
+                    $collection,
+                )) !== null ? (int) $typeCode : null,
+            )
+            ->setNote(
+                ReaderHelper::getTagValue(Schema::CBC . "Note", $collection),
+            )
+            ->setTaxPointDate(
+                ($taxPointDate = ReaderHelper::getTagValue(
+                    Schema::CBC . "TaxPointDate",
+                    $collection,
+                )) !== null ? Carbon::parse($taxPointDate)->toDateTime() : null,
+            )
+            ->setPaymentTerms(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "PaymentTerms",
+                    $collection,
+                ),
+            )
+            ->setAccountingSupplierParty($accountingSupplierParty)
+            ->setAccountingCustomerParty($accountingCustomerParty)
+            ->setPayeeParty(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "PayeeParty",
+                    $collection,
+                ),
+            )
+            ->setPaymentMeans(
+                ReaderHelper::getArrayValue(
+                    Schema::CAC . "PaymentMeans",
+                    $collection,
+                ),
+            )
+            ->setTaxTotal($taxTotal)
+            ->setLegalMonetaryTotal($legalMonetaryTotal)
+            ->setInvoiceLines(
+                ReaderHelper::getArrayValue(
+                    Schema::CAC . "InvoiceLine",
+                    $collection,
+                ),
+            )
+            ->setAllowanceCharges(
+                ReaderHelper::getArrayValue(
+                    Schema::CAC . "AllowanceCharge",
+                    $collection,
+                ),
+            )
+            ->setAdditionalDocumentReferences(
+                ReaderHelper::getArrayValue(
+                    Schema::CAC . "AdditionalDocumentReference",
+                    $collection,
+                ),
+            )
+            ->setBuyerReference(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "BuyerReference",
+                    $collection,
+                ),
+            )
+            ->setAccountingCostCode(
+                ReaderHelper::getTagValue(
+                    Schema::CBC . "AccountingCostCode",
+                    $collection,
+                ),
+            )
+            ->setInvoicePeriod(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "InvoicePeriod",
+                    $collection,
+                ),
+            )
+            ->setBillingReferences(
+                ReaderHelper::getArrayValue(
+                    Schema::CAC . "BillingReference",
+                    $collection,
+                ),
+            )
+            ->setDelivery(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "Delivery",
+                    $collection,
+                ),
+            )
+            ->setOrderReference(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "OrderReference",
+                    $collection,
+                ),
+            )
+            ->setContractDocumentReference(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "ContractDocumentReference",
+                    $collection,
+                ),
+            )
+            ->setDespatchDocumentReference(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "DespatchDocumentReference",
+                    $collection,
+                ),
+            )
+            ->setReceiptDocumentReference(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "ReceiptDocumentReference",
+                    $collection,
+                ),
+            )
+            ->setOriginatorDocumentReference(
+                ReaderHelper::getTagValue(
+                    Schema::CAC . "OriginatorDocumentReference",
+                    $collection,
+                ),
+            );
+    }
+}

@@ -1,5 +1,7 @@
+@use 'sass:map';
+
 .tooltip {
-    z-index: 1000;
+    z-index: map.get($layers, 'tooltips');
     max-width: 300px;
 
     .tooltip-inner {

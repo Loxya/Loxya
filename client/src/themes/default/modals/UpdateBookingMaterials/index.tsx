@@ -1,8 +1,6 @@
 import './index.scss';
 import { RequestError } from '@/globals/requester';
 import { defineComponent } from 'vue';
-import { debounce } from 'lodash';
-import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import Button from '@/themes/default/components/Button';
@@ -10,7 +8,6 @@ import MaterialsSelector, {
     getEmbeddedMaterialsQuantities,
 } from '@/themes/default/components/MaterialsSelector';
 
-import type { DebouncedMethod } from 'lodash';
 import type { PropType } from 'vue';
 import type { Booking } from '@/stores/api/bookings';
 import type { SelectedMaterial } from '@/themes/default/components/MaterialsSelector';
@@ -21,10 +18,9 @@ type Props = {
      * on veut modifier le matériel, dans son état initial.
      */
     defaultBooking: Booking,
-};
 
-type InstanceProperties = {
-    debouncedSave: DebouncedMethod<typeof UpdateBookingMaterialsModal, 'save'> | undefined,
+    /** Fonction appelée lorsque la modale est fermée. */
+    onClose?(): void,
 };
 
 type Data = {
@@ -42,15 +38,17 @@ const UpdateBookingMaterialsModal = defineComponent({
             type: Object as PropType<Props['defaultBooking']>,
             required: true,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
+        },
     },
     modal: {
         width: 1400,
-        clickToClose: false,
+        dismissible: false,
     },
     emits: ['close'],
-    setup: (): InstanceProperties => ({
-        debouncedSave: undefined,
-    }),
     data(): Data {
         const { materials } = this.defaultBooking;
 
@@ -72,15 +70,6 @@ const UpdateBookingMaterialsModal = defineComponent({
 
             return __('title');
         },
-    },
-    created() {
-        this.debouncedSave = debounce(
-            this.save.bind(this),
-            DEBOUNCE_WAIT_DURATION.asMilliseconds(),
-        );
-    },
-    beforeDestroy() {
-        this.debouncedSave?.cancel();
     },
     methods: {
         // ------------------------------------------------------
@@ -108,7 +97,7 @@ const UpdateBookingMaterialsModal = defineComponent({
         },
 
         handleSave() {
-            this.debouncedSave!();
+            this.save();
         },
 
         handleClose() {

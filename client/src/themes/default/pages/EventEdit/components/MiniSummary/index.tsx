@@ -7,8 +7,8 @@ import Icon from '@/themes/default/components/Icon';
 import Fragment from '@/components/Fragment';
 import IconMessage from '@/themes/default/components/IconMessage';
 
-import type Currency from '@/utils/currency';
 import type { PropType } from 'vue';
+import type Currency from '@/utils/currency';
 import type { EventDetails } from '@/stores/api/events';
 
 type Props = {
@@ -55,13 +55,15 @@ const EventEditMiniSummary = defineComponent({
                 : config.billingMode !== BillingMode.NONE;
         },
 
-        hasTaxes(): boolean {
+        showDetailedTotals(): boolean {
             if (this.event === null || !this.event.is_billable) {
                 return false;
             }
 
-            const { total_taxes: totalTaxes } = this.event;
-            return totalTaxes.length > 0;
+            return (
+                this.event.global_tax_regime === null &&
+                (this.event.total_taxes ?? []).length > 0
+            );
         },
 
         totalWithoutTaxes(): Decimal | undefined {
@@ -86,9 +88,9 @@ const EventEditMiniSummary = defineComponent({
             event,
             duration,
             currency,
-            hasTaxes,
             isDirty,
             isConfirmed,
+            showDetailedTotals,
             totalWithoutTaxes,
             showBillingAmounts,
         } = this;
@@ -130,7 +132,7 @@ const EventEditMiniSummary = defineComponent({
                     )}
                     {showBillingAmounts && (
                         <div class="EventEditMiniSummary__total">
-                            {__(hasTaxes ? 'total-without-taxes' : 'total')}{' '}
+                            {__(showDetailedTotals ? 'total-without-taxes' : 'total')}{' '}
                             <strong>{formatAmount(totalWithoutTaxes, currency)}</strong>
                         </div>
                     )}

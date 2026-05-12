@@ -19,7 +19,7 @@ export type DayInput = string | Day | DateTime | Date;
 
 /** Un jour (e.g. `2024-01-01`) */
 class Day {
-    private _dateTime: DateTime;
+    private readonly _dateTime: DateTime;
 
     constructor(input?: DayInput) {
         let dateTime: DateTime | undefined;

@@ -9,9 +9,14 @@ fields-changes-depending-on-category: The fields below fluctuate depending on th
 saved: Material saved.
 
 fields:
-    tax:
-        label: Tax
-        placeholder: Tax-free
     degressive-rate:
         label: Degressive Rate
         placeholder: No degressivity
+
+    tax:
+        label:
+            default: Tax
+            simple: VAT
+        placeholder:
+            default: None (exempt without reason)
+            simple: None (exempt without reason)

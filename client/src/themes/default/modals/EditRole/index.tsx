@@ -4,10 +4,11 @@ import { defineComponent } from 'vue';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiRoles from '@/stores/api/roles';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Button from '@/themes/default/components/Button';
 
+import type { ComponentRef, PropType } from 'vue';
 import type { Role, RoleEdit } from '@/stores/api/roles';
-import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -15,6 +16,13 @@ type Props = {
      * Si non fourni, on considérera que c'est un ajout.
      */
     role?: Role,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param updatedRole - Le rôle sauvegardé si la modification a été menée à son terme.
+     */
+    onClose?(updatedRole?: Role): void,
 };
 
 type Data = {
@@ -27,16 +35,20 @@ type Data = {
 const EditRole = defineComponent({
     name: 'EditRole',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     modal: {
         width: 600,
-        draggable: true,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         role: {
             type: Object as PropType<Props['role']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },
@@ -49,13 +61,25 @@ const EditRole = defineComponent({
         };
     },
     computed: {
-        title(): string {
-            const { __ } = this;
+        isNew(): boolean {
+            return this.role === undefined;
+        },
 
-            return this.role === undefined
+        title(): string {
+            const { __, isNew } = this;
+
+            return isNew
                 ? __('title-create')
                 : __('title-edit');
         },
+    },
+    mounted() {
+        if (this.isNew) {
+            this.$nextTick(() => {
+                const $inputName = this.$refs.inputName as ComponentRef<typeof FormField>;
+                $inputName?.focus();
+            });
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -147,6 +171,7 @@ const EditRole = defineComponent({
                     <form class="EditRole__form" onSubmit={handleSubmit}>
                         <FormField
                             type="text"
+                            ref="inputName"
                             label={__('role-name')}
                             class="EditRole__form__input-name"
                             value={this.name}

@@ -1,0 +1,28 @@
+operators:
+    date:
+        exact:
+            label: "Exactement le"
+            alias: "="
+        before:
+            label: "Avant le"
+            alias: "<"
+        after:
+            label: "Après le"
+            alias: ">"
+
+    number:
+        exact:
+            label: "Égal à"
+            alias: "="
+        before:
+            label: "Plus petit que"
+            alias: "<"
+        after:
+            label: "Plus grand que"
+            alias: ">"
+
+    text:
+        contains: "Contient"
+
+    period:
+        during: "Pendant"

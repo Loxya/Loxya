@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -51,7 +51,7 @@ final class Category extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
         V::notEmpty()
             ->length(2, 96)
@@ -143,13 +143,13 @@ final class Category extends BaseModel implements Serializable
 
             try {
                 $this->fill($data)->save();
-            } catch (ValidationException $e) {
+            } catch (ValidationsException $e) {
                 $validationErrors = $e->getValidationErrors();
                 $hasFailed = true;
             }
 
             if ($hasFailed) {
-                throw new ValidationException($validationErrors);
+                throw new ValidationsException($validationErrors);
             }
 
             return $this->refresh();

@@ -8,24 +8,33 @@
 
         &--label {
             overflow: hidden;
-            max-width: 590px;
             margin-bottom: 3px;
             padding-left: 0;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
 
-        &--quantity {
-            width: 50px;
-        }
-
-        &--unit-price {
+        &--price {
+            width: 85px;
+            min-width: 85px;
             color: globals.$text-light-color;
             text-align: right;
         }
 
-        &--total-price {
-            width: 125px;
+        &--quantity {
+            width: 60px;
+            min-width: 60px;
+        }
+
+        &--discount {
+            width: 60px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        &--total {
+            width: 85px;
+            min-width: 85px;
             padding-right: 0;
             text-align: right;
         }

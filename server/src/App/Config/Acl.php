@@ -94,10 +94,6 @@ final class Acl
                 'restore',
                 'delete',
             ],
-            'Country' => [
-                'getAll',
-                'getOne',
-            ],
             'Company' => [
                 'getAll',
                 'getOne',
@@ -160,10 +156,25 @@ final class Acl
                 'deletePosition',
             ],
             'Invoice' => [
+                'getAll',
+                'getOne',
                 'getOnePdf',
+                'getOneUbl',
+                'create',
+                'createCreditNote',
+                'finalize',
+                'updateStatus',
+                'addPayment',
+                'delete',
             ],
             'Estimate' => [
+                'getAll',
+                'getOne',
                 'getOnePdf',
+                'create',
+                'createInvoice',
+                'finalize',
+                'updateStatus',
                 'delete',
             ],
             'Setting' => [
@@ -319,10 +330,25 @@ final class Acl
                 'deletePosition',
             ],
             'Invoice' => [
+                'getAll',
+                'getOne',
                 'getOnePdf',
+                'getOneUbl',
+                'create',
+                'createCreditNote',
+                'finalize',
+                'updateStatus',
+                'addPayment',
+                'delete',
             ],
             'Estimate' => [
+                'getAll',
+                'getOne',
                 'getOnePdf',
+                'create',
+                'createInvoice',
+                'finalize',
+                'updateStatus',
                 'delete',
             ],
             'Setting' => [
@@ -427,9 +453,12 @@ final class Acl
                 'updateNote',
             ],
             'Invoice' => [
+                'getOne',
                 'getOnePdf',
+                'getOneUbl',
             ],
             'Estimate' => [
+                'getOne',
                 'getOnePdf',
             ],
             'Setting' => [

@@ -1,7 +1,6 @@
 import { z } from '@/utils/validation';
 import requester from '@/globals/requester';
 import { Group } from './groups';
-import { CountrySchema } from './countries';
 import { withPaginationEnvelope } from './@schema';
 
 import type { UndefinedOnPartialDeep } from 'type-fest';
@@ -54,8 +53,7 @@ export const UserSummarySchema = z.strictObject({
         //       géré, au cas où.
         (value: string | null) => value ?? '?',
     ),
-    // TODO [zod@>3.22.4]: Remettre `email()`.
-    email: z.string(),
+    email: z.email(),
 });
 
 export const UserSchema = UserSummarySchema.extend({
@@ -76,17 +74,18 @@ export const UserSchema = UserSummarySchema.extend({
         //       géré, au cas où.
         (value: string | null) => value ?? '?',
     ),
-    phone: z.string().nullable(),
+    phone: z.phone().nullable(),
     group: z.nativeEnum(Group),
 });
 
 export const UserDetailsSchema = UserSchema.extend({
     street: z.string().nullable(),
+    additional_street: z.string().nullable(),
     postal_code: z.string().nullable(),
+    administrative_area: z.string().nullable(),
     locality: z.string().nullable(),
-    country_id: z.number().nullable(),
-    country: z.lazy(() => CountrySchema).nullable(),
-    full_address: z.string().nullable(),
+    country: z.country(),
+    address: z.string().nullable(),
 });
 
 export const UserSettingsSchema = z.strictObject({

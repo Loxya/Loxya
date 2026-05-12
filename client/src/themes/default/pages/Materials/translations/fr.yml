@@ -14,3 +14,5 @@ confirm-restore: "Voulez-vous vraiment restaurer ce matériel\_?"
 
 deleted: Matériel supprimé.
 restored: Matériel restauré.
+
+empty: Aucun matériel enregistré pour le moment.

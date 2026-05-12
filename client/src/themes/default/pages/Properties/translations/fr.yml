@@ -5,6 +5,7 @@ add-properties: Ajouter des caractéristiques
 add-btn: Ajouter une caractéristique
 all-categories-not-limited: Toutes catégories (non limité)
 deleted: Caractéristique supprimée.
+empty: Aucune caractéristique spéciale créée pour le moment.
 
 confirm-permanently-delete:
     '1': "Voulez-vous vraiment supprimer définitivement cette caractéristique spéciale\_?\n\n                ATTENTION\_: Toutes les données relatives à cette caractéristique spéciale seront supprimées DÉFINITIVEMENT\_!!"

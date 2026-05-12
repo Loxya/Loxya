@@ -24,6 +24,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '19400',
+        weight: '24.5',
+        origin_country: 'CH',
         is_hidden_on_bill: false,
         is_discountable: false,
         is_deleted: false,
@@ -59,6 +61,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '349.9',
+        weight: '6.4',
+        origin_country: 'CH',
         is_hidden_on_bill: false,
         is_discountable: true,
         is_deleted: false,
@@ -93,6 +97,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '89',
+        weight: '1.2',
+        origin_country: 'FR',
         is_hidden_on_bill: false,
         is_discountable: true,
         is_deleted: false,
@@ -127,6 +133,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '59',
+        weight: '3.0',
+        origin_country: 'BE',
         is_hidden_on_bill: false,
         is_discountable: true,
         is_deleted: false,
@@ -160,6 +168,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '9.5',
+        weight: '0.35',
+        origin_country: 'FR',
         is_hidden_on_bill: true,
         is_discountable: true,
         is_deleted: false,
@@ -189,6 +199,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '419',
+        weight: '4.8',
+        origin_country: 'FR',
         is_hidden_on_bill: false,
         is_discountable: false,
         is_deleted: false,
@@ -222,6 +234,8 @@ const data = [
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '32000',
+        weight: null,
+        origin_country: null,
         is_hidden_on_bill: false,
         is_discountable: false,
         is_deleted: false,
@@ -246,13 +260,15 @@ const data = [
         degressive_rate_id: 3,
         degressive_rate: '1.00',
         rental_price_period: '1500.00',
-        tax_id: 4,
+        tax_id: 1,
         stock_quantity: 2,
         out_of_order_quantity: 0,
         available_quantity: 2,
         departure_inventory_todo: null,
         return_inventory_todo: null,
         replacement_price: '8500',
+        weight: null,
+        origin_country: 'FR',
         is_hidden_on_bill: false,
         is_discountable: true,
         is_deleted: false,
@@ -284,60 +300,40 @@ const asDefault = dataFactory(data, (material) => (
 ));
 
 /** @type {import('./@utils').FactoryReturnType} */
-const withAvailability = dataFactory(data, (material) => {
-    if (material.is_unitary) {
-        material.units = material.units.map((lazyUnit) => (
-            units.withAvailability(lazyUnit().id)
-        ));
-    }
-    return omit(material, [
+const withAvailability = dataFactory(data, (material) => (
+    omit(material, [
         'degressive_rate',
         'rental_price_period',
         'departure_inventory_todo',
         'return_inventory_todo',
-    ]);
-});
+    ])
+));
 
 /** @type {import('./@utils').FactoryReturnType} */
-const withContext = dataFactory(data, (material) => {
-    if (material.is_unitary) {
-        material.units = material.units.map((lazyUnit) => (
-            units.withAvailability(lazyUnit().id)
-        ));
-    }
-    return omit(material, [
+const withContext = dataFactory(data, (material) => (
+    omit(material, [
         'departure_inventory_todo',
         'return_inventory_todo',
-    ]);
-});
+    ])
+));
 
 /** @type {import('./@utils').FactoryReturnType} */
-const withContextExcerpt = dataFactory(data, (material) => {
-    if (material.is_unitary) {
-        material.units = material.units.map(
-            (lazyUnit) => lazyUnit(),
-        );
-    }
-    return omit(material, [
+const withContextExcerpt = dataFactory(data, (material) => (
+    omit(material, [
         'available_quantity',
         'departure_inventory_todo',
         'return_inventory_todo',
-    ]);
-});
+    ])
+));
 
 /** @type {import('./@utils').FactoryReturnType} */
-const asDetails = dataFactory(data, (material) => {
-    if (material.is_unitary) {
-        material.units = material.units.map(
-            (lazyUnit) => lazyUnit(),
-        );
-    }
-    return omit(material, [
+const asDetails = dataFactory(data, (material) => (
+    omit(material, [
         'degressive_rate',
         'rental_price_period',
         'is_deleted',
-    ]);
-});
+    ])
+));
 
 /** @type {import('./@utils').FactoryReturnType} */
 const asPublic = dataFactory(data, (material) => (

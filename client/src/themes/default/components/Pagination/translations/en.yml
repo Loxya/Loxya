@@ -1,0 +1,3 @@
+count: "Showing {from} to {to} of {count} records|{count} records|One record"
+previous: "Previous"
+next: "Next"

@@ -3,11 +3,19 @@ declare(strict_types=1);
 
 namespace Loxya\Errors\Renderer;
 
+use Loxya\Services\View;
 use Slim\Error\Renderers\HtmlErrorRenderer as CoreHtmlErrorRenderer;
 
-// TODO: Utiliser Twig pour le rendu + Des vues par code d'erreur dans `views/errors/http/[code].twig`.
 final class HtmlErrorRenderer extends CoreHtmlErrorRenderer
 {
-    protected string $defaultErrorTitle = 'Internal Error';
-    protected string $defaultErrorDescription = 'Internal error has occurred. Sorry for the temporary inconvenience.';
+    public function __invoke(\Throwable $exception, bool $displayErrorDetails): string
+    {
+        try {
+            /** @var View $view */
+            $view = container('view');
+            return $view->fetch('errors/critical.twig');
+        } catch (\Throwable) {
+            return parent::__invoke($exception, false);
+        }
+    }
 }

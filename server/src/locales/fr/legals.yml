@@ -1,0 +1,425 @@
+legal-types:
+    FR:
+        EI:
+            short: "EI"
+            long: "Entreprise individuelle"
+        ME:
+            short: "EI"
+            long: "Micro-entreprise / Auto-entreprise"
+        SARL:
+            short: "SARL"
+            long: "SARL"
+        EURL:
+            short: "EURL"
+            long: "EURL"
+        SAS:
+            short: "SAS"
+            long: "SAS"
+        SASU:
+            short: "SASU"
+            long: "SASU"
+        SA:
+            short: "SA"
+            long: "SA"
+        SNC:
+            short: "SNC"
+            long: "SNC"
+        SCS:
+            short: "SCS"
+            long: "SCS"
+        SCA:
+            short: "SCA"
+            long: "SCA"
+        SCP:
+            short: "SCP"
+            long: "Société civile professionnelle"
+        SCC:
+            short: "SCC"
+            long: "Société civile coopérative"
+        SCEA:
+            short: "SCEA"
+            long: "Société civile d'exploitation agricole"
+        SCI:
+            short: "SCI"
+            long: "Société civile immobilière"
+        GIE:
+            short: "GIE"
+            long: "Groupement d'intérêt économique"
+        COOP:
+            short: "COOP"
+            long: "Coopérative"
+        ASSO:
+            short: "Association"
+            long: "Association"
+        FOND:
+            short: "Fondation"
+            long: "Fondation"
+        COLL:
+            short: "Collectivité"
+            long: "Collectivité territoriale"
+        EPA:
+            short: "EPA"
+            long: "Établissement public administratif"
+        EPIC:
+            short: "EPIC"
+            long: "Établissement public industriel et commercial"
+        EPLE:
+            short: "EPLE"
+            long: "Établissement public local d'enseignement"
+        EPSCP:
+            short: "EPSCP"
+            long: "Université / grand établissement"
+        GIP:
+            short: "GIP"
+            long: "Groupement d'intérêt public"
+    BE:
+        EI:
+            short: "Entreprise individuelle"
+            long: "Indépendant / Entreprise individuelle"
+        SRL:
+            short: "SRL"
+            long: "Société à responsabilité limitée (SRL)"
+        SA:
+            short: "SA"
+            long: "Société anonyme (SA)"
+        SC:
+            short: "SC"
+            long: "Société coopérative (SC)"
+        SNC:
+            short: "SNC"
+            long: "Société en nom collectif"
+        SCOMM:
+            short: "SCOMM"
+            long: "Société en commandite"
+        ASBL:
+            short: "ASBL"
+            long: "Association sans but lucratif"
+        AISBL:
+            short: "AISBL"
+            long: "Association internationale sans but lucratif"
+        FP:
+            short: "Fondation privée"
+            long: "Fondation privée"
+        FUP:
+            short: "Fondation d'utilité publique"
+            long: "Fondation d'utilité publique"
+    CH:
+        RI:
+            short: "Raison individuelle"
+            long: "Raison individuelle"
+        SARL:
+            short: "SàRL"
+            long: "Société à responsabilité limitée (SàRL)"
+        SA:
+            short: "SA"
+            long: "Société anonyme (SA)"
+        SNC:
+            short: "SNC"
+            long: "Société en nom collectif"
+        SCM:
+            short: "SCM"
+            long: "Société en commandite"
+        SC:
+            short: "SC"
+            long: "Société coopérative"
+        ASSO:
+            short: "Association"
+            long: "Association"
+        FOND:
+            short: "Fondation"
+            long: "Fondation"
+
+vat-exemptions:
+    VATEX-EU-79-C:
+        label: "Art. UE 79c - Remboursement de débours"
+        mention: "TVA non applicable, art. 79c de la Directive TVA 2006/112/CE"
+    VATEX-EU-132:
+        label: "Art. UE 132 - Activités d'intérêt public"
+        mention: "TVA non applicable, art. 132 de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1A:
+        label: "Art. UE 132 (a) - Services postaux publics"
+        mention: "TVA non applicable, art. 132 (a) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1B:
+        label: "Art. UE 132 (b) - Soins hospitaliers publics/assimilés"
+        mention: "TVA non applicable, art. 132 (b) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1C:
+        label: "Art. UE 132 (c) - Soins médicaux et paramédicaux"
+        mention: "TVA non applicable, art. 132 (c) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1D:
+        label: "Art. UE 132 (d) - Organes, sang et lait humains"
+        mention: "TVA non applicable, art. 132 (d) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1E:
+        label: "Art. UE 132 (e) - Prothèses dentaires et techniciens"
+        mention: "TVA non applicable, art. 132 (e) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1F:
+        label: "Art. UE 132 (f) - Groupements autonomes de personnes"
+        mention: "TVA non applicable, art. 132 (f) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1G:
+        label: "Art. UE 132 (g) - Action sociale et sécurité sociale"
+        mention: "TVA non applicable, art. 132 (g) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1H:
+        label: "Art. UE 132 (h) - Protection de l'enfance/jeunesse"
+        mention: "TVA non applicable, art. 132 (h) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1I:
+        label: "Art. UE 132 (i) - Enseignement et formation"
+        mention: "TVA non applicable, art. 132 (i) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1J:
+        label: "Art. UE 132 (j) - Cours particuliers (scolaire/université)"
+        mention: "TVA non applicable, art. 132 (j) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1K:
+        label: "Art. UE 132 (k) - Personnel fourni par institutions religieuses"
+        mention: "TVA non applicable, art. 132 (k) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1L:
+        label: "Art. UE 132 (l) - Assoc. sans but lucratif (intérêt commun)"
+        mention: "TVA non applicable, art. 132 (l) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1M:
+        label: "Art. UE 132 (m) - Assoc. sans but lucratif (Sport/éducation physique)"
+        mention: "TVA non applicable, art. 132 (m) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1N:
+        label: "Art. UE 132 (n) - Services culturels reconnus"
+        mention: "TVA non applicable, art. 132 (n) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1O:
+        label: "Art. UE 132 (o) - Événements de collecte de fonds"
+        mention: "TVA non applicable, art. 132 (o) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1P:
+        label: "Art. UE 132 (p) - Transport de malades/blessés"
+        mention: "TVA non applicable, art. 132 (p) de la Directive TVA 2006/112/CE"
+    VATEX-EU-132-1Q:
+        label: "Art. UE 132 (q) - Organismes publics radio/TV (non commercial)"
+        mention: "TVA non applicable, art. 132 (q) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143:
+        label: "Art. UE 143 - Importations exonérées (art. 143)"
+        mention: "TVA non applicable, art. 143 de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1A:
+        label: "Art. UE 143 (a) - Import de biens exonérables"
+        mention: "TVA non applicable, art. 143 (a) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1B:
+        label: "Art. UE 143 (b) - Importations selon directives UE"
+        mention: "TVA non applicable, art. 143 (b) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1C:
+        label: "Art. UE 143 (c) - Import de biens en libre pratique"
+        mention: "TVA non applicable, art. 143 (c) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1D:
+        label: "Art. UE 143 (d) - Import en régime d'acquisition intra-UE"
+        mention: "TVA non applicable, art. 143 (d) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1E:
+        label: "Art. UE 143 (e) - Réimportation par l'exportateur"
+        mention: "TVA non applicable, art. 143 (e) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1F:
+        label: "Art. UE 143 (f) - Régime diplomatique/consulaire (import)"
+        mention: "TVA non applicable, art. 143 (f) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1FA:
+        label: "Art. UE 143 (fa) - Import par institutions de l'UE"
+        mention: "TVA non applicable, art. 143 (fa) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1G:
+        label: "Art. UE 143 (g) - Import par organismes internationaux"
+        mention: "TVA non applicable, art. 143 (g) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1H:
+        label: "Art. UE 143 (h) - Import pour forces OTAN (autres États)"
+        mention: "TVA non applicable, art. 143 (h) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1I:
+        label: "Art. UE 143 (i) - Import forces UK à Chypre"
+        mention: "TVA non applicable, art. 143 (i) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1J:
+        label: "Art. UE 143 (j) - Import de prises de pêche"
+        mention: "TVA non applicable, art. 143 (j) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1K:
+        label: "Art. UE 143 (k) - Import d'or par banques centrales"
+        mention: "TVA non applicable, art. 143 (k) de la Directive TVA 2006/112/CE"
+    VATEX-EU-143-1L:
+        label: "Art. UE 143 (l) - Import gaz/électricité/chaleur/froid"
+        mention: "TVA non applicable, art. 143 (l) de la Directive TVA 2006/112/CE"
+    VATEX-EU-144:
+        label: "Art. UE 144 - Services liés à l'import exonérés"
+        mention: "TVA non applicable, art. 144 de la Directive TVA 2006/112/CE"
+    VATEX-EU-146-1E:
+        label: "Art. UE 146 (e) - Services liés à l'export de produits"
+        mention: "TVA non applicable, art. 146 (e) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148:
+        label: "Art. UE 148 - Transports internationaux"
+        mention: "TVA non applicable, art. 148 de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-A:
+        label: "Art. UE 148 (a) - Carburant navires commerce international"
+        mention: "TVA non applicable, art. 148 (a) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-B:
+        label: "Art. UE 148 (b) - Carburant navires militaires internationaux"
+        mention: "TVA non applicable, art. 148 (b) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-C:
+        label: "Art. UE 148 (c) - Navires internationaux: maintenance/location"
+        mention: "TVA non applicable, art. 148 (c) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-D:
+        label: "Art. UE 148 (d) - Autres services aux navires internationaux"
+        mention: "TVA non applicable, art. 148 (d) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-E:
+        label: "Art. UE 148 (e) - Carburant aéronefs lignes internationales"
+        mention: "TVA non applicable, art. 148 (e) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-F:
+        label: "Art. UE 148 (f) - Aéronefs internationaux: maintenance/location"
+        mention: "TVA non applicable, art. 148 (f) de la Directive TVA 2006/112/CE"
+    VATEX-EU-148-G:
+        label: "Art. UE 148 (g) - Autres services aux aéronefs internationaux"
+        mention: "TVA non applicable, art. 148 (g) de la Directive TVA 2006/112/CE"
+    VATEX-EU-151:
+        label: "Art. UE 151 - Opérations assimilées à export"
+        mention: "TVA non applicable, art. 151 de la Directive TVA 2006/112/CE"
+    VATEX-EU-151-1A:
+        label: "Art. UE 151 (a) - Fournitures diplomatiques/consulaires"
+        mention: "TVA non applicable, art. 151 (a) de la Directive TVA 2006/112/CE"
+    VATEX-EU-151-1AA:
+        label: "Art. UE 151 (aa) - Fournitures aux institutions de l'UE"
+        mention: "TVA non applicable, art. 151 (aa) de la Directive TVA 2006/112/CE"
+    VATEX-EU-151-1B:
+        label: "Art. UE 151 (b) - Fournitures à organismes internationaux"
+        mention: "TVA non applicable, art. 151 (b) de la Directive TVA 2006/112/CE"
+    VATEX-EU-151-1C:
+        label: "Art. UE 151 (c) - Fournitures aux forces de l'OTAN"
+        mention: "TVA non applicable, art. 151 (c) de la Directive TVA 2006/112/CE"
+    VATEX-EU-151-1D:
+        label: "Art. UE 151 (d) - Fournitures aux forces de l'OTAN"
+        mention: "TVA non applicable, art. 151 (d) de la Directive TVA 2006/112/CE"
+    VATEX-EU-151-1E:
+        label: "Art. UE 151 (e) - Fournitures forces UK à Chypre"
+        mention: "TVA non applicable, art. 151 (e) de la Directive TVA 2006/112/CE"
+    VATEX-EU-153:
+        label: "Art. UE 153"
+        mention: "TVA non applicable, art. 153 de la Directive TVA 2006/112/CE"
+    VATEX-EU-159:
+        label: "Art. UE 159 - Services pour entrepôts douaniers/assimilés"
+        mention: "TVA non applicable, art. 159 de la Directive TVA 2006/112/CE"
+    VATEX-EU-309:
+        label: "Art. UE 309 - Voyages réalisés hors UE (agences)"
+        mention: "TVA non applicable, art. 309 de la Directive TVA 2006/112/CE"
+    VATEX-EU-AE:
+        label: "Autoliquidation"
+        mention: "Autoliquidation"
+    # VATEX-EU-D:
+    #     label: "Acq. intra-UE moyens de transport d'occasion"
+    #     mention: "Acq. intra-UE moyens de transport d'occasion"
+    # VATEX-EU-F:
+    #     label: "Biens d'occasion (régime de marge)"
+    #     mention: "Biens d'occasion (régime de marge)"
+    VATEX-EU-G:
+        label: "Exportation hors UE"
+        mention: "Exportation hors UE"
+    # VATEX-EU-I:
+    #     label: "Œuvres d'art (régime de marge)"
+    #     mention: "Œuvres d'art (régime de marge)"
+    VATEX-EU-IC:
+        label: "Livraison intracommunautaire"
+        mention: "Livraison intracommunautaire"
+    # VATEX-EU-J:
+    #     label: "Objets de collection/antiquités (marge)"
+    #     mention: "Objets de collection/antiquités (marge)"
+    VATEX-EU-O:
+        label: "Non soumis à la TVA"
+        mention: "Non soumis à la TVA"
+    VATEX-FR-FRANCHISE:
+        label: "Art. 293 B du CGI - Franchise en base"
+        mention: "TVA non applicable, art. 293 B du CGI"
+    VATEX-FR-CNWVAT:
+        label: "Avoir sans TVA (escompte)"
+        mention: "Avoir sans TVA (escompte)"
+    VATEX-FR-CGI261-1:
+        label: "Art. 261, 1 du CGI - Opérations soumises à d'autres taxes"
+        mention: "TVA non applicable, art. 261, 1 du CGI"
+    VATEX-FR-CGI261-2:
+        label: "Art. 261, 2 du CGI - Activités agricoles et de pêche"
+        mention: "TVA non applicable, art. 261, 2 du CGI"
+    VATEX-FR-CGI261-3:
+        label: "Art. 261, 3 du CGI - Ventes de biens d'occasion"
+        mention: "TVA non applicable, art. 261, 3 du CGI"
+    VATEX-FR-CGI261-4:
+        label: "Art. 261, 4 du CGI - Professions et activités diverses"
+        mention: "TVA non applicable, art. 261, 4 du CGI"
+    VATEX-FR-CGI261-5:
+        label: "Art. 261, 5 du CGI - Opérations immobilières"
+        mention: "TVA non applicable, art. 261, 5 du CGI"
+    VATEX-FR-CGI261-7:
+        label: "Art. 261, 7 du CGI - Activités des organismes à but non lucratif"
+        mention: "TVA non applicable, art. 261, 7 du CGI"
+    VATEX-FR-CGI261-8:
+        label: "Art. 261, 8 du CGI - Biens/services liés à une catastrophe dans l'UE"
+        mention: "TVA non applicable, art. 261, 8 du CGI"
+    VATEX-FR-CGI261A:
+        label: "Art. 261 A du CGI - Mise à disposition gratuite de biens par personnes morales"
+        mention: "TVA non applicable, art. 261 A du CGI"
+    VATEX-FR-CGI261B:
+        label: "Art. 261 B du CGI - Services à leurs membres par groupements exonérés"
+        mention: "TVA non applicable, art. 261 B du CGI"
+    VATEX-FR-CGI261C-1:
+        label: "Art. 261 C, 1° du CGI - Opérations bancaires et financières"
+        mention: "TVA non applicable, art. 261 C, 1° du CGI"
+    VATEX-FR-CGI261C-2:
+        label: "Art. 261 C, 2° du CGI - Opérations d'assurance/réassurance et services connexes"
+        mention: "TVA non applicable, art. 261 C, 2° du CGI"
+    VATEX-FR-CGI261C-3:
+        label: "Art. 261 C, 3° du CGI - Vente de timbres fiscaux/postaux à leur valeur"
+        mention: "TVA non applicable, art. 261 C, 3° du CGI"
+    VATEX-FR-CGI261D-1:
+        label: "Art. 261 D, 1° du CGI - Locations agricoles de terrains et bâtiments"
+        mention: "TVA non applicable, art. 261 D, 1° du CGI"
+    VATEX-FR-CGI261D-1BIS:
+        label: "Art. 261 D, 1° bis du CGI - Locations conférant un droit réel"
+        mention: "TVA non applicable, art. 261 D, 1° bis du CGI"
+    VATEX-FR-CGI261D-2:
+        label: "Art. 261 D, 2° du CGI - Locations de terrains nus ou locaux non aménagés"
+        mention: "TVA non applicable, art. 261 D, 2° du CGI"
+    VATEX-FR-CGI261D-3:
+        label: "Art. 261 D, 3° du CGI - Droits/locations liés à la gestion d'un portefeuille immobilier"
+        mention: "TVA non applicable, art. 261 D, 3° du CGI"
+    VATEX-FR-CGI261D-4:
+        label: "Art. 261 D, 4° du CGI - Locations de logements meublés à usage d'habitation"
+        mention: "TVA non applicable, art. 261 D, 4° du CGI"
+    VATEX-FR-CGI261E-1:
+        label: "Art. 261 E, 1° du CGI - Organisation de jeux de hasard soumis à prélèvements"
+        mention: "TVA non applicable, art. 261 E, 1° du CGI"
+    VATEX-FR-CGI261E-2:
+        label: "Art. 261 E, 2° du CGI - Produits des loteries, paris hippiques/sportifs et jeux en ligne"
+        mention: "TVA non applicable, art. 261 E, 2° du CGI"
+    VATEX-FR-CGI277A:
+        label: "Art. 277 A du CGI - Régime suspensif de TVA"
+        mention: "TVA non applicable, art. 277 A du CGI"
+    VATEX-FR-CGI275:
+        label: "Art. 275 du CGI - Achats en franchise pour exportations/livraisons exonérées"
+        mention: "TVA non applicable, art. 275 du CGI"
+    VATEX-FR-298SEXDECIESA:
+        label: "Art. 298 sexdecies A du CGI - Or d'investissement"
+        mention: "TVA non applicable, art. 298 sexdecies A du CGI"
+    VATEX-FR-CGI295:
+        label: "Art. 295 du CGI - Territoires français (TFUE arts. 349 et 355(1))"
+        mention: "TVA non applicable, art. 295 du CGI"
+    VATEX-FR-AE:
+        label: "Autoliquidation, art. 283-2 du CGI"
+        mention: "Autoliquidation, art. 283-2 du CGI"
+    CUSTOM-FR-G-SERVICE:
+        label: "TVA non applicable, art. 259-1 du CGI"
+        mention: "TVA non applicable, art. 259-1 du CGI"
+    CUSTOM-FR-DROM:
+        label: "Livraison vers les DROM, art. 294 du CGI"
+        mention: "Exonération de TVA - Livraison vers les DROM, art. 294 du CGI"
+    CUSTOM-BE-FRANCHISE:
+        label: "Régime particulier de franchise des petites entreprises"
+        mention: "Régime particulier de franchise des petites entreprises – TVA non applicable"
+    CUSTOM-BE-AE:
+        label: "Autoliquidation / Cocontractant, AR CTVA n° 1, article 20"
+        mention: "Autoliquidation, AR CTVA n° 1, article 20"
+
+mentions:
+    global:
+        share-capital:
+            short: "%s au capital de %s"
+            full: "%s %s au capital de %s"
+
+    FR:
+        vat-due-on-invoice: >-
+            TVA acquittée sur les débits.
+
+        no-early-payment-discount: >-
+            Les règlements reçus avant la date d'échéance ne donneront pas lieu à escompte.
+
+        late-payment-penalty: >-
+            Tout retard de paiement engendre une pénalité exigible à compter de la
+            date d'échéance, calculée sur la base de trois fois le taux d'intérêt légal.
+
+        late-payment-flat-fee: >-
+            Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 €.

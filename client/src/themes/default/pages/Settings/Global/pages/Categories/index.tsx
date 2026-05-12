@@ -107,7 +107,7 @@ const CategoriesGlobalSettings = defineComponent({
 
             // TODO: À migrer vers une vraie modale.
             //       (qui ne se ferme pas quand on a des erreurs de formulaire notamment)
-            const { value } = await prompt(title, {
+            const value = await prompt(title, {
                 placeholder: __('category-name'),
                 inputValue: isCreate ? undefined : previousName,
                 confirmButtonText: isCreate ? __('create') : undefined,
@@ -184,18 +184,33 @@ const CategoriesGlobalSettings = defineComponent({
             );
         }
 
+        // - Actions de la page.
+        const actions = [
+            <Button
+                type="primary"
+                icon="plus"
+                class="CategoriesGlobalSettings__create"
+                onClick={handleClickNewCategory}
+                collapsible
+            >
+                {__('new-category')}
+            </Button>,
+        ];
+
         if (categories.length === 0) {
             return (
                 <SubPage
                     class="CategoriesGlobalSettings"
                     title={__('title')}
                     help={__('help')}
+                    actions={actions}
                     centered
                 >
                     <EmptyMessage
                         message={__('no-category-yet')}
                         action={{
-                            type: 'add',
+                            type: 'primary',
+                            icon: 'plus',
                             label: __('create-a-first-category'),
                             onClick: handleClickNewCategory,
                         }}
@@ -209,16 +224,7 @@ const CategoriesGlobalSettings = defineComponent({
                 class="CategoriesGlobalSettings"
                 title={__('title')}
                 help={__('help')}
-                actions={[
-                    <Button
-                        type="add"
-                        class="CategoriesGlobalSettings__create"
-                        onClick={handleClickNewCategory}
-                        collapsible
-                    >
-                        {__('new-category')}
-                    </Button>,
-                ]}
+                actions={actions}
             >
                 <ul class="CategoriesGlobalSettings__list">
                     {categories.map((category: CategoryDetails) => (

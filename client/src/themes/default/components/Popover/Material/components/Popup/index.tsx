@@ -1,5 +1,7 @@
 import './index.scss';
 import { defineComponent } from 'vue';
+import config from '@/globals/config';
+import formatNumber from '@/utils/formatNumber';
 import formatCustomFieldValue from '@/utils/formatCustomFieldValue';
 
 import type { PropType } from 'vue';
@@ -31,13 +33,23 @@ const MaterialPopoverPopup = defineComponent({
             return this.$store.getters['parks/getName'](material.park_id);
         },
 
-        hasInfos(): boolean {
+        hasProperties(): boolean {
             const { material } = this;
+
+            return (
+                material.properties.length > 0 ||
+                material.weight !== null ||
+                material.origin_country !== null
+            );
+        },
+
+        hasInfos(): boolean {
+            const { material, hasProperties } = this;
 
             return (
                 (material.description ?? '').length > 0 ||
                 (material.note ?? '').length > 0 ||
-                material.properties.length > 0 ||
+                hasProperties ||
                 !material.is_discountable
             );
         },
@@ -61,7 +73,7 @@ const MaterialPopoverPopup = defineComponent({
         },
     },
     render() {
-        const { __, parkName, material, hasInfos } = this;
+        const { __, parkName, material, hasInfos, hasProperties } = this;
         const {
             picture,
             name,
@@ -69,8 +81,11 @@ const MaterialPopoverPopup = defineComponent({
             description,
             note,
             properties,
+            origin_country: originCountry,
             is_discountable: isDiscountable,
+            weight,
         } = material;
+        const { weight: weightUnit } = config.measurementUnits.materials;
 
         const pictureClassNames = ['MaterialPopoverPopup__picture', {
             'MaterialPopoverPopup__picture--placeholder': !picture,
@@ -102,8 +117,28 @@ const MaterialPopoverPopup = defineComponent({
                                     {description}
                                 </p>
                             )}
-                            {properties.length > 0 && (
+                            {hasProperties && (
                                 <dl class="MaterialPopoverPopup__properties">
+                                    {weight !== null && (
+                                        <div class="MaterialPopoverPopup__properties__item">
+                                            <dt class="MaterialPopoverPopup__properties__item__name">
+                                                {__('global.label-colon', { label: __('global.weight') })}
+                                            </dt>
+                                            <dd class="MaterialPopoverPopup__properties__item__value">
+                                                {formatNumber(weight)}&nbsp;{weightUnit}
+                                            </dd>
+                                        </div>
+                                    )}
+                                    {originCountry !== null && (
+                                        <div class="MaterialViewInfos__properties__item">
+                                            <dt class="MaterialViewInfos__properties__item__name">
+                                                {__('global.label-colon', { label: __('global.origin-country') })}
+                                            </dt>
+                                            <dd class="MaterialViewInfos__properties__item__value">
+                                                {originCountry.name}
+                                            </dd>
+                                        </div>
+                                    )}
                                     {properties.map((property: PropertyWithValue) => (
                                         <div key={property.id} class="MaterialPopoverPopup__properties__item">
                                             <dt class="MaterialPopoverPopup__properties__item__name">

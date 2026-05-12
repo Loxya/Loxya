@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Loxya\Tests;
 
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\SubCategory;
+use Loxya\Support\Validation\ValidationsException;
 
 final class SubCategoryTest extends TestCase
 {
@@ -14,12 +14,12 @@ final class SubCategoryTest extends TestCase
         //   mais dans une catégorie différente
         try {
             SubCategory::new(['name' => 'Gradateurs', 'category_id' => 1]);
-        } catch (ValidationException) {
+        } catch (ValidationsException) {
             $this->fail("Should have been created without validation errors.");
         }
 
         // - Tente d'ajouter une sous-catégorie qui existe déjà pour cette catégorie
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         SubCategory::new(['name' => 'Gradateurs', 'category_id' => 2]);
     }
 }

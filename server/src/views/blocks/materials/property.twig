@@ -12,13 +12,15 @@
         {{- property.value|format_date('short', locale=locale) -}}.
     {%- elseif property.type == enum('Loxya\\Models\\Enums\\CustomFieldType').PERIOD.value -%}
         {{- property.value|format_period('short', locale=locale)|ucfirst -}}.
-    {%- else -%}
-        {{- property.value -}}
-        {%- if property.type in [
-            enum('Loxya\\Models\\Enums\\CustomFieldType').INTEGER.value,
-            enum('Loxya\\Models\\Enums\\CustomFieldType').FLOAT.value
-        ] and property.unit is not empty -%}
+    {%- elseif property.type in [
+        enum('Loxya\\Models\\Enums\\CustomFieldType').INTEGER.value,
+        enum('Loxya\\Models\\Enums\\CustomFieldType').FLOAT.value
+    ] -%}
+        {{ property.value|format_number(locale=locale) }}
+        {%- if property.unit is not empty -%}
             &nbsp;{{ property.unit }}
         {%- endif -%}.
+    {%- else -%}
+        {{- property.value -}}.
     {%- endif -%}
 </span>

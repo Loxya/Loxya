@@ -55,7 +55,7 @@ const MaterialsSortedExtras = defineComponent({
                 <table class="MaterialsSortedExtras__list">
                     {data.map((extra: EmbeddedExtra) => (
                         <Item
-                            key={extra.id}
+                            key={extra.uuid}
                             extra={extra}
                             withBilling={withBilling}
                             currency={currency}

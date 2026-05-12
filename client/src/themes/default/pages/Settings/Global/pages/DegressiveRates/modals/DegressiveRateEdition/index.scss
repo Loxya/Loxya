@@ -7,6 +7,7 @@
         padding: 0.7rem 1rem;
         background-color: globals.$bg-color-emphasis;
         gap: globals.$spacing-medium;
+        user-select: none;
 
         &__title {
             flex: 1;
@@ -51,8 +52,7 @@
 
         &__item {
             &__is-rate {
-                // stylelint-disable-next-line declaration-no-important
-                text-align: center !important;
+                text-align: center;
             }
 
             &__value {
@@ -62,7 +62,7 @@
 
         &__add-button {
             margin-top: globals.$spacing-small;
-            margin-left: 10px;
+            margin-left: 5px;
         }
     }
 }

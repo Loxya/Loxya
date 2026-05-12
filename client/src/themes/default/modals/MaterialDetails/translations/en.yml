@@ -1,0 +1,19 @@
+
+#
+# - Tabs
+#
+
+informations:
+    title: Informations
+
+    degressive-rate:
+        label: Degressive rate
+        empty: No degressive rate applied.
+
+    tax:
+        label:
+            default: Tax
+            simple: VAT rate
+        empty:
+            default: None (exempt without explicit reason).
+            simple: None (exempt without explicit reason).

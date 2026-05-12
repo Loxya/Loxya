@@ -1,7 +1,8 @@
 import './index.scss';
-import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
+import config from '@/globals/config';
 import throttle from 'lodash/throttle';
+import { confirm } from '@/utils/alert';
 import { HttpCode, RequestError } from '@/globals/requester';
 import isTruthy from '@/utils/isTruthy';
 import mergeDifference from '@/utils/mergeDifference';
@@ -14,14 +15,10 @@ import Page from '@/themes/default/components/Page';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import ViewModeSwitch from '../../components/ViewModeSwitch';
-import formatAddress from '@/utils/formatAddress';
-import { confirm } from '@/utils/alert';
 import FiltersPanel from './components/Filters';
-import {
-    ServerTable,
-    getLegacySavedSearch,
-} from '@/themes/default/components/Table';
+import { ServerTable } from '@/themes/default/components/Table';
 import {
     persistFilters,
     getPersistedFilters,
@@ -30,14 +27,15 @@ import {
     convertFiltersToRouteQuery,
 } from './_utils';
 
+import type { CreateElement } from 'vue';
 import type { DebouncedMethod } from 'lodash';
-import type { ComponentRef, CreateElement } from 'vue';
 import type { PaginationParams, SortableParams } from '@/stores/api/@types';
 import type { Filters } from './components/Filters';
 import type { Technician } from '@/stores/api/technicians';
-import type { Columns } from '@/themes/default/components/Table/Server';
+import type { Columns, ServerTableRef } from '@/themes/default/components/Table/Server';
 import type { Session } from '@/stores/api/session';
 import type { Role } from '@/stores/api/roles';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type InstanceProperties = {
     refreshTableDebounced: (
@@ -48,7 +46,10 @@ type InstanceProperties = {
 
 type Data = {
     filters: Filters,
+    appliedFilters: Filters,
     isLoading: boolean,
+    isFetched: boolean,
+    isEmpty: boolean,
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
@@ -78,15 +79,6 @@ const TechniciansListing = defineComponent({
                 const savedFilters = getPersistedFilters();
                 if (savedFilters !== null) {
                     Object.assign(filters, savedFilters);
-                } else {
-                    // - Ancienne sauvegarde éventuelle, dans le component `<Table />`.
-                    const savedSearchLegacy = this.$options.name
-                        ? getLegacySavedSearch(this.$options.name)
-                        : null;
-
-                    if (savedSearchLegacy !== null) {
-                        Object.assign(filters, { search: [savedSearchLegacy] });
-                    }
                 }
             }
 
@@ -96,17 +88,40 @@ const TechniciansListing = defineComponent({
         }
 
         return {
+            filters,
+            appliedFilters: { ...filters },
             isLoading: false,
+            isFetched: false,
+            isEmpty: false,
             hasCriticalError: false,
             isTrashDisplayed: false,
             shouldDisplayTrashed: false,
-            filters,
         };
     },
     computed: {
         shouldPersistSearch(): boolean {
             const session = this.$store.state.auth.user as Session;
             return !session.disable_search_persistence;
+        },
+
+        hasActiveFilters(): boolean {
+            const { appliedFilters } = this;
+            return (
+                appliedFilters.search.length > 0 ||
+                appliedFilters.availabilityPeriod !== null ||
+                appliedFilters.role !== null
+            );
+        },
+
+        hasContent(): boolean {
+            if (this.isTrashDisplayed) {
+                return true;
+            }
+
+            return (
+                this.isFetched &&
+                (!this.isEmpty || this.hasActiveFilters)
+            );
         },
 
         columns(): Columns<Technician> {
@@ -171,7 +186,7 @@ const TechniciansListing = defineComponent({
                         'TechniciansListing__table__cell--phone',
                     ],
                     render: (h: CreateElement, { phone }: Technician) => (
-                        phone ?? (
+                        phone?.toReadable() ?? (
                             <div class="TechniciansListing__table__cell__empty">
                                 {__('global.not-specified')}
                             </div>
@@ -187,17 +202,20 @@ const TechniciansListing = defineComponent({
                     ],
                     defaultHidden: true,
                     render: (h: CreateElement, technician: Technician) => {
-                        const address = formatAddress(
-                            technician.street,
-                            technician.postal_code,
-                            technician.locality,
-                            technician.country,
-                        );
-                        return address ?? (
-                            <div class="TechniciansListing__table__cell__empty">
-                                {__('global.not-specified')}
-                            </div>
-                        );
+                        if (technician.address === null) {
+                            return (
+                                <div class="TechniciansListing__table__cell__empty">
+                                    {__('global.not-specified')}
+                                </div>
+                            );
+                        }
+
+                        let { address } = technician;
+                        if (!technician.country.isSame(config.mainCountry)) {
+                            address += `\n${technician.country.name}`;
+                        }
+
+                        return address;
                     },
                 },
                 !isTrashDisplayed && {
@@ -450,7 +468,7 @@ const TechniciansListing = defineComponent({
                 return;
             }
 
-            const $table = this.$refs.table as ComponentRef<typeof ServerTable>;
+            const $table = this.$refs.table as ServerTableRef;
             $table?.showColumnsSelector();
         },
 
@@ -461,16 +479,22 @@ const TechniciansListing = defineComponent({
         // ------------------------------------------------------
 
         async fetch(pagination: PaginationParams & SortableParams) {
-            pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
             this.isLoading = true;
+
+            const filters: Filters = { ...this.filters };
+            this.appliedFilters = filters;
 
             try {
                 const data = await apiTechnicians.all({
                     ...pagination,
-                    ...this.filters,
+                    ...filters,
                     deleted: this.shouldDisplayTrashed,
                 });
+
+                this.isFetched = true;
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
+                this.isEmpty = data.pagination.total.items <= 0;
+
                 return data;
             } catch (error) {
                 if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
@@ -491,7 +515,7 @@ const TechniciansListing = defineComponent({
         refreshTable() {
             this.refreshTableDebounced?.cancel();
 
-            (this.$refs.table as ComponentRef<typeof ServerTable>)?.refresh();
+            (this.$refs.table as ServerTableRef)?.refresh();
         },
 
         __(key: string, params?: Record<string, number | string>, count?: number): string {
@@ -514,8 +538,10 @@ const TechniciansListing = defineComponent({
             columns,
             filters,
             isLoading,
+            hasContent,
             isTrashDisplayed,
             hasCriticalError,
+            hasActiveFilters,
             handleRowClick,
             handleFiltersChange,
             handleFiltersSubmit,
@@ -552,7 +578,6 @@ const TechniciansListing = defineComponent({
                             ref="table"
                             key="trash"
                             class="TechniciansListing__table"
-                            rowClass="TechniciansListing__table__row"
                             columns={columns}
                             fetcher={fetch}
                         />
@@ -560,6 +585,21 @@ const TechniciansListing = defineComponent({
                 </Page>
             );
         }
+
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage = (
+            hasActiveFilters
+                ? { variant: EmptyMessageVariant.NO_RESULTS }
+                : {
+                    text: __('empty'),
+                    action: {
+                        type: 'primary',
+                        icon: 'plus',
+                        label: __('page.action-add'),
+                        target: { name: 'add-technician' },
+                    },
+                }
+        );
 
         return (
             <Page
@@ -569,7 +609,7 @@ const TechniciansListing = defineComponent({
                 actions={[
                     <ViewModeSwitch mode={TechniciansViewMode.LISTING} />,
                     <Button
-                        type="add"
+                        type="primary"
                         icon="user-plus"
                         to={{ name: 'add-technician' }}
                         collapsible
@@ -580,22 +620,29 @@ const TechniciansListing = defineComponent({
                         <Button icon="tools" to={{ name: 'roles' }}>
                             {__('page.manage-roles')}
                         </Button>
-                        <Button icon="table" onClick={handleConfigureColumns}>
-                            {__('global.configure-columns')}
-                        </Button>
+                        {hasContent && (
+                            <Button icon="table" onClick={handleConfigureColumns}>
+                                {__('global.configure-columns')}
+                            </Button>
+                        )}
                         <Button icon="trash" onClick={handleToggleShowTrashed}>
                             {__('global.open-trash-bin')}
                         </Button>
                     </Dropdown>,
                 ]}
                 scopedSlots={{
-                    headerContent: (): JSX.Node => (
-                        <FiltersPanel
-                            values={filters}
-                            onChange={handleFiltersChange}
-                            onSubmit={handleFiltersSubmit}
-                        />
-                    ),
+                    headerContent: (): JSX.Node => {
+                        if (!hasContent) {
+                            return null;
+                        }
+                        return (
+                            <FiltersPanel
+                                values={filters}
+                                onChange={handleFiltersChange}
+                                onSubmit={handleFiltersSubmit}
+                            />
+                        );
+                    },
                 }}
             >
                 <div class="TechniciansListing">
@@ -604,10 +651,11 @@ const TechniciansListing = defineComponent({
                         key="default"
                         name={$options.name}
                         class="TechniciansListing__table"
-                        rowClass="TechniciansListing__table__row"
                         columns={columns}
                         fetcher={fetch}
+                        emptyMessage={emptyMessage}
                         onRowClick={handleRowClick}
+                        sticky
                     />
                 </div>
             </Page>

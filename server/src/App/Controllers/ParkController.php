@@ -5,24 +5,22 @@ namespace Loxya\Controllers;
 
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
-use Loxya\Controllers\Traits\WithCrud;
 use Loxya\Http\Request;
 use Loxya\Models\Material;
 use Loxya\Models\Park;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Http\Response;
 
 final class ParkController extends BaseController
 {
-    use WithCrud;
-
     public function getAll(Request $request, Response $response): ResponseInterface
     {
         $search = $request->getSearchArrayQueryParam('search');
         $limit = $request->getIntegerQueryParam('limit');
-        $ascending = $request->getBooleanQueryParam('ascending', true);
         $onlyDeleted = $request->getBooleanQueryParam('deleted', false);
+        $orderBy = $request->getOrderByQueryParams('orderBy', 'ascending', Park::class);
 
         $query = Park::query()
             ->when(
@@ -32,7 +30,9 @@ final class ParkController extends BaseController
             ->when($onlyDeleted, static fn (Builder $subQuery) => (
                 $subQuery->onlyTrashed()
             ))
-            ->orderBy('name', $ascending ? 'asc' : 'desc');
+            ->when($orderBy !== null, static fn (Builder $subQuery) => (
+                $subQuery->customOrderBy($orderBy['column'], $orderBy['direction'])
+            ));
 
         $results = $this->paginate($request, $query, $limit);
         return $response->withJson($results, StatusCode::STATUS_OK);
@@ -48,9 +48,20 @@ final class ParkController extends BaseController
         return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
+    public function getOne(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $park = Park::findOrFail($id);
+
+        $data = static::_formatOne($park);
+        return $response->withJson($data, StatusCode::STATUS_OK);
+    }
+
     public function getOneMaterials(Request $request, Response $response): ResponseInterface
     {
         $id = $request->getIntegerAttribute('id');
+
         if (!Park::includes($id)) {
             throw new HttpNotFoundException($request);
         }
@@ -62,10 +73,74 @@ final class ParkController extends BaseController
     public function getOneTotalAmount(Request $request, Response $response): ResponseInterface
     {
         $id = $request->getIntegerAttribute('id');
+
         /** @var Park $park */
         $park = Park::findOrFail($id);
 
         return $response->withJson($park->total_amount, StatusCode::STATUS_OK);
+    }
+
+    public function create(Request $request, Response $response): ResponseInterface
+    {
+        $postData = (array) $request->getParsedBody();
+        if (empty($postData)) {
+            throw new HttpBadRequestException($request, "No data was provided.");
+        }
+
+        $park = Park::new($postData);
+
+        $data = static::_formatOne($park);
+        return $response->withJson($data, StatusCode::STATUS_CREATED);
+    }
+
+    public function update(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $park = Park::findOrFail($id);
+
+        $postData = (array) $request->getParsedBody();
+        if (empty($postData)) {
+            throw new HttpBadRequestException($request, "No data was provided.");
+        }
+
+        $park->edit($postData);
+
+        $data = static::_formatOne($park);
+        return $response->withJson($data, StatusCode::STATUS_OK);
+    }
+
+    public function delete(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $park = Park::withTrashed()->findOrFail($id);
+
+        $isDeleted = $park->trashed()
+            ? $park->forceDelete()
+            : $park->delete();
+
+        if (!$isDeleted) {
+            throw new \RuntimeException("An unknown error occurred while deleting the park.");
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
+    }
+
+    public function restore(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $park = Park::query()
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        if (!$park->restore()) {
+            throw new \RuntimeException(sprintf("Unable to restore the park %d.", $id));
+        }
+
+        $data = static::_formatOne($park);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     // ------------------------------------------------------

@@ -26,7 +26,7 @@ type Data = {
     id: Material['id'],
     material: Material | null,
     isFetched: boolean,
-    selectedTabIndex: number,
+    selectedTab: TabName,
     criticalError: ErrorType | null,
 };
 
@@ -46,7 +46,7 @@ const MaterialView = defineComponent({
             id: parseInteger(this.$route.params.id)!,
             material: null,
             isFetched: false,
-            selectedTabIndex: 0,
+            selectedTab: TabName.INFOS,
             criticalError: null,
         };
     },
@@ -59,14 +59,10 @@ const MaterialView = defineComponent({
                 : __('page.material-view.title-simple');
         },
 
-        tabsIndexes(): string[] {
-            return Object.values(TabName);
-        },
-
         tabsActions(): JSX.Element[] {
-            const { $t: __, id, isFetched, tabsIndexes, selectedTabIndex } = this;
+            const { $t: __, id, isFetched, selectedTab } = this;
 
-            switch (tabsIndexes[selectedTabIndex]) {
+            switch (selectedTab) {
                 case TabName.INFOS: {
                     if (!isFetched) {
                         return [];
@@ -110,7 +106,7 @@ const MaterialView = defineComponent({
         // ------------------------------------------------------
 
         async handleTabChange(event: TabChangeEvent) {
-            if (this.tabsIndexes[event.prevIndex] !== TabName.DOCUMENTS) {
+            if (event.prevId !== TabName.DOCUMENTS) {
                 return;
             }
 
@@ -133,9 +129,13 @@ const MaterialView = defineComponent({
             event.executeDefault();
         },
 
-        handleTabChanged(index: number) {
-            this.selectedTabIndex = index;
-            this.$router.replace(this.tabsIndexes[index]);
+        handleTabChanged(id: TabName) {
+            this.selectedTab = id;
+            this.$router.replace(id);
+        },
+
+        handleOutdated() {
+            this.fetchData();
         },
 
         // ------------------------------------------------------
@@ -146,8 +146,8 @@ const MaterialView = defineComponent({
 
         selectTabFromRouting() {
             const { hash } = this.$route;
-            if (hash && this.tabsIndexes.includes(hash)) {
-                this.selectedTabIndex = this.tabsIndexes.indexOf(hash);
+            if (hash && (Object.values(TabName) as string[]).includes(hash)) {
+                this.selectedTab = hash as TabName;
             }
         },
 
@@ -184,7 +184,7 @@ const MaterialView = defineComponent({
             material,
             handleTabChange,
             handleTabChanged,
-            selectedTabIndex,
+            selectedTab,
         } = this;
 
         if (criticalError || !isFetched) {
@@ -199,15 +199,15 @@ const MaterialView = defineComponent({
             <Page name="material-view" title={pageTitle}>
                 <div class="MaterialView">
                     <Tabs
-                        defaultIndex={selectedTabIndex}
+                        defaultActive={selectedTab}
                         onChange={handleTabChange}
                         onChanged={handleTabChanged}
                         actions={tabsActions}
                     >
-                        <Tab title={__('informations')} icon="info-circle">
+                        <Tab id={TabName.INFOS} title={__('informations')} icon="info-circle">
                             <Infos material={material!} />
                         </Tab>
-                        <Tab title={__('documents')} icon="file-pdf">
+                        <Tab id={TabName.DOCUMENTS} title={__('documents')} icon="file-pdf">
                             <Documents ref="documents" material={material!} />
                         </Tab>
                     </Tabs>

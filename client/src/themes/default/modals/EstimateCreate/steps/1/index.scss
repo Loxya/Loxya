@@ -1,0 +1,42 @@
+@use '~@/themes/default/style/globals';
+
+.EstimateCreateStepBuyerAndLines {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    &__body {
+        overflow-y: auto;
+        padding: 0 globals.$spacing-large globals.$spacing-medium;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem globals.$spacing-medium;
+        background-color: rgb(0 0 0 / 10%);
+        gap: globals.$spacing-small;
+    }
+
+    //
+    // - Content
+    //
+
+    &__buyer {
+        margin-bottom: globals.$spacing-medium;
+    }
+
+    &__lines {
+        &__title {
+            margin: 0 0 globals.$spacing-small;
+
+            &::after {
+                content: '*';
+                margin-left: 3px;
+                color: globals.$text-danger-color;
+            }
+        }
+    }
+}

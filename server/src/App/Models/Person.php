@@ -9,10 +9,18 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
+use Loxya\Config\Config;
+use Loxya\Config\Enums\BillingMode;
 use Loxya\Config\Enums\Feature;
 use Loxya\Contracts\Serializable;
+use Loxya\Models\Casts\AsCountry;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Address;
+use Loxya\Support\Addressing\AddressField;
+use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -27,11 +35,13 @@ use Loxya\Support\Validation\Validator as V;
  * @property string|null $email
  * @property string|null $phone
  * @property string|null $street
+ * @property string|null $additional_street
  * @property string|null $postal_code
+ * @property string|null $administrative_area
  * @property string|null $locality
- * @property int|null $country_id
- * @property-read Country|null $country
- * @property-read string|null $full_address
+ * @property-read Address $address
+ * @property Country $country
+ * @property-read string|null $language
  * @property-read CarbonImmutable $created_at
  * @property-read CarbonImmutable|null $updated_at
  *
@@ -46,6 +56,14 @@ final class Person extends BaseModel implements Serializable
 
     protected $table = 'persons';
 
+    /**
+     * Indique si la validation doit ajouter des règles de
+     * validation spécifiques aux données requises pour les acheteurs.
+     *
+     * Cette valeur devrait revenir à `false` après chaque validation.
+     */
+    private bool $enforceBuyerValidation = false;
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
@@ -54,12 +72,14 @@ final class Person extends BaseModel implements Serializable
             'user_id' => V::custom([$this, 'checkUserId']),
             'first_name' => V::notEmpty()->nameLike()->length(2, 35),
             'last_name' => V::notEmpty()->nameLike()->length(2, 35),
-            'email' => V::optional(V::email()->length(5, 191)),
-            'phone' => V::optional(V::phone()),
-            'street' => V::optional(V::length(null, 191)),
-            'postal_code' => V::optional(V::length(null, 10)),
-            'locality' => V::optional(V::length(null, 191)),
-            'country_id' => V::custom([$this, 'checkCountryId']),
+            'email' => V::nullable(V::email()),
+            'phone' => V::custom([$this, 'checkPhone']),
+            'street' => V::custom([$this, 'checkStreet']),
+            'additional_street' => V::custom([$this, 'checkAdditionalStreet']),
+            'postal_code' => V::custom([$this, 'checkPostalCode']),
+            'administrative_area' => V::custom([$this, 'checkAdministrativeArea']),
+            'locality' => V::custom([$this, 'checkLocality']),
+            'country' => V::notEmpty()->countryCode(),
         ];
     }
 
@@ -69,16 +89,134 @@ final class Person extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkUserId($value)
+    public function checkUserId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
         return $value === null || User::includes($value);
     }
 
-    public function checkCountryId($value)
+    public function checkStreet()
     {
-        V::nullable(V::intVal())->check($value);
-        return $value === null || Country::includes($value);
+        return V::create()
+            ->nullable(V::length(null, 191))
+            ->custom(
+                [$this, 'checkAddressField'],
+                AddressField::ADDRESS_LINE1,
+            );
+    }
+
+    public function checkAdditionalStreet()
+    {
+        return V::create()
+            ->nullable(V::length(null, 191))
+            ->custom(
+                [$this, 'checkAddressField'],
+                AddressField::ADDRESS_LINE2,
+            );
+    }
+
+    public function checkPostalCode(mixed $value)
+    {
+        V::create()
+            ->nullable(V::length(null, 10))
+            ->custom(
+                [$this, 'checkAddressField'],
+                AddressField::POSTAL_CODE,
+            )
+            ->check($value);
+
+        // - Si la valeur est nulle, on ne va pas plus loin.
+        if ($value === null) {
+            return true;
+        }
+
+        // - Si le pays n'est pas valide, on ne peut pas aller plus loin.
+        $countryCode = $this->getAttributeFromArray('country');
+        if (!V::countryCode()->validate($countryCode)) {
+            return true;
+        }
+
+        return V::postalCode($countryCode);
+    }
+
+    public function checkAdministrativeArea()
+    {
+        return V::create()
+            ->nullable(V::length(null, 191))
+            ->custom(
+                [$this, 'checkAddressField'],
+                AddressField::ADMINISTRATIVE_AREA,
+            );
+    }
+
+    public function checkLocality()
+    {
+        return V::create()
+            ->nullable(V::length(null, 191))
+            ->custom(
+                [$this, 'checkAddressField'],
+                AddressField::LOCALITY,
+            );
+    }
+
+    public function checkAddressField(mixed $value, AddressField $field)
+    {
+        // - Si la valeur est non nulle, on est bon.
+        if ($value !== null) {
+            return true;
+        }
+
+        // - Si la facturation n'est pas activée, on n'impose pas le remplissage.
+        if (Config::get('billingMode') === BillingMode::NONE) {
+            return true;
+        }
+
+        // - Si les règles de validation liées aux acheteurs ne sont
+        //   pas forcées, on n'impose pas le remplissage.
+        if (!$this->enforceBuyerValidation) {
+            return true;
+        }
+
+        // - Si l'adresse n'est pas requise pour les acheteur particuliers
+        //   dans le pays de l'organisation, on n'impose pas le remplissage.
+        $sellerCountry = Config::getOrganizationCountry();
+        if (!$sellerCountry->requireBuyerAddress(false)) {
+            return true;
+        }
+
+        // - Si le pays n'est pas valide, on ne peut pas aller plus loin.
+        $countryCode = $this->getAttributeFromArray('country');
+        if (!V::countryCode()->validate($countryCode)) {
+            return true;
+        }
+
+        $country = new Country($countryCode);
+        return !$country->isAddressFieldMandatory($field)
+            ?: 'mandatory-field';
+    }
+
+    public function checkPhone(mixed $value)
+    {
+        V::nullable(V::phone())->check($value);
+
+        if ($value === null) {
+            return true;
+        }
+
+        // - Si c'est un format "national", par défaut on
+        //   considère le pays de l'application.
+        $mainCountryCode = Config::get('mainCountry');
+        if (V::phone($mainCountryCode)->validate($value)) {
+            return true;
+        }
+
+        // - Sinon, on considère le pays de la personne.
+        $rawCountryCode = $this->getAttributeFromArray('country');
+        $countryCode = V::countryCode()->validate($rawCountryCode)
+            ? $rawCountryCode
+            : null;
+
+        return V::phone($countryCode ?? $mainCountryCode);
     }
 
     // ------------------------------------------------------
@@ -102,11 +240,6 @@ final class Person extends BaseModel implements Serializable
         return $this->hasOne(Technician::class);
     }
 
-    public function country(): BelongsTo
-    {
-        return $this->belongsTo(Country::class);
-    }
-
     // ------------------------------------------------------
     // -
     // -    Mutators
@@ -115,7 +248,7 @@ final class Person extends BaseModel implements Serializable
 
     protected $appends = [
         'full_name',
-        'full_address',
+        'address',
     ];
 
     protected $casts = [
@@ -125,38 +258,37 @@ final class Person extends BaseModel implements Serializable
         'email' => 'string',
         'phone' => 'string',
         'street' => 'string',
+        'additional_street' => 'string',
         'postal_code' => 'string',
+        'administrative_area' => 'string',
         'locality' => 'string',
-        'country_id' => 'integer',
+        'country' => AsCountry::class,
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
     ];
 
     public function getFullNameAttribute(): string
     {
-        return implode(' ', [
-            $this->first_name,
-            $this->last_name,
-        ]);
+        return implode(' ', [$this->first_name, $this->last_name]);
     }
 
-    public function getCountryAttribute(): Country|null
+    public function getAddressAttribute(): Address
     {
-        return $this->getRelationValue('country');
+        if ($this->country === null) {
+            throw new \LogicException("Country should always be defined.");
+        }
+
+        return (new Address($this->country))
+            ->withAddressLine1($this->street)
+            ->withAddressLine2($this->additional_street)
+            ->withPostalCode($this->postal_code)
+            ->withAdministrativeArea($this->administrative_area)
+            ->withLocality($this->locality);
     }
 
-    public function getFullAddressAttribute(): string|null
+    public function getLanguageAttribute(): string|null
     {
-        $addressParts = [];
-
-        $addressParts[] = trim($this->street ?? '');
-        $addressParts[] = implode(' ', array_filter([
-            trim($this->postal_code ?? ''),
-            trim($this->locality ?? ''),
-        ]));
-
-        $addressParts = array_filter($addressParts);
-        return !empty($addressParts) ? implode("\n", $addressParts) : null;
+        return $this->user?->language;
     }
 
     public function getTechnicianAttribute(): Technician|null
@@ -180,18 +312,138 @@ final class Person extends BaseModel implements Serializable
         'email',
         'phone',
         'street',
+        'additional_street',
         'postal_code',
+        'administrative_area',
         'locality',
-        'country_id',
+        'country',
     ];
 
-    public function setPhoneAttribute(mixed $value): void
+    public function setPhoneAttribute(mixed $rawValue): void
     {
-        $value = !empty($value) && is_string($value)
-            ? Str::remove(' ', $value)
-            : $value;
+        // - Si ce n'est pas une chaîne (`null` ou valeur invalide) => On ne va pas plus loin.
+        if (!is_string($rawValue)) {
+            $this->attributes['phone'] = $rawValue;
+            return;
+        }
+        $rawValue = Str::remove([' ', '-', '.'], trim($rawValue));
 
-        $this->attributes['phone'] = $value === '' ? null : $value;
+        // - Si la valeur est vide, on ne va pas plus loin.
+        if ($rawValue === '') {
+            $this->attributes['phone'] = null;
+            return;
+        }
+
+        // - Si c'est un format "national", par défaut on
+        //   considère le pays de l'application.
+        $mainCountry = Config::getMainCountry();
+        if ($mainCountry->isValidPhoneNumber($rawValue, strict: false)) {
+            $this->attributes['phone'] = $mainCountry->normalizePhoneNumber($rawValue);
+            return;
+        }
+
+        // - Sinon, on considère le pays de l'entreprise.
+        $rawCountryCode = $this->getAttributeFromArray('country');
+        $country = V::countryCode()->validate($rawCountryCode)
+            ? new Country($rawCountryCode)
+            : null;
+
+        // - Si le pays n'est pas défini, on ne peut pas normaliser.
+        if ($country === null) {
+            $this->attributes['phone'] = $rawValue;
+            return;
+        }
+
+        $this->attributes['phone'] = (
+            $country->isValidPhoneNumber($rawValue, strict: false)
+                ? $country->normalizePhoneNumber($rawValue)
+                : $rawValue
+        );
+    }
+
+    public function setCountryAttribute(mixed $rawValue): void
+    {
+        $this->attributes['country'] = $rawValue instanceof Country
+            ? $rawValue->getCode()
+            : $rawValue;
+
+        $country = null;
+        if (V::countryCode()->validate($rawValue) || $rawValue instanceof Country) {
+            $country = !($rawValue instanceof Country)
+                ? new Country($rawValue)
+                : $rawValue;
+        }
+
+        // - Si le pays n'est pas valide, on ne va pas plus loin.
+        if ($country === null) {
+            return;
+        }
+
+        // - Numéro de téléphone
+        $mainCountry = Config::getMainCountry();
+        $rawPhone = $this->getAttributeFromArray('phone');
+        if ($rawPhone !== null && !$mainCountry->isValidPhoneNumber($rawPhone, strict: false)) {
+            $this->attributes['phone'] = (
+                $country->isValidPhoneNumber($rawPhone, strict: false)
+                    ? $country->normalizePhoneNumber($rawPhone)
+                    : $rawPhone
+            );
+        }
+    }
+
+    // ------------------------------------------------------
+    // -
+    // -    Overwritten methods
+    // -
+    // ------------------------------------------------------
+
+    public function fill(array $attributes)
+    {
+        // - On met le pays en premier dans la liste des attributs,
+        //   s'il est présent, car il est utilisé par les setters
+        //   de plusieurs autres champs.
+        if (array_key_exists('country', $attributes)) {
+            $countryCode = Arr::pull($attributes, 'country');
+            $attributes = ['country' => $countryCode] + $attributes;
+        }
+
+        return parent::fill($attributes);
+    }
+
+    public function save(array $options = [])
+    {
+        if ($options['validate'] ?? true) {
+            $enforceBuyerValidation = $options['enforceBuyerValidation'] ?? false;
+            $this->validate($enforceBuyerValidation);
+        }
+
+        return parent::save(array_replace($options, [
+            'validate' => false,
+        ]));
+    }
+
+    public function validationErrors(bool $enforceBuyerValidation = false): array
+    {
+        try {
+            $this->enforceBuyerValidation = $enforceBuyerValidation;
+            return parent::validationErrors();
+        } finally {
+            $this->enforceBuyerValidation = false;
+        }
+    }
+
+    public function isValid(bool $enforceBuyerValidation = false): bool
+    {
+        return count($this->validationErrors($enforceBuyerValidation)) === 0;
+    }
+
+    public function validate(bool $enforceBuyerValidation = false): static
+    {
+        $errors = $this->validationErrors($enforceBuyerValidation);
+        if (count($errors) > 0) {
+            throw new ValidationsException($errors);
+        }
+        return $this;
     }
 
     // ------------------------------------------------------
@@ -200,7 +452,7 @@ final class Person extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
         'full_name',
     ];
 
@@ -230,6 +482,8 @@ final class Person extends BaseModel implements Serializable
 
     public function scopeCustomOrderBy(Builder $query, string $column, string $direction = 'asc'): Builder
     {
+        Assert::inArray($direction, ['asc', 'desc'], "Invalid direction.");
+
         if ($column !== 'full_name') {
             return parent::scopeCustomOrderBy($query, $column, $direction);
         }
@@ -278,12 +532,7 @@ final class Person extends BaseModel implements Serializable
 
     public function serialize(): array
     {
-        /** @var Person $person */
-        $person = tap(clone $this, static function (Person $person) {
-            $person->append(['country']);
-        });
-
-        return (new DotArray($person->attributesForSerialization()))
+        return (new DotArray($this->attributesForSerialization()))
             ->delete(['created_at', 'updated_at'])
             ->all();
     }

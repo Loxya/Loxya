@@ -13,6 +13,7 @@
     list-style: none;
     user-select: none;
     cursor: pointer;
+    white-space: nowrap;
 
     &__icon {
         margin-right: $icon-margin;

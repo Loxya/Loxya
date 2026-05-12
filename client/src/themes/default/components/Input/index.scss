@@ -55,7 +55,6 @@
         flex: 0 0 auto;
         display: inline-block;
         min-width: 40px;
-        padding: globals.$input-padding-vertical globals.$input-padding-horizontal;
         border: globals.$input-border-width solid globals.$input-border-color;
         border-left: 0;
         border-radius: 0 globals.$input-border-radius globals.$input-border-radius 0;
@@ -64,6 +63,13 @@
         font-size: globals.$input-font-size;
         line-height: globals.$input-line-height;
         text-align: center;
+
+        // stylelint-disable-next-line order/properties-order
+        padding:
+            globals.$input-padding-vertical
+            globals.$input-padding-horizontal
+            globals.$input-padding-vertical
+            calc(globals.$input-padding-horizontal / 2);
     }
 
     //

@@ -25,7 +25,7 @@ type Props = {
 
     /**
      * Fonction appelée lorsque les données de réinitialisation sont mises à jour.
-     * (Notamment la partie liée à l’authentification de la requête (token, date d'expiration du token))
+     * (Notamment la partie liée à l'authentification de la requête (token, date d'expiration du token))
      *
      * @param payload - Les nouvelles données de réinitialisation.
      */

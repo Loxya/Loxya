@@ -4,7 +4,7 @@ import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import Icon from '@/themes/default/components/Icon';
 
-import type { Location } from 'vue-router';
+import type { RawLocation } from 'vue-router';
 import type { TooltipOptions } from 'v-tooltip';
 import type { PropType } from 'vue';
 import type {
@@ -19,7 +19,7 @@ type Props = {
      * Si non définie, un élément HTML `<button>` sera utilisé et
      * vous devriez écouter l'événement `onClick` pour réagir au click.
      */
-    to?: string | Location,
+    to?: RawLocation,
 
     /**
      * L'icône à utiliser avant le texte du lien.

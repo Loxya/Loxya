@@ -6,12 +6,18 @@ namespace Loxya\Tests;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Loxya\Models\Beneficiary;
+use Loxya\Models\Enums\BillingFormat;
+use Loxya\Models\Enums\EstimateStatus;
+use Loxya\Models\Enums\InvoiceStatus;
 use Loxya\Models\Event;
 use Loxya\Models\Material;
 use Loxya\Models\Setting;
 use Loxya\Models\User;
 use Loxya\Support\Arr;
 use Loxya\Support\File\UploadedFile;
+use Loxya\Support\Invoicing\TaxRegime;
+use Loxya\Support\Invoicing\VatExemptionCode\VatExemptionCodeEu;
 use Loxya\Support\Period;
 
 final class EventsTest extends ApiTestCase
@@ -41,18 +47,33 @@ final class EventsTest extends ApiTestCase
                 'currency' => 'EUR',
                 'total_without_global_discount' => '422.54',
                 'global_discount_rate' => '10.0000',
+                'global_discount_breakdown' => [
+                    [
+                        'base' => '422.54',
+                        'value' => '42.25',
+                        'total' => '380.29',
+                        'tax' => [
+                            'type' => TaxRegime::STANDARD->value,
+                            'value' => '20.000',
+                        ],
+                    ],
+                ],
                 'total_global_discount' => '42.25',
                 'total_without_taxes' => '380.29',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '380.29',
                         'total' => '76.06',
                     ],
                 ],
                 'total_with_taxes' => '456.35',
                 'total_replacement' => '19408.90',
+                'total_weight' => '33.900',
                 'is_confirmed' => false,
                 'is_archived' => false,
                 'is_billable' => true,
@@ -127,12 +148,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '350.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '19000.00',
                         'total_replacement_price' => '19000.00',
@@ -161,12 +181,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '44.63',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '349.90',
                         'total_replacement_price' => '349.90',
@@ -195,12 +214,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '27.91',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '59.00',
                         'total_replacement_price' => '59.00',
@@ -219,6 +237,7 @@ final class EventsTest extends ApiTestCase
                 ],
                 'extras' => [],
                 'invoices' => [
+                    InvoicesTest::data(5),
                     InvoicesTest::data(1),
                 ],
                 'estimates' => [
@@ -250,26 +269,36 @@ final class EventsTest extends ApiTestCase
                 ],
                 'materials_count' => 5,
                 'currency' => 'EUR',
-                'total_without_global_discount' => '-909.67',
+                'total_without_global_discount' => '2192.33',
+                'global_discount_breakdown' => [],
                 'global_discount_rate' => '0.0000',
                 'total_global_discount' => '0.00',
-                'total_without_taxes' => '-909.67',
+                'total_without_taxes' => '2192.33',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '1880.33',
                         'total' => '376.07',
                     ],
                     [
-                        'name' => 'Taxes diverses',
-                        'is_rate' => false,
-                        'value' => '10.00',
-                        'total' => '20.00',
+                        'type' => TaxRegime::STANDARD->value,
+                        'value' => '5.500',
+                        'base' => '310.00',
+                        'total' => '17.05',
+                    ],
+                    [
+                        'type' => TaxRegime::EXEMPTED->value,
+                        'reason' => [VatExemptionCodeEu::VATEX_EU_79_C->value],
+                        'base' => '2.00',
                     ],
                 ],
-                'total_with_taxes' => '-513.60',
+                'total_with_taxes' => '2585.45',
                 'total_replacement' => '58899.80',
+                'total_weight' => '86.300',
                 'is_archived' => false,
                 'is_billable' => true,
                 'is_confirmed' => false,
@@ -309,12 +338,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '10.0000',
                         'total_discount' => '8.93',
                         'total_without_taxes' => '80.33',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '349.90',
                         'total_replacement_price' => '699.80',
@@ -343,12 +371,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '1800.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '19400.00',
                         'total_replacement_price' => '58200.00',
@@ -367,28 +394,36 @@ final class EventsTest extends ApiTestCase
                 ],
                 'extras' => [
                     [
-                        'id' => 1,
+                        'uuid' => 'a9c6b9d2-1b7e-4e3a-8f1d-5c2d3e4f5a6b',
+                        'is_service' => true,
                         'description' => 'Services additionnels',
                         'quantity' => 2,
                         'unit_price' => '155.00',
+                        'total_without_discount' => '310.00',
+                        'discount_rate' => '0.0000',
+                        'total_discount' => '0.00',
+                        'total_without_taxes' => '310.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
                         'tax_id' => 2,
                         'taxes' => [
-                            [
-                                'name' => 'Taxes diverses',
-                                'is_rate' => false,
-                                'value' => '10.00',
-                            ],
+                            ['value' => '5.500'],
                         ],
-                        'total_without_taxes' => '310.00',
                     ],
                     [
-                        'id' => 2,
-                        'description' => 'Avoir facture du 17/12/2018',
+                        'uuid' => 'b8d7c8e1-2a6f-4d2b-9e0c-6d3e4f5a6b7c',
+                        'is_service' => false,
+                        'description' => 'Achat pile',
                         'quantity' => 1,
-                        'unit_price' => '-3100.00',
+                        'unit_price' => '2.00',
+                        'total_without_discount' => '2.00',
+                        'discount_rate' => '0.0000',
+                        'total_discount' => '0.00',
+                        'total_without_taxes' => '2.00',
+                        'tax_regime' => TaxRegime::EXEMPTED->value,
+                        'tax_exemption_code' => VatExemptionCodeEu::VATEX_EU_79_C->value,
                         'tax_id' => null,
-                        'taxes' => [],
-                        'total_without_taxes' => '-3100.00',
+                        'taxes' => null,
                     ],
                 ],
                 'beneficiaries' => [
@@ -396,7 +431,9 @@ final class EventsTest extends ApiTestCase
                 ],
                 'technicians' => [],
                 'estimates' => [],
-                'invoices' => [],
+                'invoices' => [
+                    InvoicesTest::data(2),
+                ],
                 'note' => "Il faudra envoyer le matériel sur Lyon avant l'avant-veille.",
                 'author' => UsersTest::data(1),
                 'created_at' => '2018-12-16 12:50:45',
@@ -423,6 +460,7 @@ final class EventsTest extends ApiTestCase
                 'materials_count' => 23,
                 'currency' => 'EUR',
                 'total_replacement' => '1210.99',
+                'total_weight' => '22.600',
                 'has_materials' => true,
                 'has_missing_materials' => null,
                 'has_deleted_materials' => false,
@@ -531,6 +569,7 @@ final class EventsTest extends ApiTestCase
                 'materials_count' => 6,
                 'currency' => 'EUR',
                 'total_replacement' => '115499.98',
+                'total_weight' => '34.100',
                 'is_archived' => false,
                 'is_billable' => false,
                 'is_confirmed' => false,
@@ -639,6 +678,7 @@ final class EventsTest extends ApiTestCase
                 'materials_count' => 2,
                 'currency' => 'EUR',
                 'total_replacement' => '17000.00',
+                'total_weight' => '0.000',
                 'is_archived' => false,
                 'is_billable' => false,
                 'is_confirmed' => false,
@@ -709,6 +749,7 @@ final class EventsTest extends ApiTestCase
                 'materials_count' => 0,
                 'currency' => 'EUR',
                 'total_replacement' => '0.00',
+                'total_weight' => '0.000',
                 'is_archived' => false,
                 'is_billable' => false,
                 'is_confirmed' => false,
@@ -757,18 +798,23 @@ final class EventsTest extends ApiTestCase
                 'currency' => 'EUR',
                 'total_without_global_discount' => '3353.62',
                 'global_discount_rate' => '0.0000',
+                'global_discount_breakdown' => [],
                 'total_global_discount' => '0.00',
                 'total_without_taxes' => '3353.62',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '3353.62',
                         'total' => '670.72',
                     ],
                 ],
                 'total_with_taxes' => '4024.34',
                 'total_replacement' => '99099.98',
+                'total_weight' => '64.600',
                 'is_archived' => false,
                 'is_billable' => true,
                 'is_confirmed' => true,
@@ -808,12 +854,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '324.94',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '49.99',
                         'total_replacement_price' => '99.98',
@@ -842,12 +887,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '1950.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '19400.00',
                         'total_replacement_price' => '38800.00',
@@ -876,12 +920,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '103.68',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '100.00',
                         'total_replacement_price' => '200.00',
@@ -910,12 +953,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '975.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => null,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'unit_replacement_price' => '60000.00',
                         'total_replacement_price' => '60000.00',
@@ -976,6 +1018,7 @@ final class EventsTest extends ApiTestCase
                 'materials_count' => 1,
                 'currency' => 'EUR',
                 'total_replacement' => '1000.00',
+                'total_weight' => '4.800',
                 'is_archived' => false,
                 'is_billable' => false,
                 'is_confirmed' => false,
@@ -1194,11 +1237,16 @@ final class EventsTest extends ApiTestCase
             'currency' => 'EUR',
             'total_without_global_discount' => '0.00',
             'global_discount_rate' => '0.0000',
+            'global_discount_breakdown' => [],
             'total_global_discount' => '0.00',
             'total_without_taxes' => '0.00',
+            'global_tax_regime' => null,
+            'global_tax_exemption_code' => null,
+            'global_tax_exemption_reason' => null,
             'total_taxes' => [],
             'total_with_taxes' => '0.00',
             'total_replacement' => '0.00',
+            'total_weight' => '0.000',
             'is_confirmed' => true,
             'is_archived' => false,
             'is_billable' => true,
@@ -1229,6 +1277,10 @@ final class EventsTest extends ApiTestCase
         $this->client->post('/api/events', $data);
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
         $this->assertResponseData($expected);
+
+        // - On rend le matériel #1 remisable pour permettre l'application
+        //   d'une remise sur celui-ci dans le payload ci-dessous.
+        Material::findOrFail(1)->update(['is_discountable' => true]);
 
         // - Test avec des données qui contiennent les sous-entités.
         $this->client->post('/api/events', array_merge($data, [
@@ -1264,6 +1316,7 @@ final class EventsTest extends ApiTestCase
         $this->assertResponseData(array_replace($expected, [
             'id' => 10,
             'title' => "Encore un événement",
+            'total_weight' => '36.900',
             'beneficiaries' => [
                 BeneficiariesTest::data(3),
             ],
@@ -1316,12 +1369,11 @@ final class EventsTest extends ApiTestCase
                     'discount_rate' => '50.0000',
                     'total_discount' => '150.00',
                     'total_without_taxes' => '150.00',
+                    'tax_regime' => TaxRegime::STANDARD->value,
+                    'tax_exemption_code' => null,
+                    'tax_id' => 1,
                     'taxes' => [
-                        [
-                            'name' => 'T.V.A.',
-                            'is_rate' => true,
-                            'value' => '20.000',
-                        ],
+                        ['value' => '20.000'],
                     ],
                     'quantity_departed' => null,
                     'quantity_returned' => null,
@@ -1332,8 +1384,10 @@ final class EventsTest extends ApiTestCase
                     'material' => array_merge(
                         MaterialsTest::data(1, Material::SERIALIZE_WITH_CONTEXT_EXCERPT),
                         [
+                            'is_discountable' => true,
                             'degressive_rate' => '1.00',
                             'rental_price_period' => '300.00',
+                            'updated_at' => '2019-08-20 17:20:11',
                         ],
                     ),
                 ],
@@ -1350,12 +1404,11 @@ final class EventsTest extends ApiTestCase
                     'discount_rate' => '0.0000',
                     'total_discount' => '0.00',
                     'total_without_taxes' => '76.50',
+                    'tax_regime' => TaxRegime::STANDARD->value,
+                    'tax_exemption_code' => null,
+                    'tax_id' => 1,
                     'taxes' => [
-                        [
-                            'name' => 'T.V.A.',
-                            'is_rate' => true,
-                            'value' => '20.000',
-                        ],
+                        ['value' => '20.000'],
                     ],
                     'quantity_departed' => null,
                     'quantity_returned' => null,
@@ -1384,12 +1437,11 @@ final class EventsTest extends ApiTestCase
                     'discount_rate' => '0.0000',
                     'total_discount' => '0.00',
                     'total_without_taxes' => '79.76',
+                    'tax_regime' => TaxRegime::STANDARD->value,
+                    'tax_exemption_code' => null,
+                    'tax_id' => 1,
                     'taxes' => [
-                        [
-                            'name' => 'T.V.A.',
-                            'is_rate' => true,
-                            'value' => '20.000',
-                        ],
+                        ['value' => '20.000'],
                     ],
                     'quantity_departed' => null,
                     'quantity_returned' => null,
@@ -1411,11 +1463,14 @@ final class EventsTest extends ApiTestCase
             'total_without_global_discount' => '306.26',
             'total_global_discount' => '0.00',
             'total_without_taxes' => '306.26',
+            'global_tax_regime' => null,
+            'global_tax_exemption_code' => null,
+            'global_tax_exemption_reason' => null,
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
-                    'is_rate' => true,
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
+                    'base' => '306.26',
                     'total' => '61.25',
                 ],
             ],
@@ -1474,12 +1529,11 @@ final class EventsTest extends ApiTestCase
                             'discount_rate' => '0.0000',
                             'total_discount' => '0.00',
                             'total_without_taxes' => '3092.38',
+                            'tax_regime' => TaxRegime::STANDARD->value,
+                            'tax_exemption_code' => null,
+                            'tax_id' => 1,
                             'taxes' => [
-                                [
-                                    'name' => 'T.V.A.',
-                                    'is_rate' => true,
-                                    'value' => '20.000',
-                                ],
+                                ['value' => '20.000'],
                             ],
                         ],
                         [
@@ -1490,12 +1544,11 @@ final class EventsTest extends ApiTestCase
                             'discount_rate' => '0.0000',
                             'total_discount' => '0.00',
                             'total_without_taxes' => '300.00',
+                            'tax_regime' => TaxRegime::STANDARD->value,
+                            'tax_exemption_code' => null,
+                            'tax_id' => 1,
                             'taxes' => [
-                                [
-                                    'name' => 'T.V.A.',
-                                    'is_rate' => true,
-                                    'value' => '20.000',
-                                ],
+                                ['value' => '20.000'],
                             ],
                         ],
                         [
@@ -1506,23 +1559,39 @@ final class EventsTest extends ApiTestCase
                             'discount_rate' => '0.0000',
                             'total_discount' => '0.00',
                             'total_without_taxes' => '27675.00',
+                            'tax_regime' => TaxRegime::STANDARD->value,
+                            'tax_exemption_code' => null,
+                            'tax_id' => null,
                             'taxes' => [],
                         ],
                     ],
                 ),
                 'extras' => [],
                 'estimates' => [],
-                'invoices' => [],
+                'invoices' => [
+                    // - À cette date de test (2019-03-15), l'échéance de la facture #3
+                    //   (2020-10-15) n'est pas encore dépassée, elle n'est donc pas en retard.
+                    array_replace(InvoicesTest::data(3), ['is_overdue' => false]),
+                ],
                 'total_without_global_discount' => '31067.38',
-                'total_global_discount' => '0.00',
                 'global_discount_rate' => '0.0000',
+                'global_discount_breakdown' => [],
+                'total_global_discount' => '0.00',
                 'total_without_taxes' => '31067.38',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '3392.38',
                         'total' => '678.48',
+                    ],
+                    [
+                        'type' => TaxRegime::EXEMPTED->value,
+                        'reason' => [],
+                        'base' => '27675.00',
                     ],
                 ],
                 'total_with_taxes' => '31745.86',
@@ -1561,9 +1630,14 @@ final class EventsTest extends ApiTestCase
             ],
             'extras' => [
                 [
+                    'uuid' => 'd1e2f3a4-5b6c-4d8e-9f0a-1b2c3d4e5f6a',
+                    'is_service' => true,
                     'description' => 'Nettoyage',
                     'quantity' => 2,
                     'unit_price' => '100.00',
+                    'discount_rate' => '0',
+                    'tax_regime' => TaxRegime::STANDARD->value,
+                    'tax_exemption_code' => null,
                     'tax_id' => 1,
                 ],
             ],
@@ -1576,6 +1650,7 @@ final class EventsTest extends ApiTestCase
             [
                 'has_missing_materials' => true,
                 'materials_count' => 9,
+                'total_weight' => '83.600',
                 'beneficiaries' => [
                     BeneficiariesTest::data(2),
                 ],
@@ -1634,12 +1709,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '600.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'quantity_departed' => null,
                         'quantity_returned' => 0,
@@ -1668,12 +1742,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '4182.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'quantity_departed' => null,
                         'quantity_returned' => null,
@@ -1702,12 +1775,11 @@ final class EventsTest extends ApiTestCase
                         'discount_rate' => '0.0000',
                         'total_discount' => '0.00',
                         'total_without_taxes' => '1479.99',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
+                        'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
                         'quantity_departed' => null,
                         'quantity_returned' => null,
@@ -1726,32 +1798,42 @@ final class EventsTest extends ApiTestCase
                 ],
                 'extras' => [
                     [
-                        'id' => 3,
+                        'uuid' => 'd1e2f3a4-5b6c-4d8e-9f0a-1b2c3d4e5f6a',
+                        'is_service' => true,
                         'description' => 'Nettoyage',
                         'quantity' => 2,
                         'unit_price' => '100.00',
+                        'total_without_discount' => '200.00',
+                        'discount_rate' => '0.0000',
+                        'total_discount' => '0.00',
+                        'total_without_taxes' => '200.00',
+                        'tax_regime' => TaxRegime::STANDARD->value,
+                        'tax_exemption_code' => null,
                         'tax_id' => 1,
                         'taxes' => [
-                            [
-                                'name' => 'T.V.A.',
-                                'is_rate' => true,
-                                'value' => '20.000',
-                            ],
+                            ['value' => '20.000'],
                         ],
-                        'total_without_taxes' => '200.00',
                     ],
                 ],
                 'estimates' => [],
-                'invoices' => [],
+                'invoices' => [
+                    // - À cette date de test (2019-03-15), l'échéance de la facture #3
+                    //   (2020-10-15) n'est pas encore dépassée, elle n'est donc pas en retard.
+                    array_replace(InvoicesTest::data(3), ['is_overdue' => false]),
+                ],
                 'total_without_global_discount' => '6461.99',
                 'global_discount_rate' => '0.0000',
+                'global_discount_breakdown' => [],
                 'total_global_discount' => '0.00',
                 'total_without_taxes' => '6461.99',
+                'global_tax_regime' => null,
+                'global_tax_exemption_code' => null,
+                'global_tax_exemption_reason' => null,
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '6461.99',
                         'total' => '1292.40',
                     ],
                 ],
@@ -1893,17 +1975,18 @@ final class EventsTest extends ApiTestCase
                 'has_unassigned_mandatory_positions' => true,
                 'total_without_global_discount' => '416.38',
                 'global_discount_rate' => '0.0000',
+                'global_discount_breakdown' => [],
                 'total_global_discount' => '0.00',
-                'total_with_taxes' => '499.66',
+                'total_without_taxes' => '416.38',
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '416.38',
                         'total' => '83.28',
                     ],
                 ],
-                'total_without_taxes' => '416.38',
+                'total_with_taxes' => '499.66',
                 'is_departure_inventory_done' => false,
                 'departure_inventory_author' => null,
                 'departure_inventory_datetime' => null,
@@ -1955,17 +2038,29 @@ final class EventsTest extends ApiTestCase
                 'has_unassigned_mandatory_positions' => false,
                 'return_inventory_datetime' => null,
                 'return_inventory_author' => null,
-                'materials' => array_replace_recursive(
-                    self::data(3, Event::SERIALIZE_DETAILS)['materials'],
+                'materials' => [
                     [
-                        [
-                            'quantity_departed' => null,
-                            'quantity_returned' => null,
-                            'quantity_returned_broken' => null,
-                            'departure_comment' => null,
-                            'unit_replacement_price' => '9.50',
-                            'total_replacement_price' => '114.00',
-                        ],
+                        'id' => 5,
+                        'name' => "Câble XLR 10m",
+                        'reference' => 'XLR10',
+                        'category_id' => null,
+                        'quantity' => 12,
+                        'unit_replacement_price' => '9.50',
+                        'total_replacement_price' => '114.00',
+                        'quantity_departed' => null,
+                        'quantity_returned' => null,
+                        'quantity_returned_broken' => null,
+                        'departure_comment' => null,
+                        'material' => array_merge(
+                            MaterialsTest::data(5, Material::SERIALIZE_WITH_CONTEXT_EXCERPT),
+                            [
+                                'degressive_rate' => '1.00',
+                                'rental_price_period' => '0.50',
+                            ],
+                        ),
+                    ],
+                    array_replace_recursive(
+                        self::data(3, Event::SERIALIZE_DETAILS)['materials'][1],
                         [
                             'quantity_departed' => null,
                             'quantity_returned' => null,
@@ -1976,6 +2071,9 @@ final class EventsTest extends ApiTestCase
                                 'rental_price_period' => '3.50',
                             ],
                         ],
+                    ),
+                    array_replace_recursive(
+                        self::data(3, Event::SERIALIZE_DETAILS)['materials'][2],
                         [
                             'quantity_departed' => null,
                             'quantity_returned' => null,
@@ -1988,8 +2086,8 @@ final class EventsTest extends ApiTestCase
                                 'rental_price_period' => '25.50',
                             ],
                         ],
-                    ],
-                ),
+                    ),
+                ],
                 'total_replacement' => '1353.90',
                 'created_at' => '2021-06-22 12:11:02',
                 'updated_at' => '2021-06-22 12:11:02',
@@ -2183,14 +2281,20 @@ final class EventsTest extends ApiTestCase
                 'total_without_taxes' => '1928.62',
                 'total_taxes' => [
                     [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
+                        'type' => TaxRegime::STANDARD->value,
                         'value' => '20.000',
+                        'base' => '1028.62',
                         'total' => '205.72',
+                    ],
+                    [
+                        'type' => TaxRegime::EXEMPTED->value,
+                        'reason' => [],
+                        'base' => '900.00',
                     ],
                 ],
                 'total_with_taxes' => '2134.34',
                 'total_replacement' => '71756.00',
+                'total_weight' => '64.600',
                 'created_at' => '2021-06-22 12:11:02',
                 'updated_at' => '2021-06-22 12:11:02',
             ],
@@ -2820,12 +2924,15 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => false,
                 'return_inventory_author' => null,
                 'return_inventory_datetime' => null,
-                'total_without_global_discount' => '-1798.20',
-                'total_without_taxes' => '-1798.20',
+                'total_without_global_discount' => '1303.80',
+                'total_without_taxes' => '1303.80',
                 'total_taxes' => [
-                    ['total' => '198.36'],
+                    0 => [
+                        'base' => '991.80',
+                        'total' => '198.36',
+                    ],
                 ],
-                'total_with_taxes' => '-1579.84',
+                'total_with_taxes' => '1519.21',
                 'updated_at' => '2023-02-01 10:00:00',
             ],
         );
@@ -2943,12 +3050,15 @@ final class EventsTest extends ApiTestCase
                         'total_without_taxes' => '900.00',
                     ],
                 ],
+                'total_without_global_discount' => '1303.80',
+                'total_without_taxes' => '1303.80',
                 'total_taxes' => [
-                    ['total' => '198.36'],
+                    0 => [
+                        'base' => '991.80',
+                        'total' => '198.36',
+                    ],
                 ],
-                'total_without_global_discount' => '-1798.20',
-                'total_without_taxes' => '-1798.20',
-                'total_with_taxes' => '-1579.84',
+                'total_with_taxes' => '1519.21',
                 'updated_at' => '2023-02-01 10:00:00',
             ],
         );
@@ -3042,7 +3152,6 @@ final class EventsTest extends ApiTestCase
                 'is_return_inventory_done' => true,
                 'return_inventory_author' => 1,
                 'return_inventory_datetime' => '2023-05-30 19:15:00',
-                'updated_at' => '2024-05-05 23:43:15',
                 'materials' => [
                     [
                         'quantity_returned' => 1,
@@ -3051,16 +3160,10 @@ final class EventsTest extends ApiTestCase
                     [
                         'quantity_returned' => 2,
                         'quantity_returned_broken' => 1,
-                        'material' => [
-                            'updated_at' => '2024-05-05 23:43:15',
-                        ],
                     ],
                     [
                         'quantity_returned' => 2,
                         'quantity_returned_broken' => 1,
-                        'material' => [
-                            'updated_at' => '2024-05-05 23:43:15',
-                        ],
                     ],
                     [
                         'quantity_returned' => 1,
@@ -3156,12 +3259,12 @@ final class EventsTest extends ApiTestCase
         $this->client->delete('/api/events/1');
         $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
 
-        // - Confirmation de l'événement #4 au préalable
+        // - Confirmation de l'événement #4 pour le test suivant.
         $event = Event::find(4);
         $event->is_confirmed = true;
         $event->save();
 
-        // - On ne peut plus supprimer l'événement #4 car il est confirmé
+        // - On ne peut plus supprimer l'événement #4, car il est confirmé.
         $this->client->delete('/api/events/4');
         $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
     }
@@ -3208,12 +3311,11 @@ final class EventsTest extends ApiTestCase
                 'discount_rate' => '0.0000',
                 'total_discount' => '0.00',
                 'total_without_taxes' => '44.63',
+                'tax_regime' => TaxRegime::STANDARD->value,
+                'tax_exemption_code' => null,
+                'tax_id' => 1,
                 'taxes' => [
-                    [
-                        'name' => 'T.V.A.',
-                        'is_rate' => true,
-                        'value' => '20.000',
-                    ],
+                    ['value' => '20.000'],
                 ],
                 'quantity_departed' => 1,
                 'quantity_returned' => 1,
@@ -3345,30 +3447,61 @@ final class EventsTest extends ApiTestCase
     {
         static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
-        $this->client->post('/api/events/2/invoices');
+        $this->client->post('/api/events/2/invoices', [
+            'order_number' => 'BC-0002',
+            'lang' => 'en',
+            'due_date' => '2022-10-22',
+        ]);
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
         $this->assertResponseData([
-            'id' => 2,
-            'number' => '2022-00001',
-            'date' => '2022-10-22 18:42:36',
-            'url' => 'http://loxya.test/invoices/2/pdf',
-            'total_without_taxes' => '-909.67',
+            'id' => 7,
+            'format' => BillingFormat::current()->value,
+            'order_number' => 'BC-0002',
+            'due_date' => '2022-10-22',
+            'due_delay' => null,
+            'status' => InvoiceStatus::DRAFT->value,
+            'url' => [
+                'pdf' => 'http://loxya.test/invoices/7/pdf',
+                'ubl' => null,
+            ],
+            'buyer' => BeneficiariesTest::data(3, Beneficiary::SERIALIZE_DEFAULT),
+            'is_electronic' => true,
+            'is_overdue' => false,
+            'is_prepayment' => false,
+            'is_credit_note' => false,
+            'is_cancelled' => false,
+            'is_prepayment_final' => false,
+            'total_without_taxes' => '2192.33',
+            'global_tax_regime' => null,
+            'global_tax_exemption_code' => null,
+            'global_tax_exemption_reason' => null,
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
-                    'is_rate' => true,
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
+                    'base' => '1880.33',
                     'total' => '376.07',
                 ],
                 [
-                    'name' => 'Taxes diverses',
-                    'is_rate' => false,
-                    'value' => '10.00',
-                    'total' => '20.00',
+                    'type' => TaxRegime::STANDARD->value,
+                    'value' => '5.500',
+                    'base' => '310.00',
+                    'total' => '17.05',
+                ],
+                [
+                    'type' => TaxRegime::EXEMPTED->value,
+                    'reason' => [VatExemptionCodeEu::VATEX_EU_79_C->value],
+                    'base' => '2.00',
                 ],
             ],
-            'total_with_taxes' => '-513.60',
+            'total_with_taxes' => '2585.45',
+            'parent_estimate' => null,
+            'parent_invoice' => null,
+            'child_invoice' => null,
             'currency' => 'EUR',
+            'lang' => 'en',
+            'payments' => [],
+            'created_at' => '2022-10-22 18:42:36',
         ]);
     }
 
@@ -3376,29 +3509,47 @@ final class EventsTest extends ApiTestCase
     {
         static::setNow(Carbon::create(2022, 10, 22, 18, 42, 36));
 
-        $this->client->post('/api/events/2/estimates');
+        $this->client->post('/api/events/2/estimates', [
+            'due_date' => '2022-11-05',
+        ]);
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
         $this->assertResponseData([
-            'id' => 3,
-            'date' => '2022-10-22 18:42:36',
-            'url' => 'http://loxya.test/estimates/3/pdf',
-            'total_without_taxes' => '-909.67',
+            'id' => 6,
+            'format' => BillingFormat::current()->value,
+            'due_date' => '2022-11-05',
+            'due_delay' => null,
+            'status' => EstimateStatus::DRAFT->value,
+            'url' => 'http://loxya.test/estimates/6/pdf',
+            'buyer' => BeneficiariesTest::data(3, Beneficiary::SERIALIZE_DEFAULT),
+            'has_final_invoice' => false,
+            'total_without_taxes' => '2192.33',
+            'global_tax_regime' => null,
+            'global_tax_exemption_code' => null,
+            'global_tax_exemption_reason' => null,
             'total_taxes' => [
                 [
-                    'name' => 'T.V.A.',
-                    'is_rate' => true,
+                    'type' => TaxRegime::STANDARD->value,
                     'value' => '20.000',
+                    'base' => '1880.33',
                     'total' => '376.07',
                 ],
                 [
-                    'name' => 'Taxes diverses',
-                    'is_rate' => false,
-                    'value' => '10.00',
-                    'total' => '20.00',
+                    'type' => TaxRegime::STANDARD->value,
+                    'value' => '5.500',
+                    'base' => '310.00',
+                    'total' => '17.05',
+                ],
+                [
+                    'type' => TaxRegime::EXEMPTED->value,
+                    'reason' => [VatExemptionCodeEu::VATEX_EU_79_C->value],
+                    'base' => '2.00',
                 ],
             ],
-            'total_with_taxes' => '-513.60',
+            'total_with_taxes' => '2585.45',
             'currency' => 'EUR',
+            'lang' => 'fr',
+            'related_invoices' => [],
+            'created_at' => '2022-10-22 18:42:36',
         ]);
     }
 

@@ -9,16 +9,26 @@ use Brick\Math\RoundingMode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Concerns\AsPivot;
+use Loxya\Config\Config;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Models\Traits\TransientAttributes;
-use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Arr;
+use Loxya\Support\Invoicing\StrictTaxRegime;
+use Loxya\Support\Invoicing\TaxRegime;
+use Loxya\Support\Invoicing\VatExemptionCode\VatExemptionCodeInterface;
 use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
 
 /**
  * Matériel dans un événement.
+ *
+ * // - Tax type.
+ * @phpstan-type TaxData array{
+ *     name?: string,
+ *     value: Decimal,
+ * }
  *
  * @property-read ?int $id
  * @property int $event_id
@@ -34,13 +44,22 @@ use Respect\Validation\Rules as Rule;
  * @property Decimal|null $unit_price
  * @property Decimal|null $degressive_rate
  * @property-read Decimal|null $unit_price_period
- * @property Decimal|null $discount_rate
- * @property array|null $taxes
  * @property-read Decimal|null $total_without_discount
+ * @property Decimal|null $discount_rate
  * @property-read Decimal|null $total_discount
  * @property-read Decimal|null $total_without_taxes
+ * @property-read value-of<TaxRegime>|null $default_tax_regime
+ * @property-read value-of<VatExemptionCodeInterface>|null $default_tax_exemption_code
+ * @property-read int|null $default_tax_id
+ * @property-read Tax|null $defaultTax
+ * @property value-of<TaxRegime>|null $tax_regime
+ * @property value-of<VatExemptionCodeInterface>|null $tax_exemption_code
+ * @property int|null $tax_id
+ * @property-read Tax|null $tax
+ * @property list<TaxData>|null $taxes
  * @property Decimal|null $unit_replacement_price
  * @property-read Decimal|null $total_replacement_price
+ * @property-read Decimal|null $total_weight
  * @property string|null $departure_comment
  * @property int|null $quantity_departed
  * @property int|null $quantity_returned
@@ -83,6 +102,9 @@ final class EventMaterial extends BaseModel implements Serializable
             'unit_replacement_price' => V::custom([$this, 'checkUnitReplacementPrice']),
             'degressive_rate' => V::custom([$this, 'checkDegressiveRate']),
             'discount_rate' => V::custom([$this, 'checkDiscountRate']),
+            'tax_regime' => V::custom([$this, 'checkTaxRegime']),
+            'tax_exemption_code' => V::custom([$this, 'checkTaxExemptionCode']),
+            'tax_id' => V::custom([$this, 'checkTaxId']),
             'taxes' => V::custom([$this, 'checkTaxes']),
             'quantity_departed' => V::custom([$this, 'checkQuantityDeparted']),
             'quantity_returned' => V::custom([$this, 'checkQuantityReturned']),
@@ -96,7 +118,7 @@ final class EventMaterial extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkEventId($value)
+    public function checkEventId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -115,7 +137,7 @@ final class EventMaterial extends BaseModel implements Serializable
             : true;
     }
 
-    public function checkMaterialId($value)
+    public function checkMaterialId(mixed $value)
     {
         V::notEmpty()->intVal()->check($value);
 
@@ -148,9 +170,9 @@ final class EventMaterial extends BaseModel implements Serializable
         return !$alreadyExists ?: 'material-already-in-event';
     }
 
-    public function checkUnitPrice($value)
+    public function checkUnitPrice(mixed $value)
     {
-        // - L'événement parente n'est pas récupérable, on est obligé
+        // - L'événement parent n'est pas récupérable, on est obligé
         //   de faire une vérification peu précise.
         if ($this->event === null) {
             if ($value === null) {
@@ -174,7 +196,7 @@ final class EventMaterial extends BaseModel implements Serializable
         return $isValid ?: 'invalid-positive-amount';
     }
 
-    public function checkUnitReplacementPrice($value)
+    public function checkUnitReplacementPrice(mixed $value)
     {
         if ($value === null) {
             return true;
@@ -191,7 +213,7 @@ final class EventMaterial extends BaseModel implements Serializable
         return $isValid ?: 'invalid-positive-amount';
     }
 
-    public function checkDegressiveRate($value)
+    public function checkDegressiveRate(mixed $value)
     {
         // - L'événement parent n'est pas récupérable, on est obligé
         //   de faire une vérification peu précise.
@@ -215,7 +237,7 @@ final class EventMaterial extends BaseModel implements Serializable
         );
     }
 
-    public function checkDiscountRate($value)
+    public function checkDiscountRate(mixed $value)
     {
         // - L'événement parent n'est pas récupérable, on est obligé
         //   de faire une vérification peu précise.
@@ -241,7 +263,7 @@ final class EventMaterial extends BaseModel implements Serializable
             return false;
         }
 
-        // - Si on est pas dans une édition, on laisse passer, peu importe si
+        // - Si on est dans une édition, on laisse passer, peu importe si
         //   le matériel est remisable ou non.
         if ($this->exists) {
             return true;
@@ -254,7 +276,7 @@ final class EventMaterial extends BaseModel implements Serializable
         }
 
         /** @var Material $material */
-        $material = Material::withTrashed()->find($value);
+        $material = Material::withTrashed()->find($materialId);
 
         // - Si le matériel est introuvable, on ne peut pas checker son état "remisable" ou non.
         if (!$material) {
@@ -265,7 +287,110 @@ final class EventMaterial extends BaseModel implements Serializable
         return $value->isZero() || $material->is_discountable;
     }
 
-    public function checkTaxes($value)
+    public function checkTaxRegime()
+    {
+        // - Les événements avec facturation désactivée ou avec régime de
+        //   taxe global ne peuvent pas avoir de taxe par ligne.
+        $allowLineTax = $this->event === null || (
+            $this->event->is_billable &&
+            $this->event->global_tax_regime === null
+        );
+        if (!$allowLineTax) {
+            return V::nullType();
+        }
+
+        $allowedRegimes = [
+            TaxRegime::STANDARD->value,
+            TaxRegime::EXEMPTED->value,
+        ];
+
+        // - Si on a le bénéficiaire, on va récupérer les régimes applicables.
+        $mainBeneficiary = $this->event?->mainBeneficiary;
+        if ($mainBeneficiary !== null) {
+            $sellerCountry = Config::getOrganizationCountry();
+            $allowedRegimes = array_map(
+                static fn (TaxRegime|StrictTaxRegime $regime) => (
+                    $regime instanceof StrictTaxRegime
+                        ? $regime->regime->value
+                        : $regime->value
+                ),
+                $sellerCountry->getLineAvailableTaxRegimes($mainBeneficiary, isService: true),
+            );
+        }
+
+        return V::in($allowedRegimes);
+    }
+
+    public function checkTaxExemptionCode(mixed $value)
+    {
+        // - Les événements avec facturation désactivée ou avec régime de
+        //   taxe global ne peuvent pas avoir de taxe par ligne.
+        $allowLineTax = $this->event === null || (
+            $this->event->is_billable &&
+            $this->event->global_tax_regime === null
+        );
+        if (!$allowLineTax) {
+            return V::nullType();
+        }
+
+        // - Si la valeur est nulle, pas de soucis.
+        if ($value === null) {
+            return true;
+        }
+
+        // - Si le régime de taxe est invalide, on ne peut pas aller plus loin.
+        $taxRegimeRaw = $this->getAttributeUnsafeValue('tax_regime');
+        if (!V::enumValue(TaxRegime::class)->validate($taxRegimeRaw)) {
+            return true;
+        }
+        $taxRegime = TaxRegime::from($taxRegimeRaw);
+
+        // - Si c'est le régime "standard", pas de code.
+        if ($taxRegime === TaxRegime::STANDARD) {
+            return V::nullType();
+        }
+
+        $sellerCountry = Config::getOrganizationCountry();
+        $availableExemptionCodes = $sellerCountry->getLineVatExemptionCodes($taxRegime);
+        if (empty($availableExemptionCodes)) {
+            return V::nullType();
+        }
+
+        return V::in(array_map(
+            static fn ($code) => $code->value,
+            $availableExemptionCodes,
+        ));
+    }
+
+    public function checkTaxId(mixed $value)
+    {
+        V::nullable(V::intVal())->check($value);
+
+        // - Les événements avec facturation désactivée ou avec régime de
+        //   taxe global ne peuvent pas avoir de taxe par ligne.
+        $allowLineTax = $this->event === null || (
+            $this->event->is_billable &&
+            $this->event->global_tax_regime === null
+        );
+        if (!$allowLineTax) {
+            return V::nullType();
+        }
+
+        // - Si la valeur est nulle, pas de soucis.
+        if ($value === null) {
+            return true;
+        }
+
+        // - Si le régime de taxe est invalide, on part du principe que c'est remplissable.
+        $taxRegime = $this->getAttributeUnsafeValue('tax_regime');
+        $isFillable = V::enumValue(TaxRegime::class)->validate($taxRegime)
+            ? $taxRegime === TaxRegime::STANDARD->value
+            : true;
+
+        return $isFillable ? Tax::includes($value) : V::nullType();
+    }
+
+    public function checkTaxes(mixed $value)
     {
         if (!is_array($value)) {
             if (!V::nullable(V::json())->validate($value)) {
@@ -274,50 +399,63 @@ final class EventMaterial extends BaseModel implements Serializable
             $value = $value !== null ? $this->fromJson($value) : null;
         }
 
+        // - Les événements avec facturation désactivée ou avec régime de
+        //   taxe global ne peuvent pas avoir de taxe par ligne.
+        $allowLineTax = $this->event === null || (
+            $this->event->is_billable &&
+            $this->event->global_tax_regime === null
+        );
+        if (!$allowLineTax) {
+            return V::nullType();
+        }
+
+        // - Si la valeur est nulle, pas de soucis.
         if ($value === null) {
             return true;
         }
 
-        // - Les événements avec facturation désactivée ne doivent pas avoir de taxes.
-        if ($this->event !== null && !$this->event->is_billable) {
+        // - Si le régime de taxe est invalide, on part du principe que c'est remplissable.
+        $taxRegime = $this->getAttributeUnsafeValue('tax_regime');
+        $isFillable = V::enumValue(TaxRegime::class)->validate($taxRegime)
+            ? $taxRegime === TaxRegime::STANDARD->value
+            : true;
+
+        if (!$isFillable) {
             return V::nullType();
         }
 
+        $sellerCountry = Config::getOrganizationCountry();
+        $hasSimpleVatSystem = $sellerCountry->hasSimpleVatSystem();
+        $allowedRates = $sellerCountry->getVatRates();
+
         // Note: S'il n'y a pas de taxes, le champ doit être à `null` et non un tableau vide.
-        $schema = V::arrayType()->notEmpty()->each(V::custom(static fn ($taxValue) => (
-            new SchemaStrict(
-                new Rule\Key('name', V::notEmpty()->length(1, 30)),
-                new Rule\Key('is_rate', V::boolType()),
-                new Rule\Key('value', V::custom(static function ($subValue) use ($taxValue) {
-                    V::floatVal()->check($subValue);
-                    $subValue = Decimal::of($subValue);
+        $schema = V::arrayType()->notEmpty()->each(V::schemaStrict(
+            !$hasSimpleVatSystem ? new Rule\Key('name', V::notEmpty()->length(1, 30)) : null,
+            new Rule\Key('value', V::custom(static function ($subValue) use ($allowedRates) {
+                V::floatVal()->check($subValue);
+                $subValue = Decimal::of($subValue);
 
-                    $isValid = (
-                        $subValue->isGreaterThanOrEqualTo(0) &&
-                        $subValue->isLessThan(1_000_000_000_000) &&
-                        $subValue->getScale() <= 3
-                    );
-                    if (!$isValid) {
-                        return false;
-                    }
+                $isValid = (
+                    $subValue->isGreaterThanOrEqualTo(0) &&
+                    $subValue->isLessThanOrEqualTo(100) &&
+                    $subValue->getScale() <= 3
+                );
+                if (!$isValid) {
+                    return false;
+                }
 
-                    $isRate = array_key_exists('is_rate', $taxValue) ? $taxValue['is_rate'] : null;
-                    if (!V::boolType()->validate($isRate)) {
-                        return true;
-                    }
-
-                    return $isRate
-                        // - Si c'est un pourcentage, il doit être inférieur ou égal à 100%.
-                        ? $subValue->isLessThanOrEqualTo(100)
-                        // - Sinon si ce n'est pas un pourcentage, la précision doit être à 2 décimales max.
-                        : $subValue->getScale() <= 2;
-                })),
-            )
-        )));
+                return (
+                    $allowedRates === null ||
+                    Arr::some($allowedRates, static fn ($allowedRate) => (
+                        Decimal::of($allowedRate)->isEqualTo($subValue)
+                    ))
+                );
+            })),
+        ));
         return $schema->validate($value);
     }
 
-    public function checkQuantityDeparted($value)
+    public function checkQuantityDeparted(mixed $value)
     {
         $quantityChecker = V::intVal()->min(0);
 
@@ -358,7 +496,7 @@ final class EventMaterial extends BaseModel implements Serializable
             : true;
     }
 
-    public function checkQuantityReturned($value)
+    public function checkQuantityReturned(mixed $value)
     {
         $quantityChecker = V::intVal()->min(0);
         if (V::intVal()->min(1)->validate($this->getAttributeUnsafeValue('quantity'))) {
@@ -367,7 +505,7 @@ final class EventMaterial extends BaseModel implements Serializable
         return V::anyOf(V::nullType(), $quantityChecker)->validate($value);
     }
 
-    public function checkQuantityReturnedBroken($value)
+    public function checkQuantityReturnedBroken(mixed $value)
     {
         $quantityChecker = V::intVal()->min(0);
         if (V::intVal()->min(1)->validate($this->getAttributeUnsafeValue('quantity'))) {
@@ -408,6 +546,11 @@ final class EventMaterial extends BaseModel implements Serializable
             ->withTrashed();
     }
 
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Tax::class, 'tax_id');
+    }
+
     // ------------------------------------------------------
     // -
     // -    Mutators
@@ -432,6 +575,9 @@ final class EventMaterial extends BaseModel implements Serializable
         'unit_price' => AsDecimal::class,
         'degressive_rate' => AsDecimal::class,
         'discount_rate' => AsDecimal::class,
+        'tax_regime' => 'string',
+        'tax_exemption_code' => 'string',
+        'tax_id' => 'integer',
         'taxes' => 'array',
         'unit_replacement_price' => AsDecimal::class,
         'quantity_departed' => 'integer',
@@ -513,13 +659,143 @@ final class EventMaterial extends BaseModel implements Serializable
 
         return $this->total_without_discount
             ->minus($this->total_discount)
-            // @see https://wiki.dolibarr.org/index.php?title=VAT_setup,_calculation_and_rounding_rules
-            ->toScale(2, RoundingMode::HALF_UP);
+            ->toScale(2, RoundingMode::UNNECESSARY);
     }
 
-    public function getTaxesAttribute($value): array|null
+    /** @return value-of<TaxRegime>|null */
+    public function getDefaultTaxRegimeAttribute(): string|null
     {
-        if (!$this->event->is_billable) {
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        $mainBeneficiary = $this->event?->mainBeneficiary;
+        if ($mainBeneficiary === null) {
+            return TaxRegime::STANDARD->value;
+        }
+
+        $sellerCountry = Config::getOrganizationCountry();
+        $defaultTaxRegime = $sellerCountry->getLineDefaultTaxRegime($mainBeneficiary, isService: true);
+
+        return $defaultTaxRegime instanceof StrictTaxRegime
+            ? $defaultTaxRegime->regime->value
+            : $defaultTaxRegime->value;
+    }
+
+    /** @return value-of<VatExemptionCodeInterface>|null */
+    public function getDefaultTaxExemptionCodeAttribute(): string|null
+    {
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        $mainBeneficiary = $this->event?->mainBeneficiary;
+        if ($mainBeneficiary === null) {
+            return null;
+        }
+
+        $sellerCountry = Config::getOrganizationCountry();
+        $defaultTaxRegime = $sellerCountry->getLineDefaultTaxRegime($mainBeneficiary, isService: true);
+
+        return $defaultTaxRegime instanceof StrictTaxRegime
+            ? $defaultTaxRegime->exemptionCode->value
+            : null;
+    }
+
+    public function getDefaultTaxIdAttribute(): int|null
+    {
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - Seul le régime "standard" autorise la présence d'une taxe.
+        if ($this->default_tax_regime !== TaxRegime::STANDARD->value) {
+            return null;
+        }
+
+        return $this->material->tax?->id;
+    }
+
+    public function getDefaultTaxAttribute(): Tax|null
+    {
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - Seul le régime "standard" autorise la présence d'une taxe.
+        if ($this->default_tax_regime !== TaxRegime::STANDARD->value) {
+            return null;
+        }
+
+        return $this->material->tax;
+    }
+
+    /** @return value-of<TaxRegime>|null */
+    public function getTaxRegimeAttribute(mixed $value): string|null
+    {
+        // - Si l'événement a une exemption globale, pas de taxe par ligne.
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+        return $value;
+    }
+
+    /** @return value-of<VatExemptionCodeInterface>|null */
+    public function getTaxExemptionCodeAttribute(mixed $value): string|null
+    {
+        // - Si l'événement a une exemption globale, pas de taxe par ligne.
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - Si c'est le régime "standard", pas de code d'exemption.
+        if ($this->tax_regime === TaxRegime::STANDARD->value) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    public function getTaxIdAttribute(mixed $value): int|null
+    {
+        // - Si l'événement a une exemption globale, pas de taxe par ligne.
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - Seul le régime "standard" explicite autorise la présence d'une taxe explicite.
+        if ($this->tax_regime !== TaxRegime::STANDARD->value) {
+            return null;
+        }
+
+        return $this->castAttribute('tax_id', $value);
+    }
+
+    public function getTaxAttribute(): Tax|null
+    {
+        // - Si l'événement a une exemption globale, pas de taxe par ligne.
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - Seul le régime "standard" custom autorise la présence d'une taxe explicite.
+        if ($this->tax_regime !== TaxRegime::STANDARD->value) {
+            return null;
+        }
+
+        return $this->getRelationValue('tax');
+    }
+
+    /** @return list<TaxData>|null */
+    public function getTaxesAttribute(mixed $value): array|null
+    {
+        // - Si l'événement a une exemption globale, pas de taxe par ligne.
+        if (!$this->event->is_billable || $this->event->global_tax_regime !== null) {
+            return null;
+        }
+
+        // - Seul le régime "standard" autorise la présence de taxes.
+        if ($this->tax_regime !== TaxRegime::STANDARD->value) {
             return null;
         }
 
@@ -530,8 +806,7 @@ final class EventMaterial extends BaseModel implements Serializable
 
         return array_map(
             static fn ($tax) => array_replace($tax, [
-                'value' => Decimal::of($tax['value'])
-                    ->toScale($tax['is_rate'] ? 3 : 2),
+                'value' => Decimal::of($tax['value'])->toScale(3),
             ]),
             $taxes,
         );
@@ -548,12 +823,30 @@ final class EventMaterial extends BaseModel implements Serializable
             ->toScale(2, RoundingMode::UNNECESSARY);
     }
 
+    public function getTotalWeightAttribute(): Decimal|null
+    {
+        if (!$this->material) {
+            throw new \LogicException(
+                'The event material\'s related material is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+
+        $quantity = $this->quantity;
+        $totalWeight = Decimal::zero();
+
+        $materialWeight = $this->material->weight ?? Decimal::zero();
+        $totalWeight = $totalWeight->plus($materialWeight->multipliedBy(max($quantity, 0)));
+
+        return $totalWeight->toScale(3, RoundingMode::UNNECESSARY);
+    }
+
     public function getMaterialAttribute(): Material
     {
         return $this->getRelationValue('material');
     }
 
-    public function getQuantityDepartedAttribute($value): int|null
+    public function getQuantityDepartedAttribute(mixed $value): int|null
     {
         // - Si l'inventaire de départ est marqué comme terminé, on
         //   considère que tout est parti, même si `quantity_departed`
@@ -612,6 +905,9 @@ final class EventMaterial extends BaseModel implements Serializable
         'unit_price',
         'degressive_rate',
         'discount_rate',
+        'tax_regime',
+        'tax_exemption_code',
+        'tax_id',
         'taxes',
         'unit_replacement_price',
         'quantity_departed',
@@ -657,11 +953,14 @@ final class EventMaterial extends BaseModel implements Serializable
                 'unit_price',
                 'degressive_rate',
                 'unit_price_period',
-                'discount_rate',
-                'taxes',
                 'total_without_discount',
+                'discount_rate',
                 'total_discount',
                 'total_without_taxes',
+                'tax_regime',
+                'tax_exemption_code',
+                'tax_id',
+                'taxes',
             ]);
         }
 

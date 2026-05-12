@@ -28,14 +28,12 @@
                 display: none;
             }
 
-            &--address {
-                white-space: pre-line;
+            &--phone {
+                white-space: nowrap;
             }
 
-            &--schedule-access {
-                // - Important pour surcharger la définition du <th> de `.VueTables`.
-                // stylelint-disable-next-line declaration-no-important
-                text-align: center !important;
+            &--address {
+                white-space: pre-line;
             }
 
             &--roles {
@@ -59,6 +57,7 @@
 
             @media (min-width: globals.$screen-desktop) {
                 &--nickname,
+                &--is-preparer,
                 &--schedule-access {
                     display: table-cell;
                 }
@@ -70,16 +69,6 @@
                 &--note {
                     display: table-cell;
                 }
-            }
-        }
-    }
-
-    &:not(&--trashed) {
-        #{$block}__table__row {
-            cursor: pointer;
-
-            &:hover > #{$block}__table__cell {
-                background-color: color.adjust(globals.$bg-color-table-td, $lightness: 5%);
             }
         }
     }

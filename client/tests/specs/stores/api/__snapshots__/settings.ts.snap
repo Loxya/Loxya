@@ -18,18 +18,11 @@ exports[`Settings Api all() parse the returned data correctly 1`] = `
     },
   },
   "estimates": {
-    "customText": {
-      "content": "Paiement par virement ou chèque.",
-      "title": "Modalités de paiement",
-    },
-    "showBookingDescription": false,
     "showDescriptions": false,
-    "showMobilizationPeriod": false,
-    "showPictures": false,
     "showReplacementPrices": true,
     "showTotalReplacementPrice": false,
     "showTotalisableProperties": false,
-    "showUnitPrices": true,
+    "specialMentions": "Merci de nous contacter pour toute precision concernant ce devis.",
   },
   "eventSummary": {
     "customText": {
@@ -78,18 +71,11 @@ exports[`Settings Api all() parse the returned data correctly 1`] = `
     ],
   },
   "invoices": {
-    "customText": {
-      "content": "Paiement attendu sous 30 jours.",
-      "title": null,
-    },
-    "showBookingDescription": false,
     "showDescriptions": false,
-    "showMobilizationPeriod": false,
-    "showPictures": false,
     "showReplacementPrices": true,
     "showTotalReplacementPrice": false,
     "showTotalisableProperties": false,
-    "showUnitPrices": true,
+    "specialMentions": "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
   },
   "returnInventory": {
     "mode": "start-empty",
@@ -115,18 +101,11 @@ exports[`Settings Api reset() parse the returned data correctly 1`] = `
     },
   },
   "estimates": {
-    "customText": {
-      "content": "Paiement par virement ou chèque.",
-      "title": "Modalités de paiement",
-    },
-    "showBookingDescription": false,
     "showDescriptions": false,
-    "showMobilizationPeriod": false,
-    "showPictures": false,
     "showReplacementPrices": true,
     "showTotalReplacementPrice": false,
     "showTotalisableProperties": false,
-    "showUnitPrices": true,
+    "specialMentions": "Merci de nous contacter pour toute precision concernant ce devis.",
   },
   "eventSummary": {
     "customText": {
@@ -175,18 +154,11 @@ exports[`Settings Api reset() parse the returned data correctly 1`] = `
     ],
   },
   "invoices": {
-    "customText": {
-      "content": "Paiement attendu sous 30 jours.",
-      "title": null,
-    },
-    "showBookingDescription": false,
     "showDescriptions": false,
-    "showMobilizationPeriod": false,
-    "showPictures": false,
     "showReplacementPrices": true,
     "showTotalReplacementPrice": false,
     "showTotalisableProperties": false,
-    "showUnitPrices": true,
+    "specialMentions": "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
   },
   "returnInventory": {
     "mode": "start-empty",
@@ -212,18 +184,11 @@ exports[`Settings Api update() parse the returned data correctly 1`] = `
     },
   },
   "estimates": {
-    "customText": {
-      "content": "Paiement par virement ou chèque.",
-      "title": "Modalités de paiement",
-    },
-    "showBookingDescription": false,
     "showDescriptions": false,
-    "showMobilizationPeriod": false,
-    "showPictures": false,
     "showReplacementPrices": true,
     "showTotalReplacementPrice": false,
     "showTotalisableProperties": false,
-    "showUnitPrices": true,
+    "specialMentions": "Merci de nous contacter pour toute precision concernant ce devis.",
   },
   "eventSummary": {
     "customText": {
@@ -272,18 +237,11 @@ exports[`Settings Api update() parse the returned data correctly 1`] = `
     ],
   },
   "invoices": {
-    "customText": {
-      "content": "Paiement attendu sous 30 jours.",
-      "title": null,
-    },
-    "showBookingDescription": false,
     "showDescriptions": false,
-    "showMobilizationPeriod": false,
-    "showPictures": false,
     "showReplacementPrices": true,
     "showTotalReplacementPrice": false,
     "showTotalisableProperties": false,
-    "showUnitPrices": true,
+    "specialMentions": "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
   },
   "returnInventory": {
     "mode": "start-empty",

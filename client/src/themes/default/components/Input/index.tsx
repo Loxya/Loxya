@@ -1,7 +1,8 @@
 import './index.scss';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
+import { DisabledKey, InvalidKey } from '@/themes/default/components/@constants';
 
-import type { PropType } from 'vue';
+import type { Injected, PropType } from 'vue';
 
 export enum InputType {
     TEXT = 'text',
@@ -126,6 +127,14 @@ type Props = {
 
     /**
      * Fonction appelée lorsqu'une touche du clavier
+     * est pressée dans le champ.
+     *
+     * @param event - L'événement lié.
+     */
+    onKeydown?(event: KeyboardEvent): void,
+
+    /**
+     * Fonction appelée lorsqu'une touche du clavier
      * qui a été pressée est relâchée dans le champ.
      *
      * @param event - L'événement lié.
@@ -137,13 +146,14 @@ type Data = {
     focused: boolean,
 };
 
+type InstanceProperties = {
+    injectedInvalid: Injected<typeof InvalidKey>,
+    injectedDisabled: Injected<typeof DisabledKey>,
+};
+
 /** Un champ de formulaire textuel. */
 const Input = defineComponent({
     name: 'Input',
-    inject: {
-        'input.invalid': { default: false },
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -216,8 +226,17 @@ const Input = defineComponent({
             type: Function as PropType<Props['onKeyup']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onKeydown: {
+            type: Function as PropType<Props['onKeydown']>,
+            default: undefined,
+        },
     },
-    emits: ['change', 'input', 'keyup'],
+    emits: ['change', 'input', 'keyup', 'keydown'],
+    setup: (): InstanceProperties => ({
+        injectedInvalid: inject(InvalidKey, computed(() => false)),
+        injectedDisabled: inject(DisabledKey, computed(() => false)),
+    }),
     data: (): Data => ({
         focused: false,
     }),
@@ -226,20 +245,14 @@ const Input = defineComponent({
             if (this.invalid !== undefined) {
                 return this.invalid;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'];
+            return this.injectedInvalid;
         },
 
         inheritedDisabled(): boolean {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
     },
     methods: {
@@ -271,6 +284,10 @@ const Input = defineComponent({
 
         handleBlur() {
             this.focused = false;
+        },
+
+        handleKeydown(e: KeyboardEvent) {
+            this.$emit('keydown', e);
         },
 
         handleKeyup(e: KeyboardEvent) {
@@ -310,6 +327,7 @@ const Input = defineComponent({
             handleBlur,
             handleInput,
             handleChange,
+            handleKeydown,
             handleKeyup,
         } = this;
 
@@ -341,6 +359,7 @@ const Input = defineComponent({
                         onChange={handleChange}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
+                        onKeydown={handleKeydown}
                         onKeyup={handleKeyup}
                     />
                 </div>
