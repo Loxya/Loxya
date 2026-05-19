@@ -2056,6 +2056,11 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
 
     private function generatePdfFile(): void
     {
+        // - Pas de fichier physique pour les brouillons.
+        if ($this->is_draft) {
+            return;
+        }
+
         // - Si on est dans des tests unitaires, on ne génère pas le fichier.
         if (env('DEBUG_EXPORT') === true || in_array(Config::getEnv(), ['test', 'development'], true)) {
             return;
