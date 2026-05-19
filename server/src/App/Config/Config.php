@@ -479,7 +479,7 @@ final class Config
                 'weight' => WeightUnit::class,
             ],
         ],
-        'invoices' => [
+        'invoices?' => [
             'routingIdentifier?' => 'string',
         ],
     ];
