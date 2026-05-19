@@ -7,7 +7,6 @@ import truncate from 'lodash/truncate';
 import parseInteger from '@/utils/parseInteger';
 import { defineComponent, markRaw } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
-import showModal from '@/utils/showModal';
 import EventDetails, { TabIndex as EventDetailsTab } from '@/themes/default/modals/EventDetails';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
@@ -298,9 +297,9 @@ const TechnicianViewAssignments = defineComponent({
         },
 
         async showEventModal(id: TechnicianEvent['event_id']) {
-            await showModal(this.$modal, EventDetails, {
+            await this.$modal.show(EventDetails, {
                 id,
-                defaultTabIndex: EventDetailsTab.TECHNICIANS,
+                defaultTab: EventDetailsTab.TECHNICIANS,
                 onClose: () => { this.fetchData(); },
             });
         },

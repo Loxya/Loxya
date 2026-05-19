@@ -64,20 +64,8 @@
         "value": "1"
     },
     {
-        "key": "estimates.customText.title",
-        "value": "Modalité de paiement"
-    },
-    {
-        "key": "estimates.customText.content",
-        "value": "Paiement par virement ou chèque."
-    },
-    {
-        "key": "estimates.showBookingDescription",
-        "value": "0"
-    },
-    {
-        "key": "estimates.showMobilizationPeriod",
-        "value": "0"
+        "key": "estimates.specialMentions",
+        "value": "Merci de nous contacter pour toute precision concernant ce devis."
     },
     {
         "key": "estimates.showTotalReplacementPrice",
@@ -85,10 +73,6 @@
     },
     {
         "key": "estimates.showTotalisableProperties",
-        "value": "0"
-    },
-    {
-        "key": "estimates.showPictures",
         "value": "0"
     },
     {
@@ -100,24 +84,8 @@
         "value": "1"
     },
     {
-        "key": "estimates.showUnitPrices",
-        "value": "1"
-    },
-    {
-        "key": "invoices.customText.title",
-        "value": null
-    },
-    {
-        "key": "invoices.customText.content",
-        "value": "Paiement attendu sous 30 jours."
-    },
-    {
-        "key": "invoices.showBookingDescription",
-        "value": "0"
-    },
-    {
-        "key": "invoices.showMobilizationPeriod",
-        "value": "0"
+        "key": "invoices.specialMentions",
+        "value": "Merci de préciser votre nom et prénom dans l'intitulé du virement."
     },
     {
         "key": "invoices.showTotalReplacementPrice",
@@ -128,19 +96,11 @@
         "value": "0"
     },
     {
-        "key": "invoices.showPictures",
-        "value": "0"
-    },
-    {
         "key": "invoices.showDescriptions",
         "value": "0"
     },
     {
         "key": "invoices.showReplacementPrices",
-        "value": "1"
-    },
-    {
-        "key": "invoices.showUnitPrices",
         "value": "1"
     }
 ]

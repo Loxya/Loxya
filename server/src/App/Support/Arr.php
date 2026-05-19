@@ -78,4 +78,110 @@ class Arr extends ArrCore
     {
         return array_replace($defaults, $array);
     }
+
+    /**
+     * Permet de compléter un tableau de manière récursive, avec des valeurs par défaut
+     * si celui-ci ne les contient pas.
+     *
+     * @param array $defaults - Les valeurs par défaut.
+     * @param array $array - Le tableau dans lequel on doit vérifier la présence des défauts.
+     *
+     * @return array Un nouveau tableau avec les valeurs par défaut si celles-ci n'était pas déjà définies.
+     */
+    public static function defaultsRecursive(array $defaults, array $array): array
+    {
+        $result = $defaults;
+        foreach ($array as $key => $value) {
+            if (
+                isset($result[$key])
+                && is_array($result[$key])
+                && is_array($value)
+                && !static::isList($value)
+            ) {
+                $result[$key] = static::defaultsRecursive($result[$key], $value);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Retourne un sous-ensemble d'un tableau en sélectionnant uniquement
+     * les clés spécifiées, avec support de la dot notation.
+     *
+     * @param array        $array - Le tableau source
+     * @param array|string $paths - La liste de clés / chemins à conserver.
+     *
+     * @return array Nouveau tableau ne contenant que les chemins demandés.
+     */
+    public static function only($array, $paths)
+    {
+        // - Sentinelle unique permettant de distinguer "clé absente"
+        //   d'une clé présente mais contenant `null`.
+        // phpcs:ignore SlevomatCodingStandard.Classes
+        $sentinel = new class {};
+
+        $result = [];
+        foreach ((array) $paths as $path) {
+            $value = static::get($array, $path, $sentinel);
+            if ($value !== $sentinel) {
+                Arr::set($result, $path, $value);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Récupère un élément à partir d’un tableau en utilisant la dot notation,
+     * en autorisant la présence d'un '?' dans les clés sources sans avoir
+     * à spécifier ce '?' dans l'élément à récupérer.
+     *
+     * @param \ArrayAccess|array $array Le tableau source
+     * @param string|int|null $key L'élément à récupérer, en utilisant la dot notation.
+     * @param mixed $default La valeur à retourner si l'élément n'existe pas.
+     *
+     * @return mixed
+     */
+    public static function getOptional($array, $key, $default = null)
+    {
+        if (!static::accessible($array)) {
+            return value($default);
+        }
+
+        if (is_null($key)) {
+            return $array;
+        }
+
+        if (static::exists($array, $key)) {
+            return $array[$key];
+        }
+
+        $keyWithMark = sprintf('%s?', $key);
+        if (static::exists($array, $keyWithMark)) {
+            return $array[$keyWithMark];
+        }
+
+        if (!str_contains($key, '.')) {
+            return $array[$key] ?? $array[$keyWithMark] ?? value($default);
+        }
+
+        foreach (explode('.', $key) as $segment) {
+            if (!static::accessible($array)) {
+                return value($default);
+            }
+
+            $segmentWithMark = sprintf('%s?', $segment);
+            if (static::exists($array, $segment)) {
+                $array = $array[$segment];
+            } elseif (static::exists($array, $segmentWithMark)) {
+                $array = $array[$segmentWithMark];
+            } else {
+                return value($default);
+            }
+        }
+
+        return $array;
+    }
 }

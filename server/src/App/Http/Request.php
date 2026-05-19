@@ -14,6 +14,8 @@ use Loxya\Models\BaseModel;
 use Loxya\Support\Assert;
 use Loxya\Support\Period;
 use Loxya\Support\Str;
+use Loxya\Support\Validation\Validator as V;
+use Respect\Validation\Rules as Rule;
 use Slim\Http\ServerRequest as CoreRequest;
 
 class Request extends CoreRequest
@@ -272,6 +274,36 @@ class Request extends CoreRequest
     }
 
     /**
+     * Récupère un paramètre de requête sous forme de tableau d'énumération.
+     *
+     * @template T of BackedEnum
+     * @template D of T[]
+     *
+     * @param string          $key       La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param class-string<T> $enumClass La classe d'énumération.
+     * @param D               $default   La valeur par défaut si le paramètre n'existe pas.
+     *
+     * @return T[]|D La valeur d'énumération (ou `null` si c'est la valeur par défaut).
+     */
+    public function getEnumArrayQueryParam(string $key, string $enumClass, array $default = []): array
+    {
+        Assert::enumExists($enumClass, 'Unknown enum class `%s`.');
+        Assert::isAOf($enumClass, BackedEnum::class, 'Enum class should be a backed enum.');
+        Assert::allIsInstanceOf($default, $enumClass, 'Default value should be a member of the enum (or `null`).');
+
+        $rawValues = $this->getQueryParam($key, null);
+        if ($rawValues === null) {
+            return $default;
+        }
+
+        $rawValues = !is_array($rawValues) ? [$rawValues] : $rawValues;
+        return array_filter(array_map(
+            static fn ($rawValue) => $enumClass::tryFrom($rawValue),
+            $rawValues,
+        ));
+    }
+
+    /**
      * Récupère un paramètre de requête sous forme de date
      * (ou `null` si c'est la valeur par défaut).
      *
@@ -325,13 +357,122 @@ class Request extends CoreRequest
     }
 
     /**
+     * Récupère un paramètre de requête complexe
+     * (ou `null` si le paramètre n'est pas défini / invalide).
+     *
+     * @param string   $key       La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param string[] $operators Les opérateurs autorisés.
+     *
+     * @return array{ operator: string, value: mixed }|null
+     */
+    public function getComplexQueryParam(string $key, array $operators): array|null
+    {
+        $rawValue = $this->getQueryParam($key, null);
+        if ($rawValue === null) {
+            return null;
+        }
+
+        // - Schemas
+        $periodSchema = V::schemaStrict(
+            new Rule\Key('start', V::dateTime()),
+            new Rule\Key('end', V::dateTime()),
+        );
+        $simpleFilterValueSchema = V::anyOf(
+            V::stringType()->notBlank(),
+            V::intVal(),
+            V::floatVal(),
+            V::boolVal(),
+            $periodSchema,
+            V::date(),
+        );
+        $complexFilterValueSchema = V::schemaStrict(
+            new Rule\Key('operator', V::stringType()->in($operators)),
+            new Rule\Key('value', $simpleFilterValueSchema),
+        );
+        $schema = V::anyOf(
+            $complexFilterValueSchema,
+            $simpleFilterValueSchema,
+        );
+        if (!$schema->validate($rawValue)) {
+            return null;
+        }
+
+        $defaultOperator = !in_array('=', $operators, true)
+            ? current($operators)
+            : '=' ;
+
+        return !$complexFilterValueSchema->validate($rawValue)
+            ? ['operator' => $defaultOperator, 'value' => $rawValue]
+            : $rawValue;
+    }
+
+    /**
+     * Récupère un paramètre de requête complexe de type "date"
+     * (ou `null` si le paramètre n'est pas défini / invalide).
+     *
+     * @param string                    $key       La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param string[]                  $operators Les opérateurs autorisés.
+     * @param DateTimeZone|string|null  $tz        Le fuseau horaire à utiliser pour la valeur.
+     *
+     * @return array{ operator: string, value: DateTimeInterface }|null
+     */
+    public function getComplexDateQueryParam(
+        string $key,
+        array $operators,
+        DateTimeZone|string|null $tz = null,
+    ): array|null {
+        $rawValue = $this->getComplexQueryParam($key, $operators);
+        if ($rawValue === null) {
+            return null;
+        }
+
+        try {
+            return array_replace($rawValue, [
+                'value' => Carbon::parse($rawValue['value'], $tz),
+            ]);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Récupère un paramètre de requête complexe de type "numérique"
+     * (ou `null` si le paramètre n'est pas défini / invalide).
+     *
+     * @param string   $key       La clé dans laquelle se trouve le paramètre à récupérer.
+     * @param string[] $operators Les opérateurs autorisés.
+     *
+     * @return array{ operator: string, value: int|float }|null
+     */
+    public function getComplexNumericQueryParam(string $key, array $operators): array|null
+    {
+        $rawValue = $this->getComplexQueryParam($key, $operators);
+        if ($rawValue === null) {
+            return null;
+        }
+
+        $schema = V::anyOf(V::intVal(), V::floatVal());
+        if (!$schema->validate($rawValue['value'])) {
+            return null;
+        }
+
+        return array_replace($rawValue, [
+            'value' => (
+                filter_var($rawValue['value'], \FILTER_VALIDATE_INT) === false
+                    ? (float) $rawValue['value']
+                    : (int) $rawValue['value']
+            ),
+        ]);
+    }
+
+    /**
      * Récupère un paramètre de requête sous forme de valeur brute d'énumération
      * (ou `null` si c'est la valeur par défaut).
      *
      * Une valeur brute d'énumération est une valeur valide parmi une liste donnée.
      *
      * @template T of mixed
-     * @template D of mixed|null
+     * @template D of T|null
      *
      * @param string $key     La clé dans laquelle se trouve le paramètre à récupérer.
      * @param T[]    $enum    Les valeurs valides de l'énumération.
@@ -352,7 +493,7 @@ class Request extends CoreRequest
      * (ou `null` si c'est la valeur par défaut).
      *
      * @template T of BackedEnum
-     * @template D of BackedEnum|null
+     * @template D of T|null
      *
      * @param string          $key       La clé dans laquelle se trouve le paramètre à récupérer.
      * @param class-string<T> $enumClass La classe d'énumération.
@@ -376,7 +517,7 @@ class Request extends CoreRequest
 
     /**
      * Récupère un paramètre de requête sous forme de valeur
-     * valide pour un `order by` d'un modèle donné.
+     * de colonne valide pour un `order by` d'un modèle donné.
      *
      * Si le paramètre de requête est invalide, un appel à `getDefaultOrderColumn()`
      * sur le modèle spécifié sera effectué et la valeur retournée sera utilisée comme
@@ -387,7 +528,7 @@ class Request extends CoreRequest
      *
      * @return string|null Le nom de la colonne (ou `null` si c'est la valeur par défaut retournée par le modèle).
      */
-    public function getOrderByQueryParam(string $key, string $modelClass): string|null
+    public function getOrderByColumnQueryParam(string $key, string $modelClass): string|null
     {
         Assert::isAOf($modelClass, BaseModel::class, 'Model class should be a model class.');
 
@@ -402,6 +543,44 @@ class Request extends CoreRequest
         }
 
         return in_array($rawValue, $orderableColumns, true) ? $rawValue : $defaultOrderColumn;
+    }
+
+    /**
+     * Récupère des paramètres de requête sous forme de valeur
+     * valide pour un `order by` d'un modèle donné.
+     *
+     * Si le paramètre de requête est invalide, des appel à `getDefaultOrderColumn()`
+     * sur le modèle spécifié sera effectué et la valeur retournée sera utilisée comme
+     * valeur par défaut.
+     *
+     * @param string  $columnKey    La clé dans laquelle se trouve le paramètre à récupérer pour la colonne.
+     * @param ?string $ascendingKey La clé dans laquelle se trouve le paramètre à récupérer pour la direction.
+     * @param string  $modelClass   Le modèle pour lequel la colonne `order by` doit être récupérée.
+     *
+     * @return array{ column: string, direction:'asc'|'desc' }|null Un tableau avec la colonne et la direction
+     *                                                              (ou `null` si c'est la valeur par défaut retournée par le modèle).
+     */
+    public function getOrderByQueryParams(string $columnKey, ?string $ascendingKey, string $modelClass): array|null
+    {
+        Assert::isAOf($modelClass, BaseModel::class, 'Model class should be a model class.');
+
+        $column = $this->getOrderByColumnQueryParam($columnKey, $modelClass);
+        if ($column === null) {
+            return null;
+        }
+
+        /** @var BaseModel $model */
+        $model = (new $modelClass());
+
+        $rawDirectionValue = $ascendingKey !== null
+            ? $this->getBooleanQueryParam($ascendingKey, null)
+            : null;
+
+        $direction = $rawDirectionValue !== null
+            ? ($rawDirectionValue ? 'asc' : 'desc')
+            : $model->getDefaultOrderDirection($column);
+
+        return compact('column', 'direction');
     }
 
     /**

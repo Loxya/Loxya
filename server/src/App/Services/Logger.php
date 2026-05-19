@@ -16,9 +16,27 @@ final class Logger
     private \Monolog\Logger $globalLogger;
 
     private $settings = [
-        'timezone' => null,
-        'max_files' => 5,
+        /**
+         * Le niveau de log à utiliser, sachant que tous les niveaux
+         * au-dessus de la valeur choisie seront inclus.
+         *
+         * Valeurs possibles :
+         * - 100: DEBUG
+         * - 200: INFO
+         * - 250: NOTICE
+         * - 300: WARNING
+         * - 400: ERROR
+         * - 500: CRITICAL
+         * - 550: ALERT
+         * - 600: EMERGENCY
+         */
         'level' => Level::Notice,
+
+        /**
+         * Les fichiers de logs subissant une rotation quotidienne, le nombre
+         * maximal de fichiers (et donc de jours) de logs à conserver.
+         */
+        'max_files' => 5,
     ];
 
     /**
@@ -29,12 +47,6 @@ final class Logger
     public function __construct(array $settings = [])
     {
         $this->settings = array_replace($this->settings, $settings);
-
-        if ($this->settings['timezone'] !== null) {
-            if (is_string($this->settings['timezone'])) {
-                $this->settings['timezone'] = new \DateTimeZone($this->settings['timezone']);
-            }
-        }
 
         if (
             is_string($this->settings['level']) &&
@@ -62,11 +74,7 @@ final class Logger
     public function createLogger(string $name): \Monolog\Logger
     {
         $logger = new \Monolog\Logger($name);
-
-        // - Timezone
-        if (!empty($this->settings['timezone'])) {
-            $logger->setTimezone($this->settings['timezone']);
-        }
+        $logger->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         // - Handler
         $path = LOGS_FOLDER . DS . Str::slugify($name) . '.log';

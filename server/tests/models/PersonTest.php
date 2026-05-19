@@ -13,6 +13,7 @@ final class PersonTest extends TestCase
         $data = [
             'first_name' => 'Joséphine 1ère',
             'last_name' => 'De la rue du four',
+            'country' => 'FR',
         ];
         $this->assertTrue((new Person($data))->isValid());
 
@@ -20,6 +21,7 @@ final class PersonTest extends TestCase
         $person = new Person([
             'first_name' => 'xav1er-7e$t',
             'last_name' => 'fo#32;reux',
+            'country' => 'CH',
         ]);
         $expectedErrors = [
             'first_name' => "Ce champ contient des caractères non autorisés.",
@@ -34,7 +36,7 @@ final class PersonTest extends TestCase
         $results = Person::search('Jean')->get();
         $this->assertCount(2, $results);
         $this->assertEquals(
-            ['Jean Fountain', 'Jean Technicien'],
+            ['Jean Fountain', 'Jean Garcia'],
             $results->pluck('full_name')->all(),
         );
 
@@ -46,9 +48,9 @@ final class PersonTest extends TestCase
         $this->assertCount(1, $results);
         $this->assertEquals(['Jean Fountain'], $results->pluck('full_name')->all());
 
-        $results = Person::search('Technicien Jean')->get();
+        $results = Person::search('Garcia Jean')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals(['Jean Technicien'], $results->pluck('full_name')->all());
+        $this->assertEquals(['Jean Garcia'], $results->pluck('full_name')->all());
     }
 
     public function testEditNormalizePhone(): void
@@ -57,13 +59,13 @@ final class PersonTest extends TestCase
         $resultPerson = Person::findOrFail(1)->edit([
             'phone' => '06 25 25 21 25',
         ]);
-        $this->assertEquals('0625252125', $resultPerson->phone);
+        $this->assertEquals('+33625252125', $resultPerson->phone);
 
         // - Test 2 : Avec préfixe `00`.
         $resultPerson = Person::findOrFail(1)->edit([
             'phone' => '00336 25 25 21 25',
         ]);
-        $this->assertEquals('0033625252125', $resultPerson->phone);
+        $this->assertEquals('+33625252125', $resultPerson->phone);
 
         // - Test 2 : Avec préfixe `+`.
         $resultPerson = Person::findOrFail(1)->edit([
@@ -94,6 +96,7 @@ final class PersonTest extends TestCase
             'first_name' => "Marie",
             'last_name' => "Testing",
             'email' => "marie@testing.org",
+            'country' => 'CH',
         ]);
         $createdPersonId = $person->id;
         $person->deleteIfOrphan();

@@ -1,0 +1,40 @@
+{% set hasLegalNumbers = showLegalNumbers and (
+    organization.registrationId is not empty or
+    (not organization.isVatExempted and organization.vatNumber is not empty)
+) %}
+{%- if showLogo and organization.logo is not empty ~%}
+    <img
+        src="img/{{ organization.logo }}"
+        style="max-height: 25mm; max-width: 75mm;"
+    />
+{%- endif ~%}
+<div class="spaceBottom2 size12 strong">
+    {% if organization.name is not empty %}
+        {{- organization.name }}<br />
+    {%- endif ~%}
+    {{ organization.address|nl2br }}<br />
+    {{ organization.country.getName(locale) }}
+</div>
+{%- if hasLegalNumbers ~%}
+<div class="spaceBottom2 size10">
+    {% if organization.registrationId is not empty %}
+        {%- set registrationIdScheme = organization.country.getCompanyIdentifierScheme(organization.registrationId) -%}
+        {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+        {{- __([registrationIdTranslationKey, 'business-registration-id.generic'], organization.registrationId) }}<br />
+    {%~ endif %}
+    {% if not organization.isVatExempted and organization.vatNumber is not empty %}
+        {%- set vatNumberTranslationKey = 'vat-number.' ~ (organization.country.code ?? 'generic') -%}
+        {{- __([vatNumberTranslationKey, 'vat-number.generic'], organization.vatNumber) }}<br />
+    {%~ endif %}
+</div>
+{%- endif -%}
+{%- if organization.phone is not empty or organization.email is not empty ~%}
+<div class="spaceBottom2 size10">
+    {% if organization.phone is not empty %}
+        {{- __('phone', organization.phone|format_phone(organization.country)) }}<br />
+    {%~ endif %}
+    {% if organization.email is not empty %}
+        {{- __('email', organization.email) }}
+    {%~ endif %}
+</div>
+{%- endif -%}

@@ -79,11 +79,9 @@
 
             &__forgot-link {
                 margin-top: 5px;
-                /* stylelint-disable declaration-no-important */
-                color: color.adjust(globals.$input-text-color, $lightness: -30%) !important;
-                font-size: 0.95rem !important;
-                font-style: italic !important;
-                /* stylelint-enable declaration-no-important */
+                color: color.adjust(globals.$input-text-color, $lightness: -30%);
+                font-size: 0.95rem;
+                font-style: italic;
             }
         }
 

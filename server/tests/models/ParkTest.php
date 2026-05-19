@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Loxya\Tests;
 
 use Brick\Math\BigDecimal as Decimal;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Park;
+use Loxya\Support\Validation\ValidationsException;
 
 final class ParkTest extends TestCase
 {
@@ -31,7 +31,10 @@ final class ParkTest extends TestCase
         });
 
         // - Avec un parc vide.
-        $newPark = Park::create(['name' => 'Vide et éphémère']);
+        $newPark = Park::create([
+            'name' => 'Vide et éphémère',
+            'country' => 'US',
+        ]);
         $isDeleted = Park::findOrFail($newPark->id)->delete();
         $this->assertTrue($isDeleted);
         $this->assertNull(Park::find($newPark->id));
@@ -39,7 +42,7 @@ final class ParkTest extends TestCase
 
     public function testCreateParkDuplicate(): void
     {
-        $this->expectException(ValidationException::class);
-        Park::new(['name' => 'default']);
+        $this->expectException(ValidationsException::class);
+        Park::new(['name' => 'Défaut']);
     }
 }

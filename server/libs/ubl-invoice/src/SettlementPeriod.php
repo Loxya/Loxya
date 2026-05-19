@@ -1,0 +1,167 @@
+<?php
+declare(strict_types=1);
+
+namespace NumNum\UBL;
+
+use Carbon\Carbon;
+use DateTime;
+use InvalidArgumentException;
+use Sabre\Xml\Reader;
+use Sabre\Xml\Writer;
+use Sabre\Xml\XmlDeserializable;
+use Sabre\Xml\XmlSerializable;
+use function Sabre\Xml\Deserializer\keyValue;
+
+/**
+ * Represents the invoicing period (cac:InvoicePeriod / cac:SettlementPeriod).
+ *
+ * According to Peppol BIS Billing 3.0 specification:
+ * - StartDate (BT-73): 0..1 - Optional
+ * - EndDate (BT-74): 0..1 - Optional
+ * - BR-CO-19: At least one of StartDate or EndDate must be present
+ *
+ * @see https://docs.peppol.eu/poacc/billing/3.0/syntax/ubl-invoice/cac-InvoicePeriod/cbc-StartDate/
+ * @see https://docs.peppol.eu/poacc/billing/3.0/syntax/ubl-invoice/cac-InvoicePeriod/cbc-EndDate/
+ */
+class SettlementPeriod implements XmlSerializable, XmlDeserializable
+{
+    private $startDate;
+
+    private $endDate;
+
+    // phpcs:ignore SlevomatCodingStandard.Functions.DisallowEmptyFunction
+    final public function __construct() {}
+
+    /**
+     * @return DateTime
+     */
+    public function getStartDate(): ?DateTime
+    {
+        return $this->startDate;
+    }
+
+    /**
+     * @param DateTime $startDate
+     *
+     * @return static
+     */
+    public function setStartDate(DateTime $startDate)
+    {
+        $this->startDate = $startDate;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getEndDate(): ?DateTime
+    {
+        return $this->endDate;
+    }
+
+    /**
+     * @param DateTime $endDate
+     *
+     * @return static
+     */
+    public function setEndDate(DateTime $endDate)
+    {
+        $this->endDate = $endDate;
+        return $this;
+    }
+
+    /**
+     * The validate function that is called during xml writing to valid the data of the object.
+     *
+     * According to Peppol BIS 3.0 spec:
+     * - StartDate (BT-73): 0..1 (optional)
+     * - EndDate (BT-74): 0..1 (optional)
+     * - BR-CO-19: "If Invoicing period is used, the start date or end date shall be filled, or both."
+     *
+     * @throws InvalidArgumentException An error with information about required data that is missing to write the XML
+     *
+     * @return void
+     */
+    public function validate()
+    {
+        // BR-CO-19: at least startDate or endDate must be present
+        if ($this->startDate === null && $this->endDate === null) {
+            throw new InvalidArgumentException('Missing startDate or endDate - at least one is required (BR-CO-19)');
+        }
+    }
+
+    /**
+     * The xmlSerialize method is called during xml writing.
+     *
+     * @param Writer $writer
+     *
+     * @return void
+     */
+    public function xmlSerialize(Writer $writer): void
+    {
+        $this->validate();
+
+        $data = [];
+
+        // StartDate is optional (0..1)
+        if ($this->startDate !== null) {
+            $data[Schema::CBC . "StartDate"] = $this->startDate->format("Y-m-d");
+        }
+
+        // EndDate is optional (0..1)
+        if ($this->endDate !== null) {
+            $data[Schema::CBC . "EndDate"] = $this->endDate->format("Y-m-d");
+        }
+
+        $writer->write($data);
+
+        // Only write DurationMeasure when both dates are present
+        if ($this->startDate !== null && $this->endDate !== null) {
+            $writer->write([
+                [
+                    "name" => Schema::CBC . "DurationMeasure",
+                    "value" => $this->endDate
+                        ->diff($this->startDate)
+                        ->format("%d"),
+                    "attributes" => [
+                        "unitCode" => "DAY",
+                    ],
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * The xmlDeserialize method is called during xml reading.
+     *
+     * @param Reader $reader
+     *
+     * @return static
+     */
+    public static function xmlDeserialize(Reader $reader)
+    {
+        $keyValues = keyValue($reader);
+
+        $instance = new static();
+
+        // StartDate is optional (0..1) per Peppol BIS 3.0 spec
+        if (isset($keyValues[Schema::CBC . "StartDate"])) {
+            $instance->setStartDate(
+                Carbon::parse(
+                    $keyValues[Schema::CBC . "StartDate"],
+                )->toDateTime(),
+            );
+        }
+
+        // EndDate is optional (0..1) per Peppol BIS 3.0 spec
+        if (isset($keyValues[Schema::CBC . "EndDate"])) {
+            $instance->setEndDate(
+                Carbon::parse(
+                    $keyValues[Schema::CBC . "EndDate"],
+                )->toDateTime(),
+            );
+        }
+
+        return $instance;
+    }
+}

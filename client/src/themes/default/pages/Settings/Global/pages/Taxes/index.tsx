@@ -1,11 +1,11 @@
 import './index.scss';
 import { RequestError } from '@/globals/requester';
+import config from '@/globals/config';
+import isTruthy from '@/utils/isTruthy';
 import { confirm } from '@/utils/alert';
 import { defineComponent } from 'vue';
-import showModal from '@/utils/showModal';
 import apiTaxes from '@/stores/api/taxes';
 import apiSettings from '@/stores/api/settings';
-import formatAmount from '@/utils/formatAmount';
 import formatOptions from '@/utils/formatOptions';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import Fragment from '@/components/Fragment';
@@ -51,30 +51,37 @@ const TaxesGlobalSettings = defineComponent({
         };
     },
     computed: {
+        isSimpleVatSystem(): boolean {
+            const { country } = config.organization;
+            return !!country.hasSimpleVatSystem;
+        },
+
         defaultTaxIdSync(): Tax['id'] | null {
             const currentValues: Settings['billing'] = this.$store.state.settings.billing;
             return currentValues.defaultTax;
         },
 
         taxesOptions(): Options<Tax> {
-            return formatOptions(this.taxes, (tax: Tax) => {
+            const { taxes, isSimpleVatSystem } = this;
+
+            return formatOptions(taxes, (tax: Tax) => {
                 if (tax.is_group) {
                     return tax.name;
                 }
 
-                const value = tax.is_rate
-                    ? `${tax.value.toString()}%`
-                    : formatAmount(tax.value);
-
-                return `${tax.name} (${value})`;
+                return !isSimpleVatSystem && tax.name !== undefined
+                    ? `${tax.name} (${tax.value.toString()}%)`
+                    : `${tax.value.toString()}%`;
             });
         },
 
         tableColumns(): Columns<Tax> {
             const {
                 __,
+                __s,
                 defaultTaxId,
                 defaultTaxIdSync,
+                isSimpleVatSystem,
                 handleEdit,
                 handleDelete,
             } = this;
@@ -82,21 +89,43 @@ const TaxesGlobalSettings = defineComponent({
             return [
                 {
                     key: 'name',
-                    title: __('table-column.name'),
-                    sortable: true,
+                    title: __s('table-column.name'),
+                    sortable: (ascending: boolean) => (
+                        (a: Tax, b: Tax): number => {
+                            const direction = ascending ? 1 : -1;
+
+                            if (!isSimpleVatSystem) {
+                                const nameComparison = (a.name ?? '').localeCompare(b.name ?? '');
+                                if (nameComparison !== 0) {
+                                    return nameComparison * direction;
+                                }
+                            }
+
+                            if (!a.is_group && !b.is_group) {
+                                const valueComparison = isSimpleVatSystem
+                                    ? a.value.comparedTo(b.value)
+                                    : b.value.comparedTo(a.value);
+
+                                if (valueComparison !== 0) {
+                                    return valueComparison * direction;
+                                }
+                            }
+
+                            const idComparison = a.id - b.id;
+                            return idComparison * direction;
+                        }
+                    ),
                     render: (h: CreateElement, tax: Tax) => {
                         if (tax.is_group) {
                             return tax.name;
                         }
 
-                        const value = tax.is_rate
-                            ? `${tax.value.toString()}%`
-                            : formatAmount(tax.value);
-
-                        return `${tax.name} (${value})`;
+                        return !isSimpleVatSystem && tax.name !== undefined
+                            ? `${tax.name} (${tax.value.toString()}%)`
+                            : `${tax.value.toString()}%`;
                     },
                 },
-                {
+                !isSimpleVatSystem && {
                     key: 'is_group',
                     title: __('table-column.is-group'),
                     sortable: (ascending: boolean) => (
@@ -162,7 +191,7 @@ const TaxesGlobalSettings = defineComponent({
                         );
                     },
                 },
-            ];
+            ].filter(isTruthy);
         },
     },
     mounted() {
@@ -208,7 +237,7 @@ const TaxesGlobalSettings = defineComponent({
         async handleCreate() {
             // - On affiche la modale de création de taxe.
             const newTax: Tax | undefined = (
-                await showModal(this.$modal, TaxEdition)
+                await this.$modal.show(TaxEdition)
             );
             if (!newTax) {
                 return;
@@ -227,7 +256,7 @@ const TaxesGlobalSettings = defineComponent({
 
             // - On affiche la modale d'édition de la taxe.
             const updatedTax: Tax | undefined = (
-                await showModal(this.$modal, TaxEdition, { tax })
+                await this.$modal.show(TaxEdition, { tax })
             );
             if (!updatedTax) {
                 return;
@@ -266,7 +295,7 @@ const TaxesGlobalSettings = defineComponent({
                 return;
             }
 
-            // - On supprime la taxe de manière optimiste, au pire on la remettra plus bas.
+            // - On supprime la taxe de manière optimiste, au pire on la remettra à sa position.
             const taxIndex = this.taxes.indexOf(tax);
             this.taxes.splice(taxIndex, 1);
 
@@ -274,7 +303,7 @@ const TaxesGlobalSettings = defineComponent({
                 await apiTaxes.remove(tax.id);
                 this.$store.dispatch('taxes/refresh');
             } catch {
-                this.taxes.push(tax);
+                this.taxes.splice(taxIndex, 0, tax);
                 this.$toasted.error(__('global.errors.unexpected-while-deleting'));
             }
         },
@@ -303,15 +332,22 @@ const TaxesGlobalSettings = defineComponent({
 
             return this.$t(key, params, count);
         },
+
+        __s(key: string, params?: Record<string, number | string>, count?: number): string {
+            const systemSuffix = this.isSimpleVatSystem ? 'simple' : 'default';
+            return this.__(`${key}.${systemSuffix}`, params, count);
+        },
     },
     render() {
         const {
             __,
+            __s,
             taxes,
             taxesOptions,
             tableColumns,
             isSaving,
             isFetched,
+            isSimpleVatSystem,
             hasCriticalError,
             validationErrors,
             handleCreate,
@@ -320,7 +356,7 @@ const TaxesGlobalSettings = defineComponent({
 
         if (hasCriticalError || !isFetched) {
             return (
-                <SubPage class="TaxesGlobalSettings" title={__('title')} help={__('help')} centered>
+                <SubPage class="TaxesGlobalSettings" title={__s('title')} help={__s('help')} centered>
                     {hasCriticalError ? <CriticalError /> : <Loading />}
                 </SubPage>
             );
@@ -329,18 +365,21 @@ const TaxesGlobalSettings = defineComponent({
         return (
             <SubPage
                 class="TaxesGlobalSettings"
-                title={__('title')}
-                help={__('help')}
+                title={__s('title')}
+                help={__s('help')}
                 hasValidationError={!!validationErrors}
             >
                 <form class="TaxesGlobalSettings__form" onSubmit={handleSubmit}>
                     <FormField
                         type="select"
-                        label={__('default-field.label')}
-                        placeholder={__('default-field.placeholder')}
+                        label={__s('default-field.label')}
+                        placeholder={__s('default-field.placeholder')}
                         options={taxesOptions}
-                        v-model={this.defaultTaxId}
+                        value={this.defaultTaxId}
                         error={validationErrors?.['billing.defaultTax']}
+                        onInput={(value: Tax['id']) => {
+                            this.defaultTaxId = value;
+                        }}
                     />
                     <section class="TaxesGlobalSettings__form__actions">
                         <Button icon="save" htmlType="submit" type="primary" loading={isSaving}>
@@ -349,18 +388,21 @@ const TaxesGlobalSettings = defineComponent({
                     </section>
                 </form>
                 <Fieldset
-                    title={__('section-title')}
+                    title={__s('section-title')}
                     class="TaxesGlobalSettings__taxes"
                     actions={[
                         <Button type="add" size="small" onClick={handleCreate}>
-                            {__('create-action')}
+                            {__s('create-action')}
                         </Button>,
                     ]}
                 >
                     <ClientTable
                         data={taxes}
                         columns={tableColumns}
-                        defaultOrderBy="name"
+                        defaultOrderBy={{
+                            column: 'name',
+                            ascending: !isSimpleVatSystem,
+                        }}
                     />
                 </Fieldset>
             </SubPage>

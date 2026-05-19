@@ -5,6 +5,7 @@ import parseInteger from '@/utils/parseInteger';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiMaterials from '@/stores/api/materials';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import InputImage from '@/themes/default/components/InputImage';
 import Page from '@/themes/default/components/Page';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
@@ -33,7 +34,7 @@ type Data = {
 const MaterialEdit = defineComponent({
     name: 'MaterialEdit',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     data(): Data {
         const id = parseInteger(this.$route.params.id);
@@ -127,6 +128,7 @@ const MaterialEdit = defineComponent({
             } catch (error) {
                 if (error instanceof RequestError && error.httpCode === HttpCode.NotFound) {
                     this.criticalError = ErrorType.NOT_FOUND;
+                    return;
                 }
 
                 // eslint-disable-next-line no-console
@@ -143,9 +145,9 @@ const MaterialEdit = defineComponent({
             this.saveProgress = 0;
             const { $t: __, newPicture } = this;
 
-            const postData = { ...data };
+            const _data: MaterialEditType = { ...data };
             if (newPicture !== undefined) {
-                postData.picture = newPicture ?? null;
+                _data.picture = newPicture ?? null;
             }
 
             const handleProgress = (percent: number): void => {
@@ -154,8 +156,8 @@ const MaterialEdit = defineComponent({
 
             const doRequest = (): Promise<Material> => (
                 this.isNew
-                    ? apiMaterials.create(postData, handleProgress)
-                    : apiMaterials.update(this.id!, postData, handleProgress)
+                    ? apiMaterials.create(_data, handleProgress)
+                    : apiMaterials.update(this.id!, _data, handleProgress)
             );
 
             try {
@@ -196,6 +198,7 @@ const MaterialEdit = defineComponent({
             picture,
             isFetched,
             isSaving,
+            newPicture,
             saveProgress,
             validationErrors,
             handleChangePicture,
@@ -235,7 +238,7 @@ const MaterialEdit = defineComponent({
                         >
                             <InputImage
                                 value={picture}
-                                uploading={isSaving ? saveProgress : false}
+                                uploading={(isSaving && newPicture) ? saveProgress : false}
                                 onChange={handleChangePicture}
                             />
                         </FormField>

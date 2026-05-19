@@ -17,8 +17,6 @@
         $sub-clock: &;
 
         &__row {
-            cursor: pointer;
-
             &--with-warning {
                 #{$sub-clock}__cell--icon {
                     color: globals.$text-danger-color;
@@ -33,15 +31,12 @@
             }
 
             &--icon {
-                width: 35px;
+                width: 40px;
                 text-align: center;
             }
 
             &--mobilization-period {
                 min-width: 300px;
-
-                // - Important, pour surcharger le style du header
-                /* stylelint-disable-next-line declaration-no-important */
                 text-align: center !important;
             }
 
@@ -50,15 +45,9 @@
             &--parks {
                 display: none;
             }
-        }
-    }
 
-    &:not(&--trashed) {
-        #{$block}__table__row {
-            cursor: pointer;
-
-            &:hover > #{$block}__table__cell {
-                background-color: color.adjust(globals.$bg-color-table-td, $lightness: 5%);
+            &--categories {
+                max-width: 350px;
             }
         }
     }

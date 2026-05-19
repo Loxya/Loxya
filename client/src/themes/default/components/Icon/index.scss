@@ -1,0 +1,19 @@
+.Icon {
+    &--spin {
+        animation: Icon--spin 2000ms infinite linear;
+    }
+}
+
+//
+// - Animation
+//
+
+@keyframes Icon--spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

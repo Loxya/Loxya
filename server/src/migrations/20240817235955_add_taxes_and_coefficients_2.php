@@ -15,7 +15,7 @@ final class AddTaxesAndCoefficients2 extends AbstractMigration
         $prefix = Config::get('db.prefix');
         $i18n = new I18n(Config::get('defaultLang'));
 
-        $existingVatRate = Config::get('legacy.companyData.vatRate');
+        $existingVatRate = Config::get('legacy.organization.vatRate');
         $existingDegressiveRateFunction = Config::get('legacy.degressiveRateFunction');
 
         $defaultTaxData = null;

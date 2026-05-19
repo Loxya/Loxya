@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as CoreCollection;
+use Loxya\Config\Config;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Arr;
 use Loxya\Support\Assert;
 use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
 
@@ -22,9 +24,8 @@ use Respect\Validation\Rules as Rule;
  * Taxe (ou groupe de taxes).
  *
  * @property-read ?int $id
- * @property string $name
+ * @property string|null $name
  * @property bool $is_group
- * @property bool|null $is_rate
  * @property-read bool $is_used
  * @property-read bool $is_default
  * @property Decimal|null $value
@@ -39,14 +40,18 @@ final class Tax extends BaseModel implements Serializable
     protected $table = 'taxes';
     public $timestamps = false;
 
+    protected $attributes = [
+        'name' => null,
+        'is_group' => false,
+    ];
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
 
         $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
-            'is_group' => V::boolType(),
-            'is_rate' => V::custom([$this, 'checkIsRate']),
+            'is_group' => V::custom([$this, 'checkIsGroup']),
             'value' => V::custom([$this, 'checkValue']),
         ];
     }
@@ -57,11 +62,17 @@ final class Tax extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
-        V::notEmpty()
-            ->length(1, 30)
-            ->check($value);
+        // - Pour les pays avec TVA simple, le nom DOIT être `null`.
+        //   (il sera généré à la volée à l'affichage)
+        $organizationCountry = Config::getOrganizationCountry();
+        if ($organizationCountry->hasSimpleVatSystem()) {
+            return V::nullType();
+        }
+
+        // - Pour les autres pays ou les groupes, le nom est obligatoire.
+        V::notEmpty()->length(1, 30)->check($value);
 
         $isGroup = $this->getAttributeUnsafeValue('is_group');
         if (!V::boolType()->validate($isGroup)) {
@@ -76,21 +87,10 @@ final class Tax extends BaseModel implements Serializable
 
         // - Si ce n'est pas un groupe, on vérifie que c'est bien
         //   la seule entrée avec ce même nom ET cette valeur.
-        //   (e.g. On ne veut pas deux `TVA (5%)` par exemple)
-        if (!$isGroup) {
-            $isRate = $this->getAttributeUnsafeValue('is_rate');
-            $rateValue = $this->getAttributeUnsafeValue('value');
-
-            $areValidOtherFields = (
-                V::boolType()->validate($isRate) &&
-                V::floatVal()->validate($rateValue)
-            );
-            if (!$areValidOtherFields) {
-                return true;
-            }
-
+        //   (e.g. On ne veut pas deux `Taxe (5%)` par exemple)
+        $rateValue = $this->getAttributeUnsafeValue('value');
+        if (!$isGroup && V::floatVal()->validate($rateValue)) {
             $alreadyExistsQuery = $alreadyExistsQuery
-                ->where('is_rate', (bool) $isRate)
                 ->where('value', $rateValue);
         }
 
@@ -98,19 +98,16 @@ final class Tax extends BaseModel implements Serializable
         return !$alreadyExists ?: 'tax-name-already-in-use';
     }
 
-    public function checkIsRate($value)
+    public function checkIsGroup(mixed $value)
     {
-        V::nullable(V::boolType())->check($value);
+        V::boolType()->check($value);
 
-        $isGroup = $this->getAttributeUnsafeValue('is_group');
-        if (!V::boolType()->validate($isGroup)) {
-            return true;
-        }
-
-        return $isGroup ? V::nullType() : V::boolType();
+        // - Pour les pays avec TVA simple, on interdit les groupes de taxes.
+        $organizationCountry = Config::getOrganizationCountry();
+        return !$organizationCountry->hasSimpleVatSystem() || !$value;
     }
 
-    public function checkValue($value)
+    public function checkValue(mixed $value)
     {
         V::nullable(V::floatVal())->check($value);
 
@@ -128,23 +125,43 @@ final class Tax extends BaseModel implements Serializable
 
         $isValid = (
             $value->isGreaterThanOrEqualTo(0) &&
-            $value->isLessThan(1_000_000_000_000) &&
+            $value->isLessThanOrEqualTo(100) &&
             $value->getScale() <= 3
         );
         if (!$isValid) {
             return false;
         }
 
-        $isRate = $this->getAttributeUnsafeValue('is_rate');
-        if (!V::boolType()->validate($isRate)) {
+        // - Si le pays du vendeur a une liste de taux autorisés,
+        //   on s'assure que le taux en fait partie.
+        $organizationCountry = Config::getOrganizationCountry();
+        $allowedRates = $organizationCountry->getVatRates(extended: true);
+        $isAcceptableRate = (
+            $allowedRates === null ||
+            Arr::some($allowedRates, static fn ($allowedRate) => (
+                Decimal::of($allowedRate)->isEqualTo($value)
+            ))
+        );
+        if (!$isAcceptableRate) {
+            return 'tax-rate-not-allowed-for-country';
+        }
+
+        // - Si on est dans un système de T.V.A. non simple (avec nom), on est bons.
+        $organizationCountry = Config::getOrganizationCountry();
+        if (!$organizationCountry->hasSimpleVatSystem()) {
             return true;
         }
 
-        return $isRate
-            // - Si c'est un pourcentage, il doit être inférieur ou égal à 100%.
-            ? $value->isLessThanOrEqualTo(100)
-            // - Sinon si ce n'est pas un pourcentage, la précision doit être à 2 décimales max.
-            : $value->getScale() <= 2;
+        // - Pour les pays avec TVA simple, le taux doit être unique.
+        $alreadyExists = static::query()
+            ->where('is_group', false)
+            ->where('value', (string) $value)
+            ->when($this->exists, fn (Builder $subQuery) => (
+                $subQuery->where('id', '!=', $this->id)
+            ))
+            ->exists();
+
+        return !$alreadyExists ?: 'tax-rate-already-in-use';
     }
 
     // ------------------------------------------------------
@@ -178,20 +195,8 @@ final class Tax extends BaseModel implements Serializable
     protected $casts = [
         'name' => 'string',
         'is_group' => 'boolean',
-        'is_rate' => 'boolean',
         'value' => AsDecimal::class,
     ];
-
-    public function getValueAttribute(string|null $value): Decimal|null
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        /** @var Decimal $value */
-        $value = $this->castAttribute('value', $value);
-        return $value->toScale($this->is_rate ? 3 : 2);
-    }
 
     public function getIsUsedAttribute(): bool
     {
@@ -223,7 +228,6 @@ final class Tax extends BaseModel implements Serializable
     protected $fillable = [
         'name',
         'is_group',
-        'is_rate',
         'value',
     ];
 
@@ -247,8 +251,8 @@ final class Tax extends BaseModel implements Serializable
 
                 try {
                     $this->syncComponents($components);
-                } catch (ValidationException $e) {
-                    throw new ValidationException([
+                } catch (ValidationsException $e) {
+                    throw new ValidationsException([
                         'components' => $e->getValidationErrors(),
                     ]);
                 }
@@ -260,14 +264,15 @@ final class Tax extends BaseModel implements Serializable
 
     public function syncComponents(array $componentsData): static
     {
-        Assert::boolean($this->exists, "Unable to sync components for a non-persisted tax.");
+        Assert::boolean($this->exists, (
+            "Unable to sync components for a non-persisted tax."
+        ));
         Assert::boolean($this->is_group || empty($componentsData), (
             "Unable to add components to a non-group tax."
         ));
 
         $schema = V::arrayType()->each(new SchemaStrict(
             new Rule\Key('name'),
-            new Rule\Key('is_rate'),
             new Rule\Key('value'),
         ));
         if (!$schema->validate($componentsData)) {
@@ -293,7 +298,7 @@ final class Tax extends BaseModel implements Serializable
                     ->all();
 
                 if (!empty($errors)) {
-                    throw new ValidationException($errors);
+                    throw new ValidationsException($errors);
                 }
 
                 $this->components()->saveMany($components);
@@ -303,19 +308,23 @@ final class Tax extends BaseModel implements Serializable
         });
     }
 
+    /** @return list<array{ name?: string, value: Decimal }> */
     public function asFlatArray(): array
     {
+        $organizationCountry = Config::getOrganizationCountry();
+        $hasSimpleVatSystem = $organizationCountry->hasSimpleVatSystem();
+
         /** @var CoreCollection<array-key, Tax|TaxComponent> $taxes */
         $taxes = $this->is_group
             ? $this->components->toBase()
             : new CoreCollection([$this]);
 
         return $taxes
-            ->map(static fn (Tax|TaxComponent $tax) => [
-                'name' => $tax->name,
-                'is_rate' => $tax->is_rate,
-                'value' => $tax->value,
-            ])
+            ->map(fn (Tax|TaxComponent $tax) => (
+                $this->is_group || !$hasSimpleVatSystem
+                    ? ['name' => $tax->name, 'value' => $tax->value]
+                    : ['value' => $tax->value]
+            ))
             ->all();
     }
 
@@ -362,7 +371,13 @@ final class Tax extends BaseModel implements Serializable
         $data = new DotArray($tax->attributesForSerialization());
 
         if ($tax->is_group) {
-            $data->delete(['is_rate', 'value']);
+            $data->delete(['value']);
+        } else {
+            $organizationCountry = Config::getOrganizationCountry();
+            $hasSimpleVatSystem = $organizationCountry->hasSimpleVatSystem();
+            if ($hasSimpleVatSystem) {
+                $data->delete(['name']);
+            }
         }
 
         return $data->all();

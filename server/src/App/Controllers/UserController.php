@@ -5,13 +5,12 @@ namespace Loxya\Controllers;
 
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
-use Loxya\Controllers\Traits\WithCrud;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Http\Request;
 use Loxya\Models\Enums\Group;
 use Loxya\Models\User;
 use Loxya\Services\Auth;
 use Loxya\Support\Arr;
+use Loxya\Support\Validation\ValidationsException;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpForbiddenException;
@@ -19,19 +18,13 @@ use Slim\Http\Response;
 
 final class UserController extends BaseController
 {
-    use WithCrud {
-        update as protected _originalUpdate;
-        delete as protected _originalDelete;
-    }
-
     public function getAll(Request $request, Response $response): ResponseInterface
     {
         $search = $request->getSearchArrayQueryParam('search');
         $group = $request->getRawEnumQueryParam('group', Group::all());
         $limit = $request->getIntegerQueryParam('limit');
-        $ascending = $request->getBooleanQueryParam('ascending', true);
         $onlyDeleted = $request->getBooleanQueryParam('deleted', false);
-        $orderBy = $request->getOrderByQueryParam('orderBy', User::class);
+        $orderBy = $request->getOrderByQueryParams('orderBy', 'ascending', User::class);
 
         $query = User::query()
             ->when(!empty($search), static fn (Builder $subQuery) => (
@@ -43,7 +36,9 @@ final class UserController extends BaseController
             ->when($onlyDeleted, static fn (Builder $subQuery) => (
                 $subQuery->onlyTrashed()
             ))
-            ->customOrderBy($orderBy, $ascending ? 'asc' : 'desc');
+            ->when($orderBy !== null, static fn (Builder $subQuery) => (
+                $subQuery->customOrderBy($orderBy['column'], $orderBy['direction'])
+            ));
 
         $results = $this->paginate($request, $query, $limit);
         return $response->withJson($results, StatusCode::STATUS_OK);
@@ -73,8 +68,37 @@ final class UserController extends BaseController
         return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
+    public function create(Request $request, Response $response): ResponseInterface
+    {
+        $postData = (array) $request->getParsedBody();
+        if (empty($postData)) {
+            throw new HttpBadRequestException($request, "No data was provided.");
+        }
+        $postData = User::unserialize($postData);
+
+        try {
+            $user = User::new($postData);
+        } catch (ValidationsException $e) {
+            $errors = $e->getValidationErrors();
+            if (empty($errors)) {
+                throw $e;
+            }
+
+            $errors = User::serializeValidation($errors);
+            throw new ValidationsException($errors);
+        }
+
+        $data = static::_formatOne($user);
+        return $response->withJson($data, StatusCode::STATUS_CREATED);
+    }
+
     public function update(Request $request, Response $response): ResponseInterface
     {
+        $postData = (array) $request->getParsedBody();
+        if (empty($postData)) {
+            throw new HttpBadRequestException($request, "No data was provided.");
+        }
+
         $id = $request->getAttribute('id');
         if ($id !== 'self') {
             $user = User::findOrFail($id);
@@ -90,14 +114,18 @@ final class UserController extends BaseController
                 throw new HttpForbiddenException($request);
             }
 
-            return $this->_originalUpdate($request, $response);
+            $postData = User::unserialize($postData);
+            try {
+                $user->edit($postData);
+            } catch (ValidationsException $e) {
+                $errors = User::serializeValidation($e->getValidationErrors());
+                throw new ValidationsException($errors);
+            }
+
+            $data = static::_formatOne($user);
+            return $response->withJson($data, StatusCode::STATUS_OK);
         }
         $user = clone Auth::user();
-
-        $postData = (array) $request->getParsedBody();
-        if (empty($postData)) {
-            throw new HttpBadRequestException($request, 'No data was provided.');
-        }
 
         $postData = User::unserialize(
             Arr::except($postData, array_merge(User::SETTINGS_ATTRIBUTES, [
@@ -109,12 +137,9 @@ final class UserController extends BaseController
         try {
             $user->edit($postData);
             Auth::user()->refresh();
-        } catch (ValidationException $e) {
-            $errors = $e->getValidationErrors();
-            if (!empty($errors)) {
-                $errors = User::serializeValidation($errors);
-            }
-            throw new ValidationException($errors);
+        } catch (ValidationsException $e) {
+            $errors = User::serializeValidation($e->getValidationErrors());
+            throw new ValidationsException($errors);
         }
 
         $data = static::_formatOne($user);
@@ -179,14 +204,14 @@ final class UserController extends BaseController
             if (Auth::user()->is($user)) {
                 Auth::user()->refresh();
             }
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = $e->getValidationErrors();
             if (empty($errors)) {
                 throw $e;
             }
 
             $errors = User::serializeValidation($errors);
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         $data = $user->serialize(User::SERIALIZE_SETTINGS);
@@ -199,7 +224,34 @@ final class UserController extends BaseController
         if (Auth::user()->id === $id) {
             throw new HttpForbiddenException($request, 'Self deletion is forbidden.');
         }
-        return $this->_originalDelete($request, $response);
+
+        $user = User::withTrashed()->findOrFail($id);
+
+        $isDeleted = $user->trashed()
+            ? $user->forceDelete()
+            : $user->delete();
+
+        if (!$isDeleted) {
+            throw new \RuntimeException("An unknown error occurred while deleting the user.");
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
+    }
+
+    public function restore(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $user = User::query()
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        if (!$user->restore()) {
+            throw new \RuntimeException(sprintf("Unable to restore the user %d.", $id));
+        }
+
+        $data = static::_formatOne($user);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     // ------------------------------------------------------

@@ -1,12 +1,14 @@
 import './index.scss';
-import { defineComponent } from 'vue';
+import { Step } from '..';
+import { defineComponent, markRaw } from 'vue';
 import config from '@/globals/config';
 import apiEvents from '@/stores/api/events';
+import DateTime from '@/utils/datetime';
 import Button from '@/themes/default/components/Button';
 import IconMessage from '@/themes/default/components/IconMessage';
 import Content from './Content';
 
-import type { PropType } from 'vue';
+import type { PropType, Raw } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
 
 type Props = {
@@ -14,7 +16,12 @@ type Props = {
     event: EventDetails,
 };
 
+type InstanceProperties = {
+    nowTimer: ReturnType<typeof setInterval> | undefined,
+};
+
 type Data = {
+    now: Raw<DateTime>,
     isConfirming: boolean,
 };
 
@@ -28,7 +35,11 @@ const EventEditStepOverview = defineComponent({
         },
     },
     emits: ['goToStep', 'updateEvent', 'error'],
+    setup: (): InstanceProperties => ({
+        nowTimer: undefined,
+    }),
     data: (): Data => ({
+        now: markRaw(DateTime.now()),
         isConfirming: false,
     }),
     computed: {
@@ -37,10 +48,37 @@ const EventEditStepOverview = defineComponent({
             return materials.length > 0 && beneficiaries.length > 0;
         },
 
+        isDepartureInventoryDone(): boolean {
+            return this.event.is_departure_inventory_done;
+        },
+
+        hasMaterialShortage(): boolean {
+            return this.event.has_missing_materials === true;
+        },
+
+        isDepartureInventoryViewable(): boolean {
+            const { mobilization_period: mobilisationPeriod } = this.event;
+            const isToday = mobilisationPeriod.start.isSame(this.now, 'day');
+            return !this.isDepartureInventoryDone && isToday;
+        },
+
+        isDepartureInventoryUnavailable(): boolean {
+            return !this.isDepartureInventoryDone && this.hasMaterialShortage;
+        },
+
         eventSummaryPdfUrl(): string {
             const { id } = this.event;
             return `${config.baseUrl}/events/${id}/pdf`;
         },
+    },
+    mounted() {
+        // - Actualise le timestamp courant toutes les minutes.
+        this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
+    },
+    beforeDestroy() {
+        if (this.nowTimer) {
+            clearInterval(this.nowTimer);
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -58,12 +96,19 @@ const EventEditStepOverview = defineComponent({
         },
 
         handlePrevClick() {
-            this.$emit('goToStep', this.event.is_billable ? 5 : 4);
+            this.$emit(
+                'goToStep',
+                (
+                    this.event.is_billable
+                        ? Step.BILLING
+                        : Step.MATERIALS
+                ),
+            );
         },
 
         // ------------------------------------------------------
         // -
-        // -    Internal
+        // -    Méthodes internes
         // -
         // ------------------------------------------------------
 
@@ -80,13 +125,23 @@ const EventEditStepOverview = defineComponent({
                 this.isConfirming = false;
             }
         },
+
+        __(key: string, params?: Record<string, number | string>, count?: number): string {
+            key = !key.startsWith('global.')
+                ? `page.event-edit.${key}`
+                : key.replace(/^global\./, '');
+
+            return this.$t(key, params, count);
+        },
     },
     render() {
         const { is_confirmed: isConfirmed, materials } = this.event;
         const {
-            $t: __,
+            __,
             event,
             isPrintable,
+            isDepartureInventoryViewable,
+            isDepartureInventoryUnavailable,
             isConfirming,
             eventSummaryPdfUrl,
             handleConfirm,
@@ -96,50 +151,54 @@ const EventEditStepOverview = defineComponent({
 
         return (
             <div class="EventEditStepOverview">
-                <Content event={event} />
-                {materials.length > 0 && (
-                    <section class="EventEditStepOverview__confirmation">
-                        <h3 class="EventEditStepOverview__confirmation__title">
-                            {__('page.event-edit.event-confirmation')}
-                        </h3>
-                        <div
-                            class={['EventEditStepOverview__confirmation__help', {
-                                'EventEditStepOverview__confirmation__help--confirmed': isConfirmed,
-                            }]}
-                        >
-                            <IconMessage
-                                name={isConfirmed ? 'check' : 'hourglass-half'}
-                                message={(
-                                    isConfirmed
-                                        ? __('@event.event-confirmed-help')
-                                        : __('@event.event-not-confirmed-help')
-                                )}
-                            />
-                        </div>
-                        <div class="EventEditStepOverview__confirmation__actions">
-                            {!isConfirmed && (
-                                <Button
-                                    type="success"
-                                    icon="check"
-                                    loading={isConfirming}
-                                    onClick={handleConfirm}
+                <div class="EventEditStepOverview__wrapper">
+                    <div class="EventEditStepOverview__content">
+                        <Content event={event} />
+                        {materials.length > 0 && (
+                            <section class="EventEditStepOverview__confirmation">
+                                <h3 class="EventEditStepOverview__confirmation__title">
+                                    {__('event-confirmation')}
+                                </h3>
+                                <div
+                                    class={['EventEditStepOverview__confirmation__help', {
+                                        'EventEditStepOverview__confirmation__help--confirmed': isConfirmed,
+                                    }]}
                                 >
-                                    {__('confirm-event')}
-                                </Button>
-                            )}
-                            {isConfirmed && (
-                                <Button
-                                    type="warning"
-                                    icon="hourglass-half"
-                                    loading={isConfirming}
-                                    onClick={handleUnconfirm}
-                                >
-                                    {__('unconfirm-event')}
-                                </Button>
-                            )}
-                        </div>
-                    </section>
-                )}
+                                    <IconMessage
+                                        name={isConfirmed ? 'check' : 'hourglass-half'}
+                                        message={(
+                                            isConfirmed
+                                                ? __('global.@event.event-confirmed-help')
+                                                : __('global.@event.event-not-confirmed-help')
+                                        )}
+                                    />
+                                </div>
+                                <div class="EventEditStepOverview__confirmation__actions">
+                                    {!isConfirmed && (
+                                        <Button
+                                            type="success"
+                                            icon="check"
+                                            loading={isConfirming}
+                                            onClick={handleConfirm}
+                                        >
+                                            {__('global.confirm-event')}
+                                        </Button>
+                                    )}
+                                    {isConfirmed && (
+                                        <Button
+                                            type="warning"
+                                            icon="hourglass-half"
+                                            loading={isConfirming}
+                                            onClick={handleUnconfirm}
+                                        >
+                                            {__('global.unconfirm-event')}
+                                        </Button>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+                    </div>
+                </div>
                 <section class="EventEditStepOverview__actions">
                     <Button
                         htmlType="submit"
@@ -147,16 +206,38 @@ const EventEditStepOverview = defineComponent({
                         icon={{ name: 'arrow-left', position: 'before' }}
                         onClick={handlePrevClick}
                     >
-                        {__('page.event-edit.go-to-prev-step')}
+                        {__('go-to-prev-step')}
                     </Button>
                     <div class="EventEditStepOverview__actions__right">
+                        {isDepartureInventoryViewable && (
+                            <Button
+                                icon="boxes"
+                                type="primary"
+                                disabled={isDepartureInventoryUnavailable}
+                                to={(
+                                    !isDepartureInventoryUnavailable
+                                        ? {
+                                            name: 'event-departure-inventory',
+                                            params: { id: event.id.toString() },
+                                        }
+                                        : undefined
+                                )}
+                                tooltip={(
+                                    isDepartureInventoryUnavailable
+                                        ? __('steps.summary.departure-inventory-unavailable-help')
+                                        : undefined
+                                )}
+                            >
+                                {__('global.departure-inventory')}
+                            </Button>
+                        )}
                         {isPrintable && (
                             <Button type="secondary" icon="print" to={eventSummaryPdfUrl} external>
-                                {__('print-summary')}
+                                {__('global.print-summary')}
                             </Button>
                         )}
                         <Button type="primary" to={{ name: 'schedule' }}>
-                            {__('back-to-schedule')}
+                            {__('global.back-to-schedule')}
                         </Button>
                     </div>
                 </section>

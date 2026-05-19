@@ -2,13 +2,14 @@ import './index.scss';
 import Color from '@/utils/color';
 import ClickOutside from 'vue-click-outside';
 import generateUniqueId from 'lodash/uniqueId';
+import { DisabledKey, InvalidKey } from '@/themes/default/components/@constants';
 import { computePosition, autoUpdate, flip, shift, offset } from '@floating-ui/dom';
 import { MountingPortal as Portal } from 'portal-vue';
-import { defineComponent, markRaw } from 'vue';
+import { computed, defineComponent, inject, markRaw } from 'vue';
 import Icon from '@/themes/default/components/Icon';
 import ColorPicker from '@/themes/default/components/ColorPicker';
 
-import type { PropType, Raw } from 'vue';
+import type { Injected, PropType, Raw } from 'vue';
 import type { RawColor } from '@/utils/color';
 
 type Props = {
@@ -74,6 +75,8 @@ type Props = {
 type InstanceProperties = {
     uniqueId: string | undefined,
     cancelPickerPositionUpdater: (() => void) | undefined,
+    injectedInvalid: Injected<typeof InvalidKey>,
+    injectedDisabled: Injected<typeof DisabledKey>,
 };
 
 type Data = {
@@ -86,10 +89,6 @@ type Data = {
 const InputColor = defineComponent({
     name: 'InputColor',
     directives: { ClickOutside },
-    inject: {
-        'input.invalid': { default: false },
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Required<Props>['name']>,
@@ -136,6 +135,8 @@ const InputColor = defineComponent({
     setup: (): InstanceProperties => ({
         uniqueId: undefined,
         cancelPickerPositionUpdater: undefined,
+        injectedInvalid: inject(InvalidKey, computed(() => false)),
+        injectedDisabled: inject(DisabledKey, computed(() => false)),
     }),
     data: (): Data => ({
         currentColor: null,
@@ -147,20 +148,14 @@ const InputColor = defineComponent({
             if (this.invalid !== undefined) {
                 return this.invalid;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'];
+            return this.injectedInvalid;
         },
 
         inheritedDisabled(): boolean {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
 
         color(): Color | null {

@@ -20,6 +20,10 @@
                 display: none;
             }
 
+            &--phone {
+                white-space: nowrap;
+            }
+
             //
             // - Responsive
             //
@@ -47,7 +51,7 @@
     &__name {
         display: flex;
         align-items: center;
-        gap: globals.$spacing-small;
+        gap: globals.$spacing-medium;
     }
 
     &__full-name {

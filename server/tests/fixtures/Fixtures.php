@@ -3,168 +3,208 @@ declare(strict_types=1);
 
 namespace Loxya\Tests\Fixtures;
 
-use Ifsnop\Mysqldump as IMysqldump;
+use DI\Container;
+use Illuminate\Container\Container as IlluminateContainer;
+use Illuminate\Database\Connection;
 use Loxya\Config\Config;
+use Symfony\Component\Console\Color;
 
 final class Fixtures
 {
-    protected const DATA_DUMP_FILE = TMP_FOLDER . DS . 'data.sql';
-    protected const SCHEMA_DUMP_FILE = TMP_FOLDER . DS . 'schema.sql';
-
-    protected static $alreadyCreated = false;
-
-    public static function getConnection(bool $withDatabase = true): \PDO
-    {
-        return Config::getPDO(withDatabase: $withDatabase);
-    }
+    /** @var array<string, int|null> */
+    private static array $initialTables = [];
 
     public static function resetTestDatabase(): void
     {
-        self::dropCreateTestDatabase();
-        self::runMigrations();
-
-        self::dumpTestSchema();
-        self::dumpTestData();
+        try {
+            $connection = self::dropCreateTestDatabase();
+            self::runMigrations($connection);
+            self::loadData($connection);
+            self::$initialTables = self::getAllTables($connection);
+            static::output("\n");
+            unset($connection);
+        } catch (\PDOException $e) {
+            self::outputCritical(vsprintf(
+                "Oops ! PDO returned the following error:\n\n%s\n\nTrace:\n%s",
+                [$e->getMessage(), $e->getTraceAsString()],
+            ));
+        } catch (\Throwable $e) {
+            self::outputCritical(sprintf(
+                "Oops ! Setting fixtures went wrong:\n\n%s",
+                $e->getMessage(),
+            ));
+        }
     }
 
-    public static function dropCreateTestDatabase(): void
+    public static function setupTestTransactions(Container $container): void
+    {
+        $transactionsManager = new TransactionsManager();
+
+        $illuminateContainer = IlluminateContainer::getInstance();
+        $illuminateContainer->instance('db.transactions', $transactionsManager);
+
+        /** @var Connection $connection */
+        $connection = $container->get('database')->getConnection();
+        $connection->setTransactionManager($transactionsManager);
+
+        $dispatcher = $connection->getEventDispatcher();
+        $connection->unsetEventDispatcher();
+        $connection->beginTransaction();
+        $connection->setEventDispatcher($dispatcher);
+    }
+
+    public static function resetTestTransactions(Container $container): void
+    {
+        /** @var Connection $connection */
+        $connection = $container->get('database')->getConnection();
+
+        $dispatcher = $connection->getEventDispatcher();
+        $connection->unsetEventDispatcher();
+        $connection->rollBack();
+
+        // - Reset the auto-increments
+        $currentTables = self::getAllTables($connection->getPdo());
+        foreach (self::$initialTables as $table => $expectedIncrement) {
+            if ($expectedIncrement === null || ($currentTables[$table] ?? null) === $expectedIncrement) {
+                continue;
+            }
+
+            $connection->unprepared(vsprintf(
+                'ALTER TABLE `%s` AUTO_INCREMENT = %d',
+                [$table, $expectedIncrement],
+            ));
+        }
+
+        $connection->setEventDispatcher($dispatcher);
+        $connection->disconnect();
+    }
+
+    // ------------------------------------------------------
+    // -
+    // -    Méthodes internes
+    // -
+    // ------------------------------------------------------
+
+    private static function dropCreateTestDatabase(): \PDO
     {
         $dbConfig = Config::getDbConfig();
 
-        static::_log(sprintf("Drop and re-create database `%s`...", $dbConfig['testDatabase']));
+        static::output(sprintf("- Drop and re-create database `%s` ... ", $dbConfig['testDatabase']));
 
-        $sqlRecreate = sprintf(
-            'DROP DATABASE IF EXISTS `%1$s`; CREATE DATABASE `%1$s`;',
+        $connection = Config::getPDO(withDatabase: false);
+        $connection->exec(sprintf(
+            'DROP DATABASE IF EXISTS `%1$s`; CREATE DATABASE `%1$s`; USE `%1$s`',
             $dbConfig['testDatabase'],
-        );
+        ));
 
-        $pdo = self::getConnection(withDatabase: false);
-        $pdo->prepare($sqlRecreate)->execute();
-        unset($pdo);
+        static::output(sprintf("%s.\n", (new Color('green'))->apply("OK")));
 
-        static::_log("\nOK.\n\n");
+        return $connection;
     }
 
-    public static function runMigrations(): void
+    private static function runMigrations(\PDO $connection): void
     {
+        $startTime = microtime(true);
+
         $args = ['--env=test'];
         $output = [];
+        $resultCode = null;
+
+        static::output("- Running migrations for tests ... ");
 
         $isVerbose = (env('SHELL_VERBOSITY') ?? 0) > 0;
         if (!$isVerbose) {
             $args[] = '--quiet';
         }
 
-        exec(sprintf('SHELL_VERBOSITY=0 bin' . DS . 'console migrate %s', implode(' ', $args)), $output);
+        exec(sprintf('SHELL_VERBOSITY=0 bin' . DS . 'console migrate %s', implode(' ', $args)), $output, $resultCode);
+        $isSuccess = $resultCode === 0;
 
-        $hasOutput = !empty($output);
-        static::_log("Running migrations for tests...\n", $hasOutput);
-        static::_log(implode("\n", $output) . "\n\n", $hasOutput);
+        if (!empty($output)) {
+            static::output("\n\n" . implode("\n", $output) . "\n", stderr: !$isSuccess);
+        }
+
+        if ($isSuccess) {
+            static::output(sprintf("%s.\n", (
+                (new Color('green'))
+                    ->apply(sprintf("OK (%s)", getExecutionTime($startTime)))
+            )));
+        } else {
+            throw new \RuntimeException("Migrations error, see above for details.");
+        }
     }
 
-    public static function getAllTables(): array
+    /** @return array<string, int|null> */
+    private static function getAllTables(\PDO $connection): array
     {
         $dbConfig = Config::getDbConfig();
 
-        $query = sprintf("
-            SELECT `TABLE_NAME` FROM `information_schema`.`TABLES`
-            WHERE `TABLE_SCHEMA` = '%s' AND `TABLE_NAME` != 'phinxlog';
-        ", $dbConfig['testDatabase']);
-
-        $pdo = self::getConnection();
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
-        unset($pdo);
-
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
-    }
-
-    public static function dumpTestSchema(): void
-    {
-        if (!is_dir(dirname(self::DATA_DUMP_FILE))) {
-            mkdir(dirname(self::DATA_DUMP_FILE), 0755, true);
-            static::_log("Temporary dump directory created.\n");
+        // - Désactive le cache des statistiques de `information_schema` (MySQL 8+ uniquement).
+        try {
+            $connection->query('SET SESSION information_schema_stats_expiry = 0');
+        } catch (\PDOException) {
+            // - Ignoré si la variable n'existe pas (MySQL 5.7).
         }
 
-        $dbConfig = Config::getDbConfig(['noCharset' => true]);
-        static::_log(sprintf("Dumping test database `%s`...\n", $dbConfig['testDatabase']));
+        // - Pour les auto-increments, on tente de récupérer l'information en même temps
+        //   dans `information_schema.TABLES` mais il arrive que cela retourne `null`
+        //   pour les tables avec auto-increment non initialisé, dans ce cas on regarde
+        //   aussi dans les colonnes de la table via `information_schema.COLUMNS`.
+        $query = $connection->query(sprintf(
+            "SELECT
+                `tables`.`TABLE_NAME`,
+                CASE
+                    WHEN `tables`.`AUTO_INCREMENT` IS NOT NULL THEN `tables`.`AUTO_INCREMENT`
+                    WHEN EXISTS (
+                        SELECT 1 FROM `information_schema`.`COLUMNS` AS `columns`
+                        WHERE `columns`.`TABLE_SCHEMA` = `tables`.`TABLE_SCHEMA`
+                        AND `columns`.`TABLE_NAME` = `tables`.`TABLE_NAME`
+                        AND `columns`.`EXTRA` LIKE '%%auto_increment%%'
+                    ) THEN 1
+                    ELSE NULL
+                END AS `AUTO_INCREMENT`
+            FROM `information_schema`.`TABLES` AS `tables`
+            WHERE `tables`.`TABLE_SCHEMA` = '%s' AND `tables`.`TABLE_NAME` != 'phinxlog';",
+            $dbConfig['testDatabase'],
+        ));
 
-        $dump = new IMysqldump\Mysqldump(
-            $dbConfig['dsn'],
-            $dbConfig['username'],
-            $dbConfig['password'],
-            [
-                'add-drop-table' => true,
-                'skip-comments' => true,
-                'no-data' => true,
-                'reset-auto-increment' => true,
-            ],
+        return array_map(
+            static fn ($increment) => $increment !== null ? (int) $increment : null,
+            $query->fetchAll(\PDO::FETCH_KEY_PAIR),
         );
-
-        $dumpFile = self::SCHEMA_DUMP_FILE;
-        $dump->start($dumpFile);
-
-        $dumpContent = sprintf("USE `%s`;\n", $dbConfig['testDatabase']);
-        $dumpContent .= file_get_contents($dumpFile) . "\n\n";
-
-        $prefixedTable = sprintf('CREATE TABLE `%s`.', $dbConfig['testDatabase']);
-        $dumpContent = str_replace('CREATE TABLE ', $prefixedTable, $dumpContent);
-
-        file_put_contents($dumpFile, $dumpContent);
-
-        static::_log("OK.\n\n");
     }
 
-    public static function dumpTestData(): void
+    private static function loadData(\PDO $connection): void
     {
         $startTime = microtime(true);
 
-        $tables = self::getAllTables();
+        static::output("- Seeding database ... ");
+
+        $tables = self::getAllTables($connection);
         if (empty($tables)) {
             throw new \InvalidArgumentException("No table found to seed.");
         }
 
-        static::_log("Creating data SQL dump...\n");
-
         $dataseed = new Dataseed();
-        foreach ($tables as $table) {
+        foreach (array_keys($tables) as $table) {
             $dataseed->set($table);
         }
+        $connection->exec($dataseed->getFinalQuery());
 
-        file_put_contents(self::DATA_DUMP_FILE, $dataseed->getFinalQuery());
-
-        static::_log(sprintf("OK, done in %s.\n\n", getExecutionTime($startTime)));
+        static::output(sprintf("%s.\n", (
+            (new Color('green'))
+                ->apply(sprintf("OK (%s)", getExecutionTime($startTime)))
+        )));
     }
 
-    public static function resetDataWithDump(): void
+    private static function output(string $msg, bool $stderr = false): void
     {
-        try {
-            $pdo = self::getConnection();
-
-            if (!static::$alreadyCreated) {
-                $querySchema = file_get_contents(self::SCHEMA_DUMP_FILE);
-                $pdo->prepare($querySchema)->execute();
-                static::$alreadyCreated = true;
-            }
-
-            $queryData = file_get_contents(self::DATA_DUMP_FILE);
-            $pdo->prepare($queryData)->execute();
-            unset($pdo);
-        } catch (\Throwable $e) {
-            echo "\033[91m\n\nThere is an SQL error in fixtures data.\n";
-            echo "Please check `src/var/tmp/tests/data.sql` and all seed files you have modified.\n";
-            echo "Here is the detailed SQL error message:\n\n";
-            echo $e->getMessage();
-            echo "\033[0m\n\n";
-            exit(1);
-        }
+        fwrite($stderr ? STDERR : STDOUT, $msg);
     }
 
-    protected static function _log(string $msg, bool $force = false): void
+    private static function outputCritical(string $msg): void
     {
-        $isVerbose = (env('SHELL_VERBOSITY') ?? 0) > 0;
-        if ($isVerbose || $force) {
-            echo $msg;
-        }
+        fwrite(STDERR, sprintf("\n\n%s\n\n", (new Color('red'))->apply($msg)));
+        exit(1);
     }
 }

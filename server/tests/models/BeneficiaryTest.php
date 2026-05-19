@@ -4,23 +4,23 @@ declare(strict_types=1);
 namespace Loxya\Tests;
 
 use Illuminate\Support\Carbon;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Beneficiary;
 use Loxya\Models\Event;
+use Loxya\Support\Validation\ValidationsException;
 
 final class BeneficiaryTest extends TestCase
 {
     public function testSearch(): void
     {
         // - Prénom
-        $results = Beneficiary::search('cli')->get();
+        $results = Beneficiary::search('eli')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals(['Client Benef'], $results->pluck('full_name')->all());
+        $this->assertEquals(['Élise Faure'], $results->pluck('full_name')->all());
 
         // - Prénom nom
-        $results = Beneficiary::search('client ben')->get();
+        $results = Beneficiary::search('élise fau')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals(['Client Benef'], $results->pluck('full_name')->all());
+        $this->assertEquals(['Élise Faure'], $results->pluck('full_name')->all());
 
         // - Nom Prénom
         $results = Beneficiary::search('fountain jean')->get();
@@ -54,7 +54,7 @@ final class BeneficiaryTest extends TestCase
             'street' => null,
             'postal_code' => null,
             'locality' => null,
-            'country_id' => null,
+            'country' => 'BE',
             'note' => null,
         ]);
         $expected = [
@@ -68,7 +68,7 @@ final class BeneficiaryTest extends TestCase
                 'street' => null,
                 'postal_code' => null,
                 'locality' => null,
-                'country_id' => null,
+                'country' => 'BE',
             ],
             'user' => [
                 'email' => 'tester2@loxya.com',
@@ -87,7 +87,7 @@ final class BeneficiaryTest extends TestCase
                 'street' => null,
                 'postal_code' => null,
                 'locality' => null,
-                'country_id' => null,
+                'country' => 'BE',
             ],
         ]);
         $expected = [
@@ -109,19 +109,19 @@ final class BeneficiaryTest extends TestCase
 
     public function testCreateWithoutData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Beneficiary::new([]);
     }
 
     public function testBadData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Beneficiary::new(['pseudo' => 'Sans email!']);
     }
 
     public function testBadDataDuplicateRef(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Beneficiary::new([
             'first_name' => 'Paul',
             'last_name' => 'Newtests',
@@ -132,7 +132,7 @@ final class BeneficiaryTest extends TestCase
 
     public function testCreateWithoutPerson(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Beneficiary::new(['reference' => '0009']);
     }
 
@@ -148,9 +148,11 @@ final class BeneficiaryTest extends TestCase
                 'email' => 'test@other-benef.net',
                 'phone' => null,
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => '74000',
+                'administrative_area' => null,
                 'locality' => 'Annecy',
-                'country_id' => 2,
+                'country' => 'FR',
             ],
         ];
 
@@ -162,8 +164,6 @@ final class BeneficiaryTest extends TestCase
             'reference' => null,
             'person_id' => 9,
             'company_id' => null,
-            'color' => null,
-            'can_make_reservation' => 0,
             'note' => null,
             'created_at' => '2023-02-10 15:00:00',
             'updated_at' => '2023-02-10 15:00:00',
@@ -174,12 +174,19 @@ final class BeneficiaryTest extends TestCase
             'email' => 'test@other-benef.net',
             'phone' => null,
             'street' => null,
+            'additional_street' => null,
             'postal_code' => '74000',
+            'administrative_area' => null,
+            'can_make_reservation' => 0,
+            'color' => null,
             'locality' => 'Annecy',
-            'full_address' => '74000 Annecy',
-            'country_id' => 2,
+            'address' => '74000 Annecy',
+            'country' => 'FR',
             'user_id' => null,
             'user' => null,
+            'is_invoiceable' => true,
+            'is_deleted' => false,
+            'language' => null,
         ];
         $this->assertSameCanonicalize($expected, $result);
     }

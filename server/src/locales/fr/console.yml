@@ -1,0 +1,290 @@
+global-args:
+    command: La commande a exécuter.
+    env: L'environnement à utiliser.
+    help: Affiche l'aide pour la commande spécifiée.
+    quiet: Active le mode silencieux.
+    version: Affiche la version de Loxya.
+
+commands:
+    #
+    # - Assistant d'installation
+    #
+
+    install:
+        installation-wizard: Assistant d'installation
+        should-configure-advanced:
+            "Voulez-vous configurer les paramètres avancés\_?"
+
+        change-wizard-language:
+            "Préférez-vous utiliser le français avec cet assistant ?"
+
+        database-updated-continue:
+            "La base de données va être mise à jour, appuyez sur entrée pour continuer ..."
+
+        headings:
+            organization-information: Informations de votre organisation
+            database-configuration: Configuration de la base de données
+            estimates-parameters: Paramètres des devis
+            invoicing-parameters: Paramètres de la facturation
+            application-parameters: Paramètres de l'application
+            database-update: Mise à jour de la base de données
+            administrator-creation:
+                title: Création du premier utilisateur
+                details: |
+                    Cet utilisateur sera un administrateur, il aura donc accès
+                    à tous les aspects de l'application, il aura tous les droits.
+
+        statuses:
+            settings-saved: Configuration enregistrée.
+            updating-database: Mise à jour de la base de données en cours ...
+            database-updated: Base de données mise à jour.
+            installation-completed: "Installation terminée, accédez à votre application via :"
+
+        errors:
+            database-update: "Erreur critique lors de la mise à jour de la base de données."
+
+        fields:
+            base-url:
+                label: URL de l'application
+                placeholder: "Ex : https://loxya.mon-organisation.com"
+                hint: |-
+                    C'est l'adresse de base de l'application, que vous utiliserez tous les jours.
+
+            main-country:
+                label: Pays d'utilisation principal
+                hint: |-
+                    Cette information permet d'adapter Loxya à votre zone géographique.
+
+            jwt-secret:
+                label: Jeton de sécurité
+                hint: |-
+                    Une chaîne secrète utilisée pour renforcer la sécurité de votre application.
+
+            enable-cors:
+                label: Activer CORS (Cross Origin Resource Sharing)
+                hint: |-
+                    Permet d'utiliser l'API depuis un autre domaine (moins sécurisé).
+
+            session-expire-hours:
+                label: Durée des sessions
+                hint: |-
+                    Durée maximale de la session (en heures) avant que l’utilisateur ne doive se reconnecter.
+
+            max-items-per-page:
+                label: Nombre d'éléments par page
+                hint: |-
+                    Le nombre maximum d'éléments affichés par page dans les listings.
+
+            default-lang:
+                label: Langue par défaut
+                hint: |-
+                    La langue que Loxya utilisera par défaut pour les nouveaux utilisateurs.
+
+            barcodes:
+                mode:
+                    label: Mode de génération des codes-barres
+                    hint: |-
+                        En "automatique", Loxya génère le contenu des codes-barres. En "manuel", vous pourrez spécifier
+                        leur contenu, mais l'utilisation d'un scanner de code-barres qui est capable d'insérer un préfixe
+                        et un suffixe sera requise.
+                    options:
+                        auto: Automatique
+                        manual: Manuel
+                format:
+                    label: Format des codes-barres générés par Loxya
+                    options:
+                        pdf417: PDF 417
+                        qr-code: QR Code
+                        code39: Code 39
+                        code128: Code 128
+
+            database:
+                fields:
+                    host: Hôte de la base de données
+                    username: Nom d'utilisateur
+                    password:
+                        label: Mot de passe
+                        update:
+                            placeholder: "- Mot de passe actuel -"
+                            hint: Laissez vide pour conserver le mot de passe actuel.
+                    database: Nom de la base de données
+                    port: Port
+                    prefix:
+                        label: Préfixe des tables
+                        hint: |-
+                            Le préfixe éventuel des tables de Loxya. À laisser vide dans la plupart des cas.
+                errors:
+                    generic: Connexion à la base de données impossible, veuillez vérifier les informations.
+                    host-unreachable: L'hôte de la base de données spécifié est injoignable.
+                    bad-credentials: Identifiants de connexion à la base de données invalides.
+                    missing-database: Aucune base de données ne semble exister avec ce nom.
+
+            billing-mode:
+                label: Mode d'utilisation
+                options:
+                    all: "Location de matériel: Facturation systématique."
+                    partial: "Location + Prêt de matériel: Facturation au cas par cas."
+                    none: "Prêt de matériel: Pas de facturation du tout."
+
+            currency:
+                label: Devise
+                hint:
+                    without-billing: |-
+                        Utilisée notamment pour les prix de remplacement du matériel.
+                    with-billing: |-
+                        Utilisée pour l'affichage des prix et la facturation.
+
+            organization:
+                name:
+                    without-billing: |-
+                        Nom de l'organisation
+                    with-billing: |-
+                        Raison sociale de l'organisation
+                registration-id:
+                    generic: "Numéro d'enregistrement de l'organisation"
+                    FR: "Numéro de SIRET"
+                    BE: "Numéro BCE"
+                    CH: "Numéro IDE"
+                    CA: "Numéro d'entreprise"
+                trade-registry-city:
+                    label: Ville du registre du commerce de l'organisation
+                    hint: |-
+                        Cette information apparaîtra sur les documents générés (ex: "RCS Paris").
+                legal-type: Forme juridique
+                share-capital:
+                    label: Capital social
+                    hint: |-
+                        Cette information apparaîtra sur les documents générés.
+                is-vat-subjected: Êtes-vous assujetti à la TVA ?
+                vat-exemption-reason:
+                    label: Raison d'exemption de TVA
+                    hint: |-
+                        Sélectionnez la raison de non assujettissement à la TVA.
+                vat-exemption-reason-custom:
+                    label: Précisez la raison d'exonération de TVA
+                    hint: |-
+                        Cette mention apparaîtra tel quelle sur vos devis et factures.
+                        Si laissé vide, les transactions seront considérées hors champ de TVA.
+                activity-code:
+                    generic: "Code d'activité"
+                    FR: "Code APE"
+                    BE: "Code NACE"
+                    CH: "Code NOGA"
+                vat-number:
+                    generic: "Numéro de TVA"
+                    CA: "Numéro de taxe"
+                vat-due-on-invoice:
+                    label: "Option pour le paiement de la TVA d'après les débits ?"
+                    hint:
+                        "Si vous avez opté pour le paiement de la TVA d'après les débits plutôt qu'à l'encaissement."
+                phone:
+                    label: Numéro de téléphone de l'organisation
+                    hint: |-
+                        Le numéro de téléphone qui apparaîtra sur les documents / e-mails (optionnel).
+                email:
+                    label: Adresse e-mail de l'organisation
+                    hint: |-
+                        L'adresse e-mail qui apparaîtra sur les documents (optionnel).
+                country:
+                    label: Pays de l'organisation
+                    errors:
+                        currency-mismatch: "La devise de l'application n'est pas compatible avec ce pays."
+                street:
+                    - Numéro et rue
+                    - Complément d'adresse
+                administrative-area:
+                    area: "Zone"
+                    canton: "Canton"
+                    county: "Comté"
+                    department: "Département"
+                    district: "District"
+                    do_si: "Do / Si"
+                    emirate: "Émirat"
+                    island: "Île"
+                    parish: "Paroisse"
+                    prefecture: "Préfecture"
+                    province: "Province"
+                    region: "Région"
+                    state: "État"
+                postal-code:
+                    eircode: "Eircode"
+                    pin: "PIN code"
+                    postal: "Code postal"
+                    zip: "ZIP code"
+                locality:
+                    city: "Ville"
+                    district: "District"
+                    post_town: "Ville postale"
+                    suburb: "Banlieue / Quartier"
+                    town_city: "Ville / Commune"
+
+            return-policy:
+                label: Choix de la politique de retour du matériel
+                hint:
+                    "Comment le logiciel doit-il clôturer les événements ou réservations ?"
+                options:
+                    auto: "Clôture automatique : L'événement se termine à la date prévue, même sans inventaire."
+                    manual: "Clôture manuelle : L'événement reste actif jusqu'à inventaire manuel."
+
+            estimates:
+                validity-days:
+                    label: Durée de validité par défaut des devis
+                    hint: |-
+                        Durée de validité à appliquer aux devis si aucune date d'échéance n'est précisée.
+                    options:
+                        days: "%d jours"
+                        custom: "Personnalisé..."
+                    custom-label: Durée de validité personnalisée (en jours)
+
+            invoices:
+                routing-identifier:
+                    label: Adresse électronique d'envoi des e-factures
+                    hint: |-
+                        Elle doit correspondre à celle définie auprès de votre plateforme d'envoi.
+                payment-term-days:
+                    label: Délai de paiement par défaut
+                    hint: |-
+                        Délai de paiement à indiquer sur les factures si aucune date d'échéance n'est précisée.
+                    options:
+                        on-receipt: "À réception"
+                        days: "%d jours"
+                        custom: "Personnalisé..."
+                    custom-label: Délai de paiement personnalisé (en jours)
+                payment-methods:
+                    label: Moyens de paiement acceptés
+                    hint: |-
+                        Appuyez sur espace pour sélectionner une ou plusieurs options.
+                    options:
+                        cash: Espèces
+                        card: Carte bancaire
+                        cheque: Chèque
+                        transfer:
+                            label: Virement bancaire
+                            details:
+                                iban: "IBAN du compte bancaire"
+                                bic: "BIC / SWIFT"
+                                holder:
+                                    label: "Nom du titulaire du compte"
+                                    hint: |-
+                                        Par défaut, la raison sociale de l'organisation sera utilisée.
+
+            administrator:
+                fields:
+                    first-name: Prénom - Administrateur principal
+                    last-name: Nom - Administrateur principal
+                    pseudo:
+                        label: Identifiant - Administrateur principal
+                        hint: |
+                            Utilisé comme identifiant interne et pour se connecter à l'application.
+                    password:
+                        label: Mot de passe - Administrateur principal
+                        hint: |
+                            Utilisé pour accéder à l'application avec cet utilisateur.
+                    email:
+                        label: Adresse e-mail - Administrateur principal
+                        hint: |
+                            Note : Peut aussi être utilisée pour se connecter à l'application.
+                        placeholder: votre-adresse@votre-société.com
+                errors:
+                    validation: |
+                        Certaines données sont invalides pour l'utilisateur, veuillez les vérifier.

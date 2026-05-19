@@ -1,6 +1,6 @@
 import './index.scss';
 import warning from 'warning';
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
 import Select from '@/themes/default/components/Select';
 import Radio from '@/themes/default/components/Radio';
 import DatePicker, { Type as DatePickerType } from '@/themes/default/components/DatePicker';
@@ -14,9 +14,14 @@ import DateTime from '@/utils/datetime';
 import Period from '@/utils/period';
 import Color from '@/utils/color';
 import Day from '@/utils/day';
+import {
+    DisabledKey,
+    InvalidKey,
+    VerticalFormKey,
+} from '@/themes/default/components/@constants';
 
 import type { RawColor } from '@/utils/color';
-import type { PropType, ComponentRef } from 'vue';
+import type { Injected, PropType, ComponentRef } from 'vue';
 import type { Option } from '@/themes/default/components/Select';
 import type { SwitchOptions } from '@/themes/default/components/SwitchToggle';
 import type { DisableDateFunction } from '@/themes/default/components/DatePicker';
@@ -249,6 +254,14 @@ type Props = {
     withoutMinutes?: boolean,
 
     /**
+     * Lorsque le champ est de type {@link DatePickerType},
+     * peut-on vider le champ de sa valeur ?
+     *
+     * @default false
+     */
+    clearable?: boolean,
+
+    /**
      * Fonction appelée immédiatement lorsque la valeur du
      * champ change suite à une action utilisateur.
      *
@@ -276,16 +289,17 @@ type Props = {
     onCreate?(...newValue: any[]): void,
 };
 
+type InstanceProperties = {
+    vertical: Injected<typeof VerticalFormKey>,
+};
+
 /** Un champ de formulaire (de n'importe quel type). */
 const FormField = defineComponent({
     name: 'FormField',
-    inject: {
-        verticalForm: { default: false },
-    },
     provide(this: any) {
         return {
-            'input.disabled': computed(() => this.disabled),
-            'input.invalid': computed(() => this.invalid),
+            [DisabledKey as symbol]: computed(() => this.disabled),
+            [InvalidKey as symbol]: computed(() => this.invalid),
         };
     },
     props: {
@@ -387,11 +401,11 @@ const FormField = defineComponent({
             default: false,
         },
         minDate: {
-            type: [String, DateTime] as PropType<Props['minDate']>,
+            type: [String, DateTime, Day] as PropType<Props['minDate']>,
             default: undefined,
         },
         maxDate: {
-            type: [String, DateTime] as PropType<Props['maxDate']>,
+            type: [String, DateTime, Day] as PropType<Props['maxDate']>,
             default: undefined,
         },
         disabledDate: {
@@ -404,6 +418,10 @@ const FormField = defineComponent({
         },
         withoutMinutes: {
             type: Boolean as PropType<Props['withoutMinutes']>,
+            default: false,
+        },
+        clearable: {
+            type: Boolean as PropType<Props['clearable']>,
             default: false,
         },
         onInput: {
@@ -420,13 +438,10 @@ const FormField = defineComponent({
         },
     },
     emits: ['change', 'input', 'create'],
+    setup: (): InstanceProperties => ({
+        vertical: inject(VerticalFormKey, false),
+    }),
     computed: {
-        inheritedVerticalForm(): boolean {
-            // @ts-expect-error -- Normalement corrigé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this.verticalForm;
-        },
-
         invalid(): boolean {
             return (this.error ?? null) !== null;
         },
@@ -526,8 +541,8 @@ const FormField = defineComponent({
             const customUselessProps = [
                 'name', 'placeholder', 'value', 'rows', 'step',
                 'min', 'max', 'addon', 'options', 'disabledDate',
-                'minDate', 'maxDate', 'withFullDaysToggle', 'range',
-                'withoutMinutes',
+                'clearable', 'minDate', 'maxDate', 'withFullDaysToggle',
+                'range', 'withoutMinutes',
             ];
             customUselessProps.forEach((customUselessProp: string) => {
                 warning(
@@ -543,7 +558,6 @@ const FormField = defineComponent({
         const {
             $t: __,
             $scopedSlots: slots,
-            inheritedVerticalForm: vertical,
             type,
             label,
             name,
@@ -557,9 +571,11 @@ const FormField = defineComponent({
             invalid,
             disabled,
             readonly,
+            vertical,
             options,
             multiple,
             canCreate,
+            clearable,
             step,
             min,
             max,
@@ -577,7 +593,7 @@ const FormField = defineComponent({
         } = this;
 
         const classNames = ['FormField', `FormField--${type}`, {
-            'FormField--vertical': !!vertical,
+            'FormField--vertical': vertical,
             'FormField--invalid': invalid,
         }];
 
@@ -669,6 +685,7 @@ const FormField = defineComponent({
                                 placeholder={normalizedPlaceholder as any}
                                 minDate={minDate}
                                 maxDate={maxDate}
+                                clearable={clearable}
                                 disabledDate={disabledDate}
                                 withFullDaysToggle={withFullDaysToggle}
                                 withoutMinutes={withoutMinutes}

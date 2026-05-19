@@ -40,7 +40,7 @@ exports[`Users Api all() parse the returned data correctly 1`] = `
       "group": "readonly-planning-general",
       "id": 4,
       "last_name": "Berluc",
-      "phone": "+33724000000",
+      "phone": /* Phone Instance => */ "+33794589321",
       "pseudo": "TheVisitor",
     },
     {
@@ -50,7 +50,7 @@ exports[`Users Api all() parse the returned data correctly 1`] = `
       "group": "readonly-planning-general",
       "id": 5,
       "last_name": "Farol",
-      "phone": "+33786325500",
+      "phone": /* Phone Instance => */ "+33786325500",
       "pseudo": "caroline",
     },
   ],
@@ -67,23 +67,20 @@ exports[`Users Api all() parse the returned data correctly 1`] = `
 
 exports[`Users Api create() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
+  "additional_street": null,
+  "address": "1, somewhere av.
+12340 Megacity",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester@loxya.com",
   "first_name": "Jean",
-  "full_address": "1, somewhere av.
-1234 Megacity",
   "full_name": "Jean Fountain",
   "group": "administration",
   "id": 1,
   "last_name": "Fountain",
   "locality": "Megacity",
   "phone": null,
-  "postal_code": "1234",
+  "postal_code": "12340",
   "pseudo": "test1",
   "street": "1, somewhere av.",
 }
@@ -91,11 +88,12 @@ exports[`Users Api create() parse the returned data correctly (with #1) 1`] = `
 
 exports[`Users Api create() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "group": "operation",
   "id": 2,
@@ -110,12 +108,13 @@ exports[`Users Api create() parse the returned data correctly (with #2) 1`] = `
 
 exports[`Users Api create() parse the returned data correctly (with #3) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": "156 bis, avenue des tests poussés
+88080 Wazzaville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "nobody@loxya.com",
   "first_name": "?",
-  "full_address": "156 bis, avenue des tests poussés
-88080 Wazzaville",
   "full_name": "?",
   "group": "operation",
   "id": 3,
@@ -130,21 +129,18 @@ exports[`Users Api create() parse the returned data correctly (with #3) 1`] = `
 
 exports[`Users Api create() parse the returned data correctly (with #4) 1`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "email": "visitor@loxya.com",
   "first_name": "Henry",
-  "full_address": null,
   "full_name": "Henry Berluc",
   "group": "readonly-planning-general",
   "id": 4,
   "last_name": "Berluc",
   "locality": null,
-  "phone": "+33724000000",
+  "phone": /* Phone Instance => */ "+33794589321",
   "postal_code": null,
   "pseudo": "TheVisitor",
   "street": null,
@@ -153,17 +149,18 @@ exports[`Users Api create() parse the returned data correctly (with #4) 1`] = `
 
 exports[`Users Api create() parse the returned data correctly (with #5) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "external@loxya.com",
   "first_name": "Caroline",
-  "full_address": null,
   "full_name": "Caroline Farol",
   "group": "readonly-planning-general",
   "id": 5,
   "last_name": "Farol",
   "locality": null,
-  "phone": "+33786325500",
+  "phone": /* Phone Instance => */ "+33786325500",
   "postal_code": null,
   "pseudo": "caroline",
   "street": null,
@@ -232,23 +229,20 @@ exports[`Users Api getSettings() parse the returned data correctly 6`] = `
 
 exports[`Users Api one() parse the returned data correctly 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
+  "additional_street": null,
+  "address": "1, somewhere av.
+12340 Megacity",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester@loxya.com",
   "first_name": "Jean",
-  "full_address": "1, somewhere av.
-1234 Megacity",
   "full_name": "Jean Fountain",
   "group": "administration",
   "id": 1,
   "last_name": "Fountain",
   "locality": "Megacity",
   "phone": null,
-  "postal_code": "1234",
+  "postal_code": "12340",
   "pseudo": "test1",
   "street": "1, somewhere av.",
 }
@@ -256,23 +250,20 @@ exports[`Users Api one() parse the returned data correctly 1`] = `
 
 exports[`Users Api one() parse the returned data correctly 2`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
+  "additional_street": null,
+  "address": "1, somewhere av.
+12340 Megacity",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester@loxya.com",
   "first_name": "Jean",
-  "full_address": "1, somewhere av.
-1234 Megacity",
   "full_name": "Jean Fountain",
   "group": "administration",
   "id": 1,
   "last_name": "Fountain",
   "locality": "Megacity",
   "phone": null,
-  "postal_code": "1234",
+  "postal_code": "12340",
   "pseudo": "test1",
   "street": "1, somewhere av.",
 }
@@ -280,11 +271,12 @@ exports[`Users Api one() parse the returned data correctly 2`] = `
 
 exports[`Users Api one() parse the returned data correctly 3`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "group": "operation",
   "id": 2,
@@ -299,12 +291,13 @@ exports[`Users Api one() parse the returned data correctly 3`] = `
 
 exports[`Users Api one() parse the returned data correctly 4`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": "156 bis, avenue des tests poussés
+88080 Wazzaville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "nobody@loxya.com",
   "first_name": "?",
-  "full_address": "156 bis, avenue des tests poussés
-88080 Wazzaville",
   "full_name": "?",
   "group": "operation",
   "id": 3,
@@ -319,21 +312,18 @@ exports[`Users Api one() parse the returned data correctly 4`] = `
 
 exports[`Users Api one() parse the returned data correctly 5`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "email": "visitor@loxya.com",
   "first_name": "Henry",
-  "full_address": null,
   "full_name": "Henry Berluc",
   "group": "readonly-planning-general",
   "id": 4,
   "last_name": "Berluc",
   "locality": null,
-  "phone": "+33724000000",
+  "phone": /* Phone Instance => */ "+33794589321",
   "postal_code": null,
   "pseudo": "TheVisitor",
   "street": null,
@@ -342,17 +332,18 @@ exports[`Users Api one() parse the returned data correctly 5`] = `
 
 exports[`Users Api one() parse the returned data correctly 6`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "external@loxya.com",
   "first_name": "Caroline",
-  "full_address": null,
   "full_name": "Caroline Farol",
   "group": "readonly-planning-general",
   "id": 5,
   "last_name": "Farol",
   "locality": null,
-  "phone": "+33786325500",
+  "phone": /* Phone Instance => */ "+33786325500",
   "postal_code": null,
   "pseudo": "caroline",
   "street": null,
@@ -361,23 +352,20 @@ exports[`Users Api one() parse the returned data correctly 6`] = `
 
 exports[`Users Api restore() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
+  "additional_street": null,
+  "address": "1, somewhere av.
+12340 Megacity",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester@loxya.com",
   "first_name": "Jean",
-  "full_address": "1, somewhere av.
-1234 Megacity",
   "full_name": "Jean Fountain",
   "group": "administration",
   "id": 1,
   "last_name": "Fountain",
   "locality": "Megacity",
   "phone": null,
-  "postal_code": "1234",
+  "postal_code": "12340",
   "pseudo": "test1",
   "street": "1, somewhere av.",
 }
@@ -385,11 +373,12 @@ exports[`Users Api restore() parse the returned data correctly (with #1) 1`] = `
 
 exports[`Users Api restore() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "group": "operation",
   "id": 2,
@@ -404,12 +393,13 @@ exports[`Users Api restore() parse the returned data correctly (with #2) 1`] = `
 
 exports[`Users Api restore() parse the returned data correctly (with #3) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": "156 bis, avenue des tests poussés
+88080 Wazzaville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "nobody@loxya.com",
   "first_name": "?",
-  "full_address": "156 bis, avenue des tests poussés
-88080 Wazzaville",
   "full_name": "?",
   "group": "operation",
   "id": 3,
@@ -424,21 +414,18 @@ exports[`Users Api restore() parse the returned data correctly (with #3) 1`] = `
 
 exports[`Users Api restore() parse the returned data correctly (with #4) 1`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "email": "visitor@loxya.com",
   "first_name": "Henry",
-  "full_address": null,
   "full_name": "Henry Berluc",
   "group": "readonly-planning-general",
   "id": 4,
   "last_name": "Berluc",
   "locality": null,
-  "phone": "+33724000000",
+  "phone": /* Phone Instance => */ "+33794589321",
   "postal_code": null,
   "pseudo": "TheVisitor",
   "street": null,
@@ -447,17 +434,18 @@ exports[`Users Api restore() parse the returned data correctly (with #4) 1`] = `
 
 exports[`Users Api restore() parse the returned data correctly (with #5) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "external@loxya.com",
   "first_name": "Caroline",
-  "full_address": null,
   "full_name": "Caroline Farol",
   "group": "readonly-planning-general",
   "id": 5,
   "last_name": "Farol",
   "locality": null,
-  "phone": "+33786325500",
+  "phone": /* Phone Instance => */ "+33786325500",
   "postal_code": null,
   "pseudo": "caroline",
   "street": null,
@@ -466,23 +454,20 @@ exports[`Users Api restore() parse the returned data correctly (with #5) 1`] = `
 
 exports[`Users Api update() parse the returned data correctly 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
+  "additional_street": null,
+  "address": "1, somewhere av.
+12340 Megacity",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester@loxya.com",
   "first_name": "Jean",
-  "full_address": "1, somewhere av.
-1234 Megacity",
   "full_name": "Jean Fountain",
   "group": "administration",
   "id": 1,
   "last_name": "Fountain",
   "locality": "Megacity",
   "phone": null,
-  "postal_code": "1234",
+  "postal_code": "12340",
   "pseudo": "test1",
   "street": "1, somewhere av.",
 }
@@ -490,11 +475,12 @@ exports[`Users Api update() parse the returned data correctly 1`] = `
 
 exports[`Users Api update() parse the returned data correctly 2`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "group": "operation",
   "id": 2,
@@ -509,12 +495,13 @@ exports[`Users Api update() parse the returned data correctly 2`] = `
 
 exports[`Users Api update() parse the returned data correctly 3`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": "156 bis, avenue des tests poussés
+88080 Wazzaville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "nobody@loxya.com",
   "first_name": "?",
-  "full_address": "156 bis, avenue des tests poussés
-88080 Wazzaville",
   "full_name": "?",
   "group": "operation",
   "id": 3,
@@ -529,21 +516,18 @@ exports[`Users Api update() parse the returned data correctly 3`] = `
 
 exports[`Users Api update() parse the returned data correctly 4`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "email": "visitor@loxya.com",
   "first_name": "Henry",
-  "full_address": null,
   "full_name": "Henry Berluc",
   "group": "readonly-planning-general",
   "id": 4,
   "last_name": "Berluc",
   "locality": null,
-  "phone": "+33724000000",
+  "phone": /* Phone Instance => */ "+33794589321",
   "postal_code": null,
   "pseudo": "TheVisitor",
   "street": null,
@@ -552,17 +536,18 @@ exports[`Users Api update() parse the returned data correctly 4`] = `
 
 exports[`Users Api update() parse the returned data correctly 5`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "external@loxya.com",
   "first_name": "Caroline",
-  "full_address": null,
   "full_name": "Caroline Farol",
   "group": "readonly-planning-general",
   "id": 5,
   "last_name": "Farol",
   "locality": null,
-  "phone": "+33786325500",
+  "phone": /* Phone Instance => */ "+33786325500",
   "postal_code": null,
   "pseudo": "caroline",
   "street": null,

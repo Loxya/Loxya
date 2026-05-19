@@ -9,6 +9,12 @@
         width: 100%;
     }
 
+    &__popup {
+        overflow: hidden;
+        border-bottom-left-radius: globals.$border-radius-normal;
+        border-bottom-right-radius: globals.$border-radius-normal;
+    }
+
     &__full-days {
         display: inline-flex;
         align-items: center;
@@ -85,6 +91,14 @@
                 }
             }
         }
+    }
+
+    //
+    // - Statut: Standalone
+    //
+
+    &--standalone {
+        width: auto;
     }
 
     //

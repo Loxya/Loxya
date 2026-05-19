@@ -4,10 +4,11 @@ import { defineComponent } from 'vue';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import apiTags from '@/stores/api/tags';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Button from '@/themes/default/components/Button';
 
+import type { ComponentRef, PropType } from 'vue';
 import type { Tag, TagEdit } from '@/stores/api/tags';
-import type { PropType } from 'vue';
 
 type Props = {
     /**
@@ -15,6 +16,13 @@ type Props = {
      * Si non fourni, on considérera que c'est un ajout.
      */
     tag?: Tag,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param updatedTag - Le tag sauvegardé si la modification a été menée à son terme.
+     */
+    onClose?(updatedTag?: Tag): void,
 };
 
 type Data = {
@@ -27,16 +35,20 @@ type Data = {
 const EditTag = defineComponent({
     name: 'EditTag',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     modal: {
         width: 600,
-        draggable: true,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         tag: {
             type: Object as PropType<Props['tag']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },
@@ -49,11 +61,25 @@ const EditTag = defineComponent({
         };
     },
     computed: {
-        title(): string {
-            return this.tag === undefined
-                ? this.__('title-create')
-                : this.__('title-edit');
+        isNew(): boolean {
+            return this.tag === undefined;
         },
+
+        title(): string {
+            const { __, isNew } = this;
+
+            return isNew
+                ? __('title-create')
+                : __('title-edit');
+        },
+    },
+    mounted() {
+        if (this.isNew) {
+            this.$nextTick(() => {
+                const $inputName = this.$refs.inputName as ComponentRef<typeof FormField>;
+                $inputName?.focus();
+            });
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -145,6 +171,7 @@ const EditTag = defineComponent({
                     <form class="EditTag__form" onSubmit={handleSubmit}>
                         <FormField
                             type="text"
+                            ref="inputName"
                             label={__('tag-name')}
                             class="EditTag__form__input-name"
                             value={this.name}

@@ -168,10 +168,13 @@ export type PropertyEdit = Omit<PropertyCreate, 'type'>;
 // -
 // ------------------------------------------------------
 
-const all = async (categoryId?: Category['id'] | 'none', entity?: PropertyEntity): Promise<PropertyDetails[]> => {
+const all = async (
+    entity?: PropertyEntity,
+    categoryId?: Category['id'] | 'none',
+): Promise<PropertyDetails[]> => {
     const params = {
-        ...(categoryId !== undefined ? { category: categoryId } : {}),
         ...(entity !== undefined) ? { entity } : {},
+        ...(categoryId !== undefined ? { category: categoryId } : {}),
     };
     const response = await requester.get('/properties', { params });
     return PropertyDetailsSchema.array().parse(response);

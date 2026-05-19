@@ -1,0 +1,128 @@
+subtotal: Sous total
+discount-rate: Remise en %
+total-without-taxes: Total H.T.
+total-vat: Total T.V.A.
+tax: Taxe
+total-with-taxes: Total T.T.C.
+total: Total
+
+tax-state:
+    none:
+        label: Aucune
+        details: Exempté sans motif
+        inline: Aucune (exempté sans motif)
+    exempted:
+        label:
+            default: Exempté
+            other: Autre exemption…
+        reason:
+            none: Sans motif
+    reverse-charge: Auto-liquidation
+    reverse-charge-supply: Livraison intra-com.
+    export: Export
+    out-of-scope: Hors champ
+
+lists:
+    materials:
+        title: Matériels
+
+        columns:
+            name: Nom
+            unit-price-period: Prix unitaire période
+            quantity: Quantité
+            discount: Remise
+            taxes:
+                default: Taxe(s)
+                simple: T.V.A.
+            total-without-taxes: Total H.T.
+            total: Total
+
+        empty:
+            title: Aucun matériel
+            content: |
+                Aucun matériel n'a été sélectionné et ne peut donc être facturé.
+                Ajoutez du matériel pour pouvoir ensuite personnaliser la facturation si nécessaire.
+
+        not-discountable-reset-warning:
+            "Ce matériel n'est normalement pas remisable.
+            En réinitialisant la remise, vous ne pourrez plus la modifier. Voulez-vous continuer\_?"
+
+        actions:
+            resync-data: Resynchroniser les données...
+
+        discount-not-applicable: Remise non applicable
+        obsolete-tax: Taxe obsolète / supprimée
+
+    extras:
+        title: Lignes additionnelles
+        default-title: "Ligne additionnelle #{index}"
+
+        columns:
+            name: Dénomination
+            type: Type
+            unit-price: Prix unitaire
+            quantity: Quantité
+            discount: Remise
+            taxes:
+                default: Taxe(s)
+                simple: T.V.A.
+            total-without-taxes: Total H.T.
+            total: Total
+
+        type:
+            service: Service
+            good: Produit
+            allowance: Déduction
+
+        actions:
+            add-line: Ajouter une ligne
+            resync-data: Resynchroniser les données...
+            remove-line: Supprimer la ligne
+
+        obsolete-tax: Taxe obsolète / supprimée
+        empty:
+            default: Il n'y a pas encore de lignes additionnelles.
+            standalone: Il n'y a pas encore de lignes.
+
+modals:
+    #
+    # - Resynchronisation des données d'un matériel
+    #
+
+    resync-material-data:
+        title: "Resynchronisation des données du matériel «\_{name}\_»"
+        nothing-to-resynchronize: Il n'y a aucune données à resynchroniser.
+        resynchronize-data: Resynchroniser les données sélectionnées
+        selected-data-resynchronized: Les données sélectionnées ont été resynchronisées.
+        tax-free: Pas de taxe
+
+        fields:
+            name: Nom
+            reference: Référence
+            unit_price: Prix unitaire
+            unit_replacement_price: Prix de remplacement
+            degressive_rate: Coef. dégressif
+            taxes: Taxe(s)
+
+    #
+    # - Resynchronisation des données d'un extra
+    #
+
+    resync-extra-data:
+        title: "Resynchronisation des données de la ligne «\_{name}\_»"
+        nothing-to-resynchronize: Il n'y a aucune données à resynchroniser.
+        resynchronize-data: Resynchroniser les données sélectionnées
+        selected-data-resynchronized: Les données sélectionnées ont été resynchronisées.
+        tax-free: Pas de taxe
+
+        fields:
+            taxes: Taxe(s)
+
+    #
+    # - Sélection de motif d'exemption
+    #
+
+    select-exemption-code:
+        title: Motif d'exemption de T.V.A.
+        description: Sélectionnez le motif d'exemption à appliquer.
+        no-reason: Sans motif

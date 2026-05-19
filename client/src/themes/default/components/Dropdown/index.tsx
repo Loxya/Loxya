@@ -5,10 +5,10 @@ import { MountingPortal as Portal } from 'portal-vue';
 import Button, { TYPES } from '@/themes/default/components/Button';
 import Transition from './components/Transition';
 import {
-    computePosition,
-    autoPlacement,
-    autoUpdate,
     offset,
+    autoUpdate,
+    autoPlacement,
+    computePosition,
 } from '@floating-ui/dom';
 
 import type { PropType } from 'vue';
@@ -177,7 +177,12 @@ const Dropdown = defineComponent({
                 middleware: [
                     autoPlacement({
                         alignment: 'end',
-                        allowedPlacements: ['bottom-start', 'bottom-end'],
+                        allowedPlacements: [
+                            'bottom-start',
+                            'bottom-end',
+                            'top-start',
+                            'top-end',
+                        ],
                     }),
                     offset(10),
                 ],

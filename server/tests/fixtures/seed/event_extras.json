@@ -1,25 +1,31 @@
 [
     {
         "id": 1,
+        "uuid": "a9c6b9d2-1b7e-4e3a-8f1d-5c2d3e4f5a6b",
         "event_id": 2,
+        "is_service": true,
         "description": "Services additionnels",
-        "unit_price": "155",
+        "unit_price": "155.00",
+        "discount_rate": "0.0000",
         "quantity": 2,
+        "tax_regime": "S",
+        "tax_exemption_code": null,
         "tax_id": 2,
         "taxes": [
-            {
-                "name": "Taxes diverses",
-                "is_rate": false,
-                "value": "10.00"
-            }
+            { "value": "5.500" }
         ]
     },
     {
         "id": 2,
+        "uuid": "b8d7c8e1-2a6f-4d2b-9e0c-6d3e4f5a6b7c",
         "event_id": 2,
-        "description": "Avoir facture du 17/12/2018",
-        "unit_price": "-3100.00",
+        "is_service": false,
+        "description": "Achat pile",
+        "unit_price": "2.00",
+        "discount_rate": "0.0000",
         "quantity": 1,
+        "tax_regime": "E",
+        "tax_exemption_code": "VATEX-EU-79-C",
         "tax_id": null,
         "taxes": null
     }

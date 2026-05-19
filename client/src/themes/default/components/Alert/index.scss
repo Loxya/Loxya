@@ -5,7 +5,7 @@
 .Alert {
     display: flex;
     align-items: center;
-    padding: globals.$spacing-medium globals.$spacing-medium;
+    padding: globals.$spacing-medium;
     border-radius: globals.$border-radius-large;
     white-space: pre-line;
     gap: globals.$spacing-medium;
@@ -19,9 +19,11 @@
         flex: 1;
     }
 
-    &__action {
+    &__actions {
         flex: none;
+        display: flex;
         margin-left: auto;
+        gap: globals.$spacing-small;
     }
 
     //
@@ -30,6 +32,7 @@
 
     // stylelint-disable-next-line scss/dollar-variable-first-in-block, order/order
     $variants: (
+        error: $error-variant,
         warning: $warning-variant,
         info: $info-variant,
     );

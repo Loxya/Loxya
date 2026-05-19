@@ -1,15 +1,14 @@
-import countries from '@fixtures/countries';
-import BillingMode from '@/globals/config/@enums/billing-mode';
-import ReturnPolicy from '@/globals/config/@enums/return-policy';
+import {
+    BillingMode,
+    ReturnPolicy,
+    WeightUnit,
+} from '@/globals/config/@enums';
 
 global.__SERVER_CONFIG__ = {
     baseUrl: 'http://loxya.test',
     isSslEnabled: false,
     version: '__DEV__',
-    api: {
-        url: `http://loxya.test/api`,
-        headers: { Accept: 'application/json' },
-    },
+    mainCountry: 'FR',
     defaultLang: 'fr',
     currency: 'EUR',
     auth: {
@@ -21,7 +20,16 @@ global.__SERVER_CONFIG__ = {
     },
     organization: {
         name: 'Testing corp.',
-        country: countries.default(1),
+        isVatExempted: false,
+        vatExemptionCode: null,
+        vatExemptionReason: null,
+        country: 'FR',
+    },
+    estimates: {
+        validityDays: 15,
+    },
+    invoices: {
+        paymentTermDays: 15,
     },
     defaultPaginationLimit: 100,
     maxConcurrentFetches: 2,
@@ -30,7 +38,7 @@ global.__SERVER_CONFIG__ = {
     maxFileUploadSize: 25 * 1024 * 1024,
     maxFetchPeriod: 3 * 30,
     colorSwatches: null,
-    authorizedFileTypes: [
+    allowedFileTypes: [
         'application/pdf',
         'application/zip',
         'application/x-rar-compressed',
@@ -49,9 +57,14 @@ global.__SERVER_CONFIG__ = {
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ],
-    authorizedImageTypes: [
+    allowedImageTypes: [
         'image/jpeg',
         'image/png',
         'image/webp',
     ],
+    measurementUnits: {
+        materials: {
+            weight: WeightUnit.KILOGRAM,
+        },
+    },
 };

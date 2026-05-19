@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <base href="http://loxya.test/" />
+        <meta charset="UTF-8" />
+        <title>Devis</title>
+        <meta name="generator" content="Loxya" />
+
+        <style type="text/css">
+            embedded-xml {
+                display: block;
+                margin: 30px;
+                padding: 15px;
+                background: #1e1e2e;
+                border-radius: 10px;
+                color: #cdd6f4;
+                line-height: 1.6;
+                font-size: 14px;
+                font-family: monospace;
+                white-space: pre;
+                overflow-x: auto;
+            }
+        </style>
+
+        <style type="text/css">
+            @page {
+                @bottom-right {
+                    content: "Page " counter(page) " / " counter(pages) "";
+                }
+            }
+        </style>
+        <style type="text/css">
+            :root {
+                --page-margin: 9mm 8mm 11mm;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            html {
+                font-family: "DejaVu Sans", sans-serif;
+                font-weight: 400;
+                font-size: 9pt;
+            }
+
+            @page {
+                size: A4;
+                margin: var(--page-margin);
+                @bottom-right {
+                    white-space: nowrap;
+                    font-size: 8pt;
+                    color: #666;
+                }
+            }
+            .__document {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                min-height: 100%;
+                align-items: safe center;
+                justify-content: safe center;
+                padding: 30px;
+                background-color: #eef0f4;
+                overflow: auto;
+                gap: 30px;
+            }
+            .__document__preview {
+                flex-shrink: 0;
+                columns: 210mm/297mm;
+                width: 210mm;
+                column-fill: auto;
+                box-decoration-break: clone;
+                gap: 20px;
+            }
+            .__document__preview__content {
+                box-decoration-break: clone;
+                -webkit-box-decoration-break: clone;
+                padding: var(--page-margin);
+                background-color: #fff;
+                min-height: 297mm;
+                box-shadow: 0 1.5mm 8mm rgba(0, 0, 0, 0.06);
+                border-radius: 3.5mm;
+            }
+            .__document__xml {
+                width: 100%;
+                margin: 0;
+            }
+
+            @media print {
+                img {
+                    image-rendering: pixelated;
+                }
+            }
+        </style>
+
+        <style type="text/css">
+            @page {
+                @bottom-center {
+                    content: element(main-footer);
+                }
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin: 0 0 3mm 0;
+            }
+            h2 {
+                font-size: 1.25rem;
+                margin: 0 0 3mm 0;
+            }
+            h3 {
+                font-size: 1.125rem;
+                margin: 0 0 3mm 0;
+            }
+            h4 {
+                font-size: 1rem;
+                margin: 0 0 3mm 0;
+            }
+            p {
+                font-size: 1rem;
+                margin: 0 0 3mm 0;
+            }
+            small {
+                font-size: 0.85rem;
+            }
+            ul,
+            ol {
+                margin: 2mm 0 3mm 0;
+                padding: 0;
+            }
+            li {
+                list-style: none;
+                border-left: 2px solid #ccc;
+                padding-left: 1mm;
+            }
+            table {
+                width: 100%;
+                table-layout: auto;
+                margin: 0 0 3mm 0;
+                border-spacing: 0;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                padding: 1mm 2mm;
+                border-top: 1pt solid #888;
+                border-left: 1pt solid #888;
+                vertical-align: top;
+            }
+            th {
+                text-align: left;
+            }
+            th:last-child,
+            td:last-child {
+                border-right: 1pt solid #888;
+            }
+            tr:last-child > td {
+                border-bottom: 1pt solid #888;
+            }
+            .layout-table > tbody > tr > td {
+                border: none;
+                padding: 0;
+            }
+            .listing-table {
+                margin-bottom: 8mm;
+            }
+            .listing-table > thead > tr {
+                page-break-after: avoid;
+            }
+            .listing-table > thead > tr > th {
+                font-size: 0.8rem;
+                border-left: 1pt solid #ccc;
+                border-right: 1pt solid #ccc;
+                border-bottom: 1pt solid #888;
+                vertical-align: middle;
+            }
+            .listing-table > tbody > tr > td {
+                padding: 2mm;
+                font-size: 0.7rem;
+                border: none;
+                border-left: 1pt solid #ccc;
+                border-right: 1pt solid #ccc;
+                border-bottom: 1pt solid #ccc;
+                vertical-align: middle;
+            }
+            .listing-table > tbody > tr > td.section-title {
+                padding: 4mm 2mm 2mm;
+                font-size: 0.8rem;
+                color: #888;
+            }
+            .listing-table > thead > tr > th:first-child,
+            .listing-table > tbody > tr > td:first-child {
+                border-left: 1pt solid #888 !important;
+            }
+            .listing-table > thead > tr > th:last-child,
+            .listing-table > tbody > tr > td:last-child {
+                border-right: 1pt solid #888 !important;
+            }
+            .listing-table__item__label {
+                font-weight: 600;
+            }
+            .listing-table__item__sub-name {
+                margin-top: 2px;
+                font-size: 0.6rem;
+            }
+            .listing-table__item__label,
+            .listing-table__item__sub-name {
+                display: block;
+            }
+            .totals-table {
+                width: 50%;
+                margin: 0 0 5mm auto;
+            }
+            .totals-table--legacy {
+                width: 100%;
+                margin: 0;
+            }
+            .totals-table > tbody > tr > td {
+                border-bottom: 1pt solid #888;
+                text-align: right;
+                vertical-align: middle;
+            }
+            .totals-table--legacy > tbody > tr > td {
+                text-align: center;
+            }
+            .inset {
+                padding: 5mm 3mm 8mm !important;
+                border: 1pt solid #999 !important;
+            }
+            .half {
+                width: 50%;
+            }
+            .third {
+                width: 33.33%;
+            }
+            .two-third {
+                width: 66.66%;
+            }
+            .max50mm {
+                max-width: 50mm;
+            }
+            .left {
+                text-align: left;
+            }
+            .center {
+                text-align: center;
+            }
+            .right {
+                text-align: right;
+            }
+            .sizeTitle {
+                font-size: 16pt;
+            }
+            .sizeSubtitle {
+                font-size: 14pt;
+            }
+            .size12 {
+                font-size: 1rem;
+            }
+            .size10 {
+                font-size: 0.9rem;
+            }
+            .size8 {
+                font-size: 0.85rem;
+            }
+            .size7 {
+                font-size: 7pt;
+            }
+            .vspace2 {
+                margin: 0;
+                padding: 2mm 0;
+            }
+            .vspace5 {
+                margin: 0;
+                padding: 5mm 0;
+            }
+            .vspace10 {
+                margin: 0;
+                padding: 10mm 0;
+            }
+            .spaceBottom1 {
+                margin-bottom: 1mm;
+            }
+            .spaceBottom2 {
+                margin-bottom: 2mm;
+            }
+            .spaceBottom5 {
+                margin-bottom: 5mm;
+            }
+            .indent5 {
+                padding-left: 5mm;
+            }
+            .indent10 {
+                padding-left: 10mm;
+            }
+            .box {
+                padding: 1mm;
+                background-color: #eee;
+                border-radius: 3pt;
+            }
+            .strong {
+                font-weight: 700;
+            }
+            .normal {
+                font-weight: 400;
+            }
+            .light {
+                color: #333;
+            }
+            .lighter {
+                color: #666;
+            }
+            .lightest {
+                color: #aaa;
+            }
+            .highlight {
+                color: #e60000;
+            }
+            .changePage {
+                page-break-before: always;
+            }
+
+            .main-footer {
+                position: running(main-footer);
+                text-align: center;
+                font-size: 7pt;
+                word-break: break-all;
+                color: #aaa;
+            }
+
+            @media screen {
+                .changePage {
+                    break-before: column;
+                }
+
+                .main-footer {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="__document">
+            <div class="__document__preview">
+                <div class="__document__preview__content">
+                    <footer class="main-footer">
+                        Testing corp. | SARL au capital de 1 000 € | Code APE : 7729Z<br />
+                        5 rue des tests 05555 Testville | N° TVA : FR85543210080
+                    </footer>
+                    <table class="layout-table">
+                        <tr>
+                            <td class="half">
+                                <img src="/img/logo/test/logo-wide.png" style="width: 75mm" />
+                                <div class="spaceBottom2 size12 strong">
+                                    Testing corp.<br />
+                                    5 rue des tests<br />
+                                    05555 Testville<br />
+                                    France
+                                </div>
+                                <div class="spaceBottom2 size10">
+                                    N° SIRET : 54321008020145<br />
+                                    N° TVA : FR85543210080<br />
+                                    Code APE : 7729Z<br />
+                                </div>
+                                <div class="spaceBottom2 size10">
+                                    Tél. : 01 23 45 67 89<br />
+                                    E-mail : contact@testing-corp.dev
+                                </div>
+                            </td>
+                            <td class="half">
+                                <h2 class="box center">Devis en Euro</h2>
+                                <table class="layout-table spaceBottom5">
+                                    <tr>
+                                        <td class="size12">Le 14/06/2022</td>
+                                        <td class="size12 right">Page 1</td>
+                                    </tr>
+                                </table>
+                                <p>Bénéficiaire</p>
+                                <h2>
+                                    <div class="spaceBottom2">
+                                        <strong>Testing, Inc</strong><br />
+                                        Contact :&#32;Jean Fountain<br />
+                                        10 avenue de la gare<br />
+                                        Bâtiment D<br />
+                                        74000 Annecy<br />
+                                        <small>(Réf.: 0001)</small><br />
+                                    </div>
+                                    <div class="spaceBottom2 size10">
+                                        N° SIRET : 12345678900001<br />
+                                        N° TVA : FR32123456789<br />
+                                    </div>
+                                    <div class="size8">
+                                        Tél. : 01 23 45 67 89<br />
+                                        E-mail : tester@loxya.com<br />
+                                    </div>
+                                </h2>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="vspace5">
+                        <p class="strong">Événement : Premier événement</p>
+                        <p class="strong">Du lundi 17 au mardi 18 décembre 2018, À Gap</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Catégorie</th>
+                                    <th class="center">Quantité</th>
+                                    <th class="right">Total / jour</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Son</td>
+                                    <td class="center">2 éléments</td>
+                                    <td class="right">325,50 €</td>
+                                </tr>
+                                <tr>
+                                    <td>Non catégorisé</td>
+                                    <td class="center">2 éléments</td>
+                                    <td class="right">5,50 €</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="size8 lighter">Remarque : vous trouverez le détail aux pages suivantes.</p>
+                    </div>
+
+                    <div class="vspace5 size8">
+                        <table class="totals-table totals-table--legacy">
+                            <thead>
+                                <tr>
+                                    <th>Total / jour</th>
+                                    <th>Coef. dégressif</th>
+                                    <th>Remise</th>
+                                    <th colspan="2">Totaux</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="center">
+                                    <td>
+                                        <div class="vspace2">331,00 €</div>
+                                    </td>
+                                    <td>
+                                        <div class="vspace2">
+                                            ×&nbsp;<strong>1,75</strong>
+                                            <span class="lighter">(2 jours)</span>
+                                        </div>
+                                    </td>
+                                    <td rowspan="2">
+                                        <div class="vspace2">5 % de 579,25 €</div>
+                                        <div class="vspace5 strong">- 28,97 €</div>
+                                    </td>
+                                    <td rowspan="2">
+                                        <div class="vspace2 center">
+                                            <strong class="size10">Net à payer</strong><br />
+                                            <span class="size9">(T.V.A non applicable)</span>
+                                        </div>
+                                    </td>
+                                    <td rowspan="2">
+                                        <div class="vspace2 right">550,28 €</div>
+                                    </td>
+                                </tr>
+                                <tr class="center">
+                                    <td rowspan="1" colspan="2">
+                                        <div class="vspace5 strong">= 579,25 €</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="vspace5 size10">Date d&#039;acceptation du devis :</p>
+                        <p class="size10">Signature du bénéficiaire, précédée de la mention « Bon pour accord » :</p>
+                    </div>
+                    <div class="changePage vspace5">
+                        <table class="layout-table">
+                            <tr>
+                                <td class="half">
+                                    <img src="/img/logo/test/logo-wide.png" style="width: 75mm" />
+                                    <div class="spaceBottom2 size12 strong">
+                                        Testing corp.<br />
+                                        5 rue des tests<br />
+                                        05555 Testville<br />
+                                        France
+                                    </div>
+                                    <div class="spaceBottom2 size10">
+                                        Tél. : 01 23 45 67 89<br />
+                                        E-mail : contact@testing-corp.dev
+                                    </div>
+                                </td>
+                                <td class="half">
+                                    <h2 class="box center">Détails du devis</h2>
+                                    <table class="layout-table">
+                                        <tr>
+                                            <td class="size12">Le 14/06/2022</td>
+                                            <td class="size12 right">Page 2</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <table class="listing-table">
+                        <thead>
+                            <tr>
+                                <th>Désignation</th>
+                                <th class="center">Qté</th>
+                                <th class="center">P.U.</th>
+                                <th class="right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="section-title" colspan="4">Non catégorisé</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="listing-table__item__name">Cable XX1</span>
+                                    <span class="listing-table__item__sub-name">Réf.: XX1 &bull; Val. Remp. unitaire: 10,00 €</span>
+                                </td>
+                                <td class="center">2</td>
+                                <td class="center">2,75 €</td>
+                                <td class="right">5,50 €</td>
+                            </tr>
+                            <tr>
+                                <td class="section-title" colspan="4">Son - Mixeurs</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="listing-table__item__name">Console Yamaha CL3</span>
+                                    <span class="listing-table__item__sub-name">Réf.: PM5D &bull; Val. Remp. unitaire: 19 400,00 €</span>
+                                </td>
+                                <td class="center">1</td>
+                                <td class="center">300,00 €</td>
+                                <td class="right">300,00 €</td>
+                            </tr>
+                            <tr>
+                                <td class="section-title" colspan="4">Son - Processeurs</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="listing-table__item__name">Processeur DBX PA2</span>
+                                    <span class="listing-table__item__sub-name">Réf.: DBXPA2 &bull; Val. Remp. unitaire: 349,90 €</span>
+                                </td>
+                                <td class="center">1</td>
+                                <td class="center">25,50 €</td>
+                                <td class="right">25,50 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

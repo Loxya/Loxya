@@ -3,6 +3,7 @@ import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import config, { BillingMode } from '@/globals/config';
 import formatAmount from '@/utils/formatAmount';
+import formatNumber from '@/utils/formatNumber';
 import TagsList from '@/themes/default/components/TagsList';
 import Link from '@/themes/default/components/Link';
 import formatCustomFieldValue from '@/utils/formatCustomFieldValue';
@@ -31,11 +32,20 @@ const MaterialViewInfos = defineComponent({
             return config.billingMode !== BillingMode.NONE;
         },
 
+        isTaxesEnabled(): boolean {
+            return !config.organization.isVatExempted;
+        },
+
+        isSimpleVatSystem(): boolean {
+            const { country } = config.organization;
+            return !!country.hasSimpleVatSystem;
+        },
+
         categoryName(): string {
-            const { $t: __, material } = this;
+            const { __, material } = this;
             const { category_id: categoryId } = material;
             const categoryNameGetter = this.$store.getters['categories/categoryName'];
-            return categoryNameGetter(categoryId) ?? __('not-categorized');
+            return categoryNameGetter(categoryId) ?? __('global.not-categorized');
         },
 
         subCategoryName(): string {
@@ -50,17 +60,36 @@ const MaterialViewInfos = defineComponent({
 
         parkName(): string | null {
             const { park_id: parkId } = this.material;
-            return this.$store.getters['parks/getName'](parkId);
+            const parkNameGetter = this.$store.getters['parks/getName'];
+            return parkNameGetter(parkId);
         },
 
         taxName(): string | null {
+            if (!this.isBillingEnabled || !this.isTaxesEnabled) {
+                return null;
+            }
+
             const { tax_id: taxId } = this.material;
-            return this.$store.getters['taxes/getName'](taxId);
+            if (taxId === null || taxId === undefined) {
+                return null;
+            }
+
+            const taxNameGetter = this.$store.getters['taxes/getName'];
+            return taxNameGetter(taxId);
         },
 
         degressiveRateName(): string | null {
+            if (!this.isBillingEnabled) {
+                return null;
+            }
+
             const { degressive_rate_id: degressiveRateId } = this.material;
-            return this.$store.getters['degressiveRates/getName'](degressiveRateId);
+            if (degressiveRateId === null || degressiveRateId === undefined) {
+                return null;
+            }
+
+            const degressiveNameGetter = this.$store.getters['degressiveRates/getName'];
+            return degressiveNameGetter(degressiveRateId);
         },
 
         rentalPrice(): string | null {
@@ -77,7 +106,21 @@ const MaterialViewInfos = defineComponent({
             return replacementPrice ? formatAmount(replacementPrice) : null;
         },
 
+        hasProperties(): boolean {
+            const { material } = this;
+
+            return (
+                material.properties.length > 0 ||
+                material.weight !== null ||
+                material.origin_country !== null
+            );
+        },
+
         hasPricingData(): boolean {
+            if (!this.isBillingEnabled) {
+                return false;
+            }
+
             return (
                 this.rentalPrice !== null ||
                 this.replacementPrice !== null
@@ -86,25 +129,53 @@ const MaterialViewInfos = defineComponent({
     },
     mounted() {
         this.$store.dispatch('parks/fetch');
-        this.$store.dispatch('taxes/fetch');
-        this.$store.dispatch('degressiveRates/fetch');
+
+        if (this.isBillingEnabled) {
+            this.$store.dispatch('degressiveRates/fetch');
+
+            if (this.isTaxesEnabled) {
+                this.$store.dispatch('taxes/fetch');
+            }
+        }
+    },
+    methods: {
+        // ------------------------------------------------------
+        // -
+        // -    Méthodes internes
+        // -
+        // ------------------------------------------------------
+
+        __(key: string, params?: Record<string, number | string>, count?: number): string {
+            if (!key.startsWith('global.')) {
+                if (!key.startsWith('page.')) {
+                    key = `page.infos.${key}`;
+                }
+                key = key.replace(/^page\./, 'page.material-view.');
+            } else {
+                key = key.replace(/^global\./, '');
+            }
+            return this.$t(key, params, count);
+        },
     },
     render() {
+        const { weight: weightUnit } = config.measurementUnits.materials;
         const {
-            $t: __,
+            __,
             categoryName,
             subCategoryName,
+            isSimpleVatSystem,
             isBillingEnabled,
+            isTaxesEnabled,
             hasPricingData,
             rentalPrice,
             replacementPrice,
+            hasProperties,
             hasMultipleParks,
             parkName,
             taxName,
             degressiveRateName,
             material,
         } = this;
-
         const {
             reference,
             name,
@@ -114,6 +185,8 @@ const MaterialViewInfos = defineComponent({
             available_quantity: availableQuantity,
             is_hidden_on_bill: isHiddenOnBill,
             is_discountable: isDiscountable,
+            origin_country: originCountry,
+            weight,
             properties,
             picture,
             note,
@@ -124,7 +197,7 @@ const MaterialViewInfos = defineComponent({
             <div class="MaterialViewInfos">
                 <div class="MaterialViewInfos__main">
                     <h2 class="MaterialViewInfos__reference">
-                        {__('ref-ref', { reference })}
+                        {__('global.ref-ref', { reference })}
                     </h2>
                     <h3>
                         <Link
@@ -159,14 +232,14 @@ const MaterialViewInfos = defineComponent({
                     <p class="MaterialViewInfos__description">
                         {description}
                     </p>
-                    <h3>{__('quantities')}</h3>
+                    <h3>{__('global.quantities')}</h3>
                     <ul>
                         <li class="MaterialViewInfos__stock-quantity">
-                            {__('stock-items-count', { count: stockQuantity || 0 })}
+                            {__('global.stock-items-count', { count: stockQuantity || 0 })}
                         </li>
                         {outOfOrderQuantity > 0 && (
                             <li class="MaterialViewInfos__out-of-order">
-                                {__('out-of-order-items-count', { count: outOfOrderQuantity })}
+                                {__('global.out-of-order-items-count', { count: outOfOrderQuantity })}
                             </li>
                         )}
                         <li
@@ -174,28 +247,28 @@ const MaterialViewInfos = defineComponent({
                                 'MaterialViewInfos__available-quantity--warning': availableQuantity < stockQuantity,
                             }]}
                         >
-                            {__('available-items-count', { count: availableQuantity }, availableQuantity)}
+                            {__('global.available-items-count', { count: availableQuantity }, availableQuantity)}
                         </li>
                     </ul>
                     {isBillingEnabled && (
                         <div class="MaterialViewInfos__billing">
                             {hasPricingData && (
                                 <Fragment>
-                                    <h3>{__('prices')}</h3>
+                                    <h3>{__('global.prices')}</h3>
                                     {rentalPrice !== null && (
                                         <dl class="MaterialViewInfos__info MaterialViewInfos__info--highlight">
                                             <dt class="MaterialViewInfos__info__label">
-                                                {__('label-colon', { label: __('rental-price') })}
+                                                {__('global.label-colon', { label: __('global.rental-price') })}
                                             </dt>
                                             <dd class="MaterialViewInfos__info__value">
-                                                {__('value-per-day', { value: rentalPrice })}
+                                                {__('global.value-per-day', { value: rentalPrice })}
                                             </dd>
                                         </dl>
                                     )}
                                     {replacementPrice !== null && (
                                         <dl class="MaterialViewInfos__info">
                                             <dt class="MaterialViewInfos__info__label">
-                                                {__('label-colon', { label: __('replacement-price') })}
+                                                {__('global.label-colon', { label: __('global.replacement-price') })}
                                             </dt>
                                             <dd class="MaterialViewInfos__info__value">
                                                 {replacementPrice}
@@ -204,39 +277,63 @@ const MaterialViewInfos = defineComponent({
                                     )}
                                 </Fragment>
                             )}
-                            <h3>{__('billing')}</h3>
+                            <h3>{__('global.billing')}</h3>
                             <dl class="MaterialViewInfos__info">
                                 <dt class="MaterialViewInfos__info__label">
-                                    {__('label-colon', { label: __('page.material-view.infos.tax') })}
+                                    {__('global.label-colon', { label: __('degressive-rate.label') })}
                                 </dt>
                                 <dd class="MaterialViewInfos__info__value">
-                                    {taxName ?? __('page.material-view.infos.no-tax')}
+                                    {degressiveRateName ?? __('degressive-rate.empty')}
                                 </dd>
                             </dl>
-                            <dl class="MaterialViewInfos__info">
-                                <dt class="MaterialViewInfos__info__label">
-                                    {__('label-colon', { label: __('page.material-view.infos.degressive-rate') })}
-                                </dt>
-                                <dd class="MaterialViewInfos__info__value">
-                                    {degressiveRateName ?? __('page.material-view.infos.no-degressive-rate')}
-                                </dd>
-                            </dl>
+                            {isTaxesEnabled && (
+                                <dl class="MaterialViewInfos__info">
+                                    <dt class="MaterialViewInfos__info__label">
+                                        {__('global.label-colon', {
+                                            label: __(`tax.label.${isSimpleVatSystem ? 'simple' : 'default'}`),
+                                        })}
+                                    </dt>
+                                    <dd class="MaterialViewInfos__info__value">
+                                        {taxName ?? __(`tax.empty.${isSimpleVatSystem ? 'simple' : 'default'}`)}
+                                    </dd>
+                                </dl>
+                            )}
                             {isHiddenOnBill && (
-                                <p>{__('material-not-displayed-on-invoice')}</p>
+                                <p>{__('global.material-not-displayed-on-invoice')}</p>
                             )}
                             {isDiscountable && (
-                                <p>{__('material-is-discountable')}</p>
+                                <p>{__('global.material-is-discountable')}</p>
                             )}
                         </div>
                     )}
-                    {properties.length > 0 && (
+                    {hasProperties && (
                         <div class="MaterialViewInfos__properties">
-                            <h3>{__('properties')}</h3>
+                            <h3>{__('global.properties')}</h3>
                             <dl class="MaterialViewInfos__properties__list">
+                                {weight !== null && (
+                                    <div class="MaterialViewInfos__properties__item">
+                                        <dt class="MaterialViewInfos__properties__item__name">
+                                            {__('global.label-colon', { label: __('global.weight') })}
+                                        </dt>
+                                        <dd class="MaterialViewInfos__properties__item__value">
+                                            {formatNumber(weight)}&nbsp;{weightUnit}
+                                        </dd>
+                                    </div>
+                                )}
+                                {originCountry !== null && (
+                                    <div class="MaterialViewInfos__properties__item">
+                                        <dt class="MaterialViewInfos__properties__item__name">
+                                            {__('global.label-colon', { label: __('global.origin-country') })}
+                                        </dt>
+                                        <dd class="MaterialViewInfos__properties__item__value">
+                                            {originCountry.name}
+                                        </dd>
+                                    </div>
+                                )}
                                 {properties.map((property: PropertyWithValue) => (
                                     <div key={property.id} class="MaterialViewInfos__properties__item">
                                         <dt class="MaterialViewInfos__properties__item__name">
-                                            {__('label-colon', { label: property.name })}
+                                            {__('global.label-colon', { label: property.name })}
                                         </dt>
                                         <dd class="MaterialViewInfos__properties__item__value">
                                             {formatCustomFieldValue(__, property)}
@@ -248,7 +345,7 @@ const MaterialViewInfos = defineComponent({
                     )}
                     {!!note && (
                         <div class="MaterialViewInfos__notes">
-                            <h3>{__('notes')}</h3>
+                            <h3>{__('global.notes')}</h3>
                             <p class="MaterialViewInfos__notes">{note}</p>
                         </div>
                     )}
@@ -259,7 +356,7 @@ const MaterialViewInfos = defineComponent({
                             <a
                                 href={picture}
                                 target="blank"
-                                title={__('page.material-view.infos.click-to-open-image')}
+                                title={__('click-to-open-image')}
                                 class="MaterialViewInfos__picture__link"
                             >
                                 <img
@@ -273,29 +370,31 @@ const MaterialViewInfos = defineComponent({
                     <section class="MaterialViewInfos__extras">
                         <div class="MaterialViewInfos__extra MaterialViewInfos__extra--categories">
                             <p class="MaterialViewInfos__extra__item">
-                                {__('category')}: <strong>{categoryName}</strong>
+                                {__('global.category')}: <strong>{categoryName}</strong>
                             </p>
                             {!!subCategoryName && (
                                 <p class="MaterialViewInfos__extra__item">
-                                    {__('sub-category')}: <strong>{subCategoryName}</strong>
+                                    {__('global.sub-category')}: <strong>{subCategoryName}</strong>
                                 </p>
                             )}
                         </div>
-                        {hasMultipleParks && (
+                        {(hasMultipleParks && parkName !== null) && (
                             <div class="MaterialViewInfos__extra MaterialViewInfos__extra--park">
-                                <p class="MaterialViewInfos__extra__item">
-                                    {__('page.material-view.infos.park-name', { name: parkName })}
-                                </p>
+                                {(hasMultipleParks && parkName !== null) && (
+                                    <p class="MaterialViewInfos__extra__item">
+                                        {__('park-name', { name: parkName })}
+                                    </p>
+                                )}
                             </div>
                         )}
                         {!!(tags && tags.length > 0) && <TagsList tags={tags} />}
                         <div class="MaterialViewInfos__extra MaterialViewInfos__extra--dates">
                             <p class="MaterialViewInfos__extra__item">
-                                {__('created-at', { date: material.created_at.toReadable() })}
+                                {__('global.created-at', { date: material.created_at.toReadable() })}
                             </p>
                             {!!material.updated_at && (
                                 <p class="MaterialViewInfos__extra__item">
-                                    {__('updated-at', { date: material.updated_at.toReadable() })}
+                                    {__('global.updated-at', { date: material.updated_at.toReadable() })}
                                 </p>
                             )}
                         </div>

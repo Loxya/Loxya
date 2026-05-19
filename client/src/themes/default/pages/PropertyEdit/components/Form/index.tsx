@@ -4,6 +4,7 @@ import { defineComponent } from 'vue';
 import { PropertyEntity } from '@/stores/api/properties';
 import { CustomFieldType } from '@/stores/api/@types';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
@@ -11,11 +12,6 @@ import type { ComponentRef, PropType } from 'vue';
 import type { Option, Options } from '@/utils/formatOptions';
 import type { Category } from '@/stores/api/categories';
 import type { PropertyDetails, PropertyCreate, PropertyEdit } from '@/stores/api/properties';
-
-type EntityOption = {
-    label: string,
-    value: PropertyEntity,
-};
 
 enum PeriodPrecision {
     FREE = 'free',
@@ -65,12 +61,13 @@ const getDefaults = (savedData: PropertyDetails | null): EditedData => {
         full_days: null,
         options: null,
         is_totalisable: false,
+        is_searchable: false,
     };
 
     return {
         ...BASE_DEFAULTS,
         ...pick(savedData ?? {}, Object.keys(BASE_DEFAULTS)),
-        entities: [...(savedData?.entities ?? [PropertyEntity.MATERIAL])],
+        entities: [PropertyEntity.MATERIAL],
         categories: (savedData?.categories ?? []).map(({ id }: Category) => id),
         options: savedData?.type === CustomFieldType.LIST
             ? [...(savedData?.options ?? [])]
@@ -85,7 +82,7 @@ const getDefaults = (savedData: PropertyDetails | null): EditedData => {
 const PropertyEditForm = defineComponent({
     name: 'PropertyEditForm',
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         savedData: {
@@ -120,17 +117,6 @@ const PropertyEditForm = defineComponent({
     computed: {
         isNew(): boolean {
             return this.savedData === null;
-        },
-
-        entitiesOptions(): EntityOption[] {
-            const { __ } = this;
-
-            return [
-                {
-                    label: __('entities.material'),
-                    value: PropertyEntity.MATERIAL,
-                },
-            ];
         },
 
         categoriesOptions(): Options<Category> {
@@ -202,20 +188,6 @@ const PropertyEditForm = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleToggleEntity(entity: PropertyEntity) {
-            const { entities } = this.data;
-
-            const foundIndex = entities.indexOf(entity);
-            if (foundIndex === -1) {
-                entities.push(entity);
-                return;
-            }
-
-            if (entities.length > 1) {
-                entities.splice(foundIndex, 1);
-            }
-        },
-
         handleToggleCategory(categoryId: Category['id']) {
             const { categories } = this.data;
 
@@ -244,7 +216,12 @@ const PropertyEditForm = defineComponent({
             e.preventDefault();
 
             const { isNew, data: rawData } = this;
-            const { name, type, entities, categories } = rawData;
+            const {
+                name,
+                type,
+                entities,
+                categories,
+            } = rawData;
 
             const data: PropertyCreate | PropertyEdit = (() => {
                 const base: PropertyEdit = {
@@ -311,8 +288,6 @@ const PropertyEditForm = defineComponent({
             errors,
             isNew,
             periodPrecision,
-            entitiesOptions,
-            handleToggleEntity,
             typesOptions,
             isSaving,
             categoriesOptions,
@@ -417,31 +392,6 @@ const PropertyEditForm = defineComponent({
                         autocomplete="off"
                         required
                     />
-                    <FormField
-                        type="custom"
-                        label={__('define-entities')}
-                        class="PropertyEditForm__entities"
-                        error={errors?.entities}
-                        help={__('define-entities-help')}
-                        required
-                    >
-                        <div class="PropertyEditForm__entities__choices">
-                            {entitiesOptions.map(({ label, value: entity }: EntityOption) => {
-                                const isSelected = data.entities.includes(entity);
-                                return (
-                                    <span
-                                        key={entity}
-                                        onClick={() => { handleToggleEntity(entity); }}
-                                        class={['PropertyEditForm__entities__item', {
-                                            'PropertyEditForm__entities__item--selected': isSelected,
-                                        }]}
-                                    >
-                                        {label}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </FormField>
                     <FormField
                         type="select"
                         label={__('type')}

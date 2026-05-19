@@ -8,7 +8,7 @@ final class CreateReservations extends AbstractMigration
     public function up(): void
     {
         //
-        // - Approbation des demandes de réservation
+        // - Approbation des demandes
         //
 
         $material_approvers = $this->table('material_approvers', [

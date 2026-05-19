@@ -51,7 +51,7 @@ final class EventPosition extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkEventId($value)
+    public function checkEventId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -70,7 +70,7 @@ final class EventPosition extends BaseModel implements Serializable
             : true;
     }
 
-    public function checkRoleId($value)
+    public function checkRoleId(mixed $value)
     {
         V::notEmpty()->intVal()->check($value);
 

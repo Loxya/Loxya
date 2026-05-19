@@ -1,5 +1,9 @@
+import qs from 'qs';
 import axios from 'axios';
+import Day from '@/utils/day';
+import omit from 'lodash/omit';
 import invariant from 'invariant';
+import Period from '@/utils/period';
 import globalConfig from '@/globals/config';
 import interceptors from './_interceptors';
 
@@ -63,8 +67,23 @@ class Requester {
 
         // - Création de l'instance.
         const defaultConfig: RequestConfig = {
-            baseURL: globalConfig.api.url,
-            headers: globalConfig.api.headers,
+            baseURL: `${globalConfig.baseUrl ?? ''}/api`,
+            headers: { Accept: 'application/json' },
+            paramsSerializer: (params: Record<string, any>) => (
+                qs.stringify(params, {
+                    encodeValuesOnly: true,
+                    arrayFormat: 'brackets',
+                    filter: (prefix: string, value: unknown) => {
+                        if (value instanceof Period) {
+                            return omit(value.toSerialized(), 'isFullDays');
+                        }
+                        if (value instanceof Day) {
+                            return value.toString();
+                        }
+                        return value;
+                    },
+                })
+            ),
         };
         this._instance = axios.create({ ...defaultConfig, ...config });
 

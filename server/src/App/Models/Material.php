@@ -20,16 +20,18 @@ use Loxya\Config\Config;
 use Loxya\Config\Enums\BillingMode;
 use Loxya\Contracts\PeriodInterface;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
+use Loxya\Models\Casts\AsCountry;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Models\Traits\TransientAttributes;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
 use Loxya\Support\Database\QueryAggregator;
 use Loxya\Support\Period;
 use Loxya\Support\Str;
 use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 use Psr\Http\Message\UploadedFileInterface;
 use Respect\Validation\Rules as Rule;
@@ -57,6 +59,8 @@ use Respect\Validation\Rules as Rule;
  * @property int|null $tax_id
  * @property-read Tax|null $tax
  * @property Decimal|null $replacement_price
+ * @property Decimal|null $weight
+ * @property-read Country|null $origin_country
  * @property int $stock_quantity
  * @property int $out_of_order_quantity
  * @property int $available_quantity
@@ -117,6 +121,8 @@ final class Material extends BaseModel implements Serializable
         'stock_quantity' => null,
         'out_of_order_quantity' => null,
         'replacement_price' => null,
+        'weight' => null,
+        'origin_country' => null,
         'is_hidden_on_bill' => false,
         'is_discountable' => true,
         'picture' => null,
@@ -129,8 +135,9 @@ final class Material extends BaseModel implements Serializable
 
         $this->validation = fn () => [
             'name' => V::notEmpty()->length(2, 191),
-            'reference' => V::custom([$this, 'checkReference']),
             'picture' => V::custom([$this, 'checkPicture']),
+            'reference' => V::custom([$this, 'checkReference']),
+            'description' => V::nullable(V::stringType()),
             'park_id' => V::custom([$this, 'checkParkId']),
             'category_id' => V::custom([$this, 'checkCategoryId']),
             'sub_category_id' => V::custom([$this, 'checkSubCategoryId']),
@@ -140,6 +147,8 @@ final class Material extends BaseModel implements Serializable
             'stock_quantity' => V::custom([$this, 'checkStockQuantity']),
             'out_of_order_quantity' => V::custom([$this, 'checkOutOfOrderQuantity']),
             'replacement_price' => V::custom([$this, 'checkReplacementPrice']),
+            'weight' => V::custom([$this, 'checkWeight']),
+            'origin_country' => V::nullable(V::countryCode()),
             'is_hidden_on_bill' => V::nullable(V::boolType()),
             'is_discountable' => V::nullable(V::boolType()),
         ];
@@ -151,7 +160,7 @@ final class Material extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkReference($value)
+    public function checkReference(mixed $value)
     {
         V::notEmpty()
             ->alnum('.,-+/_ ')
@@ -202,14 +211,14 @@ final class Material extends BaseModel implements Serializable
         }
 
         $pictureType = $picture->getClientMediaType();
-        if (!in_array($pictureType, Config::get('authorizedImageTypes'), true)) {
+        if (!in_array($pictureType, Config::ALLOWED_IMAGE_TYPES, true)) {
             return 'file-type-not-allowed';
         }
 
         return true;
     }
 
-    public function checkParkId($value)
+    public function checkParkId(mixed $value)
     {
         V::notEmpty()->intVal()->check($value);
 
@@ -223,13 +232,13 @@ final class Material extends BaseModel implements Serializable
             : true;
     }
 
-    public function checkCategoryId($value)
+    public function checkCategoryId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
         return $value === null || Category::includes($value);
     }
 
-    public function checkSubCategoryId($value)
+    public function checkSubCategoryId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
         return $value === null || SubCategory::includes($value);
@@ -245,10 +254,10 @@ final class Material extends BaseModel implements Serializable
         return V::nullable(V::intVal()->max(100_000));
     }
 
-    public function checkRentalPrice($value)
+    public function checkRentalPrice(mixed $value)
     {
-        $billingMode = Config::get('billingMode');
-        if ($billingMode === BillingMode::NONE) {
+        $isBillingEnabled = Config::get('billingMode') !== BillingMode::NONE;
+        if (!$isBillingEnabled) {
             return V::nullType();
         }
 
@@ -263,7 +272,7 @@ final class Material extends BaseModel implements Serializable
         return $isValid ?: 'invalid-positive-amount';
     }
 
-    public function checkReplacementPrice($value)
+    public function checkReplacementPrice(mixed $value)
     {
         if ($value === null) {
             return true;
@@ -280,14 +289,41 @@ final class Material extends BaseModel implements Serializable
         return $isValid ?: 'invalid-positive-amount';
     }
 
-    public function checkDegressiveRateId($value)
+    public function checkWeight(mixed $value)
     {
+        if ($value === null) {
+            return true;
+        }
+
+        V::floatVal()->check($value);
+        $value = Decimal::of($value);
+
+        $isValid = (
+            $value->isGreaterThanOrEqualTo(0) &&
+            $value->isLessThan(10_000_000)
+        );
+        return $isValid ?: 'invalid-positive-number';
+    }
+
+    public function checkDegressiveRateId(mixed $value)
+    {
+        $isBillingEnabled = Config::get('billingMode') !== BillingMode::NONE;
+        if (!$isBillingEnabled) {
+            return V::nullType();
+        }
+
         V::nullable(V::intVal())->check($value);
         return $value === null || DegressiveRate::includes($value);
     }
 
-    public function checkTaxId($value)
+    public function checkTaxId(mixed $value)
     {
+        $isTaxesEnabled = !Config::get('isVatExempted', false);
+        $isBillingEnabled = Config::get('billingMode') !== BillingMode::NONE;
+        if (!$isBillingEnabled || !$isTaxesEnabled) {
+            return V::nullType();
+        }
+
         V::nullable(V::intVal())->check($value);
         return $value === null || Tax::includes($value);
     }
@@ -349,6 +385,11 @@ final class Material extends BaseModel implements Serializable
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'origin_country');
+    }
+
     // ------------------------------------------------------
     // -
     // -    Mutators
@@ -370,13 +411,15 @@ final class Material extends BaseModel implements Serializable
         'replacement_price' => AsDecimal::class,
         'is_hidden_on_bill' => 'boolean',
         'is_discountable' => 'boolean',
+        'weight' => AsDecimal::class,
+        'origin_country' => AsCountry::class,
         'note' => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
         'deleted_at' => 'immutable_datetime',
     ];
 
-    public function getPictureAttribute($value): UploadedFileInterface|string|null
+    public function getPictureAttribute(mixed $value): UploadedFileInterface|string|null
     {
         if (!$value || $value instanceof UploadedFileInterface) {
             return $value;
@@ -484,6 +527,7 @@ final class Material extends BaseModel implements Serializable
                 $materialProperty->property->value = $materialProperty->value;
                 return $materialProperty->property->append(['value']);
             })
+            ->filter(static fn (Property $property) => $property->value !== null)
             ->sortBy('name')
             ->values();
     }
@@ -599,6 +643,8 @@ final class Material extends BaseModel implements Serializable
         'stock_quantity',
         'out_of_order_quantity',
         'replacement_price',
+        'weight',
+        'origin_country',
         'is_hidden_on_bill',
         'is_discountable',
         'picture',
@@ -829,7 +875,7 @@ final class Material extends BaseModel implements Serializable
         }
 
         if (!empty($validationErrors)) {
-            throw new ValidationException($validationErrors);
+            throw new ValidationsException($validationErrors);
         }
 
         return dbTransaction(function () use ($tags, $properties) {
@@ -878,7 +924,7 @@ final class Material extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
         'name',
         'reference',
         'rental_price',
@@ -942,6 +988,8 @@ final class Material extends BaseModel implements Serializable
 
     public function scopeCustomOrderBy(Builder $query, string $column, string $direction = 'asc'): Builder
     {
+        Assert::inArray($direction, ['asc', 'desc'], "Invalid direction.");
+
         if (!in_array($column, ['stock_quantity', 'out_of_order_quantity'], true)) {
             return parent::scopeCustomOrderBy($query, $column, $direction);
         }
@@ -975,6 +1023,21 @@ final class Material extends BaseModel implements Serializable
                 ],
             ],
         ]);
+
+        // - Formats qui exposent les prix contextualisés
+        $contextualFormats = [
+            self::SERIALIZE_WITH_AVAILABILITY,
+            self::SERIALIZE_WITH_CONTEXT,
+            self::SERIALIZE_WITH_CONTEXT_EXCERPT,
+            self::SERIALIZE_PUBLIC,
+        ];
+        if (in_array($format, $contextualFormats, true)) {
+            $query->with([
+                'degressiveRate' => [
+                    'tiers',
+                ],
+            ]);
+        }
 
         return $query;
     }
@@ -1056,7 +1119,7 @@ final class Material extends BaseModel implements Serializable
                         ->chunkMap($otherBorrowingProcessor, 500),
                 );
 
-            /** @var CoreCollection<array-key, array> $otherBorrowings */
+                /** @var CoreCollection<array-key, array> $otherBorrowings */
             $otherBorrowings = $otherBorrowings
                 ->sortBy(static fn ($otherBorrowing) => (
                     $otherBorrowing['period']->getStartDate()

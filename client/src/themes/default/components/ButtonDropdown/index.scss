@@ -1,32 +1,30 @@
 @use '~@/themes/default/components/Button/variables' as button;
 @use '~@/themes/default/style/globals';
+@use 'sass:map';
 @use 'sass:color';
 
 .ButtonDropdown {
-    $block: &;
-
-    position: relative;
     display: flex;
 
     //
     // - Bouton principal
     //
 
-    &__main-button {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-    }
+    &__button {
+        display: flex;
+        width: 100%;
 
-    //
-    // - Bouton toggle
-    //
+        &__main {
+            flex: 1;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
 
-    &__toggle {
-        // - Important, pour surcharger la définition de .Button + .Button
-        // stylelint-disable-next-line declaration-no-important
-        margin-left: -(button.$border-width) !important;
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
+        &__toggle {
+            margin-left: -(button.$border-width) !important;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
     }
 
     //
@@ -35,19 +33,16 @@
 
     &__menu {
         position: absolute;
-        z-index: 1;
-        top: 100%;
-        right: 0;
+        z-index: map.get(globals.$layers, 'dropdowns');
+        top: 0;
+        left: 0;
         display: flex;
         flex-direction: column;
-        margin: 2px 0 0;
+        margin: 0;
         padding: 0;
         background: globals.$dropdown-background-color;
         gap: 2px;
         box-shadow: 0 4px 9px #1b1b1b;
-        transform-origin: 50% 0%;
-        transform: scaleY(0);
-        transition: transform 150ms ease-in-out;
         white-space: nowrap;
 
         &__item {
@@ -72,16 +67,6 @@
             border-left: 1px solid globals.$divider-color;
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
-        }
-    }
-
-    //
-    // - Open
-    //
-
-    &--open {
-        #{$block}__menu {
-            transform: none;
         }
     }
 }

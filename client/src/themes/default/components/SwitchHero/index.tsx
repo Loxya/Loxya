@@ -1,7 +1,7 @@
 import './index.scss';
 import { z } from '@/utils/validation';
 import { defineComponent } from 'vue';
-import SwitchHeroItem, { SwitchHeroSize } from './Item';
+import SwitchHeroItem, { Size } from './Item';
 
 import type { SchemaInfer } from '@/utils/validation';
 import type { PropType } from 'vue';
@@ -35,11 +35,11 @@ type Props<T extends Choices = Choices> = {
     value: T[number]['value'],
 
     /**
-     * La taille des boutons ({@see {@link SwitchHeroSize}}).
+     * La taille des boutons ({@see {@link Size}}).
      *
-     * @default SwitchHeroSize.DEFAULT
+     * @default Size.DEFAULT
      */
-    size?: SwitchHeroSize,
+    size?: Size | `${Size}`,
 
     /**
      * Fonction appelée lorsque la valeur du switch change.
@@ -74,7 +74,7 @@ const SwitchHero = defineComponent({
         },
         size: {
             type: String as PropType<Required<Props>['size']>,
-            default: SwitchHeroSize.DEFAULT,
+            default: Size.DEFAULT,
         },
         // eslint-disable-next-line vue/no-unused-properties
         onInput: {
@@ -124,6 +124,6 @@ const SwitchHero = defineComponent({
     },
 });
 
-export { SwitchHeroSize };
+export { Size as SwitchHeroSize };
 
 export default SwitchHero;

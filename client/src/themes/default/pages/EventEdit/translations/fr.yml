@@ -149,5 +149,18 @@ steps:
     billing:
         title: Facturation
 
+        warnings:
+            empty-billing: |-
+                La facturation ne contient actuellement aucune ligne affichée.
+                Ajoutez du matériel ou des lignes additionnelles pour pouvoir générer des devis et factures par la suite.
+            beneficiary-not-invoiceable:
+                message:
+                    "Le bénéficiaire «\_{name}\_» a des données de facturation incomplètes ou invalides.\n
+                    Pour pouvoir générer un devis ou une facture, il faudra compléter ou corriger ses données."
+                action: Modifier sa fiche
+
     summary:
         title: Récapitulatif
+        departure-inventory-unavailable-help: >-
+            L'événement contient des quantités en excédent, l'inventaire de départ ne peut
+            pas être effectué tant que celles-ci n'auront pas été corrigées.

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as CoreCollection;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
 use Loxya\Support\Validation\Rules\SchemaStrict;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 use Respect\Validation\Rules as Rule;
 
@@ -51,7 +51,7 @@ final class DegressiveRate extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
         V::notEmpty()
             ->length(1, 30)
@@ -147,8 +147,8 @@ final class DegressiveRate extends BaseModel implements Serializable
 
                 try {
                     $this->syncTiers($data['tiers']);
-                } catch (ValidationException $e) {
-                    throw new ValidationException([
+                } catch (ValidationsException $e) {
+                    throw new ValidationsException([
                         'tiers' => $e->getValidationErrors(),
                     ]);
                 }
@@ -190,7 +190,7 @@ final class DegressiveRate extends BaseModel implements Serializable
                     ->all();
 
                 if (!empty($errors)) {
-                    throw new ValidationException($errors);
+                    throw new ValidationsException($errors);
                 }
 
                 $this->tiers()->saveMany($tiers);

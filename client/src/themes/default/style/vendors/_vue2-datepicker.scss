@@ -139,9 +139,6 @@
 
             &.in-range,
             &.hover-in-range {
-                // - `!important` pour désactiver le `border-radius` pour les
-                //   éléments à l'intérieur des périodes.
-                // stylelint-disable-next-line declaration-no-important
                 border-radius: 0 !important;
             }
 
@@ -180,11 +177,8 @@
     }
 
     &-datepicker-content {
-        // - Désactive le style ajouté par défaut quand une sidebar est affichée.
-        /* stylelint-disable declaration-no-important */
         margin: 0 !important;
         border: 0 !important;
-        /* stylelint-enable declaration-no-important */
     }
 
     &-datepicker-header,

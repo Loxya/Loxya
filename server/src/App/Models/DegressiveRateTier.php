@@ -48,7 +48,7 @@ final class DegressiveRateTier extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkDegressiveRateId($value)
+    public function checkDegressiveRateId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -60,7 +60,7 @@ final class DegressiveRateTier extends BaseModel implements Serializable
         return DegressiveRate::includes($value);
     }
 
-    public function checkFromDay($value)
+    public function checkFromDay(mixed $value)
     {
         V::intVal()->min(1)->check($value);
 
@@ -80,7 +80,7 @@ final class DegressiveRateTier extends BaseModel implements Serializable
         return !$alreadyExists ?: 'degressive-rate-day-already-exists';
     }
 
-    public function checkValue($value)
+    public function checkValue(mixed $value)
     {
         V::floatVal()->check($value);
         $value = Decimal::of($value);

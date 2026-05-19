@@ -80,7 +80,7 @@ const GlobalSettingsSubPage = defineComponent({
                         </nav>
                     )}
                 </header>
-                <div class="GlobalSettingsSubPage__body__content">
+                <div class="GlobalSettingsSubPage__body">
                     {hasValidationError && (
                         <p class="GlobalSettingsSubPage__body__error">
                             <IconMessage

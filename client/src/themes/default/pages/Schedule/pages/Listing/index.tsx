@@ -1,19 +1,18 @@
 import './index.scss';
 import Queue from 'p-queue';
-import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
-import createDeferred from 'p-defer';
 import throttle from 'lodash/throttle';
+import isTruthy from '@/utils/isTruthy';
 import upperFirst from 'lodash/upperFirst';
 import DateTime from '@/utils/datetime';
+import { Group } from '@/stores/api/groups';
 import config, { ReturnPolicy } from '@/globals/config';
 import mergeDifference from '@/utils/mergeDifference';
 import { defineComponent, markRaw } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import { HttpCode, RequestError } from '@/globals/requester';
-import showModal from '@/utils/showModal';
 import getBookingIcon from '@/utils/getBookingIcon';
 import Fragment from '@/components/Fragment';
 import Icon from '@/themes/default/components/Icon';
@@ -23,12 +22,10 @@ import Page from '@/themes/default/components/Page';
 import Button from '@/themes/default/components/Button';
 import { BookingsViewMode } from '@/stores/api/users';
 import { PeriodReadableFormat } from '@/utils/period';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import ViewModeSwitch from '../../components/ViewModeSwitch';
 import FiltersPanel from './components/Filters';
-import {
-    ServerTable,
-    getLegacySavedSearch,
-} from '@/themes/default/components/Table';
+import { ServerTable } from '@/themes/default/components/Table';
 import {
     persistFilters,
     getPersistedFilters,
@@ -42,13 +39,13 @@ import EventDetails from '@/themes/default/modals/EventDetails';
 
 import type Period from '@/utils/period';
 import type { DebouncedMethod } from 'lodash';
-import type { ComponentRef, CreateElement, Raw } from 'vue';
+import type { CreateElement, Raw } from 'vue';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 import type { PaginatedData, PaginationParams, SortableParams } from '@/stores/api/@types';
-import type { Columns } from '@/themes/default/components/Table/Server';
+import type { Columns, ServerTableRef } from '@/themes/default/components/Table/Server';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
 import type { Filters, StateFilter } from './components/Filters';
 import type { Session } from '@/stores/api/session';
-import type { DeferredPromise } from 'p-defer';
 import type {
     BookingExcerpt,
     BookingSummary,
@@ -66,14 +63,17 @@ type InstanceProperties = {
 
 type LazyBooking<F extends boolean = boolean> = (
     F extends true
-        ? { isComplete: true, booking: BookingSummary }
-        : { isComplete: false, booking: BookingExcerpt }
+        ? { key: string, isComplete: true, booking: BookingSummary }
+        : { key: string, isComplete: false, booking: BookingExcerpt }
 );
 
 type Data = {
     filters: Filters,
-    ready: Raw<DeferredPromise<undefined>>,
+    appliedFilters: Filters,
+    ready: Raw<PromiseWithResolvers<void>>,
     isLoading: boolean,
+    isFetched: boolean,
+    isEmpty: boolean,
     hasCriticalError: boolean,
     now: Raw<DateTime>,
 };
@@ -115,15 +115,6 @@ const ScheduleListing = defineComponent({
                 const savedFilters = getPersistedFilters();
                 if (savedFilters !== null) {
                     Object.assign(filters, savedFilters);
-                } else {
-                    // - Ancienne sauvegarde éventuelle, dans le component `<Table />`.
-                    const savedSearchLegacy = this.$options.name
-                        ? getLegacySavedSearch(this.$options.name)
-                        : null;
-
-                    if (savedSearchLegacy !== null) {
-                        Object.assign(filters, { search: [savedSearchLegacy] });
-                    }
                 }
             }
 
@@ -133,17 +124,28 @@ const ScheduleListing = defineComponent({
         }
 
         return {
-            ready: markRaw(createDeferred()),
+            filters,
+            appliedFilters: { ...filters },
+            ready: markRaw(Promise.withResolvers<void>()),
             isLoading: false,
+            isFetched: false,
+            isEmpty: false,
             hasCriticalError: false,
             now: markRaw(DateTime.now()),
-            filters,
         };
     },
     computed: {
         shouldPersistSearch(): boolean {
             const session = this.$store.state.auth.user as Session;
             return !session.disable_search_persistence;
+        },
+
+        isTeamMember(): boolean {
+            return this.$store.getters['auth/is']([
+                Group.ADMINISTRATION,
+                Group.SUPERVISION,
+                Group.OPERATION,
+            ]);
         },
 
         hasMultipleParks(): boolean {
@@ -155,7 +157,25 @@ const ScheduleListing = defineComponent({
             return __('page.schedule.listing.title');
         },
 
-        columns(): Columns<LazyBooking> {
+        hasActiveFilters(): boolean {
+            const { appliedFilters } = this;
+            return (
+                appliedFilters.search.length > 0 ||
+                appliedFilters.period !== null ||
+                appliedFilters.park !== null ||
+                appliedFilters.category !== null ||
+                appliedFilters.states.length > 0
+            );
+        },
+
+        hasContent(): boolean {
+            return (
+                this.isFetched &&
+                (!this.isEmpty || this.hasActiveFilters)
+            );
+        },
+
+        columns(): Columns<LazyBooking, 'key'> {
             const { $t: __, now, hasMultipleParks, handleOpen } = this;
             const getCategoryName = this.$store.getters['categories/categoryName'];
             const getParkName = this.$store.getters['parks/getName'];
@@ -414,8 +434,6 @@ const ScheduleListing = defineComponent({
         },
     },
     created() {
-        this.$store.dispatch('parks/fetch');
-
         // - Binding.
         this.fetch = this.fetch.bind(this);
 
@@ -456,27 +474,21 @@ const ScheduleListing = defineComponent({
         // ------------------------------------------------------
 
         async handleOpen({ booking }: LazyBooking) {
-            const modalComponents = {
-                [BookingEntity.EVENT]: EventDetails,
-            };
-            if (!(booking.entity in modalComponents)) {
-                throw new Error('Unsupported booking type.');
-            }
-
             let shouldRefetch = false;
-            const modalComponent = modalComponents[booking.entity];
-            await showModal(this.$modal, modalComponent, {
-                id: booking.id,
-                onUpdated: () => {
-                    shouldRefetch = true;
-                },
-                onDuplicated() {
-                    shouldRefetch = true;
-                },
-                onDeleted: () => {
-                    shouldRefetch = true;
-                },
-            });
+            switch (booking.entity) {
+                case BookingEntity.EVENT: {
+                    await this.$modal.show(EventDetails, {
+                        id: booking.id,
+                        onUpdated: () => { shouldRefetch = true; },
+                        onDuplicated() { shouldRefetch = true; },
+                        onDeleted: () => { shouldRefetch = true; },
+                    });
+                    break;
+                }
+                default: {
+                    throw new Error('Unsupported booking type.');
+                }
+            }
 
             if (shouldRefetch) {
                 this.refreshTable();
@@ -524,7 +536,7 @@ const ScheduleListing = defineComponent({
         },
 
         handleConfigureColumns() {
-            const $table = this.$refs.table as ComponentRef<typeof ServerTable>;
+            const $table = this.$refs.table as ServerTableRef;
             $table?.showColumnsSelector();
         },
 
@@ -544,15 +556,14 @@ const ScheduleListing = defineComponent({
         async fetch(pagination: PaginationParams & SortableParams): Promise<PaginatedData<LazyBooking[]> | undefined> {
             await this.ready.promise;
 
-            pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
             this.isLoading = true;
 
             const { filters: rawFilters } = this;
+            this.appliedFilters = { ...rawFilters };
+
             const filters: BookingListFilters = omit(rawFilters, ['states']);
             rawFilters.states.forEach((state: StateFilter) => {
-                if (rawFilters.states.includes(state)) {
-                    filters[state] = true;
-                }
+                filters[state] = true;
             });
 
             // - Vide la file d'attente des requêtes avant de la re-peupler.
@@ -566,10 +577,17 @@ const ScheduleListing = defineComponent({
                 });
 
                 const lazyData: LazyBooking[] = data.data.map(
-                    (booking: BookingExcerpt) => ({ isComplete: false, booking }),
+                    (booking: BookingExcerpt) => ({
+                        key: `${booking.entity}-${booking.id}`,
+                        isComplete: false,
+                        booking,
+                    }),
                 );
 
                 this.fetchSummaries(lazyData);
+
+                this.isFetched = true;
+                this.isEmpty = data.pagination.total.items <= 0;
 
                 return { data: lazyData, pagination: data.pagination };
             } catch (error) {
@@ -600,11 +618,14 @@ const ScheduleListing = defineComponent({
                     const index = data.findIndex(({ booking: { entity, id } }: LazyBooking) => (
                         entity === booking.entity && id === booking.id
                     ));
-                    if (index === undefined) {
+                    if (index === -1) {
                         return;
                     }
 
-                    this.$set(data, index, { isComplete: true, booking: finalBooking });
+                    this.$set(data, index, {
+                        isComplete: true,
+                        booking: finalBooking,
+                    });
                 });
 
             await this.fetchSummariesQueue?.addAll(promises);
@@ -613,7 +634,7 @@ const ScheduleListing = defineComponent({
         refreshTable() {
             this.refreshTableDebounced?.cancel();
 
-            (this.$refs.table as ComponentRef<typeof ServerTable>)?.refresh();
+            (this.$refs.table as ServerTableRef)?.refresh();
         },
     },
     render() {
@@ -621,7 +642,10 @@ const ScheduleListing = defineComponent({
             $t: __,
             title,
             isLoading,
+            hasContent,
+            isTeamMember,
             hasCriticalError,
+            hasActiveFilters,
             filters,
             $options,
             columns,
@@ -673,6 +697,21 @@ const ScheduleListing = defineComponent({
             }];
         };
 
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage = (
+            hasActiveFilters
+                ? { variant: EmptyMessageVariant.NO_RESULTS }
+                : {
+                    text: __('page.schedule.listing.empty'),
+                    action: !isTeamMember ? undefined : {
+                        type: 'primary',
+                        icon: 'plus',
+                        label: __('page.schedule.listing.add-event'),
+                        target: { name: 'add-event' },
+                    },
+                }
+        );
+
         return (
             <Page
                 name="schedule-listing"
@@ -680,40 +719,51 @@ const ScheduleListing = defineComponent({
                 loading={isLoading}
                 actions={[
                     <ViewModeSwitch mode={BookingsViewMode.LISTING} />,
-                    <Button type="add" to={{ name: 'add-event' }} collapsible>
-                        {__('page.schedule.listing.add-event')}
-                    </Button>,
-                    <Dropdown>
-                        <Button icon="table" onClick={handleConfigureColumns}>
-                            {__('configure-columns')}
+                    isTeamMember && (
+                        <Button type="primary" icon="plus" to={{ name: 'add-event' }} collapsible>
+                            {__('page.schedule.listing.add-event')}
                         </Button>
-                    </Dropdown>,
-                ]}
-                scopedSlots={{
-                    headerContent: (): JSX.Node => (
-                        <FiltersPanel
-                            values={filters}
-                            onChange={handleFiltersChange}
-                            onSubmit={handleFiltersSubmit}
-                        />
                     ),
+                    hasContent && (
+                        <Dropdown>
+                            <Button icon="table" onClick={handleConfigureColumns}>
+                                {__('configure-columns')}
+                            </Button>
+                        </Dropdown>
+                    ),
+                ].filter(isTruthy)}
+                scopedSlots={{
+                    headerContent: (): JSX.Node => {
+                        if (!hasContent) {
+                            return null;
+                        }
+                        return (
+                            <FiltersPanel
+                                values={filters}
+                                onChange={handleFiltersChange}
+                                onSubmit={handleFiltersSubmit}
+                            />
+                        );
+                    },
                 }}
             >
                 <div class="ScheduleListing">
                     <ServerTable
                         ref="table"
-                        key="default"
+                        uniqueKey="key"
                         name={$options.name}
                         class="ScheduleListing__table"
                         rowClass={getRowClass}
                         columns={columns}
                         fetcher={fetch}
+                        emptyMessage={emptyMessage}
                         onRowClick={handleOpen}
                         defaultOrderBy={{
                             column: 'mobilization_start_date',
                             ascending: false,
                         }}
                         perPage={MAX_ITEMS_PER_PAGE}
+                        sticky
                     />
                 </div>
             </Page>

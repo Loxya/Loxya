@@ -1,7 +1,11 @@
+import type { Raw } from 'vue';
+import type Day from '@/utils/day';
+import type Period from '@/utils/period';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
-import type { SetOptional, Simplify } from 'type-fest';
+import type { TERM_TOKEN_TYPE, TokenKind } from './_constants';
+import type { SetOptional, SetRequired, Simplify } from 'type-fest';
 
-export type OptionValue = string | number;
+export type OptionValue = string | number | typeof TERM_TOKEN_TYPE | boolean;
 
 export type Option<T extends OptionValue = OptionValue, D = unknown> = {
     /**
@@ -31,37 +35,109 @@ export type Option<T extends OptionValue = OptionValue, D = unknown> = {
     data?: D,
 };
 
-export type TokenValue = string | number | Array<string | number>;
+export type TokenValue = (
+    | string
+    | number
+    | Array<string | number>
+    | boolean
+    | Raw<Day>
+    | Raw<Period>
+);
 
-type TokenBase<T extends string | symbol, V extends TokenValue> = {
+export type TokenOperatorValue = string;
+
+export type TokenOperator = {
+    /**
+     * Le libellé de l'opérateur tel qu'il sera
+     * présenté à l'utilisateur final.
+     *
+     * @example "Supérieur à", "Différent de"
+     */
+    label: string,
+
+    /**
+     * Version courte du libellé de l'opérateur tel
+     * qu'il sera présenté à l'utilisateur final.
+     *
+     * @example ">", "diff. de"
+     */
+    alias?: string,
+
+    /**
+     * Valeur de l'opérateur (telle qu'utilisé en interne).
+     *
+     * @example ">", "!="
+     */
+    value: TokenOperatorValue,
+};
+
+export type TermToken = {
+    id: string | number,
+    type: typeof TERM_TOKEN_TYPE,
+    value: string,
+};
+export type CustomToken<T extends string = string, V extends TokenValue = TokenValue> = {
     id: string | number,
     type: T,
+    operator: TokenOperatorValue | null,
     value: V,
 };
 
-export type CustomToken<T extends string = string, V extends TokenValue = TokenValue> = TokenBase<T, V>;
-
-export type Token =
-    | CustomToken;
-
-export type PartialToken =
-    | Simplify<Omit<CustomToken, 'value'> & { value: CustomToken['value'] | null }>;
-
-export type LooseToken =
-    | Simplify<SetOptional<CustomToken, 'id'>>;
-
-export type LoosePartialToken =
-    | Simplify<
-        & { value: CustomToken['value'] | null }
-    >;
-
-export type RawCustomToken<T extends string = string, V extends TokenValue = TokenValue> = (
-    Simplify<Omit<CustomToken<T, V>, 'id'>>
+export type Token = (
+    | TermToken
+    | CustomToken
 );
 
-export type RawToken =
+export type PartialToken = (
+    | Simplify<(
+        & Omit<TermToken, 'value'>
+        & { value: TermToken['value'] | null }
+    )>
+    | Simplify<(
+        & Omit<CustomToken, 'operator' | 'value'>
+        & {
+            operator: CustomToken['operator'] | null,
+            value: CustomToken['value'] | null,
+        }
+    )>
+);
+
+export type LooseToken = (
+    | Simplify<SetOptional<TermToken, 'id'>>
+    | Simplify<SetOptional<CustomToken, 'id'>>
+);
+
+export type LoosePartialToken<ExtraPartial extends boolean = false> = (
+    | Simplify<SetOptional<
+        (
+            & Omit<SetOptional<TermToken, 'id'>, 'value'>
+            & { value: TermToken['value'] | null }
+        ),
+        [ExtraPartial] extends [true] ? 'value' : never
+    >>
+    | Simplify<SetOptional<
+        (
+            & Omit<SetOptional<CustomToken, 'id'>, 'operator' | 'value'>
+            & {
+                operator: CustomToken['operator'] | null,
+                value: CustomToken['value'] | null,
+            }
+        ),
+        [ExtraPartial] extends [true] ? ('operator' | 'value') : never
+    >>
+);
+
+export type RawCustomToken<T extends string = string, V extends TokenValue = TokenValue> = (
+    Simplify<(
+        & Omit<CustomToken<T, V>, 'id' | 'operator'>
+        & { operator?: TokenOperatorValue }
+    )>
+);
+
+export type RawToken = (
     | RawCustomToken
-    | string;
+    | string
+);
 
 export type TokenOption<
     T extends string | number = string | number,
@@ -73,7 +149,7 @@ export type TokenOptions<
     D = unknown,
 > = Array<TokenOption<T, D>>;
 
-type TokenDefinitionBase<T extends TokenOption> = {
+type TokenDefinitionBase = {
     /**
      * Identifiant unique du type de token (= Un identifiant
      * quelconque ayant du sens pour l'utilisateur du component).
@@ -105,10 +181,12 @@ type TokenDefinitionBase<T extends TokenOption> = {
     title: string,
 
     /**
-     * Les options à proposer pour ce token.
-     * (e.g. La liste des utilisateurs pour un token de type "Utilisateur")
+     * Les opérateurs à proposer pour ce type de token.
+     *
+     * Si cette prop. n'est pas définie, aucun opérateurs
+     * personnalisé ne sera proposé (équivalent à `=`).
      */
-    options: T[],
+    operators?: TokenOperator[],
 
     /**
      * Est-ce que ce type de token ne peut être présent qu'une seule fois ?
@@ -126,45 +204,154 @@ type TokenDefinitionBase<T extends TokenOption> = {
     disabled?: boolean,
 };
 
-export type TokenDefinition<T extends TokenOption = TokenOption> = (
-    & TokenDefinitionBase<T>
-    & (
-        | {
-            /**
-             * Est-ce que l'on doit autoriser la sélection de plusieurs valeurs pour un seul token ?
-             *
-             * Cette option diffère de `unique` dans le sens ou `unique` permet la sélection de
-             * plusieurs valeurs pour un même type dans plusieurs tokens différents avec éventuellement
-             * des opérateurs différents.
-             *
-             * @default false
-             */
-            multiSelect?: false,
+export type TokenDefinition<
+    Strict extends boolean = true,
+    T extends TokenOption = TokenOption,
+> = SetRequired<
+    (
+        & TokenDefinitionBase
+        & (
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind: TokenKind.TEXT,
 
-            /**
-             * Une éventuelle fonction de rendu pour customiser l'affichage
-             * des options et/ou valeur(s) sélectionnée(s).
-             */
-            render?(option: T, asSelection: boolean): JSX.Node | null,
-        }
-        | {
-            /**
-             * Est-ce que l'on doit autoriser la sélection de plusieurs valeurs pour un seul token ?
-             *
-             * Cette option diffère de `unique` dans le sens ou `unique` permet la sélection de
-             * plusieurs valeurs pour un même type dans plusieurs tokens différents avec éventuellement
-             * des opérateurs différents.
-             *
-             * @default false
-             */
-            multiSelect: true,
+                /**
+                 * Une éventuelle fonction de rendu pour customiser
+                 * l'affichage de la valeur définie.
+                 */
+                render?(value: string): JSX.Node | null,
+            }
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind: (
+                    | TokenKind.INTEGER
+                    | TokenKind.FLOAT
+                ),
 
-            /**
-             * Une éventuelle fonction de rendu pour customiser l'affichage
-             * des options et/ou valeur(s) sélectionnée(s).
-             */
-            render?(options: T[], asSelection: true): JSX.Node | null,
-            render?(options: T, asSelection: false): JSX.Node | null,
-        }
-    )
+                /**
+                 * Une éventuelle fonction de rendu pour customiser
+                 * l'affichage de la valeur définie.
+                 */
+                render?(value: number): JSX.Node | null,
+            }
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind: TokenKind.BOOLEAN,
+
+                /**
+                 * Une éventuelle fonction de rendu pour customiser l'affichage
+                 * des options et/ou de la valeur sélectionnée.
+                 */
+                render?(value: boolean, asSelection: boolean): JSX.Node | null,
+            }
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind: TokenKind.DATE,
+
+                /**
+                 * Une éventuelle fonction de rendu pour customiser
+                 * l'affichage de la valeur définie.
+                 */
+                render?(value: Raw<Day>): JSX.Node | null,
+            }
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind: TokenKind.PERIOD,
+
+                /**
+                 * Une éventuelle fonction de rendu pour customiser
+                 * l'affichage de la valeur définie.
+                 */
+                render?(value: Raw<Period<true>>): JSX.Node | null,
+            }
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind?: TokenKind.LIST,
+
+                /**
+                 * Les options à proposer pour ce token.
+                 * (e.g. La liste des utilisateurs pour un token de type "Utilisateur")
+                 */
+                options: T[],
+
+                /**
+                 * Est-ce que l'on doit autoriser la sélection de plusieurs valeurs pour un seul token ?
+                 *
+                 * Cette option diffère de `unique` dans le sens ou `unique` permet la sélection de
+                 * plusieurs valeurs pour un même type dans plusieurs tokens différents avec éventuellement
+                 * des opérateurs différents.
+                 *
+                 * @default false
+                 */
+                multiSelect?: false,
+
+                /**
+                 * Une éventuelle fonction de rendu pour customiser l'affichage
+                 * des options et/ou de(s) valeur(s) sélectionnée(s).
+                 */
+                render?(option: T, asSelection: boolean): JSX.Node | null,
+            }
+            | {
+                /**
+                 * La forme de valeur du token.
+                 *
+                 * Voir {@link TokenKind}
+                 */
+                kind?: TokenKind.LIST,
+
+                /**
+                 * Les options à proposer pour ce token.
+                 * (e.g. La liste des utilisateurs pour un token de type "Utilisateur")
+                 */
+                options: T[],
+
+                /**
+                 * Est-ce que l'on doit autoriser la sélection de plusieurs valeurs pour un seul token ?
+                 *
+                 * Cette option diffère de `unique` dans le sens ou `unique` permet la sélection de
+                 * plusieurs valeurs pour un même type dans plusieurs tokens différents avec éventuellement
+                 * des opérateurs différents.
+                 *
+                 * @default false
+                 */
+                multiSelect: true,
+
+                /**
+                 * Une éventuelle fonction de rendu pour customiser l'affichage
+                 * des options et/ou de(s) valeur(s) sélectionnée(s).
+                 */
+                render?(options: T[], asSelection: true): JSX.Node | null,
+                render?(options: T, asSelection: false): JSX.Node | null,
+            }
+        )
+    ),
+    Strict extends true ? 'kind' : never
+>;
+
+export type RawTokenDefinition<T extends TokenOption = TokenOption> = (
+    TokenDefinition<false, T>
 );

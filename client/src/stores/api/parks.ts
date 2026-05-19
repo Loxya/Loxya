@@ -5,6 +5,7 @@ import { MaterialSchema } from './materials';
 
 import type { Raw } from 'vue';
 import type Decimal from 'decimal.js';
+import type Country from '@/utils/country';
 import type { Material } from './materials';
 import type { SchemaInfer } from '@/utils/validation';
 import type { PaginatedData, ListingParams } from './@types';
@@ -19,9 +20,12 @@ export const ParkSchema = z.strictObject({
     id: z.number(),
     name: z.string(),
     street: z.string().nullable(),
+    additional_street: z.string().nullable(),
     postal_code: z.string().nullable(),
+    administrative_area: z.string().nullable(),
     locality: z.string().nullable(),
-    country_id: z.number().nullable(),
+    country: z.country(),
+    address: z.string().nullable(),
     opening_hours: z.string().nullable(),
     total_items: z.number().nonnegative(),
     total_stock_quantity: z.number().nonnegative(),
@@ -56,9 +60,11 @@ export type ParkDetails = SchemaInfer<typeof ParkDetailsSchema>;
 export type ParkEdit = {
     name: string,
     street: string | null,
+    additional_street: string | null,
     postal_code: string | null,
+    administrative_area: string | null,
     locality: string | null,
-    country_id: number | null,
+    country: Raw<Country>,
     opening_hours: string | null,
     note: string | null,
 };

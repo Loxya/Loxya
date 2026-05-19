@@ -1,5 +1,6 @@
 @use './variables' as *;
 @use '~@/themes/default/style/globals';
+@use 'sass:map';
 @use 'sass:color';
 
 .Timeline {
@@ -72,22 +73,14 @@
         &--base {
             &.vis-range {
                 z-index: 2;
-                box-shadow: $range-item-box-shadow;
-
-                // - `!important` pour désactiver tout style qui viendrait à
-                //   être appliqué sur cet éléments qui doit rester un élément "englobant".
-                // stylelint-disable-next-line declaration-no-important, order/properties-order
                 background-color: transparent !important;
+                box-shadow: $range-item-box-shadow;
             }
         }
 
         &--actual {
             &.vis-range {
                 z-index: 1;
-
-                // - `!important` pour désactiver tout `background` qui viendrait à
-                //   être appliqué sur cet éléments dont le fond est géré dans le `::before`.
-                // stylelint-disable-next-line declaration-no-important
                 background: none !important;
 
                 &::before {
@@ -187,6 +180,7 @@
 
         // stylelint-disable-next-line selector-class-pattern
         .vis-onUpdateTime-tooltip {
+            z-index: map.get(globals.$layers, 'tooltips');
             border-radius: globals.$border-radius-normal;
             background-color: globals.$bg-color-tooltip;
             line-height: 1.5;
@@ -242,12 +236,10 @@
                 box-shadow: $header-box-shadow;
             }
 
-            // stylelint-disable-next-line selector-max-compound-selectors
             .vis-text {
                 color: $header-text-color;
                 text-align: center;
 
-                // stylelint-disable-next-line selector-max-compound-selectors
                 &.vis-major {
                     margin-left: 0.5rem;
                     font-weight: 800;
@@ -269,7 +261,6 @@
                 border-color: $today-border-color;
                 background-color: $today-background-color;
 
-                // stylelint-disable-next-line selector-max-compound-selectors
                 + .vis-vertical {
                     border-left-color: $today-border-color;
                 }
@@ -288,6 +279,7 @@
     }
 
     .vis-tooltip {
+        z-index: map.get(globals.$layers, 'tooltips');
         overflow: hidden;
         max-width: 50%;
         margin: 30px 0 0 15px;
@@ -327,7 +319,6 @@
                     border-color: $separator-color;
                     background-color: transparent;
 
-                    // stylelint-disable-next-line selector-max-compound-selectors
                     + .vis-vertical {
                         border-left-color: $separator-color;
                     }

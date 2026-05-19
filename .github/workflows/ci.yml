@@ -12,7 +12,7 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '22' }
+              with: { node-version-file: '.nvmrc' }
             - run: npm ci
             - run: npm run lint:js -- --max-warnings 0 --color
 
@@ -23,7 +23,7 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '22' }
+              with: { node-version-file: '.nvmrc' }
             - run: npm ci
             - run: npm run lint:scss -- --max-warnings 0 --color
 
@@ -34,7 +34,7 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '22' }
+              with: { node-version-file: '.nvmrc' }
             - run: npm ci
             - run: npm run check-types
 
@@ -45,7 +45,7 @@ jobs:
         steps    :
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
-              with: { node-version: '22' }
+              with: { node-version-file: '.nvmrc' }
             - run: npm ci
             - run: npm test -- --color --coverage --ci --passWithNoTests
 
@@ -88,11 +88,11 @@ jobs:
             DB_PORT: 3306
         strategy:
             matrix:
-                php: [8.1, 8.2, 8.3]
+                php: [8.1, 8.3]
         defaults: { run: { working-directory: ./server }}
         services:
             mysql:
-                image: mysql:5.7
+                image: mysql:8.0
                 env:
                     MYSQL_DATABASE: Loxya-Test
                     MYSQL_ROOT_PASSWORD: 'root'
@@ -101,6 +101,12 @@ jobs:
                 options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
         steps:
             - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with: { node-version-file: '.nvmrc' }
+            - run: |
+                  pip install weasyprint==66.0
+                  echo "WEASYPRINT_BINARY=$HOME/.local/bin/weasyprint" >> $GITHUB_ENV
+            - run: npm install -g prettier@3.8.1
             - uses: shivammathur/setup-php@v2
               with:
                   php-version : ${{ matrix.php }}

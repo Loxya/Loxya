@@ -22,21 +22,21 @@ import type { ComponentRef } from 'vue';
 import type { Technician, TechnicianDetails } from '@/stores/api/technicians';
 import type { TabChangeEvent } from '@/themes/default/components/Tabs';
 
-type Data = {
-    id: Technician['id'],
-    technician: TechnicianDetails | null,
-    isFetched: boolean,
-    criticalError: ErrorType | null,
-    selectedTabIndex: number,
-    assignmentsDisplayMode: AssignmentListDisplayMode,
-};
-
 enum TabName {
     INFOS = '#infos',
     SCHEDULE = '#schedule',
     DOCUMENTS = '#documents',
     ASSIGNMENTS = '#assignments',
 }
+
+type Data = {
+    id: Technician['id'],
+    technician: TechnicianDetails | null,
+    isFetched: boolean,
+    selectedTab: TabName,
+    criticalError: ErrorType | null,
+    assignmentsDisplayMode: AssignmentListDisplayMode,
+};
 
 /** Page de détails d'un technicien. */
 const TechnicianView = defineComponent({
@@ -47,7 +47,7 @@ const TechnicianView = defineComponent({
             technician: null,
             isFetched: false,
             criticalError: null,
-            selectedTabIndex: 0,
+            selectedTab: TabName.INFOS,
             assignmentsDisplayMode: AssignmentListDisplayMode.DEFAULT,
         };
     },
@@ -64,14 +64,10 @@ const TechnicianView = defineComponent({
                 : __('page.technician-view.title-simple');
         },
 
-        tabsIndexes(): string[] {
-            return Object.values(TabName);
-        },
-
         tabsActions(): JSX.Element[] {
-            const { $t: __, tabsIndexes, selectedTabIndex } = this;
+            const { $t: __, selectedTab } = this;
 
-            if (tabsIndexes[selectedTabIndex] === TabName.INFOS) {
+            if (selectedTab === TabName.INFOS) {
                 const { id } = this;
 
                 return [
@@ -88,7 +84,7 @@ const TechnicianView = defineComponent({
                 ];
             }
 
-            if (tabsIndexes[selectedTabIndex] === TabName.ASSIGNMENTS) {
+            if (selectedTab === TabName.ASSIGNMENTS) {
                 const modes = [
                     {
                         label: __('page.technician-view.assignments.simple-list'),
@@ -130,7 +126,7 @@ const TechnicianView = defineComponent({
         // ------------------------------------------------------
 
         async handleTabChange(event: TabChangeEvent) {
-            if (this.tabsIndexes[event.prevIndex] !== TabName.DOCUMENTS) {
+            if (event.prevId !== TabName.DOCUMENTS) {
                 return;
             }
 
@@ -153,9 +149,9 @@ const TechnicianView = defineComponent({
             event.executeDefault();
         },
 
-        handleTabChanged(index: number) {
-            this.selectedTabIndex = index;
-            this.$router.replace(this.tabsIndexes[index]);
+        handleTabChanged(id: TabName) {
+            this.selectedTab = id;
+            this.$router.replace(id);
         },
 
         handleChangeAssignmentDisplayMode(newMode: AssignmentListDisplayMode) {
@@ -170,8 +166,8 @@ const TechnicianView = defineComponent({
 
         selectTabFromRouting() {
             const { hash } = this.$route;
-            if (hash && this.tabsIndexes.includes(hash)) {
-                this.selectedTabIndex = this.tabsIndexes.indexOf(hash);
+            if (hash && (Object.values(TabName) as string[]).includes(hash)) {
+                this.selectedTab = hash as TabName;
             }
         },
 
@@ -200,7 +196,7 @@ const TechnicianView = defineComponent({
             isFetched,
             criticalError,
             technician,
-            selectedTabIndex,
+            selectedTab,
             handleTabChange,
             handleTabChanged,
             assignmentsDisplayMode,
@@ -218,21 +214,21 @@ const TechnicianView = defineComponent({
             <Page name="technician-view" title={pageTitle}>
                 <div class="TechnicianView">
                     <Tabs
-                        defaultIndex={selectedTabIndex}
+                        defaultActive={selectedTab}
                         onChange={handleTabChange}
                         onChanged={handleTabChanged}
                         actions={tabsActions}
                     >
-                        <Tab title={__('informations')} icon="info-circle">
+                        <Tab id={TabName.INFOS} title={__('informations')} icon="info-circle">
                             <Infos technician={technician!} />
                         </Tab>
-                        <Tab title={__('schedule')} icon="calendar-alt">
+                        <Tab id={TabName.SCHEDULE} title={__('schedule')} icon="calendar-alt">
                             <Schedule technician={technician!} />
                         </Tab>
-                        <Tab title={__('documents')} icon="file-pdf">
+                        <Tab id={TabName.DOCUMENTS} title={__('documents')} icon="file-pdf">
                             <Documents ref="documents" technician={technician!} />
                         </Tab>
-                        <Tab title={__('page.technician-view.assignments.title')} icon="tools">
+                        <Tab id={TabName.ASSIGNMENTS} title={__('page.technician-view.assignments.title')} icon="tools">
                             <Assignments
                                 technician={technician!}
                                 displayMode={assignmentsDisplayMode}

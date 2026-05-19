@@ -4,11 +4,12 @@ exports[`Technicians Api all() parse the returned data correctly 1`] = `
 {
   "data": [
     {
-      "country": null,
-      "country_id": null,
+      "additional_street": null,
+      "address": null,
+      "administrative_area": null,
+      "country": /* Country Instance => */ "FR",
       "email": "tester2@loxya.com",
       "first_name": "Roger",
-      "full_address": null,
       "full_name": "Roger Rabbit",
       "id": 1,
       "last_name": "Rabbit",
@@ -30,25 +31,21 @@ exports[`Technicians Api all() parse the returned data correctly 1`] = `
         },
       ],
       "street": null,
-      "user_id": 2,
     },
     {
-      "country": {
-        "code": "CH",
-        "id": 2,
-        "name": "Suisse",
-      },
-      "country_id": 2,
-      "email": "client@technicien.com",
+      "additional_street": null,
+      "address": null,
+      "administrative_area": null,
+      "country": /* Country Instance => */ "CH",
+      "email": "jg@loxya.fr",
       "first_name": "Jean",
-      "full_address": null,
-      "full_name": "Jean Technicien",
+      "full_name": "Jean Garcia",
       "id": 2,
-      "last_name": "Technicien",
+      "last_name": "Garcia",
       "locality": null,
       "nickname": null,
       "note": null,
-      "phone": "+33645698520",
+      "phone": /* Phone Instance => */ "+33645698520",
       "postal_code": null,
       "roles": [
         {
@@ -58,7 +55,6 @@ exports[`Technicians Api all() parse the returned data correctly 1`] = `
         },
       ],
       "street": null,
-      "user_id": null,
     },
   ],
   "pagination": {
@@ -75,50 +71,54 @@ exports[`Technicians Api all() parse the returned data correctly 1`] = `
 exports[`Technicians Api allWhileEvent() parse the returned data correctly 1`] = `
 [
   {
-    "country": null,
-    "country_id": null,
+    "additional_street": null,
+    "address": null,
+    "administrative_area": null,
+    "country": /* Country Instance => */ "FR",
     "email": "tester2@loxya.com",
     "events": [
       {
         "event": {
           "beneficiaries": [
             {
+              "additional_street": null,
+              "address": "1, somewhere av.
+12340 Megacity",
+              "administrative_area": null,
               "company": {
-                "country": {
-                  "code": "FR",
-                  "id": 1,
-                  "name": "France",
-                },
-                "country_id": 1,
-                "full_address": "1, company st.
-1234 Megacity",
+                "additional_street": "Bâtiment D",
+                "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+                "administrative_area": null,
+                "country": /* Country Instance => */ "FR",
                 "id": 1,
+                "invoice_identifier": "0225:123456789_LOCATION",
+                "is_public_entity": false,
                 "legal_name": "Testing, Inc",
-                "locality": "Megacity",
-                "note": "Just for tests",
-                "phone": "+4123456789",
-                "postal_code": "1234",
-                "registration_id": null,
-                "street": "1, company st.",
+                "locality": "Annecy",
+                "note": "Anciennement Machin, Inc.",
+                "phone": /* Phone Instance => */ "+33123456789",
+                "postal_code": "74000",
+                "registration_id": "12345678900001",
+                "service_code": null,
+                "street": "10 avenue de la gare",
+                "vat_number": "FR32123456789",
               },
               "company_id": 1,
-              "country": {
-                "code": "FR",
-                "id": 1,
-                "name": "France",
-              },
-              "country_id": 1,
+              "country": /* Country Instance => */ "FR",
               "email": "tester@loxya.com",
               "first_name": "Jean",
-              "full_address": "1, somewhere av.
-1234 Megacity",
               "full_name": "Jean Fountain",
               "id": 1,
+              "is_deleted": false,
+              "is_invoiceable": true,
+              "language": "en",
               "last_name": "Fountain",
               "locality": "Megacity",
               "note": null,
               "phone": null,
-              "postal_code": "1234",
+              "postal_code": "12340",
               "reference": "0001",
               "street": "1, somewhere av.",
               "user_id": 1,
@@ -168,7 +168,6 @@ exports[`Technicians Api allWhileEvent() parse the returned data correctly 1`] =
       },
     ],
     "first_name": "Roger",
-    "full_address": null,
     "full_name": "Roger Rabbit",
     "id": 1,
     "last_name": "Rabbit",
@@ -190,57 +189,56 @@ exports[`Technicians Api allWhileEvent() parse the returned data correctly 1`] =
       },
     ],
     "street": null,
-    "user_id": 2,
   },
   {
-    "country": {
-      "code": "CH",
-      "id": 2,
-      "name": "Suisse",
-    },
-    "country_id": 2,
-    "email": "client@technicien.com",
+    "additional_street": null,
+    "address": null,
+    "administrative_area": null,
+    "country": /* Country Instance => */ "CH",
+    "email": "jg@loxya.fr",
     "events": [
       {
         "event": {
           "beneficiaries": [
             {
+              "additional_street": null,
+              "address": "1, somewhere av.
+12340 Megacity",
+              "administrative_area": null,
               "company": {
-                "country": {
-                  "code": "FR",
-                  "id": 1,
-                  "name": "France",
-                },
-                "country_id": 1,
-                "full_address": "1, company st.
-1234 Megacity",
+                "additional_street": "Bâtiment D",
+                "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+                "administrative_area": null,
+                "country": /* Country Instance => */ "FR",
                 "id": 1,
+                "invoice_identifier": "0225:123456789_LOCATION",
+                "is_public_entity": false,
                 "legal_name": "Testing, Inc",
-                "locality": "Megacity",
-                "note": "Just for tests",
-                "phone": "+4123456789",
-                "postal_code": "1234",
-                "registration_id": null,
-                "street": "1, company st.",
+                "locality": "Annecy",
+                "note": "Anciennement Machin, Inc.",
+                "phone": /* Phone Instance => */ "+33123456789",
+                "postal_code": "74000",
+                "registration_id": "12345678900001",
+                "service_code": null,
+                "street": "10 avenue de la gare",
+                "vat_number": "FR32123456789",
               },
               "company_id": 1,
-              "country": {
-                "code": "FR",
-                "id": 1,
-                "name": "France",
-              },
-              "country_id": 1,
+              "country": /* Country Instance => */ "FR",
               "email": "tester@loxya.com",
               "first_name": "Jean",
-              "full_address": "1, somewhere av.
-1234 Megacity",
               "full_name": "Jean Fountain",
               "id": 1,
+              "is_deleted": false,
+              "is_invoiceable": true,
+              "language": "en",
               "last_name": "Fountain",
               "locality": "Megacity",
               "note": null,
               "phone": null,
-              "postal_code": "1234",
+              "postal_code": "12340",
               "reference": "0001",
               "street": "1, somewhere av.",
               "user_id": 1,
@@ -335,14 +333,13 @@ exports[`Technicians Api allWhileEvent() parse the returned data correctly 1`] =
       },
     ],
     "first_name": "Jean",
-    "full_address": null,
-    "full_name": "Jean Technicien",
+    "full_name": "Jean Garcia",
     "id": 2,
-    "last_name": "Technicien",
+    "last_name": "Garcia",
     "locality": null,
     "nickname": null,
     "note": null,
-    "phone": "+33645698520",
+    "phone": /* Phone Instance => */ "+33645698520",
     "postal_code": null,
     "roles": [
       {
@@ -352,7 +349,6 @@ exports[`Technicians Api allWhileEvent() parse the returned data correctly 1`] =
       },
     ],
     "street": null,
-    "user_id": null,
   },
 ]
 `;
@@ -360,50 +356,54 @@ exports[`Technicians Api allWhileEvent() parse the returned data correctly 1`] =
 exports[`Technicians Api allWithAssignments() parse the returned data correctly when not paginated 1`] = `
 [
   {
-    "country": null,
-    "country_id": null,
+    "additional_street": null,
+    "address": null,
+    "administrative_area": null,
+    "country": /* Country Instance => */ "FR",
     "email": "tester2@loxya.com",
     "events": [
       {
         "event": {
           "beneficiaries": [
             {
+              "additional_street": null,
+              "address": "1, somewhere av.
+12340 Megacity",
+              "administrative_area": null,
               "company": {
-                "country": {
-                  "code": "FR",
-                  "id": 1,
-                  "name": "France",
-                },
-                "country_id": 1,
-                "full_address": "1, company st.
-1234 Megacity",
+                "additional_street": "Bâtiment D",
+                "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+                "administrative_area": null,
+                "country": /* Country Instance => */ "FR",
                 "id": 1,
+                "invoice_identifier": "0225:123456789_LOCATION",
+                "is_public_entity": false,
                 "legal_name": "Testing, Inc",
-                "locality": "Megacity",
-                "note": "Just for tests",
-                "phone": "+4123456789",
-                "postal_code": "1234",
-                "registration_id": null,
-                "street": "1, company st.",
+                "locality": "Annecy",
+                "note": "Anciennement Machin, Inc.",
+                "phone": /* Phone Instance => */ "+33123456789",
+                "postal_code": "74000",
+                "registration_id": "12345678900001",
+                "service_code": null,
+                "street": "10 avenue de la gare",
+                "vat_number": "FR32123456789",
               },
               "company_id": 1,
-              "country": {
-                "code": "FR",
-                "id": 1,
-                "name": "France",
-              },
-              "country_id": 1,
+              "country": /* Country Instance => */ "FR",
               "email": "tester@loxya.com",
               "first_name": "Jean",
-              "full_address": "1, somewhere av.
-1234 Megacity",
               "full_name": "Jean Fountain",
               "id": 1,
+              "is_deleted": false,
+              "is_invoiceable": true,
+              "language": "en",
               "last_name": "Fountain",
               "locality": "Megacity",
               "note": null,
               "phone": null,
-              "postal_code": "1234",
+              "postal_code": "12340",
               "reference": "0001",
               "street": "1, somewhere av.",
               "user_id": 1,
@@ -453,7 +453,6 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
       },
     ],
     "first_name": "Roger",
-    "full_address": null,
     "full_name": "Roger Rabbit",
     "id": 1,
     "last_name": "Rabbit",
@@ -475,57 +474,56 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
       },
     ],
     "street": null,
-    "user_id": 2,
   },
   {
-    "country": {
-      "code": "CH",
-      "id": 2,
-      "name": "Suisse",
-    },
-    "country_id": 2,
-    "email": "client@technicien.com",
+    "additional_street": null,
+    "address": null,
+    "administrative_area": null,
+    "country": /* Country Instance => */ "CH",
+    "email": "jg@loxya.fr",
     "events": [
       {
         "event": {
           "beneficiaries": [
             {
+              "additional_street": null,
+              "address": "1, somewhere av.
+12340 Megacity",
+              "administrative_area": null,
               "company": {
-                "country": {
-                  "code": "FR",
-                  "id": 1,
-                  "name": "France",
-                },
-                "country_id": 1,
-                "full_address": "1, company st.
-1234 Megacity",
+                "additional_street": "Bâtiment D",
+                "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+                "administrative_area": null,
+                "country": /* Country Instance => */ "FR",
                 "id": 1,
+                "invoice_identifier": "0225:123456789_LOCATION",
+                "is_public_entity": false,
                 "legal_name": "Testing, Inc",
-                "locality": "Megacity",
-                "note": "Just for tests",
-                "phone": "+4123456789",
-                "postal_code": "1234",
-                "registration_id": null,
-                "street": "1, company st.",
+                "locality": "Annecy",
+                "note": "Anciennement Machin, Inc.",
+                "phone": /* Phone Instance => */ "+33123456789",
+                "postal_code": "74000",
+                "registration_id": "12345678900001",
+                "service_code": null,
+                "street": "10 avenue de la gare",
+                "vat_number": "FR32123456789",
               },
               "company_id": 1,
-              "country": {
-                "code": "FR",
-                "id": 1,
-                "name": "France",
-              },
-              "country_id": 1,
+              "country": /* Country Instance => */ "FR",
               "email": "tester@loxya.com",
               "first_name": "Jean",
-              "full_address": "1, somewhere av.
-1234 Megacity",
               "full_name": "Jean Fountain",
               "id": 1,
+              "is_deleted": false,
+              "is_invoiceable": true,
+              "language": "en",
               "last_name": "Fountain",
               "locality": "Megacity",
               "note": null,
               "phone": null,
-              "postal_code": "1234",
+              "postal_code": "12340",
               "reference": "0001",
               "street": "1, somewhere av.",
               "user_id": 1,
@@ -620,14 +618,13 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
       },
     ],
     "first_name": "Jean",
-    "full_address": null,
-    "full_name": "Jean Technicien",
+    "full_name": "Jean Garcia",
     "id": 2,
-    "last_name": "Technicien",
+    "last_name": "Garcia",
     "locality": null,
     "nickname": null,
     "note": null,
-    "phone": "+33645698520",
+    "phone": /* Phone Instance => */ "+33645698520",
     "postal_code": null,
     "roles": [
       {
@@ -637,7 +634,6 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
       },
     ],
     "street": null,
-    "user_id": null,
   },
 ]
 `;
@@ -646,50 +642,54 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
 {
   "data": [
     {
-      "country": null,
-      "country_id": null,
+      "additional_street": null,
+      "address": null,
+      "administrative_area": null,
+      "country": /* Country Instance => */ "FR",
       "email": "tester2@loxya.com",
       "events": [
         {
           "event": {
             "beneficiaries": [
               {
+                "additional_street": null,
+                "address": "1, somewhere av.
+12340 Megacity",
+                "administrative_area": null,
                 "company": {
-                  "country": {
-                    "code": "FR",
-                    "id": 1,
-                    "name": "France",
-                  },
-                  "country_id": 1,
-                  "full_address": "1, company st.
-1234 Megacity",
+                  "additional_street": "Bâtiment D",
+                  "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+                  "administrative_area": null,
+                  "country": /* Country Instance => */ "FR",
                   "id": 1,
+                  "invoice_identifier": "0225:123456789_LOCATION",
+                  "is_public_entity": false,
                   "legal_name": "Testing, Inc",
-                  "locality": "Megacity",
-                  "note": "Just for tests",
-                  "phone": "+4123456789",
-                  "postal_code": "1234",
-                  "registration_id": null,
-                  "street": "1, company st.",
+                  "locality": "Annecy",
+                  "note": "Anciennement Machin, Inc.",
+                  "phone": /* Phone Instance => */ "+33123456789",
+                  "postal_code": "74000",
+                  "registration_id": "12345678900001",
+                  "service_code": null,
+                  "street": "10 avenue de la gare",
+                  "vat_number": "FR32123456789",
                 },
                 "company_id": 1,
-                "country": {
-                  "code": "FR",
-                  "id": 1,
-                  "name": "France",
-                },
-                "country_id": 1,
+                "country": /* Country Instance => */ "FR",
                 "email": "tester@loxya.com",
                 "first_name": "Jean",
-                "full_address": "1, somewhere av.
-1234 Megacity",
                 "full_name": "Jean Fountain",
                 "id": 1,
+                "is_deleted": false,
+                "is_invoiceable": true,
+                "language": "en",
                 "last_name": "Fountain",
                 "locality": "Megacity",
                 "note": null,
                 "phone": null,
-                "postal_code": "1234",
+                "postal_code": "12340",
                 "reference": "0001",
                 "street": "1, somewhere av.",
                 "user_id": 1,
@@ -739,7 +739,6 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
         },
       ],
       "first_name": "Roger",
-      "full_address": null,
       "full_name": "Roger Rabbit",
       "id": 1,
       "last_name": "Rabbit",
@@ -761,57 +760,56 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
         },
       ],
       "street": null,
-      "user_id": 2,
     },
     {
-      "country": {
-        "code": "CH",
-        "id": 2,
-        "name": "Suisse",
-      },
-      "country_id": 2,
-      "email": "client@technicien.com",
+      "additional_street": null,
+      "address": null,
+      "administrative_area": null,
+      "country": /* Country Instance => */ "CH",
+      "email": "jg@loxya.fr",
       "events": [
         {
           "event": {
             "beneficiaries": [
               {
+                "additional_street": null,
+                "address": "1, somewhere av.
+12340 Megacity",
+                "administrative_area": null,
                 "company": {
-                  "country": {
-                    "code": "FR",
-                    "id": 1,
-                    "name": "France",
-                  },
-                  "country_id": 1,
-                  "full_address": "1, company st.
-1234 Megacity",
+                  "additional_street": "Bâtiment D",
+                  "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+                  "administrative_area": null,
+                  "country": /* Country Instance => */ "FR",
                   "id": 1,
+                  "invoice_identifier": "0225:123456789_LOCATION",
+                  "is_public_entity": false,
                   "legal_name": "Testing, Inc",
-                  "locality": "Megacity",
-                  "note": "Just for tests",
-                  "phone": "+4123456789",
-                  "postal_code": "1234",
-                  "registration_id": null,
-                  "street": "1, company st.",
+                  "locality": "Annecy",
+                  "note": "Anciennement Machin, Inc.",
+                  "phone": /* Phone Instance => */ "+33123456789",
+                  "postal_code": "74000",
+                  "registration_id": "12345678900001",
+                  "service_code": null,
+                  "street": "10 avenue de la gare",
+                  "vat_number": "FR32123456789",
                 },
                 "company_id": 1,
-                "country": {
-                  "code": "FR",
-                  "id": 1,
-                  "name": "France",
-                },
-                "country_id": 1,
+                "country": /* Country Instance => */ "FR",
                 "email": "tester@loxya.com",
                 "first_name": "Jean",
-                "full_address": "1, somewhere av.
-1234 Megacity",
                 "full_name": "Jean Fountain",
                 "id": 1,
+                "is_deleted": false,
+                "is_invoiceable": true,
+                "language": "en",
                 "last_name": "Fountain",
                 "locality": "Megacity",
                 "note": null,
                 "phone": null,
-                "postal_code": "1234",
+                "postal_code": "12340",
                 "reference": "0001",
                 "street": "1, somewhere av.",
                 "user_id": 1,
@@ -906,14 +904,13 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
         },
       ],
       "first_name": "Jean",
-      "full_address": null,
-      "full_name": "Jean Technicien",
+      "full_name": "Jean Garcia",
       "id": 2,
-      "last_name": "Technicien",
+      "last_name": "Garcia",
       "locality": null,
       "nickname": null,
       "note": null,
-      "phone": "+33645698520",
+      "phone": /* Phone Instance => */ "+33645698520",
       "postal_code": null,
       "roles": [
         {
@@ -923,7 +920,6 @@ exports[`Technicians Api allWithAssignments() parse the returned data correctly 
         },
       ],
       "street": null,
-      "user_id": null,
     },
   ],
   "pagination": {
@@ -943,42 +939,44 @@ exports[`Technicians Api assignments() parse the returned data correctly (with #
     "event": {
       "beneficiaries": [
         {
+          "additional_street": null,
+          "address": "1, somewhere av.
+12340 Megacity",
+          "administrative_area": null,
           "company": {
-            "country": {
-              "code": "FR",
-              "id": 1,
-              "name": "France",
-            },
-            "country_id": 1,
-            "full_address": "1, company st.
-1234 Megacity",
+            "additional_street": "Bâtiment D",
+            "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+            "administrative_area": null,
+            "country": /* Country Instance => */ "FR",
             "id": 1,
+            "invoice_identifier": "0225:123456789_LOCATION",
+            "is_public_entity": false,
             "legal_name": "Testing, Inc",
-            "locality": "Megacity",
-            "note": "Just for tests",
-            "phone": "+4123456789",
-            "postal_code": "1234",
-            "registration_id": null,
-            "street": "1, company st.",
+            "locality": "Annecy",
+            "note": "Anciennement Machin, Inc.",
+            "phone": /* Phone Instance => */ "+33123456789",
+            "postal_code": "74000",
+            "registration_id": "12345678900001",
+            "service_code": null,
+            "street": "10 avenue de la gare",
+            "vat_number": "FR32123456789",
           },
           "company_id": 1,
-          "country": {
-            "code": "FR",
-            "id": 1,
-            "name": "France",
-          },
-          "country_id": 1,
+          "country": /* Country Instance => */ "FR",
           "email": "tester@loxya.com",
           "first_name": "Jean",
-          "full_address": "1, somewhere av.
-1234 Megacity",
           "full_name": "Jean Fountain",
           "id": 1,
+          "is_deleted": false,
+          "is_invoiceable": true,
+          "language": "en",
           "last_name": "Fountain",
           "locality": "Megacity",
           "note": null,
           "phone": null,
-          "postal_code": "1234",
+          "postal_code": "12340",
           "reference": "0001",
           "street": "1, somewhere av.",
           "user_id": 1,
@@ -1035,42 +1033,44 @@ exports[`Technicians Api assignments() parse the returned data correctly (with #
     "event": {
       "beneficiaries": [
         {
+          "additional_street": null,
+          "address": "1, somewhere av.
+12340 Megacity",
+          "administrative_area": null,
           "company": {
-            "country": {
-              "code": "FR",
-              "id": 1,
-              "name": "France",
-            },
-            "country_id": 1,
-            "full_address": "1, company st.
-1234 Megacity",
+            "additional_street": "Bâtiment D",
+            "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+            "administrative_area": null,
+            "country": /* Country Instance => */ "FR",
             "id": 1,
+            "invoice_identifier": "0225:123456789_LOCATION",
+            "is_public_entity": false,
             "legal_name": "Testing, Inc",
-            "locality": "Megacity",
-            "note": "Just for tests",
-            "phone": "+4123456789",
-            "postal_code": "1234",
-            "registration_id": null,
-            "street": "1, company st.",
+            "locality": "Annecy",
+            "note": "Anciennement Machin, Inc.",
+            "phone": /* Phone Instance => */ "+33123456789",
+            "postal_code": "74000",
+            "registration_id": "12345678900001",
+            "service_code": null,
+            "street": "10 avenue de la gare",
+            "vat_number": "FR32123456789",
           },
           "company_id": 1,
-          "country": {
-            "code": "FR",
-            "id": 1,
-            "name": "France",
-          },
-          "country_id": 1,
+          "country": /* Country Instance => */ "FR",
           "email": "tester@loxya.com",
           "first_name": "Jean",
-          "full_address": "1, somewhere av.
-1234 Megacity",
           "full_name": "Jean Fountain",
           "id": 1,
+          "is_deleted": false,
+          "is_invoiceable": true,
+          "language": "en",
           "last_name": "Fountain",
           "locality": "Megacity",
           "note": null,
           "phone": null,
-          "postal_code": "1234",
+          "postal_code": "12340",
           "reference": "0001",
           "street": "1, somewhere av.",
           "user_id": 1,
@@ -1234,11 +1234,12 @@ exports[`Technicians Api attachDocument() parse the returned data correctly (wit
 
 exports[`Technicians Api create() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "id": 1,
   "last_name": "Rabbit",
@@ -1260,38 +1261,24 @@ exports[`Technicians Api create() parse the returned data correctly (with #1) 1`
     },
   ],
   "street": null,
-  "user": {
-    "email": "tester2@loxya.com",
-    "first_name": "Roger",
-    "full_name": "Roger Rabbit",
-    "group": "operation",
-    "id": 2,
-    "last_name": "Rabbit",
-    "phone": null,
-    "pseudo": "test2",
-  },
-  "user_id": 2,
 }
 `;
 
 exports[`Technicians Api create() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
-  "email": "client@technicien.com",
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
+  "email": "jg@loxya.fr",
   "first_name": "Jean",
-  "full_address": null,
-  "full_name": "Jean Technicien",
+  "full_name": "Jean Garcia",
   "id": 2,
-  "last_name": "Technicien",
+  "last_name": "Garcia",
   "locality": null,
   "nickname": null,
   "note": null,
-  "phone": "+33645698520",
+  "phone": /* Phone Instance => */ "+33645698520",
   "postal_code": null,
   "roles": [
     {
@@ -1301,8 +1288,6 @@ exports[`Technicians Api create() parse the returned data correctly (with #2) 1`
     },
   ],
   "street": null,
-  "user": null,
-  "user_id": null,
 }
 `;
 
@@ -1361,11 +1346,12 @@ exports[`Technicians Api documents() parse the returned data correctly 1`] = `
 
 exports[`Technicians Api one() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "id": 1,
   "last_name": "Rabbit",
@@ -1387,38 +1373,24 @@ exports[`Technicians Api one() parse the returned data correctly (with #1) 1`] =
     },
   ],
   "street": null,
-  "user": {
-    "email": "tester2@loxya.com",
-    "first_name": "Roger",
-    "full_name": "Roger Rabbit",
-    "group": "operation",
-    "id": 2,
-    "last_name": "Rabbit",
-    "phone": null,
-    "pseudo": "test2",
-  },
-  "user_id": 2,
 }
 `;
 
 exports[`Technicians Api one() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
-  "email": "client@technicien.com",
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
+  "email": "jg@loxya.fr",
   "first_name": "Jean",
-  "full_address": null,
-  "full_name": "Jean Technicien",
+  "full_name": "Jean Garcia",
   "id": 2,
-  "last_name": "Technicien",
+  "last_name": "Garcia",
   "locality": null,
   "nickname": null,
   "note": null,
-  "phone": "+33645698520",
+  "phone": /* Phone Instance => */ "+33645698520",
   "postal_code": null,
   "roles": [
     {
@@ -1428,18 +1400,17 @@ exports[`Technicians Api one() parse the returned data correctly (with #2) 1`] =
     },
   ],
   "street": null,
-  "user": null,
-  "user_id": null,
 }
 `;
 
 exports[`Technicians Api restore() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "id": 1,
   "last_name": "Rabbit",
@@ -1461,38 +1432,24 @@ exports[`Technicians Api restore() parse the returned data correctly (with #1) 1
     },
   ],
   "street": null,
-  "user": {
-    "email": "tester2@loxya.com",
-    "first_name": "Roger",
-    "full_name": "Roger Rabbit",
-    "group": "operation",
-    "id": 2,
-    "last_name": "Rabbit",
-    "phone": null,
-    "pseudo": "test2",
-  },
-  "user_id": 2,
 }
 `;
 
 exports[`Technicians Api restore() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
-  "email": "client@technicien.com",
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
+  "email": "jg@loxya.fr",
   "first_name": "Jean",
-  "full_address": null,
-  "full_name": "Jean Technicien",
+  "full_name": "Jean Garcia",
   "id": 2,
-  "last_name": "Technicien",
+  "last_name": "Garcia",
   "locality": null,
   "nickname": null,
   "note": null,
-  "phone": "+33645698520",
+  "phone": /* Phone Instance => */ "+33645698520",
   "postal_code": null,
   "roles": [
     {
@@ -1502,18 +1459,17 @@ exports[`Technicians Api restore() parse the returned data correctly (with #2) 1
     },
   ],
   "street": null,
-  "user": null,
-  "user_id": null,
 }
 `;
 
 exports[`Technicians Api update() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": null,
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "email": "tester2@loxya.com",
   "first_name": "Roger",
-  "full_address": null,
   "full_name": "Roger Rabbit",
   "id": 1,
   "last_name": "Rabbit",
@@ -1535,38 +1491,24 @@ exports[`Technicians Api update() parse the returned data correctly (with #1) 1`
     },
   ],
   "street": null,
-  "user": {
-    "email": "tester2@loxya.com",
-    "first_name": "Roger",
-    "full_name": "Roger Rabbit",
-    "group": "operation",
-    "id": 2,
-    "last_name": "Rabbit",
-    "phone": null,
-    "pseudo": "test2",
-  },
-  "user_id": 2,
 }
 `;
 
 exports[`Technicians Api update() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": {
-    "code": "CH",
-    "id": 2,
-    "name": "Suisse",
-  },
-  "country_id": 2,
-  "email": "client@technicien.com",
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
+  "email": "jg@loxya.fr",
   "first_name": "Jean",
-  "full_address": null,
-  "full_name": "Jean Technicien",
+  "full_name": "Jean Garcia",
   "id": 2,
-  "last_name": "Technicien",
+  "last_name": "Garcia",
   "locality": null,
   "nickname": null,
   "note": null,
-  "phone": "+33645698520",
+  "phone": /* Phone Instance => */ "+33645698520",
   "postal_code": null,
   "roles": [
     {
@@ -1576,7 +1518,5 @@ exports[`Technicians Api update() parse the returned data correctly (with #2) 1`
     },
   ],
   "street": null,
-  "user": null,
-  "user_id": null,
 }
 `;

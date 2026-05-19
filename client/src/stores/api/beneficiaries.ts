@@ -2,7 +2,6 @@ import { z } from '@/utils/validation';
 import requester from '@/globals/requester';
 import { UserSchema } from './users';
 import { CompanySchema } from './companies';
-import { CountrySchema } from './countries';
 import { EstimateSchema } from './estimates';
 import { InvoiceSchema } from './invoices';
 import { BookingExcerptSchema } from './bookings';
@@ -10,7 +9,9 @@ import {
     withPaginationEnvelope,
 } from './@schema';
 
+import type { Raw } from 'vue';
 import type { SchemaInfer } from '@/utils/validation';
+import type Country from '@/utils/country';
 import type DateTime from '@/utils/datetime';
 import type { Estimate } from './estimates';
 import type { Invoice } from './invoices';
@@ -28,24 +29,30 @@ import type {
 // -
 // ------------------------------------------------------
 
-export const BeneficiarySchema = z.strictObject({
+export const BeneficiarySummarySchema = z.strictObject({
     id: z.number(),
-    user_id: z.number().nullable(),
     first_name: z.string(),
     last_name: z.string(),
     full_name: z.string(),
     reference: z.string().nullable(),
-    // TODO [zod@>3.22.4]: Remettre `email()`.
-    email: z.string().nullable(),
-    phone: z.string().nullable(),
-    company_id: z.number().nullable(),
     company: z.lazy(() => CompanySchema).nullable(),
+    email: z.email().nullable(),
+});
+
+export const BeneficiarySchema = BeneficiarySummarySchema.extend({
+    user_id: z.number().nullable(),
+    phone: z.phone().nullable(),
+    company_id: z.number().nullable(),
     street: z.string().nullable(),
+    additional_street: z.string().nullable(),
     postal_code: z.string().nullable(),
+    administrative_area: z.string().nullable(),
     locality: z.string().nullable(),
-    country_id: z.number().nullable(),
-    country: z.lazy(() => CountrySchema).nullable(),
-    full_address: z.string().nullable(),
+    country: z.country(),
+    address: z.string().nullable(),
+    is_invoiceable: z.boolean(),
+    is_deleted: z.boolean(),
+    language: z.string().nullable(),
     note: z.string().nullable(),
 });
 
@@ -64,6 +71,8 @@ export const BeneficiaryDetailsSchema = BeneficiarySchema.extend({
 
 export type Beneficiary = SchemaInfer<typeof BeneficiarySchema>;
 
+export type BeneficiarySummary = SchemaInfer<typeof BeneficiarySummarySchema>;
+
 export type BeneficiaryDetails = SchemaInfer<typeof BeneficiaryDetailsSchema>;
 
 //
@@ -78,9 +87,11 @@ export type BeneficiaryEdit = {
     phone: string | null,
     company_id: number | null,
     street: string | null,
+    additional_street: string | null,
     postal_code: string | null,
+    administrative_area: string | null,
     locality: string | null,
-    country_id: number | null,
+    country: Raw<Country>,
     user_id?: number,
     pseudo?: string,
     password?: string,

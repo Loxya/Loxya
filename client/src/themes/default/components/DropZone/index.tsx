@@ -56,7 +56,7 @@ const DropZone = defineComponent({
         },
         accept: {
             type: [String, Array] as PropType<Required<Props>['accept']>,
-            default: () => config.authorizedFileTypes,
+            default: () => config.allowedFileTypes,
         },
         // eslint-disable-next-line vue/no-unused-properties
         onDragStart: {

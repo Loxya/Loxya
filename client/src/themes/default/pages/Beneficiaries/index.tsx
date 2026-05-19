@@ -1,7 +1,8 @@
 import './index.scss';
-import pick from 'lodash/pick';
 import isEqual from 'lodash/isEqual';
+import config, { BillingMode } from '@/globals/config';
 import throttle from 'lodash/throttle';
+import mergeDifference from '@/utils/mergeDifference';
 import { HttpCode, RequestError } from '@/globals/requester';
 import { defineComponent } from 'vue';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
@@ -13,29 +14,33 @@ import Page from '@/themes/default/components/Page';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Dropdown from '@/themes/default/components/Dropdown';
 import Button from '@/themes/default/components/Button';
+import Icon from '@/themes/default/components/Icon';
 import Link from '@/themes/default/components/Link';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
-import {
-    ServerTable,
-    getLegacySavedSearch,
-} from '@/themes/default/components/Table';
+import { ServerTable } from '@/themes/default/components/Table';
 import {
     persistFilters,
     getPersistedFilters,
     clearPersistedFilters,
 } from '@/utils/filtersPersister';
 
+import type Phone from '@/utils/phone';
 import type { DebouncedMethod } from 'lodash';
 import type { Filters } from './components/Filters';
-import type { ComponentRef, CreateElement } from 'vue';
+import type { CreateElement } from 'vue';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
-import type { Columns } from '@/themes/default/components/Table/Server';
+import type { Columns, ServerTableRef } from '@/themes/default/components/Table/Server';
 import type { PaginationParams, SortableParams } from '@/stores/api/@types';
 import type { Session } from '@/stores/api/session';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type Data = {
     filters: Filters,
+    appliedFilters: Filters,
     isLoading: boolean,
+    isFetched: boolean,
+    isEmpty: boolean,
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
@@ -68,26 +73,20 @@ const Beneficiaries = defineComponent({
             const savedFilters = getPersistedFilters(FILTERS_PERSISTENCE_KEY, FiltersSchema);
             if (savedFilters !== null) {
                 Object.assign(filters, savedFilters);
-            } else {
-                // - Ancienne sauvegarde éventuelle, dans le component `<Table />`.
-                const savedSearchLegacy = this.$options.name
-                    ? getLegacySavedSearch(this.$options.name)
-                    : null;
-
-                if (savedSearchLegacy !== null) {
-                    Object.assign(filters, { search: [savedSearchLegacy] });
-                }
             }
         } else {
             clearPersistedFilters(FILTERS_PERSISTENCE_KEY);
         }
 
         return {
+            filters,
+            appliedFilters: { ...filters },
             isLoading: false,
+            isFetched: false,
+            isEmpty: false,
             hasCriticalError: false,
             shouldDisplayTrashed: false,
             isTrashDisplayed: false,
-            filters,
         };
     },
     computed: {
@@ -96,8 +95,33 @@ const Beneficiaries = defineComponent({
             return !session.disable_search_persistence;
         },
 
+        hasActiveFilters(): boolean {
+            return this.appliedFilters.search.length > 0;
+        },
+
+        hasContent(): boolean {
+            if (this.isTrashDisplayed) {
+                return true;
+            }
+
+            return (
+                this.isFetched &&
+                (!this.isEmpty || this.hasActiveFilters)
+            );
+        },
+
+        isBillingEnabled(): boolean {
+            return config.billingMode !== BillingMode.NONE;
+        },
+
         columns(): Columns<Beneficiary> {
-            const { $t: __, isTrashDisplayed, handleDeleteItemClick, handleRestoreItemClick } = this;
+            const {
+                $t: __,
+                isBillingEnabled,
+                isTrashDisplayed,
+                handleDeleteItemClick,
+                handleRestoreItemClick,
+            } = this;
 
             return [
                 {
@@ -106,6 +130,27 @@ const Beneficiaries = defineComponent({
                     class: 'Beneficiaries__cell Beneficiaries__cell--full-name',
                     hideable: false,
                     sortable: true,
+                    render: (h: CreateElement, beneficiary: Beneficiary) => {
+                        const { full_name: fullName, is_invoiceable: isInvoiceable, company } = beneficiary;
+                        const showNotInvoiceableWarning = isBillingEnabled && !isInvoiceable && !isTrashDisplayed;
+
+                        return (
+                            <span class="Beneficiaries__name">
+                                {showNotInvoiceableWarning && (
+                                    <Icon
+                                        name="exclamation-triangle"
+                                        class="Beneficiaries__name__warning"
+                                        tooltip={(
+                                            company !== null
+                                                ? __('page.beneficiaries.not-invoiceable.with-company')
+                                                : __('page.beneficiaries.not-invoiceable.without-company')
+                                        )}
+                                    />
+                                )}
+                                <span class="Beneficiaries__name__value">{fullName}</span>
+                            </span>
+                        );
+                    },
                 },
                 {
                     key: 'reference',
@@ -176,24 +221,24 @@ const Beneficiaries = defineComponent({
                     title: __('phone'),
                     class: 'Beneficiaries__cell Beneficiaries__cell--phone',
                     render: (h: CreateElement, beneficiary: Beneficiary) => {
-                        const phones: string[] = [
-                            (beneficiary.phone ?? '').length > 0 && (
-                                beneficiary.phone!
-                            ),
-                            (beneficiary.company?.phone ?? '').length > 0 && (
+                        const phones: Phone[] = [
+                            beneficiary.phone !== null && beneficiary.phone,
+                            (beneficiary.company?.phone ?? null) !== null && (
                                 beneficiary.company!.phone!
                             ),
-                        ].filter(Boolean) as string[];
+                        ].filter(Boolean) as Phone[];
 
-                        return phones.length > 0
-                            ? phones.map((phone: string, index: number) => (
-                                <div key={index}>{phone}</div>
-                            ))
-                            : (
+                        if (phones.length === 0) {
+                            return (
                                 <span class="Beneficiaries__cell__empty">
                                     {__('not-specified')}
                                 </span>
                             );
+                        }
+
+                        return phones.map((phone: Phone, index: number) => (
+                            <div key={index}>{phone.toReadable()}</div>
+                        ));
                     },
                 },
                 !isTrashDisplayed && {
@@ -202,8 +247,19 @@ const Beneficiaries = defineComponent({
                     defaultHidden: true,
                     class: 'Beneficiaries__cell Beneficiaries__cell--address',
                     render: (h: CreateElement, beneficiary: Beneficiary) => {
-                        const address = beneficiary.company?.full_address || beneficiary.full_address || '';
-                        return address.length > 0 ? address : (
+                        let address: string | null;
+                        if (beneficiary.company !== null) {
+                            address = beneficiary.company.address;
+                            if (address !== null && !beneficiary.company.country.isSame(config.mainCountry)) {
+                                address += `\n${beneficiary.company.country.name}`;
+                            }
+                        } else {
+                            address = beneficiary.address;
+                            if (address !== null && !beneficiary.country.isSame(config.mainCountry)) {
+                                address += `\n${beneficiary.country.name}`;
+                            }
+                        }
+                        return address !== null ? address : (
                             <span class="Beneficiaries__cell__empty">
                                 {__('not-specified')}
                             </span>
@@ -386,14 +442,13 @@ const Beneficiaries = defineComponent({
                 return;
             }
 
-            const $table = this.$refs.table as ComponentRef<typeof ServerTable>;
+            const $table = this.$refs.table as ServerTableRef;
             $table?.showColumnsSelector();
         },
 
         handleFiltersChange(newFilters: Filters) {
             // - Recherche textuelle.
-            const newSearch = [...new Set([...this.filters.search, ...newFilters.search])]
-                .filter((term: string) => newFilters.search.includes(term));
+            const newSearch = mergeDifference(this.filters.search, newFilters.search);
             if (!isEqual(this.filters.search, newSearch)) {
                 this.filters.search = newSearch;
             }
@@ -410,16 +465,21 @@ const Beneficiaries = defineComponent({
         // ------------------------------------------------------
 
         async fetch(pagination: PaginationParams & SortableParams) {
-            pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
             this.isLoading = true;
+
+            const filters: Filters = { ...this.filters };
+            this.appliedFilters = filters;
 
             try {
                 const data = await apiBeneficiaries.all({
                     ...pagination,
-                    ...this.filters,
+                    ...filters,
                     deleted: this.shouldDisplayTrashed,
                 });
+
+                this.isFetched = true;
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
+                this.isEmpty = data.pagination.total.items <= 0;
                 return data;
             } catch (error) {
                 if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
@@ -440,7 +500,7 @@ const Beneficiaries = defineComponent({
         refreshTable() {
             this.refreshTableDebounced?.cancel();
 
-            (this.$refs.table as ComponentRef<typeof ServerTable>)?.refresh();
+            (this.$refs.table as ServerTableRef)?.refresh();
         },
     },
     render() {
@@ -451,8 +511,10 @@ const Beneficiaries = defineComponent({
             filters,
             columns,
             isLoading,
+            hasContent,
             isTrashDisplayed,
             hasCriticalError,
+            hasActiveFilters,
             handleConfigureColumns,
             handleToggleShowTrashed,
             handleFiltersChange,
@@ -484,7 +546,6 @@ const Beneficiaries = defineComponent({
                         <ServerTable
                             ref="table"
                             key="trash"
-                            rowClass="Beneficiaries__row"
                             columns={columns}
                             fetcher={fetch}
                         />
@@ -493,6 +554,21 @@ const Beneficiaries = defineComponent({
             );
         }
 
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage = (
+            hasActiveFilters
+                ? { variant: EmptyMessageVariant.NO_RESULTS }
+                : {
+                    text: __('page.beneficiaries.empty'),
+                    action: {
+                        type: 'primary',
+                        icon: 'plus',
+                        label: __('page.beneficiaries.action-add'),
+                        target: { name: 'add-beneficiary' },
+                    },
+                }
+        );
+
         return (
             <Page
                 name="beneficiaries"
@@ -500,7 +576,7 @@ const Beneficiaries = defineComponent({
                 loading={isLoading}
                 actions={[
                     <Button
-                        type="add"
+                        type="primary"
                         icon="user-plus"
                         to={{ name: 'add-beneficiary' }}
                         collapsible
@@ -508,22 +584,29 @@ const Beneficiaries = defineComponent({
                         {__('page.beneficiaries.action-add')}
                     </Button>,
                     <Dropdown>
-                        <Button icon="table" onClick={handleConfigureColumns}>
-                            {__('configure-columns')}
-                        </Button>
+                        {hasContent && (
+                            <Button icon="table" onClick={handleConfigureColumns}>
+                                {__('configure-columns')}
+                            </Button>
+                        )}
                         <Button icon="trash" onClick={handleToggleShowTrashed}>
                             {__('open-trash-bin')}
                         </Button>
                     </Dropdown>,
                 ]}
                 scopedSlots={{
-                    headerContent: (): JSX.Node => (
-                        <FiltersPanel
-                            values={filters}
-                            onChange={handleFiltersChange}
-                            onSubmit={handleFiltersSubmit}
-                        />
-                    ),
+                    headerContent: (): JSX.Node => {
+                        if (!hasContent) {
+                            return null;
+                        }
+                        return (
+                            <FiltersPanel
+                                values={filters}
+                                onChange={handleFiltersChange}
+                                onSubmit={handleFiltersSubmit}
+                            />
+                        );
+                    },
                 }}
             >
                 <div class="Beneficiaries">
@@ -532,10 +615,11 @@ const Beneficiaries = defineComponent({
                         key="default"
                         name={$options.name}
                         class="Beneficiaries__table"
-                        rowClass="Beneficiaries__row"
                         columns={columns}
                         fetcher={fetch}
+                        emptyMessage={emptyMessage}
                         onRowClick={handleRowClick}
+                        sticky
                     />
                 </div>
             </Page>

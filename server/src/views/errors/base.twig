@@ -99,6 +99,9 @@
             font-size: 1.15rem;
             line-height: 1.5;
         }
+        .critical-error__content {
+            white-space: pre-wrap;
+        }
         .critical-error__button {
             display: inline-block;
             padding: .8rem 1.3rem;
@@ -142,7 +145,11 @@
                     {% block title %}{% endblock %}
                 </h1>
                 <div class="critical-error__body">
-                    {% block content %}{% endblock %}
+                    {% block content %}
+                        <p class="critical-error__content">
+                            {%- block text %}{% endblock -%}
+                        </p>
+                    {% endblock %}
                 </div>
             </div>
         </div>

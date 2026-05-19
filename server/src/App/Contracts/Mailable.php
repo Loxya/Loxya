@@ -25,7 +25,7 @@ abstract class Mailable
             );
         }
 
-        /** @disregard P1013 - L'existence de la constante est vérifiée plus. */
+        /** @disregard P1013 - L'existence de la méthode est vérifiée ci-dessus. */
         $rawSubject = $this->getRawSubject();
         if (!is_string($rawSubject) && !is_array($rawSubject)) {
             throw new \LogicException('`getRawSubject()` should return a translation key.');

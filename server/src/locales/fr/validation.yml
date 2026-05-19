@@ -71,10 +71,7 @@
     "Ne doit contenir aucune lettre (a-z) ni «\_{{additionalChars}}\_»."
 
 "{{name}} must be a valid postal code on {{countryCode}}":
-    "Doit être un code postal vide pour {{countryCode}}."
-
-"{{name}} must not be a valid postal code on {{countryCode}}":
-    "Ne doit pas être un code postal vide pour {{countryCode}}."
+    "Ce code postal est invalide."
 
 "{{name}} must contain only space characters":
     "Ne doit contenir que des espaces."
@@ -301,10 +298,10 @@
 "{{name}} must not be a valid CNPJ number":
     "Ne doit pas être un numéro CNPJ valide."
 
-"{{name}} must be an URL":
-    "Doit être une URL."
+"{{name}} must be a URL":
+    "Cette URL est invalide."
 
-"{{name}} must not be an URL":
+"{{name}} must not be a URL":
     "Ne doit pas être une URL."
 
 "{{name}} must start with {{startValue}}":
@@ -420,12 +417,6 @@
 
 "{{name}} must not contain consonants or {{additionalChars}}":
     "Ne doit contenir aucune consonne ni «\_{{additionalChars}}\_»."
-
-"{{name}} must be a subdivision code of {{countryName}}":
-    "Doit être un secteur valide de {{countryName}}."
-
-"{{name}} must not be a subdivision code of {{countryName}}":
-    "Ne doit pas être un secteur valide de {{countryName}}."
 
 "{{name}} is always invalid":
     "Ce champ ne devrait pas être spécifié."
@@ -627,12 +618,6 @@
 
 "{{name}} must not be a valid telephone number":
     "Ne doit pas être un numéro de téléphone valide."
-
-"{{name}} must be a valid telephone number for country {{countryName}}":
-    "Ce numéro de téléphone est invalide pour le pays spécifié."
-
-"{{name}} must not be a valid telephone number for country {{countryName}}":
-    "Ne doit pas être un numéro de téléphone valide pour le pays spécifié."
 
 "Must have keys {{keys}}":
     "Doit posséder les clés {{keys}}."
@@ -977,7 +962,7 @@
     "Ne doit contenir aucune des valeurs suivantes: {{needles}}."
 
 "{{name}} must have {{decimals}} decimals":
-    "Doit avoir {{decimals}} décimales."
+    "Valeur invalide (max. {{decimals}} décimales)."
 
 "{{name}} must not have {{decimals}} decimals":
     "Ne doit pas avoir {{decimals}} décimales."
@@ -1108,6 +1093,9 @@ invalid-name-like:
 invalid-positive-amount:
     "Ce montant est invalide, il doit être positif et avec deux chiffres après la virgule maximum."
 
+invalid-positive-number:
+    "Ce nombre doit être positif."
+
 facility-closed-at-this-start-date-day:
     "L'établissement est fermé ce jour de début."
 
@@ -1150,6 +1138,15 @@ end-time-must-be-after-start-time:
 end-date-must-be-after-start-date:
     "La date de fin doit être postérieure à la date de début."
 
+due-date-must-be-after-estimate-date:
+    "La date d'échéance doit être postérieure à la date du devis."
+
+due-date-must-be-after-invoice-date:
+    "La date d'échéance doit être postérieure à la date de la facture."
+
+due-date-or-due-delay-required:
+    "Une date d'échéance ou un délai de paiement est requis."
+
 start-date-too-close:
     "La date de début est trop proche."
 
@@ -1179,9 +1176,6 @@ unavailable-quantity:
 
 event-cannot-be-archived:
     "Un événement ne peut pas être archivé si son inventaire de retour n'a pas encore été effectué\_!"
-
-reservation-cannot-be-archived:
-    "Une réservation ne peut pas être archivée si son inventaire de retour n'a pas encore été effectué\_!"
 
 field-contains-invalid-values:
     "Le champ contient des valeurs invalides."
@@ -1273,12 +1267,21 @@ invalid-csv-file-encoding:
 invalid-email-domain:
     "Cette adresse e-mail n'est pas acceptée."
 
+payment-amount-exceeds-remaining-due:
+    "Le montant du paiement ne peut pas dépasser le restant dû."
+
+payment-reversal-exceeds-paid-amount:
+    "Le montant annulé ne peut pas dépasser le total déjà encaissé."
+
 #
 # - Existence messages
 #
 
 invoice-number-already-in-use:
     "Une facture existe déjà avec ce numéro."
+
+estimate-number-already-in-use:
+    "Un devis existe déjà avec ce numéro."
 
 category-name-already-in-use:
     "Une catégorie existe déjà avec ce nom."
@@ -1328,6 +1331,12 @@ tax-name-already-in-use:
 tax-component-name-already-in-use:
     "Cette composante de taxe existe déjà dans la même taxe."
 
+tax-rate-not-allowed-for-country:
+    "Ce taux ne fait pas partie des taux en vigueur."
+
+tax-rate-already-in-use:
+    "Une taxe avec ce taux existe déjà."
+
 degressive-rate-name-already-in-use:
     "Un tarif dégressif avec ce nom existe déjà."
 
@@ -1336,6 +1345,9 @@ degressive-rate-day-already-exists:
 
 invalid-hexadecimal-color:
     "Code de couleur invalide (doit être un code hexadécimal)."
+
+invalid-decimal:
+    "Valeur invalide (max. {{scale}} décimales)."
 
 at-least-one-field-must-be-defined-for-park-location:
     "Au moins un champ doit être défini pour l'emplacement."

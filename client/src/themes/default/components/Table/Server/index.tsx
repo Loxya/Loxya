@@ -1,28 +1,33 @@
 import '../index.scss';
-import clsx from 'clsx';
-import showModal from '@/utils/showModal';
-import generateUniqueId from 'lodash/uniqueId';
 import { defineComponent } from 'vue';
 import config from '@/globals/config';
-import { initColumnsDisplay } from '../@utils';
+import generateUniqueId from 'lodash/uniqueId';
+import Table from '../@components/Table';
+import { getStoredState, storeState } from '../@utils';
 import { Variant } from '../@constants';
 
 // - Modales
 import ColumnsSelector from '@/themes/default/modals/ColumnsSelector';
 
-import type { ClassValue } from 'clsx';
-import type { CreateElement, PropType } from 'vue';
-import type { Column, Columns } from './_types';
-import type { ColumnsDisplay } from '../@utils';
-import type { OrderBy, RenderFunction } from '../@types';
+import type { ComponentRef, CreateElement, PropType } from 'vue';
+import type { Column, Columns, RequestFunction } from './_types';
+import type { PaginationParams, SortableParams } from '@/stores/api/@types';
 import type {
-    RequestFunction,
-    ServerTableOptions,
-    ServerTableInstance,
-    RowClickEventPayload,
-} from 'vue-tables-2-premium';
+    Datum,
+    Identifier,
+    OrderBy,
+    RawColumn,
+    RawColumns,
+    RawOrderBy,
+    EmptyMessage,
+    RenderFunction,
+} from '../@types';
 
-export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>> = {
+export type Props<
+    K extends string = 'id',
+    D extends Datum<K> = Datum<K>,
+    Cs extends Columns<D, K> = Columns<D, K>,
+> = {
     /**
      * Nom unique du tableau.
      *
@@ -39,9 +44,9 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      * représentant une colonne avec les informations permettant
      * d'afficher son header, de formater son contenu, etc.
      *
-     * Voir {@see {@link Column}} pour le format des données des colonnes.
+     * Voir {@see {@link Columns}} pour le format des données des colonnes.
      */
-    columns: TColumns,
+    columns: Cs,
 
     /**
      * Le nom de la clé contenant l'identifiant unique de chaque
@@ -49,7 +54,7 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      *
      * @default 'id'
      */
-    uniqueKey?: string,
+    uniqueKey?: K,
 
     /**
      * L'ordre dans lequel le tableau doit être triée initialement.
@@ -61,50 +66,100 @@ export type Props<Datum = any, TColumns extends Columns<Datum> = Columns<Datum>>
      *
      * Si cette prop. n'est pas passée, le tableau conservera son tri initial.
      */
-    defaultOrderBy?: OrderBy<TColumns> | OrderBy<TColumns>['column'],
+    defaultOrderBy?: OrderBy<D, Cs, K> | OrderBy<D, Cs, K>['column'],
 
     /**
      * La fonction permettant de récupérer le jeu de données.
      */
-    fetcher: RequestFunction<Datum[]>,
+    fetcher: RequestFunction<D, K>,
+
+    /**
+     * Une fonction permettant de rendre la ligne de détails pour une ligne du tableau.
+     *
+     * Si cette prop. est spécifiée, le tableau sera réputé contenir des lignes de détails.
+     */
+    details?: RenderFunction<D, K>,
+
+    /**
+     * Les identifiants des lignes pour lesquelles le détails doit être ouvert
+     * lorsque le tableau propose une ligne de détails pour certaines lignes du tableau.
+     */
+    openDetails?: Identifier[],
 
     /**
      * Variante de la présentation du tableau.
      *
-     * Valeur acceptées:
-     * - `default`: Variante par défaut.
-     * - `minimalist`: Présentation minimaliste, sans fond ni séparateurs.
+     * Voir {@link Variant}
      */
-    variant?: Variant,
+    variant?: Variant | `${Variant}`,
+
+    /**
+     * Le header du tableau doit-il rester visible lors du scroll ?
+     *
+     * @default false
+     */
+    sticky?: boolean,
+
+    /**
+     * Le tableau doit-il être sans ligne d'en tête ?
+     *
+     * @default false
+     */
+    headless?: boolean,
 
     /**
      * Classe(s) qui seront ajoutées aux lignes du tableau.
      *
      * Différents formats sont acceptés:
      * - Les formats acceptés par défaut par Vue pour les classes.
-     *   ({@see {@link ClassValue}})
      * - Une fonction a qui le jeu de données de chaque ligne sera passé
      *   et qui devra renvoyer des classes dans les formats acceptés par
      *   Vue (cf. ci-dessus).
      */
-    rowClass?: ClassValue | ((row: Datum) => ClassValue),
+    rowClass?: JSX.NodeClass | ((row: D) => JSX.NodeClass),
 
     /**
-     * Le nombre maximum d'enregistrements récupérables par page, pour
+     * Permet de customiser le contenu affiché lorsque le tableau est vide.
+     *
+     * Accepte soit une chaîne (= texte du message), soit un objet
+     * {@link EmptyMessage} pour customiser la variante / l'action.
+     */
+    emptyMessage?: string | EmptyMessage,
+
+    /**
+     * La page de départ, lorsque le tableau est affiché.
+     *
+     * @default 1
+     */
+    initialPage?: number,
+
+    /**
+     * Le nombre maximum d'enregistrements par page, pour
      * surcharger la valeur par défaut de la configuration.
+     *
+     * @default {config.defaultPaginationLimit}
      */
     perPage?: number,
 
     /**
      * Fonction appelée lorsqu'une ligne du tableau est cliquée.
      *
-     * @param row - Les données de la ligne cliquée.
+     * @param datum - Les données de la ligne cliquée.
      */
-    onRowClick?(row: Datum): void,
+    onRowClick?(datum: D): void,
 };
 
 type InstanceProperties = {
     uniqueId: string | undefined,
+};
+
+type Data<D extends Datum = Datum> = {
+    count: number,
+    page: number,
+    limit: number,
+    data: D[] | undefined,
+    orderBy: RawOrderBy | null,
+    columnsDisplay: Record<string, boolean>,
 };
 
 /**
@@ -141,6 +196,22 @@ const ServerTable = defineComponent({
                 Object.values(Variant).includes(value as any)
             ),
         },
+        details: {
+            type: Function as PropType<Props['details']>,
+            default: undefined,
+        },
+        openDetails: {
+            type: Array as PropType<Required<Props>['openDetails']>,
+            default: () => [],
+        },
+        sticky: {
+            type: Boolean as PropType<Required<Props>['sticky']>,
+            default: false,
+        },
+        headless: {
+            type: Boolean as PropType<Required<Props>['headless']>,
+            default: false,
+        },
         defaultOrderBy: {
             type: [Object, String] as PropType<Props['defaultOrderBy']>,
             default: undefined,
@@ -156,9 +227,19 @@ const ServerTable = defineComponent({
             ] as PropType<Props['rowClass']>,
             default: undefined,
         },
-        perPage: {
-            type: Number as PropType<Props['perPage']>,
+        emptyMessage: {
+            type: [String, Object] as PropType<Props['emptyMessage']>,
             default: undefined,
+        },
+        initialPage: {
+            type: Number as PropType<Required<Props>['initialPage']>,
+            default: 1,
+            validator: (value: number) => value > 0,
+        },
+        perPage: {
+            type: Number as PropType<Required<Props>['perPage']>,
+            default: () => config.defaultPaginationLimit,
+            validator: (value: number) => value > 0,
         },
         // eslint-disable-next-line vue/no-unused-properties
         onRowClick: {
@@ -170,127 +251,135 @@ const ServerTable = defineComponent({
     setup: (): InstanceProperties => ({
         uniqueId: undefined,
     }),
+    data(): Data {
+        const storedState = this.name !== undefined
+            ? getStoredState(this.name)
+            : null;
+
+        return {
+            count: 0,
+            data: undefined,
+            page: Math.max(1, this.initialPage),
+            limit: Math.max(1, this.perPage),
+            columnsDisplay: storedState?.columns ?? {},
+            orderBy: storedState?.orderBy ?? (() => {
+                if (this.defaultOrderBy !== undefined) {
+                    const columnKey = typeof this.defaultOrderBy !== 'string'
+                        ? this.defaultOrderBy.column
+                        : this.defaultOrderBy;
+
+                    const ascending = typeof this.defaultOrderBy !== 'string'
+                        ? (this.defaultOrderBy.ascending ?? null)
+                        : null;
+
+                    const column = this.columns.find(
+                        (_column: Column) => _column.key === columnKey,
+                    );
+
+                    return {
+                        column: columnKey,
+                        ascending: ascending ?? !column?.defaultSortDesc,
+                    };
+                }
+                return null;
+            })(),
+        };
+    },
     computed: {
-        columnsKeys(): Array<Column['key']> {
-            return this.columns.map(({ key }: Column) => key);
+        displayedColumns(): string[] {
+            return this.columns
+                .filter((column: Column) => {
+                    const defaultVisible = !(column.defaultHidden ?? false);
+                    return this.columnsDisplay[column.key] ?? defaultVisible;
+                })
+                .map((column: Column) => column.key);
         },
 
-        columnsRenders(): Record<Column['key'], RenderFunction> {
+        normalizedColumns(): RawColumns {
+            const { displayedColumns } = this;
+
             return this.columns.reduce(
-                (acc: Record<Column['key'], RenderFunction>, column: Column) => {
-                    const rawRenderColumn = column.render;
-                    if (undefined === rawRenderColumn) {
+                (acc: RawColumns, column: Column) => {
+                    if (!displayedColumns.includes(column.key)) {
                         return acc;
                     }
 
-                    return {
-                        ...acc,
-                        [column.key]: (h: CreateElement, row: any, index: number): JSX.Node => {
-                            const renderedColumn = rawRenderColumn(h, row, index);
+                    const rawRender = column.render;
+                    const render = rawRender === undefined ? undefined : (
+                        (h: CreateElement, row: any, index: number): JSX.Node => {
+                            const renderedColumn = rawRender(h, row, index);
 
                             return column.key === 'actions'
                                 ? <div class="Table__cell__actions">{renderedColumn}</div>
                                 : renderedColumn;
-                        },
-                    };
+                        }
+                    );
+
+                    return acc.concat({
+                        key: column.key,
+                        title: column.title,
+                        sortable: !!column.sortable,
+                        class: column.class,
+                        render,
+                    });
                 },
-                {},
+                [],
             );
         },
 
-        columnsHeadings(): Record<Column['key'], string> {
-            return this.columns.reduce(
-                (acc: Record<Column['key'], string>, { key, title }: Column) => (
-                    { ...acc, [key]: title ?? '' }
-                ),
-                {},
-            );
-        },
-
-        columnsClasses(): Record<Column['key'], string> {
-            return this.columns.reduce(
-                (acc: Record<Column['key'], string>, column: Column) => {
-                    const columnClass = ['Table__cell', {
-                        'Table__cell--actions': column.key === 'actions',
-                    }];
-                    return { ...acc, [column.key]: `${clsx(columnClass, column.class)} ` };
-                },
-                {},
-            );
-        },
-
-        columnsSortable(): Array<Column['key']> {
-            return this.columns
-                .filter(({ sortable }: Column) => sortable)
-                .map(({ key }: Column) => key);
-        },
-
-        columnsDisplayed(): string[] {
-            const columnsDisplay = this.columns.reduce(
-                (acc: ColumnsDisplay, column: Column) => {
-                    const visible = !(column.defaultHidden ?? false);
-                    return { ...acc, [column.key]: visible };
-                },
-                {},
-            );
-            return initColumnsDisplay(this.name, columnsDisplay);
+        hasRowClickListener(): boolean {
+            return Boolean(this.$listeners.rowClick);
         },
 
         shouldPersistState(): boolean {
             return this.name !== undefined;
         },
 
-        options(): ServerTableOptions {
-            const {
-                fetcher,
-                uniqueKey,
-                rowClass,
-                defaultOrderBy,
-                columnsHeadings,
-                columnsClasses,
-                columnsDisplayed,
-                columnsSortable,
-                columnsRenders,
-                shouldPersistState,
-                perPage = config.defaultPaginationLimit,
-            } = this;
-
-            const options: ServerTableOptions = {
-                uniqueKey,
-                preserveState: shouldPersistState,
-                saveState: shouldPersistState,
-                sortable: columnsSortable,
-                headings: columnsHeadings,
-                templates: columnsRenders,
-                saveSearch: false,
-                columnsDropdown: false,
-                filterByColumn: false,
-                filterable: false,
-                requestFunction: fetcher,
-                visibleColumns: columnsDisplayed,
-                perPage: perPage ?? config.defaultPaginationLimit,
-                columnsClasses,
-                rowClassCallback: (row: any): ClassValue => (
-                    clsx('Table__row', typeof rowClass === 'function' ? rowClass(row) : rowClass)
-                ),
-            };
-
-            if (defaultOrderBy !== undefined) {
-                options.orderBy = typeof defaultOrderBy === 'string'
-                    ? { column: defaultOrderBy, ascending: true }
-                    : {
-                        column: defaultOrderBy.column,
-                        ascending: defaultOrderBy.ascending ?? true,
-                    };
+        totalPages(): number {
+            return Math.ceil(this.count / this.limit);
+        },
+    },
+    watch: {
+        orderBy: {
+            deep: true,
+            immediate: true,
+            handler() {
+                if (this.shouldPersistState) {
+                    storeState(this.name!, {
+                        orderBy: this.orderBy,
+                        columns: this.columnsDisplay,
+                    });
+                }
+            },
+        },
+        columnsDisplay: {
+            deep: true,
+            immediate: true,
+            handler() {
+                if (this.shouldPersistState) {
+                    storeState(this.name!, {
+                        orderBy: this.orderBy,
+                        columns: this.columnsDisplay,
+                    });
+                }
+            },
+        },
+        data() {
+            if (this.page > this.totalPages) {
+                this.page = Math.max(1, this.totalPages);
             }
-
-            return options;
         },
     },
     created() {
         const { $options } = this;
 
         this.uniqueId = generateUniqueId(`${$options.name!}-`);
+
+        // - Binding
+        this.handleChangeVisibleColumns = this.handleChangeVisibleColumns.bind(this);
+
+        // - Initial fetch.
+        this.fetchData();
     },
     methods: {
         // ------------------------------------------------------
@@ -299,26 +388,76 @@ const ServerTable = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleRowClick({ row, event: e }: RowClickEventPayload) {
-            if (e.type === 'dblclick') {
+        handleRowClick(datum: Datum) {
+            this.$emit('rowClick', datum);
+        },
+
+        handleOrderBy(columnKey: RawColumn['key']) {
+            const column = this.columns.find(
+                (_column: Column) => _column.key === columnKey,
+            );
+            if (column === undefined || !column.sortable) {
                 return;
             }
 
-            let currentElement: HTMLElement | null = e.target as HTMLElement;
-            while (currentElement && currentElement !== document.body) {
-                const { nodeName } = currentElement;
-                if (['A', 'BUTTON'].includes(nodeName)) {
-                    return;
-                }
-                currentElement = currentElement.parentElement;
+            this.page = 1;
+
+            const defaultAscending = !column?.defaultSortDesc;
+            if (this.orderBy === null) {
+                this.orderBy = {
+                    column: column.key,
+                    ascending: defaultAscending,
+                };
+            } else {
+                this.orderBy.ascending = column.key === this.orderBy.column
+                    ? !this.orderBy.ascending
+                    : defaultAscending;
+
+                this.orderBy.column = column.key;
             }
 
-            this.$emit('rowClick', row);
+            this.fetchData();
         },
 
-        handleChangeVisibleColumns(newVisibleColumns: string[]) {
-            const $table = this.$refs.table as ServerTableInstance | undefined;
-            $table?.setVisibleColumns(newVisibleColumns);
+        handleChangeVisibleColumns(newVisibleColumns: string[]): void {
+            this.columns.forEach((column: Column) => {
+                const visible = newVisibleColumns.includes(column.key);
+                this.$set(this.columnsDisplay, column.key, visible);
+            });
+        },
+
+        handlePaginate(newPage: number) {
+            this.setPage(newPage);
+        },
+
+        // ------------------------------------------------------
+        // -
+        // -    Méthodes internes
+        // -
+        // ------------------------------------------------------
+
+        async fetchData() {
+            // - Si la liste précédente était vide, on invalide la donnée pour
+            //   forcer l'affichage du loader pendant le refetch pour éviter un
+            //   flash d'état "empty" potentiellement incohérent.
+            if (this.data !== undefined && this.data.length === 0) {
+                this.data = undefined;
+            }
+
+            const payload: PaginationParams & SortableParams = {
+                page: this.page,
+                limit: this.limit,
+            };
+            if (this.orderBy !== null) {
+                payload.orderBy = this.orderBy.column;
+                payload.ascending = this.orderBy.ascending;
+            }
+
+            const response = await this.fetcher(payload);
+            const { data, pagination } = response ?? { data: undefined };
+
+            this.data = data;
+            this.count = pagination?.total.items ?? 0;
         },
 
         // ------------------------------------------------------
@@ -328,32 +467,66 @@ const ServerTable = defineComponent({
         // ------------------------------------------------------
 
         /**
-         * Permet de changer la page courante du tableau (dans le cas ou celui-ci est paginé).
+         * Permet de changer la page courante du tableau.
          *
          * @param number - Le numéro de la page à afficher.
          */
         setPage(number: number): void {
-            const $table = this.$refs.table as ServerTableInstance | undefined;
-            $table?.setPage(number);
+            let page = Math.max(1, number);
+
+            if (this.totalPages > 0 && page > this.totalPages) {
+                page = this.totalPages;
+            }
+
+            this.page = page;
+            this.fetchData();
+        },
+
+        /**
+         * Permet de changer l'ordre des résultats du tableau.
+         *
+         * @param column - La colonne via laquelle il faut ordonner les résultats.
+         * @param ascending - Faut-il ordonner dans l'ordre ascendant ou descendant ?
+         */
+        setOrder(column: string, ascending: boolean) {
+            this.orderBy = { column, ascending };
+            this.fetchData();
+        },
+
+        /**
+         * Permet de changer le nombre de résultats par page du tableau.
+         *
+         * @param number - La nouvelle limite de résultats.
+         */
+        setLimit(number: number) {
+            this.limit = Math.max(1, number);
+            this.page = 1;
+            this.fetchData();
         },
 
         /**
          * Permet d'actualiser les données du tableau via une requête serveur.
+         *
+         * @param pageOnly - Dois-t'on uniquement rafraîchir la page ?
          */
-        refresh(): void {
-            const $table = this.$refs.table as ServerTableInstance | undefined;
-            $table?.refresh();
+        refresh(pageOnly: boolean = false): void {
+            if (!pageOnly) {
+                this.page = 1;
+            }
+            this.fetchData();
         },
 
         /**
          * Permet d'afficher le sélecteur de colonnes du tableau.
          */
         async showColumnsSelector(): Promise<void> {
+            const { columns, displayedColumns, handleChangeVisibleColumns } = this;
+
             const newVisibleColumns: string[] | undefined = (
-                await showModal(this.$modal, ColumnsSelector, {
-                    columns: this.columns,
-                    defaultSelected: this.columnsDisplayed,
-                    onChange: this.handleChangeVisibleColumns,
+                await this.$modal.show(ColumnsSelector, {
+                    columns,
+                    defaultSelected: displayedColumns,
+                    onChange: handleChangeVisibleColumns,
                 })
             );
 
@@ -362,33 +535,71 @@ const ServerTable = defineComponent({
                 return;
             }
 
-            this.handleChangeVisibleColumns(newVisibleColumns);
+            handleChangeVisibleColumns(newVisibleColumns);
         },
     },
     render() {
         const {
             name,
+            page,
+            limit,
+            count,
+            data,
             uniqueId,
             variant,
-            columnsKeys,
-            options,
+            sticky,
+            headless,
+            orderBy,
+            details,
+            openDetails,
+            uniqueKey,
+            rowClass,
+            emptyMessage,
+            normalizedColumns: columns,
+            hasRowClickListener,
             handleRowClick,
+            handleOrderBy,
+            handlePaginate,
         } = this;
 
         return (
-            <v-server-table
-                ref="table"
-                class={['Table', `Table--${variant}`]}
-                key={name ?? uniqueId}
-                name={name ?? uniqueId}
-                columns={columnsKeys}
-                options={options}
+            <Table
+                key={name ?? uniqueId!}
+                page={page}
+                limit={limit}
+                count={count}
+                uniqueKey={uniqueKey}
+                variant={variant}
+                sticky={sticky}
+                headless={headless}
+                clickable={hasRowClickListener}
+                orderBy={orderBy}
+                columns={columns}
+                data={data}
+                details={details}
+                openDetails={openDetails}
+                rowClass={rowClass}
+                emptyMessage={emptyMessage}
+                onOrderBy={handleOrderBy}
                 onRowClick={handleRowClick}
+                onPaginate={handlePaginate}
             />
         );
     },
 });
 
+//
+// - Exports
+//
+
 export { Variant };
 export type { Columns, Column };
-export default ServerTable;
+
+type ServerTableGeneric = <
+    D extends Datum<K>,
+    Cs extends Columns<D, K>,
+    K extends string = 'id',
+>(props: Props<K, D, Cs>) => JSX.Element;
+
+export type ServerTableRef = ComponentRef<typeof ServerTable>;
+export default ServerTable as any as ServerTableGeneric;

@@ -5,8 +5,8 @@ namespace Loxya\Models;
 
 use Adbar\Dot as DotArray;
 use Illuminate\Support\Str;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Enums\PublicCalendarPeriodDisplay;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -171,30 +171,6 @@ final class Setting extends BaseModel
             // - Devis
             //
 
-            'estimates.customText.title' => [
-                'type' => 'string',
-                'validation' => V::optional(V::length(null, 191)),
-                'sensitive' => true,
-                'default' => null,
-            ],
-            'estimates.customText.content' => [
-                'type' => 'string',
-                'validation' => null,
-                'sensitive' => true,
-                'default' => null,
-            ],
-            'estimates.showBookingDescription' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => false,
-            ],
-            'estimates.showMobilizationPeriod' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => false,
-            ],
             'estimates.showTotalReplacementPrice' => [
                 'type' => 'boolean',
                 'validation' => V::boolVal(),
@@ -202,12 +178,6 @@ final class Setting extends BaseModel
                 'default' => false,
             ],
             'estimates.showTotalisableProperties' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => false,
-            ],
-            'estimates.showPictures' => [
                 'type' => 'boolean',
                 'validation' => V::boolVal(),
                 'sensitive' => false,
@@ -225,41 +195,17 @@ final class Setting extends BaseModel
                 'sensitive' => false,
                 'default' => true,
             ],
-            'estimates.showUnitPrices' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => true,
+            'estimates.specialMentions' => [
+                'type' => 'string',
+                'validation' => V::nullable(V::stringType()),
+                'sensitive' => true,
+                'default' => null,
             ],
 
             //
             // - Factures
             //
 
-            'invoices.customText.title' => [
-                'type' => 'string',
-                'validation' => V::optional(V::length(null, 191)),
-                'sensitive' => true,
-                'default' => null,
-            ],
-            'invoices.customText.content' => [
-                'type' => 'string',
-                'validation' => null,
-                'sensitive' => true,
-                'default' => null,
-            ],
-            'invoices.showBookingDescription' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => false,
-            ],
-            'invoices.showMobilizationPeriod' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => false,
-            ],
             'invoices.showTotalReplacementPrice' => [
                 'type' => 'boolean',
                 'validation' => V::boolVal(),
@@ -267,12 +213,6 @@ final class Setting extends BaseModel
                 'default' => false,
             ],
             'invoices.showTotalisableProperties' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => false,
-            ],
-            'invoices.showPictures' => [
                 'type' => 'boolean',
                 'validation' => V::boolVal(),
                 'sensitive' => false,
@@ -290,11 +230,11 @@ final class Setting extends BaseModel
                 'sensitive' => false,
                 'default' => true,
             ],
-            'invoices.showUnitPrices' => [
-                'type' => 'boolean',
-                'validation' => V::boolVal(),
-                'sensitive' => false,
-                'default' => true,
+            'invoices.specialMentions' => [
+                'type' => 'string',
+                'validation' => V::nullable(V::stringType()),
+                'sensitive' => true,
+                'default' => null,
             ],
         ];
     }
@@ -333,7 +273,7 @@ final class Setting extends BaseModel
         'value' => 'string',
     ];
 
-    public function getValueAttribute($value)
+    public function getValueAttribute(mixed $value)
     {
         $allManifests = static::manifest();
         if (!array_key_exists($this->key, $allManifests)) {
@@ -357,7 +297,7 @@ final class Setting extends BaseModel
 
                 /** @var BaseModel $model */
                 $model = $manifest['model'];
-                return $model::find((int) $value)->getKey();
+                return $model::find((int) $value)?->getKey();
 
             case 'integer':
                 return (int) $value;
@@ -425,14 +365,14 @@ final class Setting extends BaseModel
                     $value = is_string($value) ? trim($value) : $value;
                     $model->value = $value === '' ? null : $value;
                     $model->save();
-                } catch (ValidationException $e) {
+                } catch (ValidationsException $e) {
                     $errors[$key] = $e->getValidationErrors()['value'];
                 }
             }
         }
 
         if (count($errors) > 0) {
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         return new static();

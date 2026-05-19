@@ -5,35 +5,15 @@
 
     height: 100%;
 
-    /* stylelint-disable selector-max-type, selector-max-compound-selectors */
-    .VueTables {
-        .table-responsive {
-            margin-top: 0;
-        }
-
-        &__table {
-            > thead {
-                display: none;
-            }
-
-            .VueTables__row {
-                > td {
-                    border-bottom-color: globals.$list-left-border-color;
-                    background: none;
-                }
-
-                &:first-child > td {
-                    border-top: 1px solid globals.$list-left-border-color;
-                }
-            }
-        }
+    &__table {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
-    /* stylelint-enable selector-max-type, selector-max-compound-selectors */
 
     &__col {
         &--quantity {
             width: 65px;
-            // stylelint-disable-next-line declaration-no-important
             color: globals.$text-light-color !important;
             font-weight: 600;
             text-align: right;

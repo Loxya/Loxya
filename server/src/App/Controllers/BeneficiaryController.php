@@ -5,42 +5,49 @@ namespace Loxya\Controllers;
 
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
-use Loxya\Controllers\Traits\Crud;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Http\Request;
 use Loxya\Models\Beneficiary;
+use Loxya\Models\Enums\Group;
 use Loxya\Models\Event;
 use Loxya\Models\Park;
+use Loxya\Services\Auth;
 use Loxya\Support\Database\QueryAggregator;
+use Loxya\Support\Validation\ValidationsException;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Http\Response;
 
 final class BeneficiaryController extends BaseController
 {
-    use Crud\GetOne;
-    use Crud\SoftDelete;
-
     public function getAll(Request $request, Response $response): ResponseInterface
     {
         $search = $request->getSearchArrayQueryParam('search');
         $limit = $request->getIntegerQueryParam('limit');
-        $ascending = $request->getBooleanQueryParam('ascending', true);
         $onlyDeleted = $request->getBooleanQueryParam('deleted', false);
-        $orderBy = $request->getOrderByQueryParam('orderBy', Beneficiary::class);
+        $orderBy = $request->getOrderByQueryParams('orderBy', 'ascending', Beneficiary::class);
 
         $query = Beneficiary::query()
-            ->when(
-                !empty($search),
-                static fn (Builder $query) => $query->search($search),
-            )
-            ->when($onlyDeleted, static fn (Builder $builder) => (
-                $builder->onlyTrashed()
+            ->when(!empty($search), static fn (Builder $subQuery) => (
+                $subQuery->search($search)
             ))
-            ->customOrderBy($orderBy, $ascending ? 'asc' : 'desc');
+            ->when($onlyDeleted, static fn (Builder $subQuery) => (
+                $subQuery->onlyTrashed()
+            ))
+            ->when($orderBy !== null, static fn (Builder $subQuery) => (
+                $subQuery->customOrderBy($orderBy['column'], $orderBy['direction'])
+            ));
 
         $results = $this->paginate($request, $query, $limit);
         return $response->withJson($results, StatusCode::STATUS_OK);
+    }
+
+    public function getOne(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+        $beneficiary = Beneficiary::findOrFail($id);
+
+        $data = static::_formatOne($beneficiary);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     public function getBookings(Request $request, Response $response): ResponseInterface
@@ -119,9 +126,9 @@ final class BeneficiaryController extends BaseController
 
         try {
             $beneficiary = Beneficiary::new($postData);
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Beneficiary::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         $beneficiary = static::_formatOne($beneficiary);
@@ -139,17 +146,51 @@ final class BeneficiaryController extends BaseController
         }
 
         $postData = Beneficiary::unserialize($postData);
-        unset($postData['user']);
+        if (!Auth::is(Group::ADMINISTRATION)) {
+            unset($postData['user']);
+        }
 
         try {
             $beneficiary->edit($postData);
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Beneficiary::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         $beneficiary = static::_formatOne($beneficiary);
         return $response->withJson($beneficiary, StatusCode::STATUS_OK);
+    }
+
+    public function delete(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+        $beneficiary = Beneficiary::withTrashed()->findOrFail($id);
+
+        $isDeleted = $beneficiary->trashed()
+            ? $beneficiary->forceDelete()
+            : $beneficiary->delete();
+
+        if (!$isDeleted) {
+            throw new \RuntimeException("An unknown error occurred while deleting the beneficiary.");
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
+    }
+
+    public function restore(Request $request, Response $response): ResponseInterface
+    {
+        $id = $request->getIntegerAttribute('id');
+
+        $beneficiary = Beneficiary::query()
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        if (!$beneficiary->restore()) {
+            throw new \RuntimeException(sprintf("Unable to restore the benficiary %d.", $id));
+        }
+
+        $data = static::_formatOne($beneficiary);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     // ------------------------------------------------------

@@ -15,6 +15,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "Console Yamaha CL3",
       "note": null,
+      "origin_country": /* Country Instance => */ "CH",
       "out_of_order_quantity": 1,
       "park_id": 1,
       "picture": "http://loxya.test/materials/1/picture",
@@ -65,6 +66,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       ],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+      "weight": /* Decimal Instance => */ "24.5",
     },
     {
       "available_quantity": 2,
@@ -78,6 +80,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "Processeur DBX PA2",
       "note": null,
+      "origin_country": /* Country Instance => */ "CH",
       "out_of_order_quantity": 0,
       "park_id": 1,
       "picture": null,
@@ -118,6 +121,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       ],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+      "weight": /* Decimal Instance => */ "6.4",
     },
     {
       "available_quantity": 30,
@@ -131,6 +135,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "PAR64 LED",
       "note": "Soyez délicats avec ces projos !",
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 4,
       "park_id": 1,
       "picture": null,
@@ -171,6 +176,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       ],
       "tax_id": null,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+      "weight": /* Decimal Instance => */ "1.2",
     },
     {
       "available_quantity": 2,
@@ -184,6 +190,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "Showtec SDS-6",
       "note": null,
+      "origin_country": /* Country Instance => */ "BE",
       "out_of_order_quantity": 0,
       "park_id": 1,
       "picture": null,
@@ -228,6 +235,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "tags": [],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+      "weight": /* Decimal Instance => */ "3",
     },
     {
       "available_quantity": 32,
@@ -241,6 +249,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": true,
       "name": "Câble XLR 10m",
       "note": null,
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 8,
       "park_id": 1,
       "picture": null,
@@ -253,6 +262,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "tags": [],
       "tax_id": 2,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+      "weight": /* Decimal Instance => */ "0.35",
     },
     {
       "available_quantity": 2,
@@ -266,6 +276,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "Behringer X Air XR18",
       "note": null,
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 1,
       "park_id": 1,
       "picture": null,
@@ -313,6 +324,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "tags": [],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+      "weight": /* Decimal Instance => */ "4.8",
     },
     {
       "available_quantity": 2,
@@ -326,6 +338,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "Volkswagen Transporter",
       "note": null,
+      "origin_country": null,
       "out_of_order_quantity": 0,
       "park_id": 2,
       "picture": null,
@@ -353,6 +366,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "tags": [],
       "tax_id": null,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+      "weight": null,
     },
     {
       "available_quantity": 2,
@@ -366,6 +380,7 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "is_hidden_on_bill": false,
       "name": "Décor Thème Forêt",
       "note": null,
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 0,
       "park_id": 1,
       "picture": null,
@@ -391,8 +406,9 @@ exports[`Materials Api all() parse the returned data correctly 1`] = `
       "stock_quantity": 2,
       "sub_category_id": null,
       "tags": [],
-      "tax_id": 4,
+      "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+      "weight": null,
     },
   ],
   "pagination": {
@@ -421,6 +437,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "Console Yamaha CL3",
       "note": null,
+      "origin_country": /* Country Instance => */ "CH",
       "out_of_order_quantity": 1,
       "park_id": 1,
       "picture": "http://loxya.test/materials/1/picture",
@@ -471,6 +488,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       ],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+      "weight": /* Decimal Instance => */ "24.5",
     },
     {
       "available_quantity": 2,
@@ -484,6 +502,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "Processeur DBX PA2",
       "note": null,
+      "origin_country": /* Country Instance => */ "CH",
       "out_of_order_quantity": 0,
       "park_id": 1,
       "picture": null,
@@ -524,6 +543,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       ],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+      "weight": /* Decimal Instance => */ "6.4",
     },
     {
       "available_quantity": 30,
@@ -537,6 +557,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "PAR64 LED",
       "note": "Soyez délicats avec ces projos !",
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 4,
       "park_id": 1,
       "picture": null,
@@ -577,6 +598,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       ],
       "tax_id": null,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+      "weight": /* Decimal Instance => */ "1.2",
     },
     {
       "available_quantity": 2,
@@ -590,6 +612,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "Showtec SDS-6",
       "note": null,
+      "origin_country": /* Country Instance => */ "BE",
       "out_of_order_quantity": 0,
       "park_id": 1,
       "picture": null,
@@ -634,6 +657,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "tags": [],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+      "weight": /* Decimal Instance => */ "3",
     },
     {
       "available_quantity": 32,
@@ -647,6 +671,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": true,
       "name": "Câble XLR 10m",
       "note": null,
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 8,
       "park_id": 1,
       "picture": null,
@@ -659,6 +684,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "tags": [],
       "tax_id": 2,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+      "weight": /* Decimal Instance => */ "0.35",
     },
     {
       "available_quantity": 2,
@@ -672,6 +698,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "Behringer X Air XR18",
       "note": null,
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 1,
       "park_id": 1,
       "picture": null,
@@ -719,6 +746,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "tags": [],
       "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+      "weight": /* Decimal Instance => */ "4.8",
     },
     {
       "available_quantity": 2,
@@ -732,6 +760,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "Volkswagen Transporter",
       "note": null,
+      "origin_country": null,
       "out_of_order_quantity": 0,
       "park_id": 2,
       "picture": null,
@@ -759,6 +788,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "tags": [],
       "tax_id": null,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+      "weight": null,
     },
     {
       "available_quantity": 2,
@@ -772,6 +802,7 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "is_hidden_on_bill": false,
       "name": "Décor Thème Forêt",
       "note": null,
+      "origin_country": /* Country Instance => */ "FR",
       "out_of_order_quantity": 0,
       "park_id": 1,
       "picture": null,
@@ -797,8 +828,9 @@ exports[`Materials Api all() parse the returned data correctly 2`] = `
       "stock_quantity": 2,
       "sub_category_id": null,
       "tags": [],
-      "tax_id": 4,
+      "tax_id": 1,
       "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+      "weight": null,
     },
   ],
   "pagination": {
@@ -826,6 +858,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "Console Yamaha CL3",
     "note": null,
+    "origin_country": /* Country Instance => */ "CH",
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": "http://loxya.test/materials/1/picture",
@@ -876,6 +909,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     ],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+    "weight": /* Decimal Instance => */ "24.5",
   },
   {
     "available_quantity": 2,
@@ -889,6 +923,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "Processeur DBX PA2",
     "note": null,
+    "origin_country": /* Country Instance => */ "CH",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -929,6 +964,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     ],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "weight": /* Decimal Instance => */ "6.4",
   },
   {
     "available_quantity": 30,
@@ -942,6 +978,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "PAR64 LED",
     "note": "Soyez délicats avec ces projos !",
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 4,
     "park_id": 1,
     "picture": null,
@@ -982,6 +1019,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     ],
     "tax_id": null,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "weight": /* Decimal Instance => */ "1.2",
   },
   {
     "available_quantity": 2,
@@ -995,6 +1033,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "Showtec SDS-6",
     "note": null,
+    "origin_country": /* Country Instance => */ "BE",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -1039,6 +1078,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "tags": [],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+    "weight": /* Decimal Instance => */ "3",
   },
   {
     "available_quantity": 32,
@@ -1052,6 +1092,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": true,
     "name": "Câble XLR 10m",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 8,
     "park_id": 1,
     "picture": null,
@@ -1064,6 +1105,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "tags": [],
     "tax_id": 2,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+    "weight": /* Decimal Instance => */ "0.35",
   },
   {
     "available_quantity": 2,
@@ -1077,6 +1119,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "Behringer X Air XR18",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": null,
@@ -1124,6 +1167,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "tags": [],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+    "weight": /* Decimal Instance => */ "4.8",
   },
   {
     "available_quantity": 2,
@@ -1137,6 +1181,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "Volkswagen Transporter",
     "note": null,
+    "origin_country": null,
     "out_of_order_quantity": 0,
     "park_id": 2,
     "picture": null,
@@ -1164,6 +1209,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "tags": [],
     "tax_id": null,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+    "weight": null,
   },
   {
     "available_quantity": 2,
@@ -1177,6 +1223,7 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "is_hidden_on_bill": false,
     "name": "Décor Thème Forêt",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -1202,8 +1249,9 @@ exports[`Materials Api all() parse the returned data correctly 3`] = `
     "stock_quantity": 2,
     "sub_category_id": null,
     "tags": [],
-    "tax_id": 4,
+    "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+    "weight": null,
   },
 ]
 `;
@@ -1223,6 +1271,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Console Yamaha CL3",
     "note": null,
+    "origin_country": /* Country Instance => */ "CH",
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": "http://loxya.test/materials/1/picture",
@@ -1274,6 +1323,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     ],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+    "weight": /* Decimal Instance => */ "24.5",
   },
   {
     "available_quantity": 2,
@@ -1288,6 +1338,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Processeur DBX PA2",
     "note": null,
+    "origin_country": /* Country Instance => */ "CH",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -1329,6 +1380,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     ],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "weight": /* Decimal Instance => */ "6.4",
   },
   {
     "available_quantity": 30,
@@ -1343,6 +1395,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "PAR64 LED",
     "note": "Soyez délicats avec ces projos !",
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 4,
     "park_id": 1,
     "picture": null,
@@ -1384,6 +1437,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     ],
     "tax_id": null,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "weight": /* Decimal Instance => */ "1.2",
   },
   {
     "available_quantity": 2,
@@ -1398,6 +1452,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Showtec SDS-6",
     "note": null,
+    "origin_country": /* Country Instance => */ "BE",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -1443,6 +1498,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+    "weight": /* Decimal Instance => */ "3",
   },
   {
     "available_quantity": 32,
@@ -1457,6 +1513,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": true,
     "name": "Câble XLR 10m",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 8,
     "park_id": 1,
     "picture": null,
@@ -1470,6 +1527,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": 2,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+    "weight": /* Decimal Instance => */ "0.35",
   },
   {
     "available_quantity": 2,
@@ -1484,6 +1542,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Behringer X Air XR18",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": null,
@@ -1532,6 +1591,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+    "weight": /* Decimal Instance => */ "4.8",
   },
   {
     "available_quantity": 2,
@@ -1546,6 +1606,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Volkswagen Transporter",
     "note": null,
+    "origin_country": null,
     "out_of_order_quantity": 0,
     "park_id": 2,
     "picture": null,
@@ -1574,6 +1635,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": null,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+    "weight": null,
   },
   {
     "available_quantity": 2,
@@ -1588,6 +1650,7 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Décor Thème Forêt",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -1614,8 +1677,9 @@ exports[`Materials Api allWhileEvent() parse the returned data correctly 1`] = `
     "stock_quantity": 2,
     "sub_category_id": null,
     "tags": [],
-    "tax_id": 4,
+    "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+    "weight": null,
   },
 ]
 `;
@@ -1702,42 +1766,44 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
       },
       "beneficiaries": [
         {
+          "additional_street": null,
+          "address": "1, somewhere av.
+12340 Megacity",
+          "administrative_area": null,
           "company": {
-            "country": {
-              "code": "FR",
-              "id": 1,
-              "name": "France",
-            },
-            "country_id": 1,
-            "full_address": "1, company st.
-1234 Megacity",
+            "additional_street": "Bâtiment D",
+            "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+            "administrative_area": null,
+            "country": /* Country Instance => */ "FR",
             "id": 1,
+            "invoice_identifier": "0225:123456789_LOCATION",
+            "is_public_entity": false,
             "legal_name": "Testing, Inc",
-            "locality": "Megacity",
-            "note": "Just for tests",
-            "phone": "+4123456789",
-            "postal_code": "1234",
-            "registration_id": null,
-            "street": "1, company st.",
+            "locality": "Annecy",
+            "note": "Anciennement Machin, Inc.",
+            "phone": /* Phone Instance => */ "+33123456789",
+            "postal_code": "74000",
+            "registration_id": "12345678900001",
+            "service_code": null,
+            "street": "10 avenue de la gare",
+            "vat_number": "FR32123456789",
           },
           "company_id": 1,
-          "country": {
-            "code": "FR",
-            "id": 1,
-            "name": "France",
-          },
-          "country_id": 1,
+          "country": /* Country Instance => */ "FR",
           "email": "tester@loxya.com",
           "first_name": "Jean",
-          "full_address": "1, somewhere av.
-1234 Megacity",
           "full_name": "Jean Fountain",
           "id": 1,
+          "is_deleted": false,
+          "is_invoiceable": true,
+          "language": "en",
           "last_name": "Fountain",
           "locality": "Megacity",
           "note": null,
           "phone": null,
-          "postal_code": "1234",
+          "postal_code": "12340",
           "reference": "0001",
           "street": "1, somewhere av.",
           "user_id": 1,
@@ -1806,11 +1872,12 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
             "name": "Régisseur",
           },
           "technician": {
-            "country": null,
-            "country_id": null,
+            "additional_street": null,
+            "address": null,
+            "administrative_area": null,
+            "country": /* Country Instance => */ "FR",
             "email": "tester2@loxya.com",
             "first_name": "Roger",
-            "full_address": null,
             "full_name": "Roger Rabbit",
             "id": 1,
             "last_name": "Rabbit",
@@ -1832,7 +1899,6 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
               },
             ],
             "street": null,
-            "user_id": 2,
           },
           "technician_id": 1,
         },
@@ -1850,22 +1916,19 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
             "name": "Technicien plateau",
           },
           "technician": {
-            "country": {
-              "code": "CH",
-              "id": 2,
-              "name": "Suisse",
-            },
-            "country_id": 2,
-            "email": "client@technicien.com",
+            "additional_street": null,
+            "address": null,
+            "administrative_area": null,
+            "country": /* Country Instance => */ "CH",
+            "email": "jg@loxya.fr",
             "first_name": "Jean",
-            "full_address": null,
-            "full_name": "Jean Technicien",
+            "full_name": "Jean Garcia",
             "id": 2,
-            "last_name": "Technicien",
+            "last_name": "Garcia",
             "locality": null,
             "nickname": null,
             "note": null,
-            "phone": "+33645698520",
+            "phone": /* Phone Instance => */ "+33645698520",
             "postal_code": null,
             "roles": [
               {
@@ -1875,7 +1938,6 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
               },
             ],
             "street": null,
-            "user_id": null,
           },
           "technician_id": 2,
         },
@@ -1895,20 +1957,25 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
       },
       "beneficiaries": [
         {
+          "additional_street": "Étage 3, Porte 2",
+          "address": "156 bis, avenue des tests poussés
+Étage 3, Porte 2
+88080 Wazzaville",
+          "administrative_area": null,
           "company": null,
           "company_id": null,
-          "country": null,
-          "country_id": null,
-          "email": "client@beneficiaires.com",
-          "first_name": "Client",
-          "full_address": "156 bis, avenue des tests poussés
-88080 Wazzaville",
-          "full_name": "Client Benef",
+          "country": /* Country Instance => */ "FR",
+          "email": "elise@loxya.fr",
+          "first_name": "Élise",
+          "full_name": "Élise Faure",
           "id": 3,
-          "last_name": "Benef",
+          "is_deleted": false,
+          "is_invoiceable": true,
+          "language": null,
+          "last_name": "Faure",
           "locality": "Wazzaville",
           "note": null,
-          "phone": "+33123456789",
+          "phone": /* Phone Instance => */ "+33123456789",
           "postal_code": "88080",
           "reference": "0003",
           "street": "156 bis, avenue des tests poussés",
@@ -2087,42 +2154,44 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
       },
       "beneficiaries": [
         {
+          "additional_street": null,
+          "address": "1, somewhere av.
+12340 Megacity",
+          "administrative_area": null,
           "company": {
-            "country": {
-              "code": "FR",
-              "id": 1,
-              "name": "France",
-            },
-            "country_id": 1,
-            "full_address": "1, company st.
-1234 Megacity",
+            "additional_street": "Bâtiment D",
+            "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+            "administrative_area": null,
+            "country": /* Country Instance => */ "FR",
             "id": 1,
+            "invoice_identifier": "0225:123456789_LOCATION",
+            "is_public_entity": false,
             "legal_name": "Testing, Inc",
-            "locality": "Megacity",
-            "note": "Just for tests",
-            "phone": "+4123456789",
-            "postal_code": "1234",
-            "registration_id": null,
-            "street": "1, company st.",
+            "locality": "Annecy",
+            "note": "Anciennement Machin, Inc.",
+            "phone": /* Phone Instance => */ "+33123456789",
+            "postal_code": "74000",
+            "registration_id": "12345678900001",
+            "service_code": null,
+            "street": "10 avenue de la gare",
+            "vat_number": "FR32123456789",
           },
           "company_id": 1,
-          "country": {
-            "code": "FR",
-            "id": 1,
-            "name": "France",
-          },
-          "country_id": 1,
+          "country": /* Country Instance => */ "FR",
           "email": "tester@loxya.com",
           "first_name": "Jean",
-          "full_address": "1, somewhere av.
-1234 Megacity",
           "full_name": "Jean Fountain",
           "id": 1,
+          "is_deleted": false,
+          "is_invoiceable": true,
+          "language": "en",
           "last_name": "Fountain",
           "locality": "Megacity",
           "note": null,
           "phone": null,
-          "postal_code": "1234",
+          "postal_code": "12340",
           "reference": "0001",
           "street": "1, somewhere av.",
           "user_id": 1,
@@ -2295,22 +2364,19 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
             "name": "Ingénieur du son",
           },
           "technician": {
-            "country": {
-              "code": "CH",
-              "id": 2,
-              "name": "Suisse",
-            },
-            "country_id": 2,
-            "email": "client@technicien.com",
+            "additional_street": null,
+            "address": null,
+            "administrative_area": null,
+            "country": /* Country Instance => */ "CH",
+            "email": "jg@loxya.fr",
             "first_name": "Jean",
-            "full_address": null,
-            "full_name": "Jean Technicien",
+            "full_name": "Jean Garcia",
             "id": 2,
-            "last_name": "Technicien",
+            "last_name": "Garcia",
             "locality": null,
             "nickname": null,
             "note": null,
-            "phone": "+33645698520",
+            "phone": /* Phone Instance => */ "+33645698520",
             "postal_code": null,
             "roles": [
               {
@@ -2320,7 +2386,6 @@ exports[`Materials Api bookings() parse the returned data correctly 1`] = `
               },
             ],
             "street": null,
-            "user_id": null,
           },
           "technician_id": 2,
         },
@@ -2352,6 +2417,7 @@ exports[`Materials Api create() parse the returned data correctly (with #1) 1`] 
   "is_hidden_on_bill": false,
   "name": "Console Yamaha CL3",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": "http://loxya.test/materials/1/picture",
@@ -2403,6 +2469,7 @@ exports[`Materials Api create() parse the returned data correctly (with #1) 1`] 
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+  "weight": /* Decimal Instance => */ "24.5",
 }
 `;
 
@@ -2419,6 +2486,7 @@ exports[`Materials Api create() parse the returned data correctly (with #2) 1`] 
   "is_hidden_on_bill": false,
   "name": "Processeur DBX PA2",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -2460,6 +2528,7 @@ exports[`Materials Api create() parse the returned data correctly (with #2) 1`] 
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "6.4",
 }
 `;
 
@@ -2476,6 +2545,7 @@ exports[`Materials Api create() parse the returned data correctly (with #3) 1`] 
   "is_hidden_on_bill": false,
   "name": "PAR64 LED",
   "note": "Soyez délicats avec ces projos !",
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 4,
   "park_id": 1,
   "picture": null,
@@ -2517,6 +2587,7 @@ exports[`Materials Api create() parse the returned data correctly (with #3) 1`] 
   ],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "1.2",
 }
 `;
 
@@ -2533,6 +2604,7 @@ exports[`Materials Api create() parse the returned data correctly (with #4) 1`] 
   "is_hidden_on_bill": false,
   "name": "Showtec SDS-6",
   "note": null,
+  "origin_country": /* Country Instance => */ "BE",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -2578,6 +2650,7 @@ exports[`Materials Api create() parse the returned data correctly (with #4) 1`] 
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+  "weight": /* Decimal Instance => */ "3",
 }
 `;
 
@@ -2594,6 +2667,7 @@ exports[`Materials Api create() parse the returned data correctly (with #5) 1`] 
   "is_hidden_on_bill": true,
   "name": "Câble XLR 10m",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 8,
   "park_id": 1,
   "picture": null,
@@ -2607,6 +2681,7 @@ exports[`Materials Api create() parse the returned data correctly (with #5) 1`] 
   "tags": [],
   "tax_id": 2,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+  "weight": /* Decimal Instance => */ "0.35",
 }
 `;
 
@@ -2623,6 +2698,7 @@ exports[`Materials Api create() parse the returned data correctly (with #6) 1`] 
   "is_hidden_on_bill": false,
   "name": "Behringer X Air XR18",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": null,
@@ -2671,6 +2747,7 @@ exports[`Materials Api create() parse the returned data correctly (with #6) 1`] 
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+  "weight": /* Decimal Instance => */ "4.8",
 }
 `;
 
@@ -2687,6 +2764,7 @@ exports[`Materials Api create() parse the returned data correctly (with #7) 1`] 
   "is_hidden_on_bill": false,
   "name": "Volkswagen Transporter",
   "note": null,
+  "origin_country": null,
   "out_of_order_quantity": 0,
   "park_id": 2,
   "picture": null,
@@ -2715,6 +2793,7 @@ exports[`Materials Api create() parse the returned data correctly (with #7) 1`] 
   "tags": [],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+  "weight": null,
 }
 `;
 
@@ -2731,6 +2810,7 @@ exports[`Materials Api create() parse the returned data correctly (with #8) 1`] 
   "is_hidden_on_bill": false,
   "name": "Décor Thème Forêt",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -2757,8 +2837,9 @@ exports[`Materials Api create() parse the returned data correctly (with #8) 1`] 
   "stock_quantity": 2,
   "sub_category_id": null,
   "tags": [],
-  "tax_id": 4,
+  "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+  "weight": null,
 }
 `;
 
@@ -2828,6 +2909,7 @@ exports[`Materials Api one() parse the returned data correctly (with #1) 1`] = `
   "is_hidden_on_bill": false,
   "name": "Console Yamaha CL3",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": "http://loxya.test/materials/1/picture",
@@ -2879,6 +2961,7 @@ exports[`Materials Api one() parse the returned data correctly (with #1) 1`] = `
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+  "weight": /* Decimal Instance => */ "24.5",
 }
 `;
 
@@ -2895,6 +2978,7 @@ exports[`Materials Api one() parse the returned data correctly (with #2) 1`] = `
   "is_hidden_on_bill": false,
   "name": "Processeur DBX PA2",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -2936,6 +3020,7 @@ exports[`Materials Api one() parse the returned data correctly (with #2) 1`] = `
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "6.4",
 }
 `;
 
@@ -2952,6 +3037,7 @@ exports[`Materials Api one() parse the returned data correctly (with #3) 1`] = `
   "is_hidden_on_bill": false,
   "name": "PAR64 LED",
   "note": "Soyez délicats avec ces projos !",
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 4,
   "park_id": 1,
   "picture": null,
@@ -2993,6 +3079,7 @@ exports[`Materials Api one() parse the returned data correctly (with #3) 1`] = `
   ],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "1.2",
 }
 `;
 
@@ -3009,6 +3096,7 @@ exports[`Materials Api one() parse the returned data correctly (with #4) 1`] = `
   "is_hidden_on_bill": false,
   "name": "Showtec SDS-6",
   "note": null,
+  "origin_country": /* Country Instance => */ "BE",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3054,6 +3142,7 @@ exports[`Materials Api one() parse the returned data correctly (with #4) 1`] = `
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+  "weight": /* Decimal Instance => */ "3",
 }
 `;
 
@@ -3070,6 +3159,7 @@ exports[`Materials Api one() parse the returned data correctly (with #5) 1`] = `
   "is_hidden_on_bill": true,
   "name": "Câble XLR 10m",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 8,
   "park_id": 1,
   "picture": null,
@@ -3083,6 +3173,7 @@ exports[`Materials Api one() parse the returned data correctly (with #5) 1`] = `
   "tags": [],
   "tax_id": 2,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+  "weight": /* Decimal Instance => */ "0.35",
 }
 `;
 
@@ -3099,6 +3190,7 @@ exports[`Materials Api one() parse the returned data correctly (with #6) 1`] = `
   "is_hidden_on_bill": false,
   "name": "Behringer X Air XR18",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": null,
@@ -3147,6 +3239,7 @@ exports[`Materials Api one() parse the returned data correctly (with #6) 1`] = `
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+  "weight": /* Decimal Instance => */ "4.8",
 }
 `;
 
@@ -3163,6 +3256,7 @@ exports[`Materials Api one() parse the returned data correctly (with #7) 1`] = `
   "is_hidden_on_bill": false,
   "name": "Volkswagen Transporter",
   "note": null,
+  "origin_country": null,
   "out_of_order_quantity": 0,
   "park_id": 2,
   "picture": null,
@@ -3191,6 +3285,7 @@ exports[`Materials Api one() parse the returned data correctly (with #7) 1`] = `
   "tags": [],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+  "weight": null,
 }
 `;
 
@@ -3207,6 +3302,7 @@ exports[`Materials Api one() parse the returned data correctly (with #8) 1`] = `
   "is_hidden_on_bill": false,
   "name": "Décor Thème Forêt",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3233,8 +3329,9 @@ exports[`Materials Api one() parse the returned data correctly (with #8) 1`] = `
   "stock_quantity": 2,
   "sub_category_id": null,
   "tags": [],
-  "tax_id": 4,
+  "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+  "weight": null,
 }
 `;
 
@@ -3251,6 +3348,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #1) 1`]
   "is_hidden_on_bill": false,
   "name": "Console Yamaha CL3",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": "http://loxya.test/materials/1/picture",
@@ -3302,6 +3400,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #1) 1`]
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+  "weight": /* Decimal Instance => */ "24.5",
 }
 `;
 
@@ -3318,6 +3417,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #2) 1`]
   "is_hidden_on_bill": false,
   "name": "Processeur DBX PA2",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3359,6 +3459,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #2) 1`]
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "6.4",
 }
 `;
 
@@ -3375,6 +3476,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #3) 1`]
   "is_hidden_on_bill": false,
   "name": "PAR64 LED",
   "note": "Soyez délicats avec ces projos !",
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 4,
   "park_id": 1,
   "picture": null,
@@ -3416,6 +3518,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #3) 1`]
   ],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "1.2",
 }
 `;
 
@@ -3432,6 +3535,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #4) 1`]
   "is_hidden_on_bill": false,
   "name": "Showtec SDS-6",
   "note": null,
+  "origin_country": /* Country Instance => */ "BE",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3477,6 +3581,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #4) 1`]
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+  "weight": /* Decimal Instance => */ "3",
 }
 `;
 
@@ -3493,6 +3598,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #5) 1`]
   "is_hidden_on_bill": true,
   "name": "Câble XLR 10m",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 8,
   "park_id": 1,
   "picture": null,
@@ -3506,6 +3612,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #5) 1`]
   "tags": [],
   "tax_id": 2,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+  "weight": /* Decimal Instance => */ "0.35",
 }
 `;
 
@@ -3522,6 +3629,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #6) 1`]
   "is_hidden_on_bill": false,
   "name": "Behringer X Air XR18",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": null,
@@ -3570,6 +3678,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #6) 1`]
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+  "weight": /* Decimal Instance => */ "4.8",
 }
 `;
 
@@ -3586,6 +3695,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #7) 1`]
   "is_hidden_on_bill": false,
   "name": "Volkswagen Transporter",
   "note": null,
+  "origin_country": null,
   "out_of_order_quantity": 0,
   "park_id": 2,
   "picture": null,
@@ -3614,6 +3724,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #7) 1`]
   "tags": [],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+  "weight": null,
 }
 `;
 
@@ -3630,6 +3741,7 @@ exports[`Materials Api restore() parse the returned data correctly (with #8) 1`]
   "is_hidden_on_bill": false,
   "name": "Décor Thème Forêt",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3656,8 +3768,9 @@ exports[`Materials Api restore() parse the returned data correctly (with #8) 1`]
   "stock_quantity": 2,
   "sub_category_id": null,
   "tags": [],
-  "tax_id": 4,
+  "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+  "weight": null,
 }
 `;
 
@@ -3674,6 +3787,7 @@ exports[`Materials Api update() parse the returned data correctly (with #1) 1`] 
   "is_hidden_on_bill": false,
   "name": "Console Yamaha CL3",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": "http://loxya.test/materials/1/picture",
@@ -3725,6 +3839,7 @@ exports[`Materials Api update() parse the returned data correctly (with #1) 1`] 
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+  "weight": /* Decimal Instance => */ "24.5",
 }
 `;
 
@@ -3741,6 +3856,7 @@ exports[`Materials Api update() parse the returned data correctly (with #2) 1`] 
   "is_hidden_on_bill": false,
   "name": "Processeur DBX PA2",
   "note": null,
+  "origin_country": /* Country Instance => */ "CH",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3782,6 +3898,7 @@ exports[`Materials Api update() parse the returned data correctly (with #2) 1`] 
   ],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "6.4",
 }
 `;
 
@@ -3798,6 +3915,7 @@ exports[`Materials Api update() parse the returned data correctly (with #3) 1`] 
   "is_hidden_on_bill": false,
   "name": "PAR64 LED",
   "note": "Soyez délicats avec ces projos !",
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 4,
   "park_id": 1,
   "picture": null,
@@ -3839,6 +3957,7 @@ exports[`Materials Api update() parse the returned data correctly (with #3) 1`] 
   ],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+  "weight": /* Decimal Instance => */ "1.2",
 }
 `;
 
@@ -3855,6 +3974,7 @@ exports[`Materials Api update() parse the returned data correctly (with #4) 1`] 
   "is_hidden_on_bill": false,
   "name": "Showtec SDS-6",
   "note": null,
+  "origin_country": /* Country Instance => */ "BE",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -3900,6 +4020,7 @@ exports[`Materials Api update() parse the returned data correctly (with #4) 1`] 
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+  "weight": /* Decimal Instance => */ "3",
 }
 `;
 
@@ -3916,6 +4037,7 @@ exports[`Materials Api update() parse the returned data correctly (with #5) 1`] 
   "is_hidden_on_bill": true,
   "name": "Câble XLR 10m",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 8,
   "park_id": 1,
   "picture": null,
@@ -3929,6 +4051,7 @@ exports[`Materials Api update() parse the returned data correctly (with #5) 1`] 
   "tags": [],
   "tax_id": 2,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+  "weight": /* Decimal Instance => */ "0.35",
 }
 `;
 
@@ -3945,6 +4068,7 @@ exports[`Materials Api update() parse the returned data correctly (with #6) 1`] 
   "is_hidden_on_bill": false,
   "name": "Behringer X Air XR18",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 1,
   "park_id": 1,
   "picture": null,
@@ -3993,6 +4117,7 @@ exports[`Materials Api update() parse the returned data correctly (with #6) 1`] 
   "tags": [],
   "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+  "weight": /* Decimal Instance => */ "4.8",
 }
 `;
 
@@ -4009,6 +4134,7 @@ exports[`Materials Api update() parse the returned data correctly (with #7) 1`] 
   "is_hidden_on_bill": false,
   "name": "Volkswagen Transporter",
   "note": null,
+  "origin_country": null,
   "out_of_order_quantity": 0,
   "park_id": 2,
   "picture": null,
@@ -4037,6 +4163,7 @@ exports[`Materials Api update() parse the returned data correctly (with #7) 1`] 
   "tags": [],
   "tax_id": null,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+  "weight": null,
 }
 `;
 
@@ -4053,6 +4180,7 @@ exports[`Materials Api update() parse the returned data correctly (with #8) 1`] 
   "is_hidden_on_bill": false,
   "name": "Décor Thème Forêt",
   "note": null,
+  "origin_country": /* Country Instance => */ "FR",
   "out_of_order_quantity": 0,
   "park_id": 1,
   "picture": null,
@@ -4079,7 +4207,8 @@ exports[`Materials Api update() parse the returned data correctly (with #8) 1`] 
   "stock_quantity": 2,
   "sub_category_id": null,
   "tags": [],
-  "tax_id": 4,
+  "tax_id": 1,
   "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+  "weight": null,
 }
 `;

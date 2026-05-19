@@ -7,6 +7,7 @@ use DI\Container;
 use Loxya\Config\Config;
 use Loxya\Errors\ErrorHandler;
 use Loxya\Http\Request;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use RKA\Middleware\IpAddress as IpAddressMiddleware;
@@ -34,7 +35,9 @@ final class App
     public function __construct()
     {
         $this->container = Kernel::boot()->getContainer();
+
         $this->app = AppFactory::create(null, $this->container);
+        $this->container->set(ResponseFactoryInterface::class, $this->app->getResponseFactory());
 
         // NOTE: Les middlewares sont appelés du dernier ajouté au premier.
         $this->configureMiddlewares();
@@ -91,7 +94,6 @@ final class App
     protected function configureRouter(): void
     {
         $isCORSEnabled = (bool) Config::get('enableCORS', false) && Config::getEnv() !== 'test';
-        $useRouterCache = (bool) Config::get('useRouterCache') && Config::getEnv() === 'production';
         $routeCollector = $this->app->getRouteCollector();
 
         $getActionFqn = static fn ($action) => sprintf('Loxya\\Controllers\\%s', $action);
@@ -104,6 +106,7 @@ final class App
         $routeCollector->setBasePath($basePath);
 
         // - Route cache
+        $useRouterCache = Config::getEnv() === 'production';
         if ($useRouterCache) {
             $routeCollector->setCacheFile(CACHE_FOLDER . DS . 'routes.php');
         }
@@ -146,13 +149,10 @@ final class App
         // - Health check
         $this->app->get('/healthcheck', $getActionFqn('EntryController:healthcheck'));
 
-        // - Install
-        $this->app->map(['GET', 'POST'], '/install', $getActionFqn('SetupController:index'));
-        $this->app->get('/install/end', $getActionFqn('SetupController:endInstall'));
-
         // - "Raw" / Download files
         $this->app->get('/estimates/{id:[0-9]+}/pdf[/]', $getActionFqn('EstimateController:getOnePdf'));
         $this->app->get('/invoices/{id:[0-9]+}/pdf[/]', $getActionFqn('InvoiceController:getOnePdf'));
+        $this->app->get('/invoices/{id:[0-9]+}/ubl[/]', $getActionFqn('InvoiceController:getOneUbl'));
         $this->app->get('/events/{id:[0-9]+}/pdf[/]', $getActionFqn('EventController:getOnePdf'));
         $this->app->get('/documents/{id:[0-9]+}', $getActionFqn('DocumentController:getFile'));
         $this->app->get('/materials/print[/]', $getActionFqn('MaterialController:printAll'));
@@ -177,6 +177,7 @@ final class App
         $this->app->add(Middlewares\Pagination::class);
         $this->app->add(Middlewares\Acl::class);
         $this->app->add([$this->container->get('auth'), 'middleware']);
+        $this->app->add(Middlewares\InstallCheck::class);
         $this->app->add(new Middlewares\BodyParser());
         $this->app->add(new IpAddressMiddleware(false, null, 'ip'));
         $this->app->add(Middlewares\SessionStart::class);
@@ -185,10 +186,7 @@ final class App
     protected function configureErrorHandlers(): void
     {
         $shouldLog = Config::getEnv() !== 'test';
-        $displayErrorDetails = (
-            (bool) Config::get('displayErrorDetails', false)
-            || in_array(Config::getEnv(), ['production', 'test'], true)
-        );
+        $displayErrorDetails = Config::getEnv() !== 'production';
 
         $logger = $this->container->get('logger')->createLogger('error');
         $errorMiddleware = $this->app->addErrorMiddleware($displayErrorDetails, $shouldLog, $shouldLog, $logger);

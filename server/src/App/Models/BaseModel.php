@@ -4,19 +4,18 @@ declare(strict_types=1);
 namespace Loxya\Models;
 
 use Brick\Math\BigDecimal as Decimal;
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MissingAttributeException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Expression;
-use Loxya\Errors\Exception\ValidationException;
+use Loxya\Support\Address;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
-use Respect\Validation\Exceptions\AllOfException;
-use Respect\Validation\Exceptions\AnyOfException;
-use Respect\Validation\Exceptions\KeyException;
-use Respect\Validation\Exceptions\NestedValidationException;
-use Respect\Validation\Exceptions\NotEmptyException;
-use Respect\Validation\Exceptions\OneOfException;
+use Loxya\Support\Country;
+use Loxya\Support\Validation\ValidationException;
+use Loxya\Support\Validation\ValidationsException;
+use Loxya\Support\Validation\Validator;
 
 /**
  * @mixin \Illuminate\Database\Eloquent\Builder
@@ -61,7 +60,8 @@ use Respect\Validation\Exceptions\OneOfException;
  */
 abstract class BaseModel extends Model
 {
-    private $columns;
+    /** @var array<string, array> */
+    private array $columns;
 
     protected \Closure $validation;
 
@@ -76,6 +76,21 @@ abstract class BaseModel extends Model
         $this->fill($data)->save();
 
         return $this->refresh();
+    }
+
+    /**
+     * Retire un ou plusieurs attributs de la liste `$appends` du modèle.
+     *
+     * @param string|string[] $attributes
+     */
+    public function unappend(string|array $attributes): static
+    {
+        $this->setAppends(array_values(array_diff(
+            $this->appends,
+            is_string($attributes) ? [$attributes] : $attributes,
+        )));
+
+        return $this;
     }
 
     // ------------------------------------------------------
@@ -112,6 +127,23 @@ abstract class BaseModel extends Model
         );
 
         return parent::fill($data);
+    }
+
+    public function fromDateTime($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        try {
+            return $this->asDateTime($value)->format($this->getDateFormat());
+        } catch (InvalidFormatException $e) {
+            // - On renvoi la valeur invalide pour pouvoir la valider.
+            if (is_string($value)) {
+                return $value;
+            }
+            throw $e;
+        }
     }
 
     public function save(array $options = [])
@@ -183,8 +215,12 @@ abstract class BaseModel extends Model
         $value = parent::mutateAttributeForArray($key, $value);
 
         $serialize = static function ($value) use (&$serialize) {
-            if ($value instanceof Decimal) {
+            if ($value instanceof Decimal || $value instanceof Country) {
                 return (string) $value;
+            }
+
+            if ($value instanceof Address) {
+                return $value->format();
             }
 
             if (is_array($value)) {
@@ -206,18 +242,39 @@ abstract class BaseModel extends Model
     // -
     // ------------------------------------------------------
 
-    public function getOrderableColumns(): array
+    /**
+     * @return array<string, 'asc'|'desc'>
+     */
+    private function getRawOrderableColumns(): array
     {
         if (property_exists($this, 'orderable')) {
-            return $this->orderable;
+            $orderable = $this->orderable;
+        } else {
+            $orderable = [$this->getKey()];
+            if (in_array('name', $this->getTableColumns(), true)) {
+                array_unshift($orderable, 'name');
+            }
         }
 
-        $orderable = [$this->getKey()];
-        if (in_array('name', $this->getTableColumns(), true)) {
-            array_unshift($orderable, 'name');
-        }
+        return Arr::mapWithKeys($orderable, function ($direction, $column) {
+            if (is_int($column)) {
+                return [$direction => 'asc'];
+            }
 
-        return $orderable;
+            $direction = strtolower((string) $direction);
+            if (!in_array($direction, ['asc', 'desc'], true) || !is_string($column)) {
+                throw new \LogicException(sprintf(
+                    'Invalid column / direction in %s model `$orderable` property.',
+                    class_basename($this),
+                ));
+            }
+            return [$column => $direction];
+        });
+    }
+
+    public function getOrderableColumns(): array
+    {
+        return array_keys($this->getRawOrderableColumns());
     }
 
     public function getDefaultOrderColumn(): string|null
@@ -225,9 +282,20 @@ abstract class BaseModel extends Model
         return Arr::first($this->getOrderableColumns());
     }
 
+    /**
+     * @param string $column La colonne pour laquelle on veut la direction par défaut.
+     *
+     * @return 'asc'|'desc' La direction.
+     */
+    public function getDefaultOrderDirection(string $column): string
+    {
+        $orderableColumns = $this->getRawOrderableColumns();
+        return $orderableColumns[$column] ?? 'asc';
+    }
+
     public function getTableColumns(): array
     {
-        if (!$this->columns) {
+        if (!isset($this->columns)) {
             $this->columns = $this->getConnection()
                 ->getSchemaBuilder()
                 ->getColumnListing($this->getTable());
@@ -250,7 +318,7 @@ abstract class BaseModel extends Model
 
     public function validationErrors(): array
     {
-        /** @var array<string, \Respect\Validation\Rules\AbstractRule> $rules */
+        /** @var array<string, Validator> $rules */
         $rules = ($this->validation)();
         if (empty($rules)) {
             throw new \RuntimeException("Validation rules cannot be empty.");
@@ -269,60 +337,15 @@ abstract class BaseModel extends Model
             }
         }
 
-        $getErrorMessage = static function (NestedValidationException $exception) use (&$getErrorMessage) {
-            $messages = $exception->getMessages();
-            if (count($messages) === 1) {
-                return current($messages);
-            }
-
-            $rootException = iterator_to_array($exception)[0] ?? null;
-            if ($rootException !== null) {
-                switch (get_class($rootException)) {
-                    case NotEmptyException::class:
-                        return current($messages);
-
-                    case OneOfException::class:
-                    case AnyOfException::class:
-                        return implode("\n", [
-                            array_shift($messages),
-                            ...array_map(
-                                static fn ($message) => sprintf('- %s', $message),
-                                $messages,
-                            ),
-                        ]);
-
-                    case AllOfException::class:
-                        $messages = [];
-                        foreach ($rootException->getChildren() as $child) {
-                            if ($child instanceof KeyException) {
-                                $messages[$child->getParam('reference')] = $getErrorMessage($child);
-                            } else {
-                                $messages[] = $child->getMessage();
-                            }
-                        }
-
-                        if (Arr::isAssoc($messages)) {
-                            return $messages;
-                        }
-
-                        $messages = array_slice(array_values($messages), 1);
-                        break;
-                }
-            }
-
-            return implode("\n", array_map(
-                static fn ($message) => sprintf('- %s', $message),
-                $messages,
-            ));
-        };
-
         // - Validation
         $errors = [];
         foreach ($rules as $field => $rule) {
             try {
-                $rule->setName($field)->assert($data[$field] ?? null);
-            } catch (NestedValidationException $e) {
-                $errors[$field] = $getErrorMessage($e);
+                $rule->setName($field)->assert($data[$field] ?? null, normalized: true);
+            } catch (ValidationsException $e) {
+                $errors[$field] = $e->getValidationErrors();
+            } catch (ValidationException $e) {
+                $errors[$field] = $e->getMessage();
             }
         }
 
@@ -338,7 +361,7 @@ abstract class BaseModel extends Model
     {
         $errors = $this->validationErrors();
         if (count($errors) > 0) {
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
         return $this;
     }
@@ -351,9 +374,9 @@ abstract class BaseModel extends Model
 
     public function scopeCustomOrderBy(Builder $query, string $column, string $direction = 'asc'): Builder
     {
-        if (!in_array($column, $this->getTableColumns(), true)) {
-            throw new \InvalidArgumentException("Invalid order field.");
-        }
+        Assert::inArray($column, $this->getTableColumns(), "Invalid order field.");
+        Assert::inArray($direction, ['asc', 'desc'], "Invalid direction.");
+
         return $query->orderBy($column, $direction);
     }
 

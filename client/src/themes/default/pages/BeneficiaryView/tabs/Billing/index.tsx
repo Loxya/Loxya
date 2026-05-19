@@ -1,16 +1,11 @@
 import './index.scss';
 import { defineComponent } from 'vue';
-import apiBeneficiaries from '@/stores/api/beneficiaries';
 import CriticalError, { ErrorType } from '@/themes/default/components/CriticalError';
-import Loading from '@/themes/default/components/Loading';
-import EmptyMessage from '@/themes/default/components/EmptyMessage';
 import Invoices from './Invoices';
 import Estimates from './Estimates';
 
-import type { PropType } from 'vue';
+import type { ComponentRef, PropType } from 'vue';
 import type { BeneficiaryDetails } from '@/stores/api/beneficiaries';
-import type { Estimate as EstimateType } from '@/stores/api/estimates';
-import type { Invoice as InvoiceType } from '@/stores/api/invoices';
 
 type Props = {
     /** Le bénéficiaire dont on veut afficher les devis et factures. */
@@ -18,13 +13,13 @@ type Props = {
 };
 
 type Data = {
-    isFetched: boolean,
     hasCriticalError: boolean,
-    estimates: EstimateType[],
-    invoices: InvoiceType[],
 };
 
-/** Contenu de l'onglet "devis & factures" de la page de détails d'un bénéficiaire. */
+/**
+ * Contenu de l'onglet "devis & factures" de la
+ * page de détails d'un bénéficiaire.
+ */
 const BeneficiaryViewBilling = defineComponent({
     name: 'BeneficiaryViewBilling',
     props: {
@@ -34,53 +29,39 @@ const BeneficiaryViewBilling = defineComponent({
         },
     },
     data: (): Data => ({
-        isFetched: false,
         hasCriticalError: false,
-        estimates: [],
-        invoices: [],
     }),
-    mounted() {
-        this.fetchData();
+    errorCaptured() {
+        this.hasCriticalError = true;
+        return false;
     },
     methods: {
         // ------------------------------------------------------
         // -
-        // -    Méthodes internes
+        // -    Handlers
         // -
         // ------------------------------------------------------
 
-        async fetchData() {
-            const { id } = this.beneficiary;
+        handleRefetchNeeded(from: 'invoices' | 'estimates') {
+            const $other = from === 'invoices'
+                ? this.$refs.estimates as ComponentRef<typeof Estimates>
+                : this.$refs.invoices as ComponentRef<typeof Invoices>;
 
-            try {
-                const [estimates, invoices] = await Promise.all([
-                    apiBeneficiaries.estimates(id),
-                    apiBeneficiaries.invoices(id),
-                ]);
-
-                this.estimates = estimates;
-                this.invoices = invoices;
-                this.isFetched = true;
-            } catch {
-                this.hasCriticalError = true;
-            }
+            $other?.refresh();
         },
     },
     render() {
-        const { $t: __, isFetched, hasCriticalError, estimates, invoices } = this;
+        const { beneficiary, hasCriticalError, handleRefetchNeeded } = this;
 
-        if (hasCriticalError || !isFetched) {
+        if (hasCriticalError) {
             return (
-                <div class="BeneficiaryViewBilling BeneficiaryViewBilling--loading-error">
-                    {hasCriticalError ? <CriticalError type={ErrorType.UNKNOWN} /> : <Loading />}
-                </div>
-            );
-        }
-
-        if (estimates.length === 0 && invoices.length === 0) {
-            return (
-                <div class="BeneficiaryViewBilling BeneficiaryViewBilling--empty">
-                    <EmptyMessage message={__('page.beneficiary-view.billing.nothing')} />
+                <div
+                    class={[
+                        'BeneficiaryViewBilling',
+                        'BeneficiaryViewBilling--error',
+                    ]}
+                >
+                    <CriticalError type={ErrorType.UNKNOWN} />
                 </div>
             );
         }
@@ -88,10 +69,18 @@ const BeneficiaryViewBilling = defineComponent({
         return (
             <div class="BeneficiaryViewBilling">
                 <div class="BeneficiaryViewBilling__invoices">
-                    <Invoices invoices={invoices} />
+                    <Invoices
+                        ref="invoices"
+                        beneficiary={beneficiary}
+                        onRefetchNeeded={() => { handleRefetchNeeded('invoices'); }}
+                    />
                 </div>
                 <div class="BeneficiaryViewBilling__estimates">
-                    <Estimates estimates={estimates} />
+                    <Estimates
+                        ref="estimates"
+                        beneficiary={beneficiary}
+                        onRefetchNeeded={() => { handleRefetchNeeded('estimates'); }}
+                    />
                 </div>
             </div>
         );

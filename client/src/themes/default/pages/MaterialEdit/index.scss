@@ -19,16 +19,15 @@
     @media screen and (min-width: globals.$screen-desktop) {
         flex-direction: row;
         max-width: initial;
+        gap: globals.$spacing-large;
 
         &__body {
             width: 500px;
-            margin-right: globals.$spacing-large;
             margin-bottom: globals.$form-fixed-actions-margin-bottom;
         }
 
         &__side {
             width: 300px;
-            margin-top: 0;
         }
     }
 }

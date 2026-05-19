@@ -9,7 +9,7 @@ import Fragment from '@/components/Fragment';
 import FormField from '@/themes/default/components/FormField';
 import Input from '@/themes/default/components/Input';
 import EmptyMessage from '@/themes/default/components/EmptyMessage';
-import { ClientTable, Variant as TableVariant } from '@/themes/default/components/Table';
+import { ClientTable } from '@/themes/default/components/Table';
 import SwitchToggle from '@/themes/default/components/SwitchToggle';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
@@ -34,6 +34,14 @@ type DegressiveRateEdit = Simplify<(
 type Props = {
     /** Le tarif dégressif à éditer. */
     degressiveRate?: DegressiveRate,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param updatedDegressiveRate - Le tarif dégressif sauvegardé si la modification
+     *                                a été menée à son terme.
+     */
+    onClose?(updatedDegressiveRate?: DegressiveRate): void,
 };
 
 type Data = {
@@ -61,11 +69,16 @@ const ModalDegressiveRateEdition = defineComponent({
     name: 'ModalDegressiveRateEdition',
     modal: {
         width: 800,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         degressiveRate: {
             type: Object as PropType<Props['degressiveRate']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },
@@ -90,7 +103,7 @@ const ModalDegressiveRateEdition = defineComponent({
                 : __('modal-title.new');
         },
 
-        tiersColumns(): Columns<DegressiveRateTierEdit> {
+        tiersColumns(): Columns<DegressiveRateTierEdit, 'key'> {
             const { __, data, handleRemoveTier } = this;
             const validationErrors = this.validationErrors?.tiers ?? [];
 
@@ -229,9 +242,20 @@ const ModalDegressiveRateEdition = defineComponent({
             }
 
             // - On supprime l'erreur de validation liée à la ligne si elle existe,
-            //   pour éviter qu'elle ne soit transférée à une autre ligne.
-            if (this.validationErrors?.tiers !== undefined) {
-                this.$delete(this.validationErrors?.tiers, tierIndex);
+            //   et on décale les clés suivantes pour rester alignés avec les indexes.
+            const tierErrors = this.validationErrors?.tiers;
+            if (tierErrors !== undefined) {
+                this.$set(this.validationErrors!, 'tiers', (() => {
+                    const reindexed: Record<number, any> = {};
+                    Object.entries(tierErrors).forEach(([rawKey, error]: [string, any]) => {
+                        const errorIndex = Number(rawKey);
+                        if (errorIndex === tierIndex) {
+                            return;
+                        }
+                        reindexed[errorIndex > tierIndex ? errorIndex - 1 : errorIndex] = error;
+                    });
+                    return reindexed;
+                })());
             }
 
             // - On supprime le palier.
@@ -355,8 +379,7 @@ const ModalDegressiveRateEdition = defineComponent({
                                 <Fragment>
                                     <ClientTable
                                         uniqueKey="key"
-                                        variant={TableVariant.MINIMALIST}
-                                        resizable={false}
+                                        variant="minimalist"
                                         paginated={false}
                                         columns={tiersColumns}
                                         data={data.tiers}

@@ -1,0 +1,13 @@
+critical:
+    title: Une erreur est survenue
+    content: |-
+        Une erreur inattendue s'est produite et la requête n'a pas pu être traitée.
+        Si le problème persiste, merci de contacter notre support technique.
+
+not-installed:
+    title: Installation incomplète
+    content: |-
+        L'application n'est pas encore prête à être utilisée, car le processus d'installation n'est pas terminé.
+
+        Si vous êtes l'administrateur de cette instance, veuillez
+        consulter la documentation afin de finaliser l'installation de Loxya.

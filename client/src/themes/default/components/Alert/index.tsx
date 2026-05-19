@@ -2,11 +2,14 @@ import './index.scss';
 import Button from '@/themes/default/components/Button';
 import { defineComponent } from 'vue';
 
-import type { Location } from 'vue-router';
+import type { RawLocation } from 'vue-router';
 import type { PropType } from 'vue';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
 export enum Type {
+    /** Une erreur. */
+    ERROR = 'error',
+
     /** Une alerte d'avertissement. */
     WARNING = 'warning',
 
@@ -25,7 +28,7 @@ export type Action = {
      * Si non définie, un élément HTML `<button>` sera utilisé et
      * vous devriez écouter l'événement `onClick` pour réagir au click.
      */
-    target?: string | Location,
+    target?: RawLocation,
 
     /**
      * Si l'action est un lien, permet d'indiquer que c'est un lien externe.
@@ -67,6 +70,17 @@ type Props = {
 
     /** Une action éventuelle (= un bouton) affiché au bout de l'alerte. */
     action?: Action,
+
+    /**
+     * L'alerte peut-elle être "cachée" ?
+     *
+     * @default false
+     */
+    dismissible?: boolean,
+};
+
+type Data = {
+    dismissed: boolean,
 };
 
 /** Une alerte. */
@@ -85,26 +99,57 @@ const Alert = defineComponent({
             type: Object as PropType<Props['action']>,
             default: undefined,
         },
+        dismissible: {
+            type: Boolean as PropType<Props['dismissible']>,
+            default: false,
+        },
+    },
+    data: (): Data => ({
+        dismissed: false,
+    }),
+    methods: {
+        handleDismiss() {
+            this.dismissed = true;
+        },
     },
     render() {
-        const { type, action } = this;
+        const { type, action, dismissible, dismissed, handleDismiss } = this;
+        const hasActions = action !== undefined || dismissible;
         const children = this.$slots.default;
 
+        if (dismissed) {
+            return null;
+        }
+
+        const classNames = ['Alert', `Alert--${type}`, {
+            'Alert--with-actions': hasActions,
+        }];
+
         return (
-            <div class={['Alert', `Alert--${type}`]}>
+            <div class={classNames}>
                 <span class="Alert__text">
                     {children}
                 </span>
-                {action !== undefined && (
-                    <Button
-                        to={action.target}
-                        icon={action.icon}
-                        external={action.external}
-                        onClick={action.onClick ?? (() => {})}
-                        class="Alert__action"
-                    >
-                        {action.label}
-                    </Button>
+                {hasActions && (
+                    <div class="Alert__actions">
+                        {action !== undefined && (
+                            <Button
+                                to={action.target}
+                                icon={action.icon}
+                                external={action.external}
+                                onClick={action.onClick ?? (() => {})}
+                                class="Alert__action"
+                            >
+                                {action.label}
+                            </Button>
+                        )}
+                        {dismissible && (
+                            <Button
+                                type="close"
+                                onClick={handleDismiss}
+                            />
+                        )}
+                    </div>
                 )}
             </div>
         );

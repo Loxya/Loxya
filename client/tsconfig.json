@@ -31,5 +31,5 @@
             "@fixtures/*": ["./tests/fixtures/*"]
         }
     },
-    "include": ["./src", "./tests", "./vendors"]
+    "include": ["./src", "./tests", "./libs"]
 }

@@ -10,7 +10,7 @@ use Loxya\Models\PropertyCategory;
 
 final class PropertyCategoryObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function created(PropertyCategory $property): void
     {

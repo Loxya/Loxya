@@ -146,14 +146,14 @@ describe('Events Api', () => {
     });
 
     describe('createInvoice()', () => {
-        it.each(invoices.default())('parse the returned data correctly (with invoice #$id)', async (datum: any) => {
+        it.each(invoices.details())('parse the returned data correctly (with invoice #$id)', async (datum: any) => {
             jest.spyOn(requester, 'post').mockResolvedValue(datum);
             await expect(apiEvents.createInvoice(1)).resolves.toMatchSnapshot();
         });
     });
 
     describe('createEstimate()', () => {
-        it.each(estimates.default())('parse the returned data correctly (with invoice #$id)', async (datum: any) => {
+        it.each(estimates.details())('parse the returned data correctly (with invoice #$id)', async (datum: any) => {
             jest.spyOn(requester, 'post').mockResolvedValue(datum);
             await expect(apiEvents.createEstimate(1)).resolves.toMatchSnapshot();
         });

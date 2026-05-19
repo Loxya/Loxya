@@ -5,11 +5,11 @@ namespace Loxya\Support\Validation\Core;
 
 use Loxya\Support\Validation\ChainedValidator as ChainedValidatorExtended;
 use Respect\Validation\Rules\Key;
-use Respect\Validation\Validatable;
+use Respect\Validation\Validatable as CoreValidatable;
 
 interface StaticValidator
 {
-    public static function allOf(Validatable ...$rule): ChainedValidatorExtended;
+    public static function allOf(CoreValidatable ...$rule): ChainedValidatorExtended;
 
     public static function alnum(string ...$additionalChars): ChainedValidatorExtended;
 
@@ -19,7 +19,7 @@ interface StaticValidator
 
     public static function alwaysValid(): ChainedValidatorExtended;
 
-    public static function anyOf(Validatable ...$rule): ChainedValidatorExtended;
+    public static function anyOf(CoreValidatable ...$rule): ChainedValidatorExtended;
 
     public static function arrayType(): ChainedValidatorExtended;
 
@@ -27,7 +27,7 @@ interface StaticValidator
 
     public static function attribute(
         string $reference,
-        ?Validatable $validator = null,
+        ?CoreValidatable $validator = null,
         bool $mandatory = true,
     ): ChainedValidatorExtended;
 
@@ -43,7 +43,7 @@ interface StaticValidator
 
     public static function bsn(): ChainedValidatorExtended;
 
-    public static function call(callable $callable, Validatable $rule): ChainedValidatorExtended;
+    public static function call(callable $callable, CoreValidatable $rule): ChainedValidatorExtended;
 
     public static function callableType(): ChainedValidatorExtended;
 
@@ -80,7 +80,7 @@ interface StaticValidator
 
     public static function dateTime(?string $format = null): ChainedValidatorExtended;
 
-    public static function decimal(int $decimals): ChainedValidatorExtended;
+    // public static function decimal(int $decimals): ChainedValidatorExtended;
 
     public static function digit(string ...$additionalChars): ChainedValidatorExtended;
 
@@ -88,7 +88,7 @@ interface StaticValidator
 
     public static function domain(bool $tldCheck = true): ChainedValidatorExtended;
 
-    public static function each(Validatable $rule): ChainedValidatorExtended;
+    public static function each(CoreValidatable $rule): ChainedValidatorExtended;
 
     public static function email(): ChainedValidatorExtended;
 
@@ -162,13 +162,13 @@ interface StaticValidator
 
     public static function key(
         string $reference,
-        ?Validatable $referenceValidator = null,
+        ?CoreValidatable $referenceValidator = null,
         bool $mandatory = true,
     ): ChainedValidatorExtended;
 
     public static function keyNested(
         string $reference,
-        ?Validatable $referenceValidator = null,
+        ?CoreValidatable $referenceValidator = null,
         bool $mandatory = true,
     ): ChainedValidatorExtended;
 
@@ -214,9 +214,9 @@ interface StaticValidator
 
     public static function no(bool $useLocale = false): ChainedValidatorExtended;
 
-    public static function noneOf(Validatable ...$rule): ChainedValidatorExtended;
+    public static function noneOf(CoreValidatable ...$rule): ChainedValidatorExtended;
 
-    public static function not(Validatable $rule): ChainedValidatorExtended;
+    public static function not(CoreValidatable $rule): ChainedValidatorExtended;
 
     public static function notBlank(): ChainedValidatorExtended;
 
@@ -228,7 +228,7 @@ interface StaticValidator
 
     public static function noWhitespace(): ChainedValidatorExtended;
 
-    public static function nullable(Validatable $rule): ChainedValidatorExtended;
+    public static function nullable(CoreValidatable $rule): ChainedValidatorExtended;
 
     public static function nullType(): ChainedValidatorExtended;
 
@@ -240,9 +240,9 @@ interface StaticValidator
 
     public static function odd(): ChainedValidatorExtended;
 
-    public static function oneOf(Validatable ...$rule): ChainedValidatorExtended;
+    public static function oneOf(CoreValidatable ...$rule): ChainedValidatorExtended;
 
-    public static function optional(Validatable $rule): ChainedValidatorExtended;
+    public static function optional(CoreValidatable $rule): ChainedValidatorExtended;
 
     public static function perfectSquare(): ChainedValidatorExtended;
 
@@ -265,8 +265,6 @@ interface StaticValidator
     public static function primeNumber(): ChainedValidatorExtended;
 
     public static function printable(string ...$additionalChars): ChainedValidatorExtended;
-
-    public static function publicDomainSuffix(): ChainedValidatorExtended;
 
     public static function punct(string ...$additionalChars): ChainedValidatorExtended;
 
@@ -293,8 +291,6 @@ interface StaticValidator
     public static function stringType(): ChainedValidatorExtended;
 
     public static function stringVal(): ChainedValidatorExtended;
-
-    public static function subdivisionCode(string $countryCode): ChainedValidatorExtended;
 
     /**
      * @param mixed[] $superset
@@ -328,9 +324,9 @@ interface StaticValidator
     public static function vowel(string ...$additionalChars): ChainedValidatorExtended;
 
     public static function when(
-        Validatable $if,
-        Validatable $then,
-        ?Validatable $else = null,
+        CoreValidatable $if,
+        CoreValidatable $then,
+        ?CoreValidatable $else = null,
     ): ChainedValidatorExtended;
 
     public static function writable(): ChainedValidatorExtended;

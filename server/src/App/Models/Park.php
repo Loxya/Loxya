@@ -9,14 +9,16 @@ use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use Loxya\Contracts\Serializable;
+use Loxya\Models\Casts\AsCountry;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Address;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -25,10 +27,12 @@ use Loxya\Support\Validation\Validator as V;
  * @property-read ?int $id
  * @property string $name
  * @property string|null $street
+ * @property string|null $additional_street
  * @property string|null $postal_code
+ * @property string|null $administrative_area
  * @property string|null $locality
- * @property int|null $country_id
- * @property-read Country|null $country
+ * @property-read Address $address
+ * @property Country $country
  * @property string|null $opening_hours
  * @property string|null $note
  * @property-read int $total_items
@@ -59,11 +63,13 @@ final class Park extends BaseModel implements Serializable
 
         $this->validation = fn () => [
             'name' => V::custom([$this, 'checkName']),
-            'street' => V::optional(V::length(null, 191)),
-            'postal_code' => V::optional(V::length(null, 10)),
-            'locality' => V::optional(V::length(null, 191)),
-            'country_id' => V::custom([$this, 'checkCountryId']),
-            'opening_hours' => V::optional(V::length(null, 255)),
+            'street' => V::nullable(V::length(null, 191)),
+            'additional_street' => V::nullable(V::length(null, 191)),
+            'postal_code' => V::custom([$this, 'checkPostalCode']),
+            'administrative_area' => V::nullable(V::length(null, 191)),
+            'locality' => V::nullable(V::length(null, 191)),
+            'country' => V::notEmpty()->countryCode(),
+            'opening_hours' => V::nullable(V::length(null, 255)),
         ];
     }
 
@@ -73,7 +79,7 @@ final class Park extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
         V::notEmpty()
             ->length(2, 96)
@@ -90,10 +96,26 @@ final class Park extends BaseModel implements Serializable
         return !$alreadyExists ?: 'park-name-already-in-use';
     }
 
-    public function checkCountryId($value)
+    public function checkPostalCode(mixed $value)
     {
-        V::nullable(V::intVal())->check($value);
-        return $value === null || Country::includes($value);
+        V::nullable(V::length(null, 10))->check($value);
+
+        // - Si la valeur est vide, on ne va pas plus loin.
+        if ($value === null) {
+            return true;
+        }
+
+        $rawCountryCode = $this->getAttributeFromArray('country');
+        $countryCode = V::countryCode()->validate($rawCountryCode)
+            ? $rawCountryCode
+            : null;
+
+        // - Si le pays n'est pas valide, on ne peut pas aller plus loin.
+        if ($countryCode === null) {
+            return true;
+        }
+
+        return V::postalCode($countryCode);
     }
 
     // ------------------------------------------------------
@@ -108,29 +130,44 @@ final class Park extends BaseModel implements Serializable
             ->orderBy('id');
     }
 
-    public function country(): BelongsTo
-    {
-        return $this->belongsTo(Country::class);
-    }
-
     // ------------------------------------------------------
     // -
     // -    Mutators
     // -
     // ------------------------------------------------------
 
+    protected $appends = [
+        'address',
+    ];
+
     protected $casts = [
         'name' => 'string',
         'street' => 'string',
+        'additional_street' => 'string',
         'postal_code' => 'string',
+        'administrative_area' => 'string',
         'locality' => 'string',
-        'country_id' => 'integer',
+        'country' => AsCountry::class,
         'opening_hours' => 'string',
         'note' => 'string',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
         'deleted_at' => 'immutable_datetime',
     ];
+
+    public function getAddressAttribute(): Address
+    {
+        if ($this->country === null) {
+            throw new \LogicException("Country should always be defined.");
+        }
+
+        return (new Address($this->country))
+            ->withAddressLine1($this->street)
+            ->withAddressLine2($this->additional_street)
+            ->withPostalCode($this->postal_code)
+            ->withAdministrativeArea($this->administrative_area)
+            ->withLocality($this->locality);
+    }
 
     public function getTotalItemsAttribute(): int
     {
@@ -195,9 +232,11 @@ final class Park extends BaseModel implements Serializable
     protected $fillable = [
         'name',
         'street',
+        'additional_street',
         'postal_code',
+        'administrative_area',
         'locality',
-        'country_id',
+        'country',
         'opening_hours',
         'note',
     ];
@@ -219,7 +258,7 @@ final class Park extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
         'name',
     ];
 

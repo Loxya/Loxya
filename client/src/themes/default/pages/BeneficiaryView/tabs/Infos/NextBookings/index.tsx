@@ -3,7 +3,6 @@ import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
 import { Direction } from '@/stores/api/@types';
 import { defineComponent } from 'vue';
-import showModal from '@/utils/showModal';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
 import Queue from 'p-queue';
@@ -186,27 +185,21 @@ const BeneficiaryViewNextBookings = defineComponent({
         },
 
         async showModal(entity: BookingEntity, id: BookingExcerpt['id']) {
-            const modalComponents = {
-                [BookingEntity.EVENT]: EventDetails,
-            };
-            if (!(entity in modalComponents)) {
-                throw new Error('Unsupported booking type.');
-            }
-
             let shouldRefetch = false;
-            const modalComponent = modalComponents[entity];
-            await showModal(this.$modal, modalComponent, {
-                id,
-                onUpdated: () => {
-                    shouldRefetch = true;
-                },
-                onDuplicated() {
-                    shouldRefetch = true;
-                },
-                onDeleted: () => {
-                    shouldRefetch = true;
-                },
-            });
+            switch (entity) {
+                case BookingEntity.EVENT: {
+                    await this.$modal.show(EventDetails, {
+                        id,
+                        onUpdated: () => { shouldRefetch = true; },
+                        onDuplicated() { shouldRefetch = true; },
+                        onDeleted: () => { shouldRefetch = true; },
+                    });
+                    break;
+                }
+                default: {
+                    throw new Error('Unsupported booking type.');
+                }
+            }
 
             if (shouldRefetch) {
                 this.fetchData(true);

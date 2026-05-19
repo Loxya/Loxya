@@ -114,7 +114,7 @@ const FileManagerUploadArea = defineComponent({
                 };
 
                 upload.cancel = () => {
-                    this.$set(file, 'isCancelled', true);
+                    this.$set(upload, 'isCancelled', true);
                     abortController.abort();
                 };
 

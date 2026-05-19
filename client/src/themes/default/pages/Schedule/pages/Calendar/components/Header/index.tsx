@@ -1,11 +1,8 @@
 import './index.scss';
 import Day from '@/utils/day';
-import { Group } from '@/stores/api/groups';
-import { BookingsViewMode } from '@/stores/api/users';
 import { defineComponent } from 'vue';
 import Button from '@/themes/default/components/Button';
 import DatePicker from '@/themes/default/components/DatePicker';
-import ViewModeSwitch from '../../../../components/ViewModeSwitch';
 import FiltersPanel, { FiltersSchema } from '../Filters';
 
 import type { Filters } from '../Filters';
@@ -92,14 +89,6 @@ const ScheduleCalendarHeader = defineComponent({
             }
             return Day.today().isSame(this.centerDate);
         },
-
-        isTeamMember(): boolean {
-            return this.$store.getters['auth/is']([
-                Group.ADMINISTRATION,
-                Group.SUPERVISION,
-                Group.OPERATION,
-            ]);
-        },
     },
     methods: {
         // ------------------------------------------------------
@@ -130,7 +119,6 @@ const ScheduleCalendarHeader = defineComponent({
             centerDate,
             filters,
             isToday,
-            isTeamMember,
             isLoading,
             handleRefresh,
             handleSetTodayDate,
@@ -141,43 +129,33 @@ const ScheduleCalendarHeader = defineComponent({
         return (
             <div class="ScheduleCalendarHeader">
                 <div class="ScheduleCalendarHeader__main">
-                    <div class="ScheduleCalendarHeader__main__filters">
-                        <DatePicker
-                            type="date"
-                            value={centerDate}
-                            onInput={handleChangeCenterDate}
-                            class="ScheduleCalendarHeader__main__filters__center-date"
-                            withSnippets
-                        />
-                        <Button
-                            type="transparent"
-                            icon="compress-arrows-alt"
-                            class="ScheduleCalendarHeader__main__filters__button"
-                            onClick={handleSetTodayDate}
-                            disabled={isToday}
-                            collapsible
-                        >
-                            {__('center-on-today')}
-                        </Button>
-                        <Button
-                            type="transparent"
-                            icon="sync-alt"
-                            class="ScheduleCalendarHeader__main__filters__button"
-                            onClick={handleRefresh}
-                            disabled={isLoading}
-                            collapsible
-                        >
-                            {__('action-refresh')}
-                        </Button>
-                    </div>
-                    <div class="ScheduleCalendarHeader__main__actions">
-                        <ViewModeSwitch mode={BookingsViewMode.CALENDAR} />
-                        {isTeamMember && (
-                            <Button type="add" to={{ name: 'add-event' }} collapsible>
-                                {__('page.schedule.calendar.add-event')}
-                            </Button>
-                        )}
-                    </div>
+                    <DatePicker
+                        type="date"
+                        value={centerDate}
+                        onInput={handleChangeCenterDate}
+                        class="ScheduleCalendarHeader__main__center-date"
+                        withSnippets
+                    />
+                    <Button
+                        type="transparent"
+                        icon="compress-arrows-alt"
+                        class="ScheduleCalendarHeader__main__button"
+                        onClick={handleSetTodayDate}
+                        disabled={isToday}
+                        collapsible
+                    >
+                        {__('center-on-today')}
+                    </Button>
+                    <Button
+                        type="transparent"
+                        icon="sync-alt"
+                        class="ScheduleCalendarHeader__main__button"
+                        onClick={handleRefresh}
+                        disabled={isLoading}
+                        collapsible
+                    >
+                        {__('action-refresh')}
+                    </Button>
                 </div>
                 <FiltersPanel
                     values={filters}

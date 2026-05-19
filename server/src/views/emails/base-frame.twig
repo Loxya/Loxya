@@ -77,11 +77,12 @@
                 <h1 class="body__header">{% block title %}{% endblock %}</h1>
             {% endif %}
             <div class="body__content">
-                {% block content %}{% endblock %}
+                {%~ block content %}{% endblock %}
+                {{~ include('emails/@blocks/signature.twig') }}
             </div>
             <div class="body__footer">
                 &copy; {{ 'now'|date('Y') }} Loxya. Tous droits réservés.
             </div>
         </div>
-    <div>
+    </div>
 {% endblock %}

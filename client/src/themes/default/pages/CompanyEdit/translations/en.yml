@@ -2,5 +2,24 @@ title-create: New company
 title-edit-simple: Modify company
 title-edit: 'Modify company "{name}"'
 
-attached-persons: People attached to the company
 saved: Company saved.
+
+#
+# - Formulaire
+#
+
+is-public-entity: "Public entity (public administration, government entity, ...)?"
+service-code: Service code
+
+invoice-routing-identifier-customize:
+    label: Customize e-invoicing identifier?
+    help: >-
+        By default, the e-invoicing routing identifier is automatically inferred from the
+        business registration number. If the client has provided you with a specific
+        identifier (e.g. with a routing suffix), you can enter it here.
+
+invoice-routing-identifier:
+    label: E-invoicing routing identifier
+    help: |-
+        Identifier used to route electronic invoices to the correct recipient.
+        You can obtain this information directly from the client.

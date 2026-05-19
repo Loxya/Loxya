@@ -31,6 +31,7 @@ final class CreateCountries extends AbstractMigration
         $now = date('Y-m-d H:i:s');
         $data = array_map(
             static fn ($country) => array_replace($country, [
+                'name' => $country['name']['fr'],
                 'created_at' => $now,
                 'updated_at' => $now,
             ]),

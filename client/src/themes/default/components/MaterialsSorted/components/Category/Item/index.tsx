@@ -1,6 +1,7 @@
 import './index.scss';
 import Decimal from 'decimal.js';
 import { defineComponent } from 'vue';
+import MaterialPopover from '@/themes/default/components/Popover/Material';
 import formatAmount from '@/utils/formatAmount';
 import Icon from '@/themes/default/components/Icon';
 
@@ -108,9 +109,11 @@ const MaterialsSortedCategoryItem = defineComponent({
                         'MaterialsSortedCategoryItem__label',
                     ]}
                 >
-                    <div class="MaterialsSortedCategoryItem__label__name">
-                        {material.name}
-                    </div>
+                    <MaterialPopover material={material.material}>
+                        <div class="MaterialsSortedCategoryItem__label__name">
+                            {material.name}
+                        </div>
+                    </MaterialPopover>
                     <span class="MaterialsSortedCategoryItem__label__ref">
                         {__('ref-ref', { reference: material.reference })}
                     </span>

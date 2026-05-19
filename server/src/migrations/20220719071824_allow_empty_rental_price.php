@@ -27,7 +27,7 @@ final class AllowEmptyRentalPrice extends AbstractMigration
         $qb
             ->update(sprintf('%smaterials', $prefix))
             ->set('rental_price', 0.0)
-            ->where(['rental_price IS' => null])
+            ->whereNull('rental_price')
             ->execute();
 
         $table = $this->table('materials');

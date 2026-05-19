@@ -39,9 +39,6 @@ return [
         '/beneficiaries/{id:[0-9]+}/estimates[/]' => 'BeneficiaryController:getEstimates',
         '/beneficiaries/{id:[0-9]+}/invoices[/]' => 'BeneficiaryController:getInvoices',
 
-        '/countries[/]' => 'CountryController:getAll',
-        '/countries/{id:[0-9]+}[/]' => 'CountryController:getOne',
-
         '/companies[/]' => 'CompanyController:getAll',
         '/companies/{id:[0-9]+}[/]' => 'CompanyController:getOne',
 
@@ -63,6 +60,12 @@ return [
         '/events/{id:[0-9]+}/documents[/]' => 'EventController:getDocuments',
 
         '/settings[/]' => 'SettingController:getAll',
+
+        '/estimates[/]' => 'EstimateController:getAll',
+        '/estimates/{id:[0-9]+}[/]' => 'EstimateController:getOne',
+
+        '/invoices[/]' => 'InvoiceController:getAll',
+        '/invoices/{id:[0-9]+}[/]' => 'InvoiceController:getOne',
 
         '/bookings[/]' => 'BookingController:getAll',
         sprintf(
@@ -115,6 +118,13 @@ return [
         '/events/{id:[0-9]+}/documents[/]' => 'EventController:attachDocument',
         '/events/{id:[0-9]+}/assignments[/]' => 'EventController:createAssignment',
         '/events/{id:[0-9]+}/positions[/]' => 'EventController:createPosition',
+
+        '/estimates[/]' => 'EstimateController:create',
+        '/estimates/{id:[0-9]+}/invoices[/]' => 'EstimateController:createInvoice',
+
+        '/invoices[/]' => 'InvoiceController:create',
+        '/invoices/{id:[0-9]+}/credit-note[/]' => 'InvoiceController:createCreditNote',
+        '/invoices/{id:[0-9]+}/payments[/]' => 'InvoiceController:addPayment',
 
         sprintf(
             '/bookings/{entity:(?:%s)}/{id:[0-9]+}/lists[/]',
@@ -178,6 +188,12 @@ return [
 
         '/settings[/]' => 'SettingController:update',
 
+        '/estimates/{id:[0-9]+}/status[/]' => 'EstimateController:updateStatus',
+        '/estimates/{id:[0-9]+}/finalize[/]' => 'EstimateController:finalize',
+
+        '/invoices/{id:[0-9]+}/status[/]' => 'InvoiceController:updateStatus',
+        '/invoices/{id:[0-9]+}/finalize[/]' => 'InvoiceController:finalize',
+
         sprintf(
             '/bookings/{entity:(?:%s)}/{id:[0-9]+}/materials[/]',
             implode('|', array_keys(BookingController::BOOKING_TYPES)),
@@ -191,7 +207,7 @@ return [
             implode('|', array_keys(BookingController::BOOKING_TYPES)),
         ) => 'BookingMaterialController:resynchronize',
         sprintf(
-            '/bookings/{entity:(?:%s)}/{id:[0-9]+}/extras/{extraId:[0-9]+}/resynchronize[/]',
+            '/bookings/{entity:(?:%s)}/{id:[0-9]+}/extras/{extraUuid:[a-z0-9-]+}/resynchronize[/]',
             implode('|', array_keys(BookingController::BOOKING_TYPES)),
         ) => 'BookingExtraController:resynchronize',
     ],
@@ -211,6 +227,7 @@ return [
         '/properties/{id:[0-9]+}[/]' => 'PropertyController:delete',
         '/documents/{id:[0-9]+}[/]' => 'DocumentController:delete',
         '/estimates/{id:[0-9]+}[/]' => 'EstimateController:delete',
+        '/invoices/{id:[0-9]+}[/]' => 'InvoiceController:delete',
         '/settings/{key:[a-zA-Z0-9-.]+}[/]' => 'SettingController:reset',
 
         '/events/{id:[0-9]+}[/]' => 'EventController:delete',

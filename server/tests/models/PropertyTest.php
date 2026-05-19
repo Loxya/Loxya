@@ -181,6 +181,7 @@ final class PropertyTest extends TestCase
             'type' => CustomFieldType::DATE->value,
             'config' => [],
             'is_totalisable' => null,
+            'is_searchable' => 0,
             'created_at' => '2024-11-20 13:30:00',
             'updated_at' => '2024-11-20 13:30:00',
         ];

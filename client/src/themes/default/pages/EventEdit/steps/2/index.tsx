@@ -1,4 +1,5 @@
 import './index.scss';
+import { Step } from '..';
 import config from '@/globals/config';
 import { defineComponent } from 'vue';
 import apiEvents from '@/stores/api/events';
@@ -76,19 +77,27 @@ const EventEditStepBeneficiaries = defineComponent({
         handleSubmit(e: SubmitEvent) {
             e.preventDefault();
 
-            this.saveAndGoToStep(this.isTechniciansEnabled ? 3 : 4);
+            this.saveAndGoToStep((
+                this.isTechniciansEnabled
+                    ? Step.TECHNICIANS
+                    : Step.MATERIALS
+            ));
         },
 
         handlePrevClick(e: MouseEvent) {
             e.preventDefault();
 
-            this.saveAndGoToStep(1);
+            this.saveAndGoToStep(Step.INFORMATIONS);
         },
 
         handleNextClick(e: MouseEvent) {
             e.preventDefault();
 
-            this.saveAndGoToStep(this.isTechniciansEnabled ? 3 : 4);
+            this.saveAndGoToStep((
+                this.isTechniciansEnabled
+                    ? Step.TECHNICIANS
+                    : Step.MATERIALS
+            ));
         },
 
         // ------------------------------------------------------
@@ -97,7 +106,7 @@ const EventEditStepBeneficiaries = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async saveAndGoToStep(nextStep: number) {
+        async saveAndGoToStep(nextStep: Step) {
             this.$emit('loading');
 
             const { id } = this.event;
@@ -129,23 +138,27 @@ const EventEditStepBeneficiaries = defineComponent({
 
         return (
             <form class="EventEditStepBeneficiaries" method="POST" onSubmit={handleSubmit}>
-                <header class="EventEditStepBeneficiaries__header">
-                    <h1 class="EventEditStepBeneficiaries__title">
-                        {__('page.event-edit.steps.beneficiaries.title')}
-                    </h1>
-                    {isBillingEnabled && (
-                        <p class="EventEditStepBeneficiaries__help">
-                            <IconMessage
-                                name="info-circle"
-                                message={__('page.event-edit.beneficiary-billing-help')}
-                            />
-                        </p>
-                    )}
-                </header>
-                <BeneficiariesSelect
-                    defaultValues={event.beneficiaries}
-                    onChange={handleChangeSelected}
-                />
+                <div class="EventEditStepBeneficiaries__wrapper">
+                    <div class="EventEditStepBeneficiaries__content">
+                        <header class="EventEditStepBeneficiaries__header">
+                            <h1 class="EventEditStepBeneficiaries__title">
+                                {__('page.event-edit.steps.beneficiaries.title')}
+                            </h1>
+                            {isBillingEnabled && (
+                                <p class="EventEditStepBeneficiaries__help">
+                                    <IconMessage
+                                        name="info-circle"
+                                        message={__('page.event-edit.beneficiary-billing-help')}
+                                    />
+                                </p>
+                            )}
+                        </header>
+                        <BeneficiariesSelect
+                            defaultValues={event.beneficiaries}
+                            onChange={handleChangeSelected}
+                        />
+                    </div>
+                </div>
                 <section class="EventEditStepBeneficiaries__actions">
                     <Button
                         htmlType="submit"

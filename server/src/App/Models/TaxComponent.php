@@ -7,9 +7,11 @@ use Adbar\Dot as DotArray;
 use Brick\Math\BigDecimal as Decimal;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Loxya\Config\Config;
 use Loxya\Contracts\Serializable;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Arr;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -19,7 +21,6 @@ use Loxya\Support\Validation\Validator as V;
  * @property int $tax_id
  * @property-read Tax $tax
  * @property string $name
- * @property bool $is_rate
  * @property Decimal $value
  */
 final class TaxComponent extends BaseModel implements Serializable
@@ -36,7 +37,6 @@ final class TaxComponent extends BaseModel implements Serializable
         $this->validation = fn () => [
             'tax_id' => V::custom([$this, 'checkTaxId']),
             'name' => V::custom([$this, 'checkName']),
-            'is_rate' => V::boolType(),
             'value' => V::custom([$this, 'checkValue']),
         ];
     }
@@ -47,7 +47,7 @@ final class TaxComponent extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkTaxId($value)
+    public function checkTaxId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -60,7 +60,7 @@ final class TaxComponent extends BaseModel implements Serializable
         return $tax?->is_group ?? false;
     }
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
         V::notEmpty()
             ->length(1, 30)
@@ -82,30 +82,31 @@ final class TaxComponent extends BaseModel implements Serializable
         return !$alreadyExists ?: 'tax-component-name-already-in-use';
     }
 
-    public function checkValue($value)
+    public function checkValue(mixed $value)
     {
         V::floatVal()->check($value);
         $value = Decimal::of($value);
 
         $isValid = (
             $value->isGreaterThanOrEqualTo(0) &&
-            $value->isLessThan(1_000_000_000_000) &&
+            $value->isLessThanOrEqualTo(100) &&
             $value->getScale() <= 3
         );
         if (!$isValid) {
             return false;
         }
 
-        $isRate = $this->getAttributeUnsafeValue('is_rate');
-        if (!V::boolType()->validate($isRate)) {
-            return true;
-        }
-
-        return $isRate
-            // - Si c'est un pourcentage, il doit être inférieur ou égal à 100%.
-            ? $value->isLessThanOrEqualTo(100)
-            // - Sinon si ce n'est pas un pourcentage, la précision doit être à 2 décimales max.
-            : $value->getScale() <= 2;
+        // - Si le pays du vendeur a une liste de taux autorisés,
+        //   on s'assure que le taux en fait partie.
+        $organizationCountry = Config::getOrganizationCountry();
+        $allowedRates = $organizationCountry->getVatRates(extended: true);
+        $isAcceptableRate = (
+            $allowedRates === null ||
+            Arr::some($allowedRates, static fn ($allowedRate) => (
+                Decimal::of($allowedRate)->isEqualTo($value)
+            ))
+        );
+        return $isAcceptableRate ?: 'tax-rate-not-allowed-for-country';
     }
 
     // ------------------------------------------------------
@@ -116,7 +117,7 @@ final class TaxComponent extends BaseModel implements Serializable
 
     public function tax(): BelongsTo
     {
-        return $this->belongsTo(TaxComponent::class);
+        return $this->belongsTo(Tax::class);
     }
 
     // ------------------------------------------------------
@@ -128,16 +129,8 @@ final class TaxComponent extends BaseModel implements Serializable
     protected $casts = [
         'tax_id' => 'integer',
         'name' => 'string',
-        'is_rate' => 'boolean',
         'value' => AsDecimal::class,
     ];
-
-    public function getValueAttribute(string $value): Decimal
-    {
-        /** @var Decimal $value */
-        $value = $this->castAttribute('value', $value);
-        return $value->toScale($this->is_rate ? 3 : 2);
-    }
 
     // ------------------------------------------------------
     // -
@@ -147,7 +140,6 @@ final class TaxComponent extends BaseModel implements Serializable
 
     protected $fillable = [
         'name',
-        'is_rate',
         'value',
     ];
 

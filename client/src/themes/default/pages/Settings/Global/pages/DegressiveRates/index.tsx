@@ -2,7 +2,6 @@ import './index.scss';
 import { RequestError } from '@/globals/requester';
 import { confirm } from '@/utils/alert';
 import { defineComponent } from 'vue';
-import showModal from '@/utils/showModal';
 import apiDegressiveRates from '@/stores/api/degressive-rates';
 import apiSettings from '@/stores/api/settings';
 import formatOptions from '@/utils/formatOptions';
@@ -170,7 +169,7 @@ const DegressiveRatesGlobalSettings = defineComponent({
         async handleCreate() {
             // - On affiche la modale de création de tarif dégressif.
             const newDegressiveRate: DegressiveRate | undefined = (
-                await showModal(this.$modal, DegressiveRateEdition)
+                await this.$modal.show(DegressiveRateEdition)
             );
             if (!newDegressiveRate) {
                 return;
@@ -193,7 +192,7 @@ const DegressiveRatesGlobalSettings = defineComponent({
 
             // - On affiche la modale d'édition du tarif dégressif.
             const updatedDegressiveRate: DegressiveRate | undefined = (
-                await showModal(this.$modal, DegressiveRateEdition, { degressiveRate })
+                await this.$modal.show(DegressiveRateEdition, { degressiveRate })
             );
             if (!updatedDegressiveRate) {
                 return;
@@ -243,12 +242,12 @@ const DegressiveRatesGlobalSettings = defineComponent({
                 return;
             }
 
-            // - On supprime le tarif dégressif de manière optimiste, au pire on le remettra plus bas.
+            // - On supprime le tarif dégressif de manière optimiste, au pire on le remettra à sa position.
             const degressiveRateIndex = this.degressiveRates.indexOf(degressiveRate);
             this.degressiveRates.splice(degressiveRateIndex, 1);
 
             try {
-                await apiDegressiveRates.remove(degressiveRate.id);
+                this.degressiveRates.splice(degressiveRateIndex, 0, degressiveRate);
                 this.$store.dispatch('degressiveRates/refresh');
             } catch {
                 this.degressiveRates.push(degressiveRate);

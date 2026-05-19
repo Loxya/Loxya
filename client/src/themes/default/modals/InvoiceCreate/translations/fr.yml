@@ -1,0 +1,48 @@
+title: Nouvelle facture
+created: La facture a bien été créée.
+
+actions:
+    next-step: Étape suivante
+    prev-step: Étape précédente
+
+steps:
+    buyer-and-lines:
+        title: Contenu
+        fields:
+            buyer:
+                label: Acheteur
+                placeholder: Rechercher un bénéficiaire...
+                change: Changer
+                not-invoiceable:
+                    label: Non facturable
+                    tooltip:
+                        with-company: >-
+                            Ce bénéficiaire ne peut pas être facturé en l'état,
+                            des informations obligatoires sont manquantes ou invalides
+                            sur la fiche de l'entreprise liée.
+                        without-company: >-
+                            Ce bénéficiaire ne peut pas être facturé en l'état,
+                            des informations obligatoires sont manquantes ou invalides
+                            sur sa fiche.
+
+            lines:
+                label: Lignes de la facture
+
+    other-informations:
+        title: Autres informations
+        action: Créer la facture
+        fields:
+            order-number: Numéro de bon de commande
+            special-mentions: Mentions spéciales
+            lang:
+                label: Langue de la facture
+                options:
+                    fr: Français
+                    en: Anglais
+            due-date:
+                label: Date d'échéance
+                placeholder:
+                    immediately: Paiement à réception
+                    with-delay:
+                        - "Paiement sous {days} jour"
+                        - "Paiement sous {days} jours"

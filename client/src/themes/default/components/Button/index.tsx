@@ -5,7 +5,7 @@ import Icon, { Variant as IconVariant } from '@/themes/default/components/Icon';
 import Fragment from '@/components/Fragment';
 
 import type { PropType } from 'vue';
-import type { Location } from 'vue-router';
+import type { RawLocation } from 'vue-router';
 import type { TooltipOptions } from 'v-tooltip';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
@@ -145,7 +145,7 @@ type Props = {
      * Si non définie, un élément HTML `<button>` sera utilisé et
      * vous devriez écouter l'événement `onClick` pour réagir au click.
      */
-    to?: string | Location,
+    to?: RawLocation,
 
     /**
      * Permet d'indiquer que c'est un bouton avec cible externe.
@@ -387,11 +387,11 @@ const Button = defineComponent({
         const content = (
             <Fragment>
                 {(icon && iconPosition === 'before') && (
-                    <Icon name={icon.name} variant={icon.variant} class="Button__icon" />
+                    <Icon name={icon.name} variant={icon.variant} spin={icon.spin} class="Button__icon" />
                 )}
                 {children && <span class="Button__content">{children}</span>}
                 {(icon && iconPosition === 'after') && (
-                    <Icon name={icon.name} variant={icon.variant} class="Button__icon" />
+                    <Icon name={icon.name} variant={icon.variant} spin={icon.spin} class="Button__icon" />
                 )}
             </Fragment>
         );

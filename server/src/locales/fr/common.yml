@@ -1,27 +1,56 @@
 invoice: "Facture"
 credit-note: "Avoir"
+prepayment-invoice: "Facture d'acompte"
+prepayment-credit-note: "Avoir sur acompte"
+
 invoice-number: "Facture n°\_%s"
 credit-note-number: "Avoir n°\_%s"
+prepayment-invoice-number: "Facture d'acompte n°\_%s"
+prepayment-credit-note-number: "Avoir sur acompte n°\_%s"
+
 invoice-title: "Facture en %s, N°\_%s"
 credit-note-title: "Avoir en %s, N°\_%s"
-
 estimate: "Devis"
-estimate-title: "Devis en %s"
+estimate-title:
+    without-number: "Devis en %s"
+    with-number: "Devis n°\_%s"
+prepayments: Acomptes
 
 inventory: "Inventaire"
 inventory-for-park: "Inventaire du parc\_: «\_%s\_»"
 inventory-created-by: "Inventaire créé par %s"
 
+related-invoice: "Facture associée"
+related-invoice-mention: "{number} ({date})"
+
+related-estimate: "Devis associé"
+related-estimate-mention: "Devis n°\_{number}"
+
+credit-note-on-invoice: "Avoir sur la facture n°\_{number}"
+prepayment-invoice-on-estimate: "Facture d'acompte sur le devis n°\_{number}"
+
+document-draft:
+    number-placeholder: "[Numéro à attribuer]"
+    watermark: "BROUILLON"
+
+company: Société
+period: Période
+reservation-period: "Période de réservation"
+event-period: "Période de l'événement"
 printed-on-date: "Imprimé le %s"
+issue-date: Date d'émission
+issue-date-value: "Date d'émission\_: %s"
+due-date-value: "Date d'échéance\_: %s"
+other: "Autre"
+other-specify: "Autre (précisez)"
 as-of-date: "Au %s"
 for-park: "pour le parc\_:"
 all-parks: "tous les parcs"
 park-name: "Parc %s"
 page: "Page %d"
-page-n-of-n: "Page %d / %d"
+page-n-of-n: "Page %s / %s"
 phone: "Tél.\_: %s"
 email: "E-mail\_: %s"
-vat-number: "N° TVA Intracom.\_: %s"
 technicians: "Techniciens"
 beneficiary: "Bénéficiaire"
 other-beneficiaries: "Autres bénéficiaires"
@@ -55,7 +84,7 @@ note-detail-next-page: "Remarque\_: vous trouverez le détail aux pages suivante
 amount: "Montant"
 duration: Durée
 number-of-days: ["%d jour", "%d jours"]
-discount-rate: "Remise de %s"
+discount-rate: "Remise (%s)"
 degressive-rate: "Coef. dégressif"
 discount: "Remise"
 discount-of-amount: "%s de %s"
@@ -68,13 +97,27 @@ unit-price-excl-tax: "P.U. H.T."
 daily-total: "Total\_/\_jour"
 daily-total-excl-tax: "Total H.T.\_/\_jour"
 total: "Total"
+total-vat: "Total T.V.A."
 subtotal: "Sous-total"
+subtotal-without-prepayments: "Sous-total (hors acomptes)"
+prepayments-deduction: "Déduction acomptes"
+prepayments-recovery: "Reprise acomptes"
 total-excl-tax: "Total H.T."
+total-excl-tax-short: "Total H.T."
 total-incl-taxes: "Total T.T.C."
-total-due: "Montant net à payer"
-total-credit: "Montant net à déduire"
+total-due: "Net à payer"
+total-credit: "Net à déduire"
+payment-informations: "Paiement"
+accepted-payment-methods: "Moyens de paiement acceptés"
+bank-details: "Coordonnées bancaires"
+bic: "BIC"
+account-holder: "Titulaire"
 estimate-acceptance-date: "Date d'acceptation du devis\_:"
 estimate-acceptance-signature: "Signature du bénéficiaire, précédée de la mention «\_Bon pour accord\_»\_:"
+signature-heading: "Signature"
+signature-approval: "Bon pour accord — Date et signature"
+billing-type-label: "Type de vente"
+order-number: "N° bon de commande"
 invoice-details-title: "Détails de la facture N°\_%s"
 credit-note-details-title: "Détails de l'avoir N°\_%s"
 estimate-details-title: "Détails du devis"
@@ -84,7 +127,9 @@ reference-value: "Réf.: %s"
 picture: "Photo"
 designation: "Désignation"
 replacement-value: "Val. Remp."
-unit-replacement-value: "Val. Remp. unitaire: %s"
+unit-replacement-short: "Val. Remp. unitaire"
+unit-replacement-value: "Valeur de remplacement unitaire"
+unit-replacement-value-short: "Val. Remp. unitaire: %s"
 total-replacement-value: "Val. Remp. Totale"
 description: "Description"
 tags: "Tags"
@@ -94,12 +139,10 @@ materials-list: "Liste du matériel"
 title: "Titre\_: «\_%s\_»"
 notes: "Notes"
 location: "Lieu\_: %s"
-contact: "Contact\_:"
+contact: Contact
+contact-dots: "Contact\_:"
 manager: "Chef de projet\_: %s"
-beneficiary-reference: "Réf. %s"
-company-registration-number:
-    global: "%s"
-    fr: "SIRET\_: %s"
+service-code: "Code service"
 serial-number-short: "S/N %s"
 this-event-is-confirmed: "Cet événement est confirmé."
 description-notes: "Description\_/\_Notes"
@@ -110,16 +153,21 @@ materials-park-name: "Matériel du parc «\_%s\_»"
 other-materials: "Autre matériel"
 not-categorized: "Non catégorisé"
 category-other: "Autre"
-total-replacement-amount: "Montant total de remplacement\_:\_%s"
+total-replacement-amount: "Montant total de remplacement"
+total-replacement-amount-value: "Montant total de remplacement\_:\_%s"
 properties-totals: "Totaux des caractéristiques"
+properties: "Caractéristiques"
 output: "Sortie"
 return: "Retour"
+optional: "(Optionnel)"
 date-dots: "Date\_:"
 signature: "Signature\_:"
 label: "Étiquette"
 park-value: "Parc\_: %s"
 enable-javascript-message: "Veuillez activer JavaScript pour utiliser l'application."
+prepayment-line: "Acompte sur le devis n°\_{number}"
 state: "État"
+rate: "Taux"
 base: "Base"
 vat: "T.V.A."
 non-degressive: "Non dégressif"
@@ -129,9 +177,78 @@ group: "Groupe"
 creation-date: "Date de création"
 pickup-date: "Date de l'enlèvement\_: %s"
 return-date: "Date de retour\_: %s"
-
+weight: Poids
+weight-value: "Poids\_: %s\_%s"
+origin-country: Pays d'origine
+origin-country-value: "Pays d'origine\_: %s"
+exempted: Exempté
 'yes': "Oui"
 'no': "Non"
+
+tax-breakdown:
+    simple: "Détails de la T.V.A."
+    default: "Détails des taxes"
+
+prepayment-reprise-line:
+    details: "Acompte n°{index} - Facture n°\_{number} ({date})"
+    short: "Acompte n°{index} du {date}"
+
+prepayment-credit-note-reprise-line:
+    details: "Avoir sur acompte n°{index} - Facture n°\_{number} ({date})"
+    short: "Avoir sur acompte n°{index} du {date}"
+
+taxes:
+    default: Taxe(s)
+    simple: T.V.A.
+
+tax-state:
+    exempted: Exempté
+    reverse-charge: Auto-liquidation
+    reverse-charge-supply: Livraison intra-com.
+    export: Export
+    out-of-scope: Hors champ
+
+due-date:
+    fixed: Date d'échéance
+    delay: Conditions de paiement
+
+expiry-date:
+    fixed: Date d'échéance
+    delay: Validité
+
+payment-terms:
+    immediately: "Paiement à reception"
+    with-delay:
+        - "Paiement sous %d jour"
+        - "Paiement sous %d jours"
+
+# - Voir le enum `IdentifierScheme`
+business-registration-id:
+    generic: "N° d'entreprise\_: %s"
+    "0002": "N° SIREN\_: %s"
+    "0009": "N° SIRET\_: %s"
+    "0208": "N° d'entreprise\_: %s"
+    "0183": "N° IDE\_: %s"
+
+business-registration-id-full:
+    generic: "Enregistré à %s / n° %s"
+    FR: "RCS %s %s"
+
+business-activity-code:
+    generic: "Code d'activité\_: %s"
+    FR: "Code APE\_: %s"
+    BE: "Code NACE\_: %s"
+    CH: "Code NOGA\_: %s"
+    CA: "Code SCIAN\_: %s"
+
+billing-type:
+    goods: Vente de biens
+    services: Prestation de services
+    both: Vente de biens et services
+
+vat-number:
+    generic: "N° TVA\_: %s"
+    CA: "N° de taxe\_: %s"
 
 label-with-period-flag:
     mobilization: "[Mobilisation du matériel] %s"
@@ -143,3 +260,9 @@ unit-state:
     brand-new: "Neuf"
     bad: "Mauvais"
     outdated: "Obsolète"
+
+payment-method:
+    cash: Espèces
+    card: Carte bancaire
+    cheque: Chèque
+    transfer: Virement bancaire

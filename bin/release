@@ -100,6 +100,7 @@ echo -e "\e[1m\e[34m-> Compilation des sources du client...\e[0m"
 echo -e "\e[1m\e[34m-> Copie des sources vers le dossier de distribution...\e[0m"
 mkdir -p "$BUILD_PATH"
 cp -r ./server/src "$BUILD_PATH"
+cp -r ./server/libs "$BUILD_PATH"
 
 cp -R ./server/bin "$BUILD_PATH/bin"
 cp ./server/.htaccess "$BUILD_PATH/.htaccess"
@@ -115,8 +116,6 @@ cp -R ./client/dist "$BUILD_PATH/src/public/webclient"
 
 echo -e "\e[1m\e[34m-> Nettoyage du dossier de distribution (suppression des fichiers inutiles / privés)...\e[0m"
 cd "$BUILD_PATH"
-rm -f src/App/Config/install.json
-rm -f src/App/Config/install.json.bckp
 rm -f src/App/Config/settings.json
 rm -f src/App/Config/settings.json.bckp
 rm -r src/var/cache && mkdir -m 777 src/var/cache/
@@ -151,6 +150,7 @@ cd "$ROOT"
 
 echo -e "\e[1m\e[34m-> Création de l'image Docker liée...\e[0m"
 docker build \
+    --target app-release \
     --build-context source="$BUILD_PATH" \
     -t "loxya/loxya:${VERSION}" \
     ./.docker

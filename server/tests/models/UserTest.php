@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace Loxya\Tests;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Enums\Group;
 use Loxya\Models\User;
 use Loxya\Support\Hash;
+use Loxya\Support\Validation\ValidationsException;
 
 final class UserTest extends TestCase
 {
@@ -37,7 +37,7 @@ final class UserTest extends TestCase
 
     public function testCreateWithoutData(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         User::new([]);
     }
 
@@ -68,7 +68,7 @@ final class UserTest extends TestCase
 
     public function testCreateWithoutPerson(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         User::new([
             'pseudo' => 'Owkay',
             'email' => 'owkay@test.org',
@@ -101,6 +101,18 @@ final class UserTest extends TestCase
         $this->assertSame(6, $user->person->user_id);
         $this->assertSame('Testing', $user->person->first_name);
         $this->assertSame('Add', $user->person->last_name);
+    }
+
+    public function testCreatePseudoFromName(): void
+    {
+        // - Avec un cas simple.
+        $this->assertSame('g.dupont', User::createPseudoFromName('Gérard', 'Dupont'));
+
+        // - Avec des caractères spéciaux dans le nom.
+        $this->assertSame('e.hruscakova-oestergaard', User::createPseudoFromName("'Élodie", "Hruščáková'Östergård"));
+
+        // - Avec un pseudo déjà utilisé.
+        $this->assertSame('a.dupont2', User::createPseudoFromName('Alexis', 'Dupont'));
     }
 
     public function testEdit(): void

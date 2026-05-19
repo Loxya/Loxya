@@ -1,18 +1,21 @@
 import { z } from '@/utils/validation';
 import requester from '@/globals/requester';
+import TaxRegime from '@/utils/invoicing/tax-regime';
+import VatExemptionCode from '@/utils/invoicing/vat-exemption-code';
 import { UserSchema } from './users';
 import { MaterialWithContextExcerptSchema } from './materials';
 import { DocumentSchema } from './documents';
 import { TechnicianSchema } from './technicians';
 import { RoleSchema } from './roles';
 import { withCountedEnvelope } from './@schema';
-import { EstimateSchema } from './estimates';
-import { InvoiceSchema } from './invoices';
+import { EstimateDetailsSchema, EstimateSchema } from './estimates';
+import { InvoiceDetailsSchema, InvoiceSchema } from './invoices';
 import {
     BeneficiarySchema,
 } from './beneficiaries';
 
 import type { Raw } from 'vue';
+import type Day from '@/utils/day';
 import type Color from '@/utils/color';
 import type Period from '@/utils/period';
 import type DateTime from '@/utils/datetime';
@@ -21,8 +24,8 @@ import type { CountedData } from './@types';
 import type { SchemaInfer } from '@/utils/validation';
 import type { User } from './users';
 import type { Document } from './documents';
-import type { Estimate } from './estimates';
-import type { Invoice } from './invoices';
+import type { EstimateDetails } from './estimates';
+import type { InvoiceDetails } from './invoices';
 import type { Material } from './materials';
 import type { Technician } from './technicians';
 import type { Role } from './roles';
@@ -55,14 +58,58 @@ export const EventTechnicianSchema = z.strictObject({
     technician: z.lazy(() => TechnicianSchema),
 });
 
-const EventTaxSchema = z.strictObject({
-    name: z.string(),
-    is_rate: z.boolean(),
+const EventLineTaxSchema = z.strictObject({
+    name: z.string().optional(),
     value: z.decimal(),
 });
 
-const EventTaxTotalSchema = EventTaxSchema
-    .extend({ total: z.decimal() });
+const EventTaxSchema = z.union([
+    // - Régime standard.
+    z.strictObject({
+        type: z.literal(TaxRegime.STANDARD),
+        name: z.string().optional(),
+        value: z.decimal(),
+        base: z.decimal(),
+        total: z.decimal(),
+    }),
+    // - Exemption / régime non-standard.
+    z.strictObject({
+        type: z.union([
+            z.literal(TaxRegime.EXEMPTED),
+            z.literal(TaxRegime.EXPORT),
+            z.literal(TaxRegime.OUT_OF_SCOPE),
+            z.literal(TaxRegime.REVERSE_CHARGE),
+            z.literal(TaxRegime.REVERSE_CHARGE_SUPPLY),
+        ]),
+        reason: z.string().array(),
+        base: z.decimal(),
+    }),
+]);
+
+const EventGlobalDiscountBreakdownSchema = z.strictObject({
+    base: z.decimal(),
+    value: z.decimal(),
+    total: z.decimal(),
+    tax: z.union([
+        // - Régime standard.
+        z.strictObject({
+            type: z.literal(TaxRegime.STANDARD),
+            name: z.string().optional(),
+            value: z.decimal(),
+        }),
+        // - Exemption / régime non-standard.
+        z.strictObject({
+            type: z.union([
+                z.literal(TaxRegime.EXEMPTED),
+                z.literal(TaxRegime.EXPORT),
+                z.literal(TaxRegime.OUT_OF_SCOPE),
+                z.literal(TaxRegime.REVERSE_CHARGE),
+                z.literal(TaxRegime.REVERSE_CHARGE_SUPPLY),
+            ]),
+            reason: z.string().array(),
+        }),
+    ]),
+});
 
 //
 // -- Event material schemas / factory
@@ -100,7 +147,10 @@ const createMaterialBillableSchema = createEventMaterialSchemaFactory({
     discount_rate: z.decimal(),
     total_discount: z.decimal(),
     total_without_taxes: z.decimal(),
-    taxes: z.lazy(() => EventTaxSchema.array()),
+    tax_regime: z.nativeEnum(TaxRegime).nullable(),
+    tax_exemption_code: z.nativeEnum(VatExemptionCode).nullable(),
+    tax_id: z.number().nullable(),
+    taxes: z.lazy(() => EventLineTaxSchema.array()).nullable(),
 });
 
 // - Matériel d'événement de base.
@@ -128,13 +178,19 @@ const EventMaterialWithQuantityMissingSchema = z.union([
 //
 
 export const EventExtraSchema = z.strictObject({
-    id: z.number(),
+    uuid: z.string().uuid(),
+    is_service: z.boolean(),
     description: z.string(),
     quantity: z.number().positive(),
     unit_price: z.decimal(),
-    tax_id: z.number().nullable(),
-    taxes: z.lazy(() => EventTaxSchema.array()),
+    total_without_discount: z.decimal(),
+    discount_rate: z.decimal(),
+    total_discount: z.decimal(),
     total_without_taxes: z.decimal(),
+    tax_regime: z.nativeEnum(TaxRegime).nullable(),
+    tax_exemption_code: z.nativeEnum(VatExemptionCode).nullable(),
+    tax_id: z.number().nullable(),
+    taxes: z.lazy(() => EventLineTaxSchema.array()).nullable(),
 });
 
 //
@@ -179,6 +235,7 @@ export const createEventDetailsSchema = <T extends ZodRawShape>(augmentation: T)
         })
         .extend({
             total_replacement: z.decimal(),
+            total_weight: z.decimal(),
             currency: z.currency(),
             has_deleted_materials: z.boolean(),
             technicians: z.lazy(() => EventTechnicianSchema.array()),
@@ -188,49 +245,48 @@ export const createEventDetailsSchema = <T extends ZodRawShape>(augmentation: T)
             note: z.string().nullable().optional(),
         })
         .extend<T>(augmentation)
-        .strip() // TODO: À enlever lorsqu'on pourra garder les objets stricts avec les intersections.
-        .and(z.discriminatedUnion('is_departure_inventory_done', [
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+        .extend(
+            {
                 is_departure_inventory_done: z.literal(true),
                 departure_inventory_datetime: z.datetime().nullable(),
                 departure_inventory_author: z.lazy(() => UserSchema).nullable(),
-            }),
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+            {
                 is_departure_inventory_done: z.literal(false),
                 departure_inventory_datetime: z.null(),
                 departure_inventory_author: z.null(),
-            }),
-        ]))
-        .and(z.discriminatedUnion('is_return_inventory_done', [
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+        )
+        .extend(
+            {
                 is_return_inventory_done: z.literal(true),
                 is_return_inventory_started: z.literal(true),
                 return_inventory_datetime: z.datetime().nullable(),
                 return_inventory_author: z.lazy(() => UserSchema).nullable(),
-            }),
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+            {
                 is_return_inventory_done: z.literal(false),
                 is_return_inventory_started: z.boolean(),
                 return_inventory_datetime: z.null(),
                 return_inventory_author: z.null(),
-            }),
-        ]))
-        .and(z.discriminatedUnion('is_archived', [
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+        )
+        .extend(
+            {
                 is_archived: z.literal(true),
                 has_missing_materials: z.null(),
                 has_not_returned_materials: z.null(),
                 has_unassigned_mandatory_positions: z.null(),
-            }),
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+            {
                 is_archived: z.literal(false),
                 has_missing_materials: z.boolean().nullable(),
                 has_not_returned_materials: z.boolean().nullable(),
                 has_unassigned_mandatory_positions: z.boolean().nullable(),
-            }),
-        ]))
-        .and(z.discriminatedUnion('is_billable', [
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+        )
+        .extend(
+            {
                 is_billable: z.literal(true),
                 materials: z.lazy(() => EventMaterialBillableSchema.array()),
                 extras: z.lazy(() => EventExtraSchema.array()),
@@ -238,16 +294,20 @@ export const createEventDetailsSchema = <T extends ZodRawShape>(augmentation: T)
                 invoices: z.lazy(() => InvoiceSchema.array()).optional(),
                 total_without_global_discount: z.decimal(),
                 global_discount_rate: z.decimal(),
+                global_discount_breakdown: z.lazy(() => EventGlobalDiscountBreakdownSchema.array()),
                 total_global_discount: z.decimal(),
                 total_without_taxes: z.decimal(),
-                total_taxes: z.lazy(() => EventTaxTotalSchema.array()),
+                global_tax_regime: z.nativeEnum(TaxRegime).nullable(),
+                global_tax_exemption_code: z.nativeEnum(VatExemptionCode).nullable(),
+                global_tax_exemption_reason: z.string().nullable(),
+                total_taxes: z.lazy(() => EventTaxSchema.array()).nullable(),
                 total_with_taxes: z.decimal(),
-            }),
-            z.object({ // TODO: `strictObject` lorsque ce sera possible.
+            },
+            {
                 is_billable: z.literal(false),
                 materials: z.lazy(() => EventMaterialNotBillableSchema.array()),
-            }),
-        ]))
+            },
+        )
 );
 
 export const EventDetailsSchema = createEventDetailsSchema({});
@@ -291,8 +351,8 @@ export type EventTechnician = SchemaInfer<typeof EventTechnicianSchema>;
 
 export type EventPosition = SchemaInfer<typeof EventPositionSchema>;
 
+export type EventLineTax = SchemaInfer<typeof EventLineTaxSchema>;
 export type EventTax = SchemaInfer<typeof EventTaxSchema>;
-export type EventTaxTotal = SchemaInfer<typeof EventTaxTotalSchema>;
 
 //
 // - Edition
@@ -342,6 +402,19 @@ export type EventPositionEdit = Nullable<{
     id: Role['id'],
     is_mandatory: boolean,
 }>;
+
+export type EventInvoiceCreate = {
+    lang?: string,
+    due_date?: Raw<Day> | null,
+    order_number?: string | null,
+    special_mentions?: string | null,
+};
+
+export type EventEstimateCreate = {
+    lang?: string,
+    due_date?: Raw<Day> | null,
+    special_mentions?: string | null,
+};
 
 //
 // - Récupération
@@ -419,14 +492,14 @@ const cancelReturnInventory = async (id: Event['id']): Promise<EventDetails> => 
     return EventDetailsSchema.parse(response);
 };
 
-const createInvoice = async (id: Event['id']): Promise<Invoice> => {
-    const response = await requester.post(`/events/${id}/invoices`);
-    return InvoiceSchema.parse(response);
+const createInvoice = async (id: Event['id'], data: EventInvoiceCreate = {}): Promise<InvoiceDetails> => {
+    const response = await requester.post(`/events/${id}/invoices`, data);
+    return InvoiceDetailsSchema.parse(response);
 };
 
-const createEstimate = async (id: Event['id']): Promise<Estimate> => {
-    const response = await requester.post(`/events/${id}/estimates`);
-    return EstimateSchema.parse(response);
+const createEstimate = async (id: Event['id'], data: EventEstimateCreate = {}): Promise<EstimateDetails> => {
+    const response = await requester.post(`/events/${id}/estimates`, data);
+    return EstimateDetailsSchema.parse(response);
 };
 
 const create = async (data: EventEdit): Promise<EventDetails> => {

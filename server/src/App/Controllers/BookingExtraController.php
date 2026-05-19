@@ -4,13 +4,13 @@ declare(strict_types=1);
 namespace Loxya\Controllers;
 
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
-use Illuminate\Support\Collection;
 use Loxya\Config\Config;
 use Loxya\Errors\Exception\HttpUnprocessableEntityException;
 use Loxya\Http\Request;
 use Loxya\Models\Event;
 use Loxya\Models\EventExtra;
 use Loxya\Support\Arr;
+use Loxya\Support\Invoicing\TaxRegime;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpNotFoundException;
@@ -26,7 +26,7 @@ final class BookingExtraController extends BaseController
     {
         $id = $request->getIntegerAttribute('id');
         $entity = $request->getAttribute('entity');
-        $extraId = $request->getAttribute('extraId');
+        $extraUuid = $request->getAttribute('extraUuid');
         if (!array_key_exists($entity, self::BOOKING_TYPES)) {
             throw new HttpNotFoundException($request, "Booking type (entity) not recognized.");
         }
@@ -39,7 +39,7 @@ final class BookingExtraController extends BaseController
         }
 
         /** @var EventExtra|null $bookingExtra */
-        $bookingExtra = $booking->extras->find($extraId);
+        $bookingExtra = $booking->extras->firstWhere('uuid', $extraUuid);
         if ($bookingExtra === null) {
             throw new HttpNotFoundException($request, "Booking does not contain the specified extra.");
         }
@@ -55,22 +55,21 @@ final class BookingExtraController extends BaseController
             throw new HttpBadRequestException($request, "The list of fields to be resynchronized is invalid.");
         }
 
-        $currencyChanged = $booking->currency !== Config::get('currency');
-        if ($currencyChanged && in_array('taxes', $selection, true)) {
-            $canResyncTaxes = (new Collection($bookingExtra->liveTax?->asFlatArray() ?? []))
-                ->every('is_rate', true);
-
-            if (!$canResyncTaxes) {
-                throw new HttpBadRequestException(
-                    $request,
-                    "Resynchronization of taxes is not possible when " .
-                    "the booking currency differ from the global one.",
-                );
-            }
-        }
-
         if (in_array('taxes', $selection, true)) {
-            $bookingExtra->taxes = $bookingExtra->liveTax?->asFlatArray();
+            $isVatExempted = Config::get('organization.isVatExempted', false);
+            if ($isVatExempted) {
+                throw new HttpUnprocessableEntityException($request, (
+                    "The tax management is disabled, taxes cannot be resynchronized."
+                ));
+            }
+
+            $isDefaultStandardTaxRegime = $bookingExtra->default_tax_regime === TaxRegime::STANDARD->value;
+            $tax = $isDefaultStandardTaxRegime ? $bookingExtra->defaultTax : null;
+
+            $bookingExtra->tax_regime = $bookingExtra->default_tax_regime;
+            $bookingExtra->tax_exemption_code = $bookingExtra->default_tax_exemption_code;
+            $bookingExtra->taxes = $tax?->asFlatArray();
+            $bookingExtra->tax()->associate($tax);
         }
 
         $bookingExtra->save();

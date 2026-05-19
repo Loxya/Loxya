@@ -25,10 +25,12 @@ sub-pages:
         deleted: Technician deleted.
         restored: Technician restored.
 
+        empty: No technician registered at the moment.
+
     timeline:
         title: Technicians planning
 
         add-technician: Add a technician
 
-        no-technicians: There is no technicians yet.
+        no-technicians: No technician registered at the moment.
         no-technicians-with-this-search: No technicians were found with this search.

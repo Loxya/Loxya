@@ -6,7 +6,6 @@ import parseInteger from '@/utils/parseInteger';
 import { defineComponent, markRaw } from 'vue';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
 import bookingFormatterFactory from '@/utils/formatTimelineBooking';
-import showModal from '@/utils/showModal';
 import apiBeneficiaries from '@/stores/api/beneficiaries';
 import Queue from 'p-queue';
 import EventDetails from '@/themes/default/modals/EventDetails';
@@ -289,27 +288,21 @@ const BeneficiaryViewBorrowings = defineComponent({
         },
 
         async showModal(entity: BookingEntity, id: BookingExcerpt['id']) {
-            const modalComponents = {
-                [BookingEntity.EVENT]: EventDetails,
-            };
-            if (!(entity in modalComponents)) {
-                throw new Error('Unsupported booking type.');
-            }
-
             let shouldRefetch = false;
-            const modalComponent = modalComponents[entity];
-            await showModal(this.$modal, modalComponent, {
-                id,
-                onUpdated: () => {
-                    shouldRefetch = true;
-                },
-                onDuplicated() {
-                    shouldRefetch = true;
-                },
-                onDeleted: () => {
-                    shouldRefetch = true;
-                },
-            });
+            switch (entity) {
+                case BookingEntity.EVENT: {
+                    await this.$modal.show(EventDetails, {
+                        id,
+                        onUpdated: () => { shouldRefetch = true; },
+                        onDuplicated() { shouldRefetch = true; },
+                        onDeleted: () => { shouldRefetch = true; },
+                    });
+                    break;
+                }
+                default: {
+                    throw new Error('Unsupported booking type.');
+                }
+            }
 
             if (shouldRefetch) {
                 this.fetchData(true);

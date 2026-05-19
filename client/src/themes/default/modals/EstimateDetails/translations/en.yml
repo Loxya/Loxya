@@ -1,0 +1,87 @@
+title:
+    with-number: "Estimate No.\_{number}"
+    without-number: "Estimate of {date} at {hour}"
+
+confirm-delete: Do you really want to delete this estimate?
+deleted: The estimate has been successfully deleted.
+
+confirm-finalize: >-
+    Finalizing will produce the official estimate document.
+    This action cannot be undone, do you want to continue?
+
+issue-date: Issue date
+validity: ["Valid for {days} day", "Valid for {days} days"]
+expiry-date:
+    fixed: Expiry Date
+    delay: Validity
+
+actions:
+    create-invoice: Create an invoice from this estimate
+    finalize: Finalize the estimate
+    delete: Delete estimate
+
+related-invoices:
+    title: Related invoices
+    remaining: "Remaining to invoice:"
+    item:
+        label:
+            invoice: "Invoice No.\_{number}"
+            credit-note: "Credit note No.\_{number}"
+
+            draft:
+                invoice: "Invoice of {date} at {hour}"
+                credit-note: "Credit note of {date} at {hour}"
+
+modals:
+    create-invoice:
+        title:
+            with-number: "New invoice from estimate No.\_{number}"
+            without-number: "New invoice from the estimate of {date}"
+        action: Create invoice
+        created: The invoice has been created successfully.
+
+        confirm-no-draft:
+            prepayment: >-
+                The prepayment invoice will be created directly (without going through
+                the draft step). Do you want to continue?
+
+            balance: >-
+                The invoice will be created directly (without going through the
+                draft step). Do you want to continue?
+
+        type-choice:
+            prepayment:
+                title: Prepayment invoice
+                description: Allows to invoice only a portion of the estimate amount.
+            balance:
+                title: Balance invoice
+                description: "Allows to invoice the remaining amount ({amount}) directly."
+            direct:
+                title: Invoice
+                description: Allows to invoice the full estimate amount directly.
+
+        prepayment-input-mode:
+            percentage: Percentage of estimate
+            amount: Fixed amount
+
+        fields:
+            percentage:
+                label: Prepayment percentage
+                help: "Max. {max}% of the estimate total"
+            amount:
+                label: "Prepayment amount"
+                help: "Max. {max} (remaining to invoice)"
+            order-number: Purchase order number
+            special-mentions: Special mentions
+            lang:
+                label: Invoice language
+                options:
+                    fr: French
+                    en: English
+            due-date:
+                label: Due date
+                placeholder:
+                    immediately: Payment due on receipt
+                    with-delay:
+                        - "Payment due in %d day"
+                        - "Payment due in %d days"

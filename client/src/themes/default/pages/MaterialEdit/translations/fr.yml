@@ -9,9 +9,14 @@ fields-changes-depending-on-category: Les champs ci-dessous fluctuent en fonctio
 saved: Matériel sauvegardé.
 
 fields:
-    tax:
-        label: Taxe
-        placeholder: Pas de taxe
     degressive-rate:
         label: Tarif dégressif
         placeholder: Pas de dégressivité
+
+    tax:
+        label:
+            default: Taxe
+            simple: Taux de T.V.A.
+        placeholder:
+            default: Aucune (exempté sans motif)
+            simple: Aucun (exempté sans motif)

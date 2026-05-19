@@ -1,0 +1,939 @@
+{% extends 'pdf/document' %}
+
+{%- set isVatExempted = globalTaxRegime == (
+    enum('Loxya\\Support\\Invoicing\\TaxRegime').EXEMPTED
+) -%}
+{%- set isVatOutOfScope = globalTaxRegime == (
+    enum('Loxya\\Support\\Invoicing\\TaxRegime').OUT_OF_SCOPE
+) -%}
+{%- set hasTaxes = not isVatExempted and not isVatOutOfScope -%}
+
+{% macro registrationIdLabelled(party) %}
+    {%- if party.identifier is not empty -%}
+        {%- set registrationIdScheme = party.country.getCompanyIdentifierScheme(party.identifier) -%}
+        {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+        {{- __(registrationIdTranslationKey, party.identifier, __('business-registration-id.generic', party.identifier)) -}}
+    {%- endif -%}
+{% endmacro %}
+
+{% macro vatNumberLabelled(party) %}
+    {%- if party.vatNumber is not empty -%}
+        {%- set vatNumberTranslationKey = 'vat-number.' ~ (party.country.code ?? 'generic') -%}
+        {{- __([vatNumberTranslationKey, 'vat-number.generic'], party.vatNumber) -}}
+    {%- endif -%}
+{% endmacro %}
+
+{% macro lineTax(tax) %}
+    <span
+        class="{{ html_classes('line-table__table__item__tax', {
+            'line-table__table__item__tax--standard': tax.regime.isStandard(),
+            'line-table__table__item__tax--exempt': tax.regime.isExempt(),
+            'line-table__table__item__tax--empty': tax is null,
+        }) }}"
+    >
+        {%- if tax is not null -%}
+            {%- if tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').STANDARD -%}
+                {%- set parts = [] -%}
+                {%- for tax in tax.taxes -%}
+                    {%- set taxValue = (
+                        tax.value.dividedBy(100, 5)
+                            |format_percent_number({ max_fraction_digit: 3 }, locale=locale)
+                    ) -%}
+                    {% if not isSimpleVatSystem and tax.name is not empty -%}
+                        {% set parts = parts|merge([tax.name ~ ' (' ~ taxValue ~ ')']) -%}
+                    {% else -%}
+                        {% set parts = parts|merge([taxValue]) -%}
+                    {% endif -%}
+                {%- endfor -%}
+                {%- for part in parts -%}
+                <span class="line-table__table__item__tax__part">
+                    {{- part -}}
+                </span>
+                {%- endfor -%}
+            {% elseif tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').ZERO_RATED %}
+                {{- 0|format_percent_number({ max_fraction_digit: 3 }, locale=locale) -}}
+            {% else %}
+                {%- if tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').REVERSE_CHARGE ~%}
+                    {{- __('tax-state.reverse-charge') -}}
+                {%- elseif tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').REVERSE_CHARGE_SUPPLY ~%}
+                    {{- __('tax-state.reverse-charge-supply') -}}
+                {%- elseif tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').EXPORT ~%}
+                    {{- __('tax-state.export') -}}
+                {%- elseif tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').EXEMPTED ~%}
+                    {{- __('tax-state.exempted') -}}
+                {%- elseif tax.regime == enum('Loxya\\Support\\Invoicing\\TaxRegime').OUT_OF_SCOPE ~%}
+                    {{- __('tax-state.out-of-scope') -}}
+                {%- endif ~%}
+                {%- if tax.footnote is defined -%}
+                    <sup>{{- '(' ~ tax.footnote ~ ')' -}}</sup>
+                {%- endif -%}
+            {%- endif -%}
+        {%- else -%}
+            &mdash;
+        {%- endif -%}
+    </span>
+{% endmacro %}
+
+{% block head %}
+{{ parent() }}
+<style type="text/css">
+    :root {
+        --color-accent: #2563eb;
+        --background-accent: #f5f9ff;
+    }
+</style>
+<style type="text/css">
+    {{~ source('./index.scss') }}
+</style>
+{% endblock %}
+
+{% block title %}
+    {%- if isDraft -%}
+        {{ __('estimate') }}
+    {%- else -%}
+        {{ __('estimate-title.with-number', number) }}
+    {%- endif -%}
+{% endblock %}
+
+{% block content ~%}
+<header class="header">
+    <div class="header__left">
+        <div class="seller">
+            {#- -- Logo du vendeur -- ~#}
+            {%- if seller.logo is not empty ~%}
+            <div class="seller__logo">
+                <img src="img/{{ seller.logo }}" class="seller__logo__image" />
+            </div>
+            {%- endif ~%}
+
+            {#- -- Informations du vendeur -- ~#}
+            <div class="seller__infos">
+                <h2 class="seller__name">
+                    {{ seller.name }}
+                </h2>
+                <address class="seller__address">
+                    {{ seller.address.format(withCountry: true)|nl2br }}
+                </address>
+                <ul class="seller__identifiers">
+                    <li class="seller__identifiers__item">
+                        {{- _self.registrationIdLabelled(seller) -}}
+                    </li>
+                    {%- if not isVatOutOfScope and seller.vatNumber is not empty ~%}
+                    <li class="seller__identifiers__item">
+                        {{- _self.vatNumberLabelled(seller) -}}
+                    </li>
+                    {%- endif ~%}
+                </ul>
+                {%- if seller.phone is not empty or seller.email is not empty ~%}
+                <ul class="seller__contact">
+                    {%- if seller.email is not empty ~%}
+                    <li class="seller__contact__item">{{- seller.email -}}</li>
+                    {%~ endif %}
+                    {%- if seller.phone is not empty ~%}
+                    <li class="seller__contact__item">
+                        {{ seller.phone|format_phone(seller.country) }}
+                    </li>
+                    {%- endif ~%}
+                </ul>
+                {%- endif ~%}
+            </div>
+
+            {#- -- Informations générales -- ~#}
+            <dl class="main-infos">
+                <div class="main-infos__item">
+                    <dt class="main-infos__item__label">
+                        {{- __('billing-type-label') -}}
+                    </dt>
+                    <dd class="main-infos__item__value">
+                        {{- __('billing-type.' ~ billingType.value) -}}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+    <div class="header__right">
+        {#- -- Méta-données globales -- ~#}
+        <div class="meta">
+            {#- -- Type + Numéro de devis -- ~#}
+            <h1 class="meta__title">
+                <span class="meta__title__type">
+                    {{- __('estimate') -}}
+                </span>
+                <span
+                    class="{{ html_classes('meta__title__number', {
+                        'meta__title__number--placeholder': isDraft,
+                    }) }}"
+                >
+                    {{- isDraft ? __('document-draft.number-placeholder') : number -}}
+                </span>
+            </h1>
+
+            {#- -- Dates et références du devis -- ~#}
+            {%- set hasMetaData = (
+                not isDraft or
+                (
+                    totalWithTaxes.isGreaterThan(0) and
+                    (dueDate is not null or dueDelay is not null)
+                )
+            ) -%}
+            {%- if hasMetaData ~%}
+            <dl class="meta__data">
+                {%- if not isDraft ~%}
+                <div class="meta__data__item">
+                    <dt class="meta__data__item__label">
+                        {{- __('issue-date') -}}
+                    </dt>
+                    <dd class="meta__data__item__value">
+                        {{- date|format_date('long', locale=locale) -}}
+                    </dd>
+                </div>
+                {%- endif ~%}
+                {%- if totalWithTaxes.isGreaterThan(0) ~%}
+                    {%- if dueDate is not null ~%}
+                    <div class="meta__data__item">
+                        <dt class="meta__data__item__label">
+                            {{- __('expiry-date.fixed') -}}
+                        </dt>
+                        <dd class="meta__data__item__value">
+                            {{- dueDate|format_date('long', locale=locale) -}}
+                        </dd>
+                    </div>
+                    {%- elseif dueDelay is not null ~%}
+                    <div class="meta__data__item">
+                        <dt class="meta__data__item__label">
+                            {{- __('expiry-date.delay') -}}
+                        </dt>
+                        <dd class="meta__data__item__value">
+                            {{- __n('number-of-days', dueDelay) -}}
+                        </dd>
+                    </div>
+                    {%- endif ~%}
+                {%- endif ~%}
+            </dl>
+            {%- endif ~%}
+        </div>
+
+        <div class="header__right__main">
+            {#- -- Informations de l'acheteur -- ~#}
+            <div class="buyer">
+                <div class="buyer__heading">{{ __('beneficiary') }}</div>
+                <div class="buyer__infos">
+                    <h2 class="buyer__name">{{ buyer.name }}</h2>
+                    {%- if buyer.address is not empty ~%}
+                    <address class="buyer__address">
+                        {{ buyer.address.format(withCountry: not isDomestic)|nl2br }}
+                    </address>
+                    {%- endif -%}
+                    {% with %}
+                        {%- set showVatNumber = (
+                            not isVatOutOfScope and
+                            buyer.isSameVatArea and
+                            buyer.vatNumber is not empty
+                        ) -%}
+                        {%- set hasIdentifiers = buyer.isCompany and (
+                            buyer.identifier is not empty or
+                            showVatNumber
+                        ) -%}
+                        {%- if hasIdentifiers ~%}
+                        <ul class="buyer__identifiers">
+                            {%- if buyer.identifier is not empty -%}
+                            <li class="buyer__identifiers__item">
+                                {{- _self.registrationIdLabelled(buyer) -}}
+                            </li>
+                            {%~ endif %}
+                            {%- if showVatNumber ~%}
+                            <li class="buyer__identifiers__item">
+                                {{- _self.vatNumberLabelled(buyer) -}}
+                            </li>
+                            {%- endif ~%}
+                        </ul>
+                        {%- endif -%}
+                    {% endwith %}
+                    {% with %}
+                        {% set hasExtras = (
+                            (buyer.isCompany and buyer.contactName is not empty) or
+                            buyer.serviceCode is not empty or
+                            buyer.reference is not empty
+                        ) %}
+                        {%- if hasExtras ~%}
+                        <dl class="buyer__extras">
+                            {%- if buyer.isCompany and buyer.contactName is not empty ~%}
+                            <div class="buyer__extras__item">
+                                <dt class="buyer__extras__item__label">
+                                    {{- __('contact') -}}
+                                </dt>
+                                <dd class="buyer__extras__item__value">
+                                    {{- buyer.contactName -}}
+                                </dd>
+                            </div>
+                            {%- endif -%}
+                            {%- if buyer.serviceCode is not empty ~%}
+                            <div class="buyer__extras__item">
+                                <dt class="buyer__extras__item__label">
+                                    {{- __('service-code') -}}
+                                </dt>
+                                <dd class="buyer__extras__item__value">
+                                    {{- buyer.serviceCode -}}
+                                </dd>
+                            </div>
+                            {%- endif -%}
+                            {%- if buyer.reference is not empty ~%}
+                            <div class="buyer__extras__item">
+                                <dt class="buyer__extras__item__label">
+                                    {{- __('reference') -}}
+                                </dt>
+                                <dd class="buyer__extras__item__value">
+                                    {{- buyer.reference -}}
+                                </dd>
+                            </div>
+                            {%- endif ~%}
+                        </dl>
+                        {%- endif ~%}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+{#- -- Titre du devis -- ~#}
+{% set hasBookingInformations = booking is not null and (
+    (booking.type == constant('Loxya\\Models\\Event::TYPE') and booking.title is not empty)
+) %}
+{%- if hasBookingInformations ~%}
+<div class="main-title">
+    <h1 class="main-title__main">
+        {{- booking.title -}}
+    </h1>
+    {%- if booking.period is not null ~%}
+    <p class="main-title__subtitle">
+        <span class="main-title__subtitle__part">
+            <span class="main-title__subtitle__part__key">
+                {{- __('event-period') -}}
+            </span>
+            <span class="main-title__subtitle__part__value">
+                {{- booking.period|format_period('long', locale=locale)|ucfirst -}}
+            </span>
+        </span>
+    </p>
+    {%- endif %}
+</div>
+{%- endif ~%}
+
+{#- -- Lignes de matériel -- ~#}
+{% if materials|length > 0 %}
+<div class="line-table">
+    {% if extras|length > 0 -%}
+    <h3 class="line-table__title">
+        {{- __('materials') -}}
+    </h3>
+    {%- endif %}
+    <table class="line-table__table">
+        {% with %}
+        {% set fullColspan = 4 + (hasTaxes ? 1 : 0) + (hasLineDiscount ? 1 : 0) %}
+        <thead class="line-table__table__header">
+            <tr class="line-table__table__header__row">
+                <th class="line-table__table__header__cell line-table__table__header__cell--designation">
+                    {{- __('designation') -}}
+                </th>
+                <th class="line-table__table__header__cell line-table__table__header__cell--qty">
+                    {{- __('qty') -}}
+                </th>
+                <th class="line-table__table__header__cell line-table__table__header__cell--unit-price">
+                    {{- __(hasTaxes ? 'unit-price-excl-tax' : 'unit-price') -}}
+                </th>
+                {%- if hasTaxes ~%}
+                <th class="line-table__table__header__cell line-table__table__header__cell--tax">
+                    {{ __(isSimpleVatSystem ? __('taxes.simple') : __('taxes.default')) }}
+                </th>
+                {%- endif -%}
+                {%- if hasLineDiscount ~%}
+                <th class="line-table__table__header__cell line-table__table__header__cell--discount">
+                    {{- __('discount') -}}
+                </th>
+                {%- endif -%}
+                <th class="line-table__table__header__cell line-table__table__header__cell--total">
+                    {{ __(hasTaxes ? 'total-excl-tax' : 'total') }}
+                </th>
+            </tr>
+        </thead>
+        <tbody class="line-table__table__body">
+            {%- for category, _materials in materials ~%}
+                <tr class="line-table__table__body__header">
+                    <td
+                        class="line-table__table__body__header__cell"
+                        colspan="{{ fullColspan }}"
+                    >
+                        {%- if category == '__other' -%}
+                            {{- __('not-categorized') -}}
+                        {%- else -%}
+                            {{- category -}}
+                        {%- endif -%}
+                    </td>
+                </tr>
+                {%- for material in _materials ~%}
+                <tr class="line-table__table__body__row line-table__table__item">
+                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                        <div class="line-table__table__item__name">
+                            <span class="line-table__table__item__name__main">{{ material.name }}</span>
+                            <span class="line-table__table__item__name__sub">
+                                <span class="line-table__table__item__name__sub__part">
+                                    <span class="line-table__table__item__name__sub__part__key">
+                                        {{- __('reference') -}}
+                                    </span>
+                                    <span class="line-table__table__item__name__sub__part__value">
+                                        {{- material.reference -}}
+                                    </span>
+                                </span>
+                                {%- if showReplacementPrices and material.unit_replacement_price is not null -%}
+                                <span class="line-table__table__item__name__sub__part">
+                                    <span class="line-table__table__item__name__sub__part__key">
+                                        {{- __('unit-replacement-short') -}}
+                                    </span>
+                                    <span
+                                        class="{{ html_classes(
+                                            'line-table__table__item__name__sub__part__value',
+                                            'line-table__table__item__name__sub__part__value--numeric',
+                                        ) }}"
+                                    >
+                                        {{- (material.unit_replacement_price ?? 0)|format_currency(currency, locale=locale) -}}
+                                    </span>
+                                </span>
+                                {%- endif %}
+                            </span>
+                        </div>
+                        {% if showDescriptions and material.description is not empty ~%}
+                        <p class="line-table__table__item__description">
+                            {{- material.description|nl2br -}}
+                        </p>
+                        {%- endif %}
+                    </td>
+                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">
+                        {{- material.quantity -}}
+                    </td>
+                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">
+                        {{- material.unit_price_period|format_currency(currency, locale=locale) -}}
+                    </td>
+                    {%- if hasTaxes ~%}
+                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                        {{ _self.lineTax(material.tax) }}
+                    </td>
+                    {%- endif -%}
+                    {%- if hasLineDiscount ~%}
+                    <td class="line-table__table__body__cell line-table__table__body__cell--discount">
+                        <span
+                            class="{{ html_classes('line-table__table__item__discount', {
+                                'line-table__table__item__discount--empty': not material.has_discount,
+                            }) }}"
+                        >
+                            {%- if material.has_discount -%}
+                                {{-
+                                    material.discount_rate.negated().dividedBy(100, 6)
+                                        |format_percent_number({max_fraction_digit: 4}, locale=locale)
+                                -}}
+                            {%- else -%}
+                                &mdash;
+                            {%- endif -%}
+                        </span>
+                    </td>
+                    {%- endif -%}
+                    <td class="line-table__table__body__cell line-table__table__body__cell--total">
+                        {{- material.total_without_taxes|format_currency(currency, locale=locale) -}}
+                    </td>
+                </tr>
+                {%- endfor %}
+            {%- endfor ~%}
+        </tbody>
+        {%- if showTotalReplacementPrice and totalReplacement is not null ~%}
+        <tfoot class="line-table__table__footer">
+            <tr class="line-table__table__footer__row">
+                <td class="line-table__table__footer__cell" colspan="{{ fullColspan }}">
+                    <dl class="line-table__table__footer__data">
+                        <div class="line-table__table__footer__data__item">
+                            <dt class="line-table__table__footer__data__item__key">
+                                {{- __('total-replacement-amount') -}}
+                            </dt>
+                            <dd
+                                class="{{ html_classes(
+                                    'line-table__table__footer__data__item__value',
+                                    'line-table__table__footer__data__item__value--numeric',
+                                ) }}"
+                            >
+                                {{- totalReplacement|format_currency(currency, locale=locale) -}}
+                            </dd>
+                        </div>
+                    </dl>
+                </td>
+            </tr>
+        <tfoot>
+        {%- endif ~%}
+        {% endwith %}
+    </table>
+</div>
+{% endif %}
+
+{#- -- Autres lignes -- ~#}
+{% if extras|length > 0 %}
+<div class="line-table">
+    {% if materials|length > 0 -%}
+    <h3 class="line-table__title">
+        {{- __('other') -}}
+    </h3>
+    {%- endif %}
+    <table class="line-table__table">
+        <thead class="line-table__table__header">
+            <tr class="line-table__table__header__row">
+                <th class="line-table__table__header__cell line-table__table__header__cell--designation">
+                    {{- __('designation') -}}
+                </th>
+                <th class="line-table__table__header__cell line-table__table__header__cell--qty">
+                    {{- __('qty') -}}
+                </th>
+                <th class="line-table__table__header__cell line-table__table__header__cell--unit-price">
+                    {{- __(hasTaxes ? 'unit-price-excl-tax' : 'unit-price') -}}
+                </th>
+                {%- if hasTaxes ~%}
+                <th class="line-table__table__header__cell line-table__table__header__cell--tax">
+                    {{ __(isSimpleVatSystem ? __('taxes.simple') : __('taxes.default')) }}
+                </th>
+                {%- endif -%}
+                {%- if hasLineDiscount ~%}
+                <th class="line-table__table__header__cell line-table__table__header__cell--discount">
+                    {{- __('discount') -}}
+                </th>
+                {%- endif -%}
+                <th class="line-table__table__header__cell line-table__table__header__cell--total">
+                    {{ __(hasTaxes ? 'total-excl-tax' : 'total') }}
+                </th>
+            </tr>
+        </thead>
+        <tbody class="line-table__table__body">
+            {%- for extra in extras ~%}
+            <tr class="line-table__table__body__row line-table__table__item">
+                <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                    {{ extra.description }}
+                </td>
+                <td class="line-table__table__body__cell line-table__table__body__cell--qty">
+                    {{ extra.quantity }}
+                </td>
+                <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">
+                    {{- extra.unit_price|format_currency(currency, locale=locale) -}}
+                </td>
+                {%- if hasTaxes ~%}
+                <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                    {{ _self.lineTax(extra.tax) }}
+                </td>
+                {%- endif -%}
+                {%- if hasLineDiscount ~%}
+                <td class="line-table__table__body__cell line-table__table__body__cell--discount">
+                    <span
+                        class="{{ html_classes('line-table__table__item__discount', {
+                            'line-table__table__item__discount--empty': not extra.has_discount,
+                        }) }}"
+                    >
+                        {%- if extra.has_discount -%}
+                            {{-
+                                extra.discount_rate.negated().dividedBy(100, 6)
+                                    |format_percent_number({max_fraction_digit: 4}, locale=locale)
+                            -}}
+                        {%- else -%}
+                            &mdash;
+                        {%- endif -%}
+                    </span>
+                </td>
+                {%- endif -%}
+                <td class="line-table__table__body__cell line-table__table__body__cell--total">
+                    {{- extra.total_without_taxes|format_currency(currency, locale=locale) -}}
+                </td>
+            </tr>
+            {%- endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{#- -- Ventilation TVA + Totaux -- ~#}
+<div class="summary">
+    <div class="summary__left">
+        {#- -- Raison d'exemption globale -- ~#}
+        {%- if not hasTaxes and globalTaxExemptionReason is not empty ~%}
+        <p class="global-tax-exemption">
+            {{- globalTaxExemptionReason -}}
+        </p>
+
+        {#- -- Ventilation de la TVA -- ~#}
+        {%- elseif hasTaxes and totalTaxes is not null and totalTaxes|length > 0 ~%}
+        <div class="vat-breakdown">
+            <div class="vat-breakdown__title">
+                {{- __(isSimpleVatSystem ? 'tax-breakdown.simple' : 'tax-breakdown.default') -}}
+            </div>
+            <table class="vat-breakdown__table">
+                <thead class="vat-breakdown__table__header">
+                    <tr class="vat-breakdown__table__header__row">
+                        <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--rate">
+                            {{- __('rate') -}}
+                        </th>
+                        <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--base">
+                            {{- __('base') -}}
+                        </th>
+                        <th class="vat-breakdown__table__header__cell vat-breakdown__table__header__cell--total">
+                            {{- __('amount') -}}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="vat-breakdown__table__body">
+                    {%- for tax in totalTaxes ~%}
+                    <tr
+                        class="{{ html_classes('vat-breakdown__table__body__row', {
+                            'vat-breakdown__table__body__row--standard': tax.type.isStandard(),
+                            'vat-breakdown__table__body__row--exempt': tax.type.isExempt(),
+                        }) }}"
+                    >
+                        <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--rate">
+                            {%- if tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').STANDARD -%}
+                                {%- set taxRate = (
+                                    tax.value.dividedBy(100, 5)
+                                        |format_percent_number({ max_fraction_digit: 3 }, locale=locale)
+                                ) -%}
+                                {%- if not isSimpleVatSystem and tax.name is not empty -%}
+                                    {{- tax.name ~ '(' ~ taxRate ~ ')' -}}
+                                {%- else -%}
+                                    {{- taxRate -}}
+                                {%- endif -%}
+                            {% elseif tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').ZERO_RATED %}
+                                {{- 0|format_percent_number({ max_fraction_digit: 3 }, locale=locale) -}}
+                            {%- else -%}
+                                {%- if tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').REVERSE_CHARGE ~%}
+                                    {{- __('tax-state.reverse-charge') -}}
+                                {%- elseif tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').REVERSE_CHARGE_SUPPLY ~%}
+                                    {{- __('tax-state.reverse-charge-supply') -}}
+                                {%- elseif tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').EXPORT ~%}
+                                    {{- __('tax-state.export') -}}
+                                {%- elseif tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').EXEMPTED ~%}
+                                    {{- __('tax-state.exempted') -}}
+                                {%- elseif tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').OUT_OF_SCOPE ~%}
+                                    {{- __('tax-state.out-of-scope') -}}
+                                {%- endif -%}
+                                {%- if tax.footnotes is not empty -%}
+                                    <sup>{{- '(' ~ tax.footnotes|join(', ') ~ ')' -}}</sup>
+                                {%- endif -%}
+                            {%- endif -%}
+                        </td>
+                        <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">
+                            {{- tax.base|format_currency(currency, locale=locale) -}}
+                        </td>
+                        <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">
+                            {%- if tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').STANDARD -%}
+                                {{- tax.total|format_currency(currency, locale=locale) -}}
+                            {%- else -%}
+                                {{- 0|format_currency(currency, locale=locale) -}}
+                            {%- endif -%}
+                        </td>
+                    </tr>
+                    {%- endfor %}
+                </tbody>
+            </table>
+            {%- if taxFootnotes|length > 0 ~%}
+            <ul class="vat-breakdown__notes">
+                {%- for footnote in taxFootnotes ~%}
+                <li class="vat-breakdown__notes__item">
+                    <span class="vat-breakdown__notes__item__index">
+                        {{- '(' ~ footnote.index ~ ')' -}}
+                    </span>
+                    <span class="vat-breakdown__notes__item__text">
+                        {{- footnote.reason -}}
+                    </span>
+                </li>
+                {%- endfor ~%}
+            </ul>
+            {%- endif ~%}
+        </div>
+        {%- endif ~%}
+    </div>
+
+    {#- -- Totaux -- ~#}
+    <div class="totals">
+        <dl class="totals__lines">
+            {%- if hasBookingInformations and booking.period is not null ~%}
+            <div class="totals__lines__item">
+                <dt class="totals__lines__item__label">
+                    {{- __('duration') -}}
+                </dt>
+                <dd class="totals__lines__item__value">
+                    {{- __n('number-of-days', booking.period.asDays) -}}
+                </dd>
+            </div>
+            {%- endif ~%}
+            {% if hasGlobalDiscount or hasTaxes -%}
+            <div class="totals__lines__item">
+                <dt class="totals__lines__item__label">
+                    {{- __(hasGlobalDiscount ? 'subtotal' : 'total-excl-tax') -}}
+                </dt>
+                <dd class="totals__lines__item__value">
+                    {{-
+                        (hasGlobalDiscount ? totalWithoutGlobalDiscount : totalWithoutTaxes)
+                            |format_currency(currency, locale=locale)
+                    -}}
+                </dd>
+            </div>
+            {% endif -%}
+            {% if hasGlobalDiscount -%}
+            <div class="totals__lines__item">
+                <dt class="totals__lines__item__label">
+                    {%- with -%}
+                    {%- set rate = globalDiscountRate.dividedBy(100, 6) -%}
+                    {{- __('discount-rate', rate|format_percent_number({ max_fraction_digit: 4 }, locale=locale)) -}}
+                    {%- endwith -%}
+                </dt>
+                <dd class="totals__lines__item__value">
+                    {{- totalGlobalDiscount.negated()|format_currency(currency, locale=locale) -}}
+                </dd>
+            </div>
+            {% endif -%}
+            {% if hasTaxes and hasGlobalDiscount -%}
+            <div class="totals__lines__item">
+                <dt class="totals__lines__item__label">{{ __('total-excl-tax') }}</dt>
+                <dd class="totals__lines__item__value">
+                    {{- totalWithoutTaxes|format_currency(currency, locale=locale) -}}
+                </dd>
+            </div>
+            {% endif -%}
+            {%- if hasTaxes ~%}
+                {%- if isSimpleVatSystem ~%}
+                    <div class="totals__lines__item">
+                        <dt class="totals__lines__item__label">{{ __('total-vat') }}</dt>
+                        <dd class="totals__lines__item__value">
+                            {{- totalTaxesAmount|format_currency(currency, locale=locale) -}}
+                        </dd>
+                    </div>
+                {%- elseif totalTaxes is not null ~%}
+                    {%- for tax in totalTaxes -%}
+                        {%- if tax.type == enum('Loxya\\Support\\Invoicing\\TaxRegime').STANDARD and not tax.total.isZero() ~%}
+                        <div class="totals__lines__item">
+                            <dt class="totals__line__label">
+                                {%- set taxRate = (
+                                    tax.value.dividedBy(100, 5)
+                                        |format_percent_number({ max_fraction_digit: 3 }, locale=locale)
+                                ) -%}
+                                {%- if tax.name is not empty -%}
+                                    {{- tax.name ~ '(' ~ taxRate ~ ')' -}}
+                                {%- else -%}
+                                    {{- __('tax') ~ '(' ~ taxRate ~ ')' -}}
+                                {%- endif -%}
+                            </dt>
+                            <dd class="totals__lines__item__value">
+                                {{- tax.total|format_currency(currency, locale=locale) -}}
+                            </dd>
+                        </div>
+                        {%- endif -%}
+                    {%- endfor ~%}
+                {%- endif ~%}
+            {%- endif ~%}
+        </dl>
+        <div class="totals__grand">
+            <span class="totals__grand__label">
+                <span class="totals__grand__label__sup">
+                    {% if hasTaxes -%}{{ __('total-incl-taxes') }}{% endif -%}
+                </span>
+                <span class="totals__grand__label__main">
+                    {{- __('total-due') -}}
+                </span>
+            </span>
+            <span class="totals__grand__value">
+                {{- totalWithTaxes|format_currency(currency, locale=locale) -}}
+            </span>
+        </div>
+    </div>
+</div>
+
+{#- -- Informations de paiement + Caractéristiques + Zone de signature + Mentions légales -- ~#}
+{%- set hasLegalMentions = legalMentions|length > 0 or specialMentions is not empty -%}
+{%- set hasProperties = showTotalisableProperties and totalisableProperties is not empty -%}
+{%- set hasPaymentInformations = totalWithTaxes.isGreaterThan(0) and paymentMethods|length > 0 -%}
+<div class="extras">
+    {#- -- Informations de paiement -- ~#}
+    {%- if hasPaymentInformations ~%}
+    <div class="extras__box">
+        <div class="extras__box__title">
+            {{- __('payment-informations') -}}
+        </div>
+        <div class="extras__box__content">
+            <div class="extras__payment-infos">
+                <div class="extras__payment-infos__methods">
+                    <span class="extras__payment-infos__methods__label">
+                        {{- __('accepted-payment-methods') -}}
+                    </span>
+                    <span class="extras__payment-infos__methods__values">
+                        {%- for method in paymentMethods -%}
+                            {{- __('payment-method.' ~ method.value)|lower -}}
+                            {%- if not loop.last -%}, {% endif -%}
+                        {%- endfor -%}
+                    </span>
+                </div>
+                {%- if bankTransferData is not null ~%}
+                <div class="extras__payment-infos__bank">
+                    <div class="extras__payment-infos__bank__title">
+                        {{- __('bank-details') -}}
+                    </div>
+                    <div class="extras__payment-infos__bank__iban">
+                        {{- bankTransferData.iban|format_iban -}}
+                    </div>
+                    {%- if bankTransferData.bic is not empty or bankTransferData.holder is not empty ~%}
+                    <dl class="extras__payment-infos__bank__details">
+                        {%- if bankTransferData.bic is not empty ~%}
+                        <div class="extras__payment-infos__bank__details__item">
+                            <dt class="extras__payment-infos__bank__details__item__label">
+                                {{- __('bic') -}}
+                            </dt>
+                            <dd class="extras__payment-infos__bank__details__item__value">
+                                {{- bankTransferData.bic -}}
+                            </dd>
+                        </div>
+                        {%- endif -%}
+                        {%- if bankTransferData.holder is not empty ~%}
+                        <div class="extras__payment-infos__bank__details__item">
+                            <dt class="extras__payment-infos__bank__details__item__label">
+                                {{- __('account-holder') -}}
+                            </dt>
+                            <dd class="extras__payment-infos__bank__details__item__value">
+                                {{- bankTransferData.holder -}}
+                            </dd>
+                        </div>
+                        {%- endif -%}
+                    </dl>
+                    {%- endif -%}
+                </div>
+                {%- endif -%}
+            </div>
+        </div>
+    </div>
+    {%- endif ~%}
+
+    {#- -- Caractéristiques -- ~#}
+    {%- if hasProperties ~%}
+    <div class="extras__box">
+        <div class="extras__box__title">
+            {{- __('properties') -}}
+        </div>
+        <div class="extras__box__content">
+            <dl class="extras__properties">
+                {%- for property in totalisableProperties ~%}
+                <div class="extras__properties__item">
+                    <dt class="extras__properties__item__label">
+                        {{- property.name -}}
+                    </dt>
+                    <dd class="extras__properties__item__value">
+                        {{- property.value|format_number(locale=locale) -}}
+                        {%- if property.unit is not empty -%}
+                            &nbsp;{{- property.unit -}}
+                        {%- endif -%}
+                    </dd>
+                </div>
+                {%- endfor ~%}
+            </dl>
+        </div>
+    </div>
+    {%- endif ~%}
+
+    {#- -- Zone de signature -- ~#}
+    <div class="extras__signature">
+        <div class="extras__signature__heading">
+            <span class="extras__signature__heading__title">
+                {{ __('signature-heading') }}
+            </span>
+            <span class="extras__signature__heading__name">
+                {{- buyer.name -}}
+            </span>
+        </div>
+        <div class="extras__signature__body"></div>
+        <div class="extras__signature__footer">
+            <span class="extras__signature__footer__mention">
+                {{- __('signature-approval') -}}
+            </span>
+        </div>
+    </div>
+
+    {#- -- Mentions légales -- ~#}
+    {%- if hasLegalMentions ~%}
+    <div class="extras__legal-mentions">
+        {%- if specialMentions is not empty ~%}
+        <p class="extras__legal-mentions__part extras__legal-mentions__part--special">
+            {{- specialMentions -}}
+        </p>
+        {%- endif ~%}
+        {%- if legalMentions|length > 0 ~%}
+        <p class="extras__legal-mentions__part">
+            {{ legalMentions|join(' ') }}
+        </p>
+        {%- endif ~%}
+    </div>
+    {%- endif ~%}
+</div>
+{% endblock %}
+
+{% block running %}
+{%- if isDraft ~%}
+<div class="watermark" aria-hidden="true">
+    {{- __('document-draft.watermark') -}}
+</div>
+{%- endif ~%}
+<footer class="main-footer">
+    {%- set sellerCountry = seller.country -%}
+    {%- set legalType = (
+        sellerCountry.mustShowLegalType() and seller.legalType is not empty
+            ? __('legals.legal-types.' ~ seller.legalType.value ~ '.short')
+            : null
+    ) -%}
+    {%- if (
+        sellerCountry.mustShowShareCapital() and
+        seller.shareCapital is not empty and
+        sellerCountry.canHaveShareCapital(seller.legalType ?? null)
+    ) -%}
+        {%- set legalType = __('legals.mentions.global.share-capital.short', [
+            legalType ?? __('company'),
+            seller.shareCapital|format_currency(sellerCountry.currency, locale=locale, attrs={
+                'min_fraction_digit': 0,
+            }),
+        ]) -%}
+    {%- endif -%}
+    {#- Ligne 1. #}
+    {%- set line1 = [seller.name] -%}
+    {%- if legalType is not null -%}
+        {% set line1 = line1|merge([legalType]) -%}
+    {%- endif -%}
+    {%- if sellerCountry.canShowActivityCode() and seller.activityCode is not empty -%}
+        {% set activityCodeTranslationKey = 'business-activity-code.' ~ (sellerCountry.code ?? 'generic') -%}
+        {% set activityCode = __([activityCodeTranslationKey, 'business-activity-code.generic'], seller.activityCode) -%}
+        {% set line1 = line1|merge([activityCode]) -%}
+    {%- endif -%}
+    {%- if sellerCountry.mustShowTradeRegister() and seller.tradeRegistryCity is not empty -%}
+        {%- set mainRegistrationId = sellerCountry.inferMainCompanyIdentifier(seller.identifier) -%}
+        {%- set fullRegistrationIdTranslationKey = 'business-registration-id-full.' ~ (sellerCountry.code ?? 'generic') -%}
+        {%- set registrationId = __(
+            [fullRegistrationIdTranslationKey, 'business-registration-id-full.generic'],
+            [seller.tradeRegistryCity, mainRegistrationId],
+        ) -%}
+    {%- else -%}
+        {%- set registrationId = _self.registrationIdLabelled(seller) -%}
+    {%- endif -%}
+    {%- set line1 = line1|merge([registrationId]) -%}
+    {#- Ligne 2. #}
+    {%- set line2 = [] -%}
+    {%- if seller.address is not empty -%}
+        {%- set line2 = line2|merge([seller.address|replace({ "\n": " " })]) -%}
+    {%- endif -%}
+    {%- if not isVatOutOfScope and seller.vatNumber is not empty -%}
+        {% set line2 = line2|merge([_self.vatNumberLabelled(seller)]) -%}
+    {%- endif -%}
+    {#- Output. #}
+    {% if line1 is not empty -%}
+        {{- line1|join(' | ') -}}
+        {%- if line2 is not empty -%}
+            <br />
+        {% endif %}
+    {%- endif -%}
+    {% if line2 is not empty -%}
+        {{- line2|join(' | ') }}
+    {% endif %}
+</footer>
+{% endblock %}

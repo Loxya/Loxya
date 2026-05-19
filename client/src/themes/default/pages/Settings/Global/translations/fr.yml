@@ -157,12 +157,21 @@ inventories:
                 start-full: Les quantités restituées sont pré-remplies avec les quantités attendues.
 
 taxes:
-    title: "Facturation - Taxes"
-    help: Ici vous pouvez modifier les paramètres de facturation liés aux taxes.
+    title:
+        default: "Facturation - Taxes"
+        simple: "Facturation - T.V.A."
+    help:
+        default: Ici vous pouvez modifier les paramètres de facturation liés aux taxes.
+        simple: Ici vous pouvez modifier les paramètres de facturation liés à la T.V.A.
     saved: Les paramètres des taxes ont bien été sauvegardés.
 
-    section-title: "Taxes et groupes de taxes"
-    create-action: Nouvelle taxe
+    section-title:
+        default: "Taxes et groupes de taxes"
+        simple: "Taux de T.V.A."
+
+    create-action:
+        default: Nouvelle taxe
+        simple: Nouveau taux
 
     confirm-delete: "Voulez-vous vraiment supprimer cette taxe\_?"
     not-deletable:
@@ -187,11 +196,17 @@ taxes:
             Sauvegardez les changements que vous venez d'effectuer sur la taxe par défaut puis réessayez.
 
     default-field:
-        label: Taxe par défaut
-        placeholder: Pas de taxe
+        label:
+            default: Taxe par défaut
+            simple: Taux de T.V.A. par défaut
+        placeholder:
+            default: "Pas de taxe (exempté sans motif explicite)"
+            simple: "Pas de T.V.A. (exempté sans motif explicite)"
 
     table-column:
-        name: Nom
+        name:
+            default: Nom
+            simple: Taux
         is-group: "Groupe de taxes\_?"
 
     yes-with-count-sub-taxes:
@@ -205,8 +220,12 @@ taxes:
 
         tax-edition:
             modal-title:
-                new: Nouvelle taxe
-                edit: "Modification de la taxe «\_{name}\_»"
+                new:
+                    default: Nouvelle taxe
+                    simple: Nouveau taux de T.V.A.
+                edit:
+                    default: "Modification de la taxe «\_{name}\_»"
+                    simple: "Modification du taux «\_{rate}\_»"
             save: Enregistrer la taxe
             saved: La taxe a bien été sauvegardée.
             fields:
@@ -219,16 +238,9 @@ taxes:
                         Les groupes de taxes sont utilisés pour définir plusieurs taxes qui seront toutes appliquées à un matériel ou produit donné.
 
                         Ceci pourrait être par exemple :
-                        - Un groupe "Taxe électroménager" qui inclurait une T.V.A de base ainsi qu'une "Taxe Écologique".
+                        - Un groupe "Taxe électroménager" qui inclurait une T.V.A. de base ainsi qu'une "Taxe Écologique".
                         - Un groupe de taxes TPS + TVQ pour le Québec.
-                is-rate:
-                    label: "Taux\_/\_Prix fixe\_?"
-                    options:
-                        rate: Taux
-                        fixed-price: Prix fixe
-                value:
-                    label-rate: Taux
-                    label-fixed-price: Montant
+                value: Taux
                 components:
                     label: Taxes du groupe
                     empty: |
@@ -239,12 +251,7 @@ taxes:
                         name:
                             label: Nom de la taxe
                             placeholder: T.V.A, Taxe Écologique, ...
-                        value: "Taux\_/\_Montant"
-                        is-rate:
-                            label: "Taux\_/\_Prix fixe\_?"
-                            options:
-                                rate: Taux
-                                fixed-price: Prix fixe
+                        value: Taux
 
 degressive-rates:
     title: "Facturation - Tarifs dégressifs"
@@ -322,17 +329,13 @@ estimates-invoices:
     help: Ici, vous pouvez personnaliser le contenu des devis et des factures.
 
     details: Détails
-    display-booking-description: "Afficher la description de l'événement\_?"
-    display-mobilization-period: "Afficher les dates d'enlèvement et retour\_?"
     display-total-replacement-price: "Afficher le total des valeurs de remplacement\_?"
-    display-totalisable-attributes: "Afficher les totaux des caractéristiques spéciales\_? (sous la liste du matériel)"
+    display-totalisable-attributes: "Afficher les totaux des caractéristiques spéciales\_?"
     material-list: Liste du matériel
-    display-pictures: "Afficher les photos (miniatures)\_?"
     display-descriptions: "Afficher les descriptions\_?"
     display-replacement-prices: "Afficher les valeurs de remplacement\_?"
-    display-unit-prices: "Afficher les prix unitaires et sous-totaux\_?"
-    estimates-custom-text: Texte personnalisé des devis (au-dessus de la signature)
-    invoices-custom-text: Texte personnalisé des factures (en-dessous des totaux)
-    custom-text-title: Titre du texte
-    custom-text-content: Contenu du texte
     saved: Les paramètres des devis et factures ont bien été sauvegardés.
+
+    special-mentions:
+        estimates: Mentions spéciales par défaut des devis
+        invoices: Mentions spéciales par défaut des factures

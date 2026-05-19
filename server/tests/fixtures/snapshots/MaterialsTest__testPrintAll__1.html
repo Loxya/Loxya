@@ -1,434 +1,578 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    <style type="text/css">
-        html {
-            margin: 9mm 8mm;
-            font-family: 'DejaVu Sans', sans-serif;
-            font-weight: 400;
-            font-size: 9pt;
-        }
-        body {
-            margin: 0;
-        }
-        h1 {
-            font-size: 1.5rem;
-            margin: 0 0 3mm 0;
-        }
-        h2 {
-            font-size: 1.25rem;
-            margin: 0 0 3mm 0;
-        }
-        h3 {
-            font-size: 1.125rem;
-            margin: 0 0 3mm 0;
-        }
-        h4 {
-            font-size: 1rem;
-            margin: 0 0 3mm 0;
-        }
-        p {
-            font-size: 1rem;
-            margin: 0 0 3mm 0;
-        }
-        small {
-            font-size: 0.85rem;
-        }
-        ul, ol {
-            margin: 2mm 0 3mm 0;
-            padding: 0;
-        }
-        li {
-            list-style: none;
-            border-left: 2px solid #ccc;
-            padding-left: 1mm;
-        }
-        table {
-            width: 100%;
-            table-layout: auto;
-            margin: 0 0 3mm 0;
-            border-spacing: 0;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 1mm 2mm;
-            border-top: 1pt solid #888;
-            border-left: 1pt solid #888;
-            vertical-align: top;
-        }
-        th {
-            text-align: left;
-        }
-        th:last-child, td:last-child {
-            border-right: 1pt solid #888;
-        }
-        tr:last-child > td {
-            border-bottom: 1pt solid #888;
-        }
-        .layout-table > tbody > tr > td {
-            border: none;
-            padding: 0;
-        }
-        .listing-table {
-            margin-bottom: 8mm;
-        }
-        .listing-table > thead > tr {
-            page-break-after: avoid;
-        }
-        .listing-table > thead > tr > th {
-            font-size: 0.8rem;
-            border-left: 1pt solid #ccc;
-            border-right: 1pt solid #ccc;
-            border-bottom: 1pt solid #888;
-            vertical-align: middle;
-        }
-        .listing-table > tbody > tr > td {
-            padding: 2mm;
-            font-size: 0.7rem;
-            border: none;
-            border-left: 1pt solid #ccc;
-            border-right: 1pt solid #ccc;
-            border-bottom: 1pt solid #ccc;
-            vertical-align: middle;
-        }
-        .listing-table > tbody > tr > td.section-title {
-            padding: 4mm 2mm 2mm;
-            font-size: 0.8rem;
-            color: #888;
-        }
-        .listing-table > thead > tr > th:first-child,
-        .listing-table > tbody > tr > td:first-child {
-            border-left: 1pt solid #888 !important;
-        }
-        .listing-table > thead > tr > th:last-child,
-        .listing-table > tbody > tr > td:last-child {
-            border-right: 1pt solid #888 !important;
-        }
-        .listing-table__item__label {
-            font-weight: 600;
-        }
-        .listing-table__item__sub-name {
-            margin-top: 2px;
-            font-size: 0.6rem;
-        }
-        .listing-table__item__label,
-        .listing-table__item__sub-name {
-            display: block;
-        }
-        .totals-table {
-            width: 50%;
-            margin: 0 0 5mm auto;
-        }
-        .totals-table--legacy {
-            width: 100%;
-            margin: 0;
-        }
-        .totals-table > tbody > tr > td {
-            border-bottom: 1pt solid #888;
-            text-align: right;
-            vertical-align: middle;
-        }
-        .totals-table--legacy > tbody > tr > td {
-            text-align: center;
-        }
-        .inset {
-            padding: 5mm 3mm 8mm !important;
-            border: 1pt solid #999 !important;
-        }
-        .half { width: 50%; }
-        .third { width: 33.33%; }
-        .two-third { width: 66.66%; }
-        .max50mm { max-width: 50mm; }
-        .left { text-align: left; }
-        .center { text-align: center; }
-        .right { text-align: right; }
-        .sizeTitle { font-size: 16pt; }
-        .sizeSubtitle { font-size: 14pt; }
-        .size12 { font-size: 1rem; }
-        .size10 { font-size: 0.9rem; }
-        .size8 { font-size: 0.85rem; }
-        .size7 { font-size: 7pt; }
-        .vspace2 { margin: 0; padding: 2mm 0; }
-        .vspace5 { margin: 0; padding: 5mm 0; }
-        .vspace10 { margin: 0; padding: 10mm 0; }
-        .spaceBottom1 { margin-bottom: 1mm; }
-        .spaceBottom2 { margin-bottom: 2mm; }
-        .spaceBottom5 { margin-bottom: 5mm; }
-        .indent5 { padding-left: 5mm; }
-        .indent10 { padding-left: 10mm; }
-        .box {
-            padding: 1mm;
-            background-color: #eee;
-            border-radius: 3pt;
-        }
-        .strong { font-weight: 700; }
-        .normal { font-weight: 400; }
-        .light { color: #333; }
-        .lighter { color: #666; }
-        .lightest { color: #aaa; }
-        .highlight { color: #e60000; }
-        .changePage { page-break-before: always; }
-        .picture-cell { width: 20mm; text-align: center; }
-        .material-picture { max-width: 18mm; max-height: 12mm; }
+    <head>
+        <base href="http://loxya.test/" />
+        <meta charset="UTF-8" />
+        <title></title>
+        <meta name="generator" content="Loxya" />
 
-        .listing-title {
-    page-break-after: avoid;
-}
+        <style type="text/css">
+            embedded-xml {
+                display: block;
+                margin: 30px;
+                padding: 15px;
+                background: #1e1e2e;
+                border-radius: 10px;
+                color: #cdd6f4;
+                line-height: 1.6;
+                font-size: 14px;
+                font-family: monospace;
+                white-space: pre;
+                overflow-x: auto;
+            }
+        </style>
 
-.listing-table > tbody > tr > td {
-    height: 6mm;
-    font-size: 8pt;
-}
-    </style>
-</head>
-<body>
-    <table class="layout-table">
-    <tr>
-        <td class="third">
-<div class="spaceBottom2 size12 strong">
-    Testing corp.<br>
-    5 rue des tests<br>
-    05555 Testville<br>
-    France
-</div>
-<div class="spaceBottom2">
-    Phone: +33123456789<br>
-    E-mail: jean@testing-corp.dev<br>
-</div>
-        </td>
-        <td class="two-third">
-            <h1 class="box center">Materials list</h1>
-            <h3 class="center">
-                As of 23 September 2022
-                (all parks)
-            </h3>
-        </td>
-    </tr>
-</table>
-    <h3 class="listing-title">
-        default
-    </h3>
-    <table class="listing-table">
-        <thead>
-            <tr>
-                <th style="width: 30mm;">Reference</th>
-                <th>
-                    Designation
-                    <span class="right">- Park default</span>
-                </th>
-                <th class="right" style="width: 15mm;">Repl. Val.</th>
-                <th class="center" style="width: 12mm;">Stock quantity</th>
-                <th class="center" style="width: 20mm;">Recount quantity</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="section-title" colspan="5">
-                    Not categorized
-                </td>
-            </tr>
-            <tr>
-    <td>XLR10</td>
-    <td>
-        C&acirc;ble XLR 10m
-            </td>
-    <td class="right lighter">
-        &euro;9.50
-    </td>
-    <td class="center">
-        40
-    </td>
-    <td class="center"></td>
-</tr>
+        <style type="text/css">
+            @page {
+                @bottom-right {
+                    content: "Page " counter(page) " of " counter(pages) "";
+                }
+            }
+        </style>
+        <style type="text/css">
+            :root {
+                --page-margin: 9mm 8mm 11mm;
+            }
 
-            <tr>
-                <td class="section-title" colspan="5">
-                    D&eacute;cors - Other Materials
-                </td>
-            </tr>
-            <tr>
-    <td>Decor-Forest</td>
-    <td>
-        D&eacute;cor Th&egrave;me For&ecirc;t
-                    <br>
-                            <span class="lighter">Lieu d'usage&nbsp;:&nbsp;Int&eacute;rieur.</span>
+            * {
+                box-sizing: border-box;
+            }
 
-                        </td>
-    <td class="right lighter">
-        &euro;8,500.00
-    </td>
-    <td class="center">
-        2
-    </td>
-    <td class="center"></td>
-</tr>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
 
-            <tr>
-                <td class="section-title" colspan="5">
-                    Lumi&egrave;re - Gradateurs
-                </td>
-            </tr>
-            <tr>
-    <td>SDS-6-01</td>
-    <td>
-        Showtec SDS-6
-                    <br>
-                            <span class="lighter">Conforme&nbsp;:&nbsp;Yes.</span>
+            html {
+                font-family: "DejaVu Sans", sans-serif;
+                font-weight: 400;
+                font-size: 9pt;
+            }
 
-                            <span class="lighter">Poids&nbsp;:&nbsp;3.15&nbsp;kg.</span>
+            @page {
+                size: A4;
+                margin: var(--page-margin);
+                @bottom-right {
+                    white-space: nowrap;
+                    font-size: 8pt;
+                    color: #666;
+                }
+            }
+            .__document {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                min-height: 100%;
+                align-items: safe center;
+                justify-content: safe center;
+                padding: 30px;
+                background-color: #eef0f4;
+                overflow: auto;
+                gap: 30px;
+            }
+            .__document__preview {
+                flex-shrink: 0;
+                columns: 210mm/297mm;
+                width: 210mm;
+                column-fill: auto;
+                box-decoration-break: clone;
+                gap: 20px;
+            }
+            .__document__preview__content {
+                box-decoration-break: clone;
+                -webkit-box-decoration-break: clone;
+                padding: var(--page-margin);
+                background-color: #fff;
+                min-height: 297mm;
+                box-shadow: 0 1.5mm 8mm rgba(0, 0, 0, 0.06);
+                border-radius: 3.5mm;
+            }
+            .__document__xml {
+                width: 100%;
+                margin: 0;
+            }
 
-                            <span class="lighter">Puissance&nbsp;:&nbsp;60&nbsp;W.</span>
+            @media print {
+                img {
+                    image-rendering: pixelated;
+                }
+            }
+        </style>
+        <style type="text/css">
+            @page {
+                @bottom-center {
+                    content: element(main-footer);
+                }
+            }
 
-                        </td>
-    <td class="right lighter">
-        &euro;59.00
-    </td>
-    <td class="center">
-        2
-    </td>
-    <td class="center"></td>
-</tr>
+            h1 {
+                font-size: 1.5rem;
+                margin: 0 0 3mm 0;
+            }
+            h2 {
+                font-size: 1.25rem;
+                margin: 0 0 3mm 0;
+            }
+            h3 {
+                font-size: 1.125rem;
+                margin: 0 0 3mm 0;
+            }
+            h4 {
+                font-size: 1rem;
+                margin: 0 0 3mm 0;
+            }
+            p {
+                font-size: 1rem;
+                margin: 0 0 3mm 0;
+            }
+            small {
+                font-size: 0.85rem;
+            }
+            ul,
+            ol {
+                margin: 2mm 0 3mm 0;
+                padding: 0;
+            }
+            li {
+                list-style: none;
+                border-left: 2px solid #ccc;
+                padding-left: 1mm;
+            }
+            table {
+                width: 100%;
+                table-layout: auto;
+                margin: 0 0 3mm 0;
+                border-spacing: 0;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                padding: 1mm 2mm;
+                border-top: 1pt solid #888;
+                border-left: 1pt solid #888;
+                vertical-align: top;
+            }
+            th {
+                text-align: left;
+            }
+            th:last-child,
+            td:last-child {
+                border-right: 1pt solid #888;
+            }
+            tr:last-child > td {
+                border-bottom: 1pt solid #888;
+            }
 
-            <tr>
-                <td class="section-title" colspan="5">
-                    Lumi&egrave;re - Projecteurs
-                </td>
-            </tr>
-            <tr>
-    <td>PAR64LED</td>
-    <td>
-        PAR64 LED
-                    <br>
-                            <span class="lighter">Poids&nbsp;:&nbsp;0.85&nbsp;kg.</span>
+            .layout-table > tbody > tr > td {
+                border: none;
+                padding: 0;
+            }
 
-                            <span class="lighter">Puissance&nbsp;:&nbsp;150&nbsp;W.</span>
+            .listing-table {
+                margin-bottom: 8mm;
+            }
+            .listing-table > thead > tr {
+                page-break-after: avoid;
+            }
+            .listing-table > thead > tr > th {
+                font-size: 0.8rem;
+                border-left: 1pt solid #ccc;
+                border-right: 1pt solid #ccc;
+                border-bottom: 1pt solid #888;
+                vertical-align: middle;
+            }
+            .listing-table > tbody > tr > td {
+                padding: 2mm;
+                font-size: 0.7rem;
+                border: none;
+                border-left: 1pt solid #ccc;
+                border-right: 1pt solid #ccc;
+                border-bottom: 1pt solid #ccc;
+                vertical-align: middle;
+            }
+            .listing-table > tbody > tr > td.section-title {
+                padding: 4mm 2mm 2mm;
+                font-size: 0.8rem;
+                color: #888;
+            }
+            .listing-table > thead > tr > th:first-child,
+            .listing-table > tbody > tr > td:first-child {
+                border-left: 1pt solid #888 !important;
+            }
+            .listing-table > thead > tr > th:last-child,
+            .listing-table > tbody > tr > td:last-child {
+                border-right: 1pt solid #888 !important;
+            }
+            .listing-table__item__label {
+                font-weight: 600;
+            }
+            .listing-table__item__sub-name {
+                margin-top: 2px;
+                font-size: 0.6rem;
+            }
+            .listing-table__item__label,
+            .listing-table__item__sub-name {
+                display: block;
+            }
 
-                        </td>
-    <td class="right lighter">
-        &euro;89.00
-    </td>
-    <td class="center">
-        34
-    </td>
-    <td class="center"></td>
-</tr>
+            .totals-table {
+                width: 50%;
+                margin: 0 0 5mm auto;
+            }
+            .totals-table--legacy {
+                width: 100%;
+                margin: 0;
+            }
+            .totals-table > tbody > tr > td {
+                border-bottom: 1pt solid #888;
+                text-align: right;
+                vertical-align: middle;
+            }
+            .totals-table--legacy > tbody > tr > td {
+                text-align: center;
+            }
 
-            <tr>
-                <td class="section-title" colspan="5">
-                    Son - Mixeurs
-                </td>
-            </tr>
-            <tr>
-    <td>CL3</td>
-    <td>
-        Console Yamaha CL3
-                    <br>
-                            <span class="lighter">Couleur&nbsp;:&nbsp;Grise.</span>
+            .signature-table {
+                break-inside: avoid;
+            }
 
-                            <span class="lighter">Poids&nbsp;:&nbsp;36.5&nbsp;kg.</span>
+            .inset {
+                padding: 5mm 3mm 8mm !important;
+                border: 1pt solid #999 !important;
+            }
+            .half {
+                width: 50%;
+            }
+            .third {
+                width: 33.33%;
+            }
+            .two-third {
+                width: 66.66%;
+            }
+            .max50mm {
+                max-width: 50mm;
+            }
+            .left {
+                text-align: left;
+            }
+            .center {
+                text-align: center;
+            }
+            .right {
+                text-align: right;
+            }
+            .sizeTitle {
+                font-size: 16pt;
+            }
+            .sizeSubtitle {
+                font-size: 14pt;
+            }
+            .size12 {
+                font-size: 1rem;
+            }
+            .size10 {
+                font-size: 0.9rem;
+            }
+            .size8 {
+                font-size: 0.85rem;
+            }
+            .size7 {
+                font-size: 7pt;
+            }
+            .vspace2 {
+                margin: 0;
+                padding: 2mm 0;
+            }
+            .vspace5 {
+                margin: 0;
+                padding: 5mm 0;
+            }
+            .vspace10 {
+                margin: 0;
+                padding: 10mm 0;
+            }
+            .spaceBottom1 {
+                margin-bottom: 1mm;
+            }
+            .spaceBottom2 {
+                margin-bottom: 2mm;
+            }
+            .spaceBottom5 {
+                margin-bottom: 5mm;
+            }
+            .indent5 {
+                padding-left: 5mm;
+            }
+            .indent10 {
+                padding-left: 10mm;
+            }
+            .box {
+                padding: 1mm;
+                background-color: #eee;
+                border-radius: 3pt;
+            }
+            .strong {
+                font-weight: 700;
+            }
+            .normal {
+                font-weight: 400;
+            }
+            .light {
+                color: #333;
+            }
+            .lighter {
+                color: #666;
+            }
+            .lightest {
+                color: #aaa;
+            }
+            .highlight {
+                color: #e60000;
+            }
+            .changePage {
+                page-break-before: always;
+            }
+            .picture-cell {
+                width: 20mm;
+                text-align: center;
+            }
+            .material-picture {
+                max-width: 18mm;
+                max-height: 12mm;
+            }
 
-                            <span class="lighter">Puissance&nbsp;:&nbsp;850&nbsp;W.</span>
+            .main-footer {
+                position: running(main-footer);
+                text-align: center;
+                font-size: 7pt;
+                word-break: break-all;
+                color: #aaa;
+            }
 
-                        </td>
-    <td class="right lighter">
-        &euro;19,400.00
-    </td>
-    <td class="center">
-        5
-    </td>
-    <td class="center"></td>
-</tr>
+            @media screen {
+                .changePage {
+                    break-before: column;
+                }
 
-            <tr>
-    <td>XR18</td>
-    <td>
-        Behringer X Air XR18
-                    <br>
-                            <span class="lighter">Date d'achat&nbsp;:&nbsp;28/01/2021.</span>
+                .main-footer {
+                    display: none;
+                }
+            }
+        </style>
 
-                            <span class="lighter">Lieu d'usage&nbsp;:&nbsp;Polyvalent.</span>
+        <style type="text/css">
+            .listing-title {
+                page-break-after: avoid;
+            }
 
-                        </td>
-    <td class="right lighter">
-        &euro;419.00
-    </td>
-    <td class="center">
-        3
-    </td>
-    <td class="center"></td>
-</tr>
+            .listing-table > tbody > tr > td {
+                height: 6mm;
+                font-size: 8pt;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="__document">
+            <div class="__document__preview">
+                <div class="__document__preview__content">
+                    <footer class="main-footer">
+                        Testing corp. | SARL with a share capital of €1,000 | APE code: 7729Z | RCS TestGrandeVille 543210080<br />
+                        5 rue des tests 05555 Testville | VAT No.: FR85543210080
+                    </footer>
+                    <table class="layout-table">
+                        <tr>
+                            <td class="third">
+                                <div class="spaceBottom2 size12 strong">
+                                    Testing corp.<br />
+                                    5 rue des tests<br />
+                                    05555 Testville<br />
+                                    France
+                                </div>
+                                <div class="spaceBottom2 size10">
+                                    Phone: 01 23 45 67 89<br />
+                                    E-mail: contact@testing-corp.dev
+                                </div>
+                            </td>
+                            <td class="two-third">
+                                <h1 class="box center">Materials list</h1>
+                                <h3 class="center">As of 23 September 2022 (all parks)</h3>
+                            </td>
+                        </tr>
+                    </table>
+                    <h3 class="listing-title">Défaut</h3>
+                    <table class="listing-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30mm">Reference</th>
+                                <th>
+                                    Designation
+                                    <span class="right" class="normal lightest">- Park Défaut</span>
+                                </th>
+                                <th class="right" style="width: 15mm">Repl. value</th>
+                                <th class="center" style="width: 12mm">Stock quantity</th>
+                                <th class="center" style="width: 20mm">Recount quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="section-title" colspan="5">Not categorized</td>
+                            </tr>
+                            <tr>
+                                <td>XLR10</td>
+                                <td>
+                                    Câble XLR 10m<br />
+                                    <span class="lighter">Weight: 0.35 kg</span>
+                                    <span class="lighter">Origin country: France</span>
+                                </td>
+                                <td class="right lighter">€9.50</td>
+                                <td class="center">40</td>
+                                <td class="center"></td>
+                            </tr>
 
-            <tr>
-                <td class="section-title" colspan="5">
-                    Son - Processeurs
-                </td>
-            </tr>
-            <tr>
-    <td>DBXPA2</td>
-    <td>
-        Processeur DBX PA2
-                    <br>
-                            <span class="lighter">Poids&nbsp;:&nbsp;2.2&nbsp;kg.</span>
+                            <tr>
+                                <td class="section-title" colspan="5">Décors - Other Materials</td>
+                            </tr>
+                            <tr>
+                                <td>Decor-Forest</td>
+                                <td>
+                                    Décor Thème Forêt<br />
+                                    <span class="lighter">Origin country: France</span>
+                                    <span class="lighter">Lieu d&#039;usage&nbsp;:&nbsp;Intérieur.</span>
+                                </td>
+                                <td class="right lighter">€8,500.00</td>
+                                <td class="center">2</td>
+                                <td class="center"></td>
+                            </tr>
 
-                            <span class="lighter">Puissance&nbsp;:&nbsp;35&nbsp;W.</span>
+                            <tr>
+                                <td class="section-title" colspan="5">Lumière - Gradateurs</td>
+                            </tr>
+                            <tr>
+                                <td>SDS-6-01</td>
+                                <td>
+                                    Showtec SDS-6<br />
+                                    <span class="lighter">Weight: 3 kg</span>
+                                    <span class="lighter">Origin country: Belgium</span>
+                                    <span class="lighter">Conforme&nbsp;:&nbsp;Yes.</span>
 
-                        </td>
-    <td class="right lighter">
-        &euro;349.90
-    </td>
-    <td class="center">
-        2
-    </td>
-    <td class="center"></td>
-</tr>
+                                    <span class="lighter">Poids&nbsp;:&nbsp;3.15&nbsp;kg.</span>
 
-        </tbody>
-    </table>
-    <h3 class="listing-title">
-        spare
-    </h3>
-    <table class="listing-table">
-        <thead>
-            <tr>
-                <th style="width: 30mm;">Reference</th>
-                <th>
-                    Designation
-                    <span class="right">- Park spare</span>
-                </th>
-                <th class="right" style="width: 15mm;">Repl. Val.</th>
-                <th class="center" style="width: 12mm;">Stock quantity</th>
-                <th class="center" style="width: 20mm;">Recount quantity</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="section-title" colspan="5">
-                    Transport - Other Materials
-                </td>
-            </tr>
-            <tr>
-    <td>Transporter</td>
-    <td>
-        Volkswagen Transporter
-                    <br>
-                            <span class="lighter">Lieu d'usage&nbsp;:&nbsp;Ext&eacute;rieur.</span>
+                                    <span class="lighter">Puissance&nbsp;:&nbsp;60&nbsp;W.</span>
+                                </td>
+                                <td class="right lighter">€59.00</td>
+                                <td class="center">2</td>
+                                <td class="center"></td>
+                            </tr>
 
-                        </td>
-    <td class="right lighter">
-        &euro;32,000.00
-    </td>
-    <td class="center">
-        2
-    </td>
-    <td class="center"></td>
-</tr>
+                            <tr>
+                                <td class="section-title" colspan="5">Lumière - Projecteurs</td>
+                            </tr>
+                            <tr>
+                                <td>PAR64LED</td>
+                                <td>
+                                    PAR64 LED<br />
+                                    <span class="lighter">Weight: 1.2 kg</span>
+                                    <span class="lighter">Origin country: France</span>
+                                    <span class="lighter">Poids&nbsp;:&nbsp;0.85&nbsp;kg.</span>
 
-        </tbody>
-    </table>
+                                    <span class="lighter">Puissance&nbsp;:&nbsp;150&nbsp;W.</span>
+                                </td>
+                                <td class="right lighter">€89.00</td>
+                                <td class="center">34</td>
+                                <td class="center"></td>
+                            </tr>
 
-<h3 class="listing-title">Notes</h3>
-<div class="inset" style="height: 100mm;"></div>
-</body>
+                            <tr>
+                                <td class="section-title" colspan="5">Son - Mixeurs</td>
+                            </tr>
+                            <tr>
+                                <td>CL3</td>
+                                <td>
+                                    Console Yamaha CL3<br />
+                                    <span class="lighter">Weight: 24.5 kg</span>
+                                    <span class="lighter">Origin country: Switzerland</span>
+                                    <span class="lighter">Couleur&nbsp;:&nbsp;Grise.</span>
+
+                                    <span class="lighter">Poids&nbsp;:&nbsp;36.5&nbsp;kg.</span>
+
+                                    <span class="lighter">Puissance&nbsp;:&nbsp;850&nbsp;W.</span>
+                                </td>
+                                <td class="right lighter">€19,400.00</td>
+                                <td class="center">5</td>
+                                <td class="center"></td>
+                            </tr>
+
+                            <tr>
+                                <td>XR18</td>
+                                <td>
+                                    Behringer X Air XR18<br />
+                                    <span class="lighter">Weight: 4.8 kg</span>
+                                    <span class="lighter">Origin country: France</span>
+                                    <span class="lighter">Date d&#039;achat&nbsp;:&nbsp;28/01/2021.</span>
+
+                                    <span class="lighter">Lieu d&#039;usage&nbsp;:&nbsp;Polyvalent.</span>
+                                </td>
+                                <td class="right lighter">€419.00</td>
+                                <td class="center">3</td>
+                                <td class="center"></td>
+                            </tr>
+
+                            <tr>
+                                <td class="section-title" colspan="5">Son - Processeurs</td>
+                            </tr>
+                            <tr>
+                                <td>DBXPA2</td>
+                                <td>
+                                    Processeur DBX PA2<br />
+                                    <span class="lighter">Weight: 6.4 kg</span>
+                                    <span class="lighter">Origin country: Switzerland</span>
+                                    <span class="lighter">Poids&nbsp;:&nbsp;2.2&nbsp;kg.</span>
+
+                                    <span class="lighter">Puissance&nbsp;:&nbsp;35&nbsp;W.</span>
+                                </td>
+                                <td class="right lighter">€349.90</td>
+                                <td class="center">2</td>
+                                <td class="center"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3 class="listing-title">Spare</h3>
+                    <table class="listing-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 30mm">Reference</th>
+                                <th>
+                                    Designation
+                                    <span class="right" class="normal lightest">- Park Spare</span>
+                                </th>
+                                <th class="right" style="width: 15mm">Repl. value</th>
+                                <th class="center" style="width: 12mm">Stock quantity</th>
+                                <th class="center" style="width: 20mm">Recount quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="section-title" colspan="5">Transport - Other Materials</td>
+                            </tr>
+                            <tr>
+                                <td>Transporter</td>
+                                <td>
+                                    Volkswagen Transporter<br />
+                                    <span class="lighter">Lieu d&#039;usage&nbsp;:&nbsp;Extérieur.</span>
+                                </td>
+                                <td class="right lighter">€32,000.00</td>
+                                <td class="center">2</td>
+                                <td class="center"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="listing-title">Notes</h3>
+                    <div class="inset" style="height: 100mm"></div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

@@ -1,11 +1,12 @@
 import './index.scss';
 import { defineComponent } from 'vue';
 import apiEvents from '@/stores/api/events';
-import { BookingEntity } from '@/stores/api/bookings';
+import MaterialDetails from '@/themes/default/modals/MaterialDetails';
 
 import type { PropType } from 'vue';
 import type { Booking as BookingCore } from '@/stores/api/bookings';
 import type { Event, EventMaterialWithQuantityMissing } from '@/stores/api/events';
+import type { Material } from '@/stores/api/materials';
 
 export enum BookableEntity {
     EVENT = 'event',
@@ -57,6 +58,18 @@ const MissingMaterials = defineComponent({
     methods: {
         // ------------------------------------------------------
         // -
+        // -    Handlers
+        // -
+        // ------------------------------------------------------
+
+        handleClickItem(material: Material) {
+            this.$modal.show(MaterialDetails, {
+                id: material.id,
+            });
+        },
+
+        // ------------------------------------------------------
+        // -
         // -    Méthodes internes
         // -
         // ------------------------------------------------------
@@ -81,10 +94,10 @@ const MissingMaterials = defineComponent({
     render() {
         const {
             __,
-            bookable,
             missingMaterials,
             hasCriticalError,
             hasMissingMaterials,
+            handleClickItem,
         } = this;
 
         if (hasCriticalError) {
@@ -106,13 +119,6 @@ const MissingMaterials = defineComponent({
             return null;
         }
 
-        const renderHelp = (): JSX.Node => {
-            if ([BookingEntity.EVENT, BookableEntity.EVENT].includes(bookable.entity)) {
-                return __('help.event');
-            }
-            return __('help.general');
-        };
-
         return (
             <div class="MissingMaterials">
                 <div class="MissingMaterials__header">
@@ -120,13 +126,17 @@ const MissingMaterials = defineComponent({
                         {__('title')}
                     </h3>
                     <p class="MissingMaterials__header__help">
-                        {renderHelp()}
+                        {__('help.event')}
                     </p>
                 </div>
                 <ul class="MissingMaterials__list">
                     {missingMaterials.map((missingMaterial: BookableMaterialWithQuantityMissing) => (
                         <li key={missingMaterial.id} class="MissingMaterials__list__item">
-                            <div class="MissingMaterials__list__item__name">
+                            <div
+                                class="MissingMaterials__list__item__name"
+                                onClick={() => { handleClickItem(missingMaterial.material); }}
+                                role="button"
+                            >
                                 {missingMaterial.name}
                             </div>
                             <div class="MissingMaterials__list__item__quantity">

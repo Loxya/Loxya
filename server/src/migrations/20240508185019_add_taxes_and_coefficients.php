@@ -59,7 +59,7 @@ final class AddTaxesAndCoefficients extends AbstractMigration
 
         $defaultTaxId = null;
         $defaultTaxData = null;
-        $existingVatRate = Config::get('legacy.companyData.vatRate');
+        $existingVatRate = Config::get('legacy.organization.vatRate');
         if ($existingVatRate !== null && $existingVatRate > 0) {
             $defaultTaxId = 1;
             $defaultTaxData = [

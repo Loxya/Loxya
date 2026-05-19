@@ -2,7 +2,7 @@ import './index.scss';
 import { defineComponent, markRaw } from 'vue';
 import config from '@/globals/config';
 import DateTime from '@/utils/datetime';
-import Logo from '@/themes/default/components/Logo';
+import Logo from '@/components/Logo';
 
 import type { Raw } from 'vue';
 

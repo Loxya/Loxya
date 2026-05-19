@@ -13,7 +13,10 @@ import type { ParkSummary } from '@/stores/api/parks';
 import type { Options } from '@/utils/formatOptions';
 import type { SubCategory } from '@/stores/api/subcategories';
 import type { Category, CategoryDetails } from '@/stores/api/categories';
-import type { FilterDefinition } from '@/themes/default/components/SearchPanel';
+import type {
+    FilterDefinition,
+    Filters as RawFilters,
+} from '@/themes/default/components/SearchPanel';
 
 export enum TokenType {
     PARK = 'park',
@@ -50,6 +53,10 @@ type Props = {
     onSubmit?(): void,
 };
 
+type Data = {
+    isFetched: boolean,
+};
+
 /** Filtres d'une liste de matériel. */
 const MaterialsFilters = defineComponent({
     name: 'MaterialsFilters',
@@ -73,6 +80,9 @@ const MaterialsFilters = defineComponent({
         },
     },
     emits: ['change', 'submit'],
+    data: (): Data => ({
+        isFetched: false,
+    }),
     computed: {
         parksOptions(): Options<ParkSummary> {
             return this.$store.getters['parks/options'];
@@ -83,7 +93,7 @@ const MaterialsFilters = defineComponent({
         },
 
         categoriesOptions(): Options<Category> {
-            const { $t: __ } = this;
+            const { __ } = this;
 
             // - On garde le tableau à vide le temps d'avoir récupéré les options pour
             //   éviter que le component `<Search />` pense qu'on a toutes les valeurs
@@ -93,7 +103,7 @@ const MaterialsFilters = defineComponent({
             }
 
             return [
-                { value: UNCATEGORIZED, label: __('not-categorized') },
+                { value: UNCATEGORIZED, label: __('global.not-categorized') },
                 ...this.$store.getters['categories/options'],
             ];
         },
@@ -128,9 +138,17 @@ const MaterialsFilters = defineComponent({
             );
         },
 
+        rawValues(): RawFilters {
+            const { ...otherValues } = this.values;
+
+            return {
+                ...otherValues,
+            };
+        },
+
         definitions(): FilterDefinition[] {
             const {
-                $t: __,
+                __,
                 withParkFilter,
                 isSubCategoriesDisabled,
                 parksOptions,
@@ -143,40 +161,38 @@ const MaterialsFilters = defineComponent({
                 withParkFilter && {
                     type: TokenType.PARK,
                     icon: 'industry',
-                    title: __('park'),
-                    placeholder: __('all-parks'),
+                    title: __('global.park'),
+                    placeholder: __('global.all-parks'),
                     options: parksOptions,
                 },
                 {
                     type: TokenType.CATEGORY,
                     icon: 'sitemap',
-                    title: __('category'),
-                    placeholder: __('all-categories'),
+                    title: __('global.category'),
+                    placeholder: __('global.all-categories'),
                     options: categoriesOptions,
                 },
                 {
                     type: TokenType.SUB_CATEGORY,
                     icon: 'sitemap',
-                    title: __('sub-category'),
+                    title: __('global.sub-category'),
                     disabled: isSubCategoriesDisabled,
-                    placeholder: __('all-sub-categories'),
+                    placeholder: __('global.all-sub-categories'),
                     options: subCategoriesOptions,
                 },
                 {
                     type: TokenType.TAGS,
                     icon: 'tags',
-                    title: __('tags'),
+                    title: __('global.tags'),
                     options: tagsOptions,
-                    placeholder: __('all-tags'),
+                    placeholder: __('global.all-tags'),
                     multiSelect: true,
                 },
             ].filter(isTruthy);
         },
     },
     created() {
-        this.$store.dispatch('tags/fetch');
-        this.$store.dispatch('parks/fetch');
-        this.$store.dispatch('categories/fetch');
+        this.fetchData();
     },
     methods: {
         // ------------------------------------------------------
@@ -185,8 +201,27 @@ const MaterialsFilters = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleChange(newFilters: Filters) {
-            const normalizedNewFilters: Filters = { ...newFilters };
+        handleChange(newFilters: RawFilters) {
+            // - Si on n'a pas encore terminé la récupération des données tierces, on ne
+            //   permet pas le changement. (le composant de recherche a dû vouloir
+            //   resynchroniser avec les tokens déjà disponibles mais on souhaite
+            //    conserver nos valeurs jusqu'à la fin de la récupération)
+            if (!this.isFetched) {
+                return;
+            }
+
+            const normalizedNewFilters = Object.entries(newFilters).reduce(
+                (filters: Partial<Filters>, [rawType, value]) => {
+                    const type: TokenType = rawType as any;
+                    return { ...filters, [type]: value } as Partial<Filters>;
+                },
+                {},
+            );
+
+            if (!('search' in normalizedNewFilters)) {
+                normalizedNewFilters.search = [];
+            }
+
             if (!(TokenType.PARK in normalizedNewFilters) || !this.withParkFilter) {
                 normalizedNewFilters[TokenType.PARK] = null;
             }
@@ -205,10 +240,36 @@ const MaterialsFilters = defineComponent({
         handleSubmit() {
             this.$emit('submit');
         },
+
+        // ------------------------------------------------------
+        // -
+        // -    Méthodes internes
+        // -
+        // ------------------------------------------------------
+
+        async fetchData() {
+            try {
+                await Promise.allSettled([
+                    this.$store.dispatch('tags/fetch'),
+                    this.$store.dispatch('parks/fetch'),
+                    this.$store.dispatch('categories/fetch'),
+                ]);
+            } finally {
+                this.isFetched = true;
+            }
+        },
+
+        __(key: string, params?: Record<string, number | string>, count?: number): string {
+            key = !key.startsWith('global.')
+                ? `components.MaterialsFilters.${key}`
+                : key.replace(/^global\./, '');
+
+            return this.$t(key, params, count);
+        },
     },
     render() {
         const {
-            values,
+            rawValues: values,
             definitions,
             handleChange,
             handleSubmit,
@@ -224,5 +285,9 @@ const MaterialsFilters = defineComponent({
         );
     },
 });
+
+export {
+    hasChangedFilters,
+} from './_utils';
 
 export default MaterialsFilters;

@@ -1,11 +1,15 @@
 import './index.scss';
-import Period from '@/utils/period';
 import { defineComponent } from 'vue';
-import SearchPanel, { FiltersSchema } from '@/themes/default/components/MaterialsFilters';
+import Period, { SerializedPeriodSchema } from '@/utils/period';
+import SearchPanel, { FiltersSchema as BaseFiltersSchema } from '@/themes/default/components/MaterialsFilters';
 import DatePicker from '@/themes/default/components/DatePicker';
 
 import type { PropType, Raw } from 'vue';
 import type { Filters } from '@/themes/default/components/MaterialsFilters';
+
+export const FiltersSchema = BaseFiltersSchema.extend({
+    quantitiesPeriod: SerializedPeriodSchema.optional(),
+});
 
 type Props = {
     /** La valeur actuelle des filtres. */
@@ -84,9 +88,11 @@ const MaterialsPageFilters = defineComponent({
         'quantitiesPeriodChange',
         'submit',
     ],
-    data: (): Data => ({
-        quantitiesPeriodIsFullDays: false,
-    }),
+    data(): Data {
+        return {
+            quantitiesPeriodIsFullDays: this.quantitiesPeriodValue?.isFullDays ?? false,
+        };
+    },
     computed: {
         quantitiesPeriod(): Period | null {
             return this.quantitiesPeriodValue;
@@ -145,7 +151,8 @@ const MaterialsPageFilters = defineComponent({
     },
 });
 
-export type { Filters };
+export type {
+    Filters,
+};
 
-export { FiltersSchema };
 export default MaterialsPageFilters;

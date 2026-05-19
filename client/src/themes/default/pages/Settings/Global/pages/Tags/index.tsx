@@ -2,7 +2,6 @@ import './index.scss';
 import { defineComponent } from 'vue';
 import apiTags from '@/stores/api/tags';
 import { confirm } from '@/utils/alert';
-import showModal from '@/utils/showModal';
 import stringCompare from '@/utils/stringCompare';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
@@ -57,7 +56,7 @@ const TagsGlobalSettings = defineComponent({
 
         async handleCreate() {
             const newTag: Tag | undefined = (
-                await showModal(this.$modal, EditTag)
+                await this.$modal.show(EditTag)
             );
 
             // - Si l'ajout a été annulé, on retourne sans autre.
@@ -80,7 +79,7 @@ const TagsGlobalSettings = defineComponent({
             this.processing.push(id);
 
             const updatedTag: Tag | undefined = (
-                await showModal(this.$modal, EditTag, { tag })
+                await this.$modal.show(EditTag, { tag })
             );
 
             this.$delete(this.processing, this.processing.indexOf(id));
@@ -244,7 +243,7 @@ const TagsGlobalSettings = defineComponent({
         // - Actions de la page.
         const actions = !isTrashDisplayed
             ? [
-                <Button type="add" onClick={handleCreate} collapsible>
+                <Button type="primary" icon="plus" onClick={handleCreate} collapsible>
                     {__('action-add')}
                 </Button>,
                 <Dropdown>
@@ -282,7 +281,8 @@ const TagsGlobalSettings = defineComponent({
                                     onClick: handleToggleShowTrashed,
                                 }
                                 : {
-                                    type: 'add',
+                                    type: 'primary',
+                                    icon: 'plus',
                                     label: __('create-first-tag'),
                                     onClick: handleCreate,
                                 }
@@ -298,6 +298,7 @@ const TagsGlobalSettings = defineComponent({
                 title={title}
                 help={help}
                 actions={actions}
+                centered
             >
                 <ul class="TagsGlobalSettings__list">
                     {sortedTags.map(({ id, name }: Tag) => (

@@ -7,7 +7,7 @@ use Loxya\Models\Material;
 
 final class MaterialObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function updated(Material $material): void
     {

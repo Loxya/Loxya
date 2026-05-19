@@ -1,0 +1,272 @@
+{% extends 'pdf/document' %}
+
+{% block head %}
+{{- parent() -}}
+
+<style type="text/css">
+    @page {
+        @bottom-center {
+            content: element(main-footer);
+        }
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin: 0 0 3mm 0;
+    }
+    h2 {
+        font-size: 1.25rem;
+        margin: 0 0 3mm 0;
+    }
+    h3 {
+        font-size: 1.125rem;
+        margin: 0 0 3mm 0;
+    }
+    h4 {
+        font-size: 1rem;
+        margin: 0 0 3mm 0;
+    }
+    p {
+        font-size: 1rem;
+        margin: 0 0 3mm 0;
+    }
+    small {
+        font-size: 0.85rem;
+    }
+    ul, ol {
+        margin: 2mm 0 3mm 0;
+        padding: 0;
+    }
+    li {
+        list-style: none;
+        border-left: 2px solid #ccc;
+        padding-left: 1mm;
+    }
+    table {
+        width: 100%;
+        table-layout: auto;
+        margin: 0 0 3mm 0;
+        border-spacing: 0;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 1mm 2mm;
+        border-top: 1pt solid #888;
+        border-left: 1pt solid #888;
+        vertical-align: top;
+    }
+    th {
+        text-align: left;
+    }
+    th:last-child, td:last-child {
+        border-right: 1pt solid #888;
+    }
+    tr:last-child > td {
+        border-bottom: 1pt solid #888;
+    }
+
+    .layout-table > tbody > tr > td {
+        border: none;
+        padding: 0;
+    }
+
+    .listing-table {
+        margin-bottom: 8mm;
+    }
+    .listing-table > thead > tr {
+        page-break-after: avoid;
+    }
+    .listing-table > thead > tr > th {
+        font-size: 0.8rem;
+        border-left: 1pt solid #ccc;
+        border-right: 1pt solid #ccc;
+        border-bottom: 1pt solid #888;
+        vertical-align: middle;
+    }
+    .listing-table > tbody > tr > td {
+        padding: 2mm;
+        font-size: 0.7rem;
+        border: none;
+        border-left: 1pt solid #ccc;
+        border-right: 1pt solid #ccc;
+        border-bottom: 1pt solid #ccc;
+        vertical-align: middle;
+    }
+    .listing-table > tbody > tr > td.section-title {
+        padding: 4mm 2mm 2mm;
+        font-size: 0.8rem;
+        color: #888;
+    }
+    .listing-table > thead > tr > th:first-child,
+    .listing-table > tbody > tr > td:first-child {
+        border-left: 1pt solid #888 !important;
+    }
+    .listing-table > thead > tr > th:last-child,
+    .listing-table > tbody > tr > td:last-child {
+        border-right: 1pt solid #888 !important;
+    }
+    .listing-table__item__label {
+        font-weight: 600;
+    }
+    .listing-table__item__sub-name {
+        margin-top: 2px;
+        font-size: 0.6rem;
+    }
+    .listing-table__item__label,
+    .listing-table__item__sub-name {
+        display: block;
+    }
+
+    .totals-table {
+        width: 50%;
+        margin: 0 0 5mm auto;
+    }
+    .totals-table--legacy {
+        width: 100%;
+        margin: 0;
+    }
+    .totals-table > tbody > tr > td {
+        border-bottom: 1pt solid #888;
+        text-align: right;
+        vertical-align: middle;
+    }
+    .totals-table--legacy > tbody > tr > td {
+        text-align: center;
+    }
+
+    .signature-table {
+        break-inside: avoid;
+    }
+
+    .inset {
+        padding: 5mm 3mm 8mm !important;
+        border: 1pt solid #999 !important;
+    }
+    .half { width: 50%; }
+    .third { width: 33.33%; }
+    .two-third { width: 66.66%; }
+    .max50mm { max-width: 50mm; }
+    .left { text-align: left; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .sizeTitle { font-size: 16pt; }
+    .sizeSubtitle { font-size: 14pt; }
+    .size12 { font-size: 1rem; }
+    .size10 { font-size: 0.9rem; }
+    .size8 { font-size: 0.85rem; }
+    .size7 { font-size: 7pt; }
+    .vspace2 { margin: 0; padding: 2mm 0; }
+    .vspace5 { margin: 0; padding: 5mm 0; }
+    .vspace10 { margin: 0; padding: 10mm 0; }
+    .spaceBottom1 { margin-bottom: 1mm; }
+    .spaceBottom2 { margin-bottom: 2mm; }
+    .spaceBottom5 { margin-bottom: 5mm; }
+    .indent5 { padding-left: 5mm; }
+    .indent10 { padding-left: 10mm; }
+    .box {
+        padding: 1mm;
+        background-color: #eee;
+        border-radius: 3pt;
+    }
+    .strong { font-weight: 700; }
+    .normal { font-weight: 400; }
+    .light { color: #333; }
+    .lighter { color: #666; }
+    .lightest { color: #aaa; }
+    .highlight { color: #e60000; }
+    .changePage { page-break-before: always; }
+    .picture-cell { width: 20mm; text-align: center; }
+    .material-picture { max-width: 18mm; max-height: 12mm; }
+
+    .main-footer {
+        position: running(main-footer);
+        text-align: center;
+        font-size: 7pt;
+        word-break: break-all;
+        color: #aaa;
+    }
+
+    @media screen {
+        .changePage {
+            break-before: column;
+        }
+
+        .main-footer {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block running %}
+<footer class="main-footer">
+    {% set organizationCountry = organization.country -%}
+    {%- set legalType = (
+        organizationCountry.mustShowLegalType() and organization.legalType is not empty
+            ? __('legals.legal-types.' ~ organization.legalType.value ~ '.short')
+            : null
+    ) -%}
+    {%- if (
+        organizationCountry.mustShowShareCapital() and
+        organization.shareCapital is not empty and
+        organizationCountry.canHaveShareCapital(organization.legalType ?? null)
+    ) -%}
+        {% set legalType = __('legals.mentions.global.share-capital.short', [
+            legalType ?? __('company'),
+            organization.shareCapital|format_currency(organizationCountry.currency, locale=locale, attrs={
+                'min_fraction_digit': 0,
+            }),
+        ]) -%}
+    {%- endif -%}
+    {#- Ligne 1. #}
+    {%- set line1 = [] -%}
+    {%- if legalType is not null -%}
+        {% set line1 = line1|merge([legalType]) -%}
+    {%- endif -%}
+    {%- if organizationCountry.canShowActivityCode() and organization.activityCode is not empty -%}
+        {% set activityCodeTranslationKey = 'business-activity-code.' ~ (organizationCountry.code ?? 'generic') -%}
+        {% set activityCode = __([activityCodeTranslationKey, 'business-activity-code.generic'], organization.activityCode) -%}
+        {% set line1 = line1|merge([activityCode]) -%}
+    {%- endif -%}
+    {%- if organization.registrationId is not empty -%}
+        {%- if organizationCountry.mustShowTradeRegister() and organization.tradeRegistryCity is not empty -%}
+            {%- set mainRegistrationId = organizationCountry.inferMainCompanyIdentifier(organization.registrationId) -%}
+            {%- set fullRegistrationIdTranslationKey = 'business-registration-id-full.' ~ (organizationCountry.code ?? 'generic') -%}
+            {%- set registrationId = __(
+                [fullRegistrationIdTranslationKey, 'business-registration-id-full.generic'],
+                [organization.tradeRegistryCity, mainRegistrationId],
+            ) -%}
+        {%- else -%}
+            {%- set registrationIdScheme = organization.country.getCompanyIdentifierScheme(organization.registrationId) -%}
+            {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+            {%- set registrationId = __([registrationIdTranslationKey, 'business-registration-id.generic'], organization.registrationId) -%}
+        {%- endif -%}
+        {%- set line1 = line1|merge([registrationId]) -%}
+    {%- endif -%}
+    {#- Ligne 2. #}
+    {%- set line2 = [] -%}
+    {%- if organization.address is not empty -%}
+        {%- set line2 = line2|merge([organization.address|replace({ "\n": " " })]) -%}
+    {%- endif -%}
+    {%- if not organization.isVatExempted and organization.vatNumber is not empty -%}
+        {%- set vatNumberTranslationKey = 'vat-number.' ~ (organization.country.code ?? 'generic') -%}
+        {% set line2 = line2|merge([__([vatNumberTranslationKey, 'vat-number.generic'], organization.vatNumber)]) -%}
+    {%- endif -%}
+    {#- Output. #}
+    {% if line1 is not empty -%}
+        {%- if organization.name is not empty -%}
+            {%- set line1 = [organization.name]|merge(line1) -%}
+        {%- endif -%}
+        {{- line1|join(' | ') -}}
+        {%- if line2 is not empty -%}
+            <br />
+        {% endif %}
+    {%- endif -%}
+    {% if line2 is not empty -%}
+        {%- if line1 is empty and organization.name is not empty -%}
+            {%- set line2 = [organization.name]|merge(line2) -%}
+        {%- endif -%}
+        {{- line2|join(' | ') }}
+    {% endif %}
+</footer>
+{% endblock %}

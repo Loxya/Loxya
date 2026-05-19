@@ -20,7 +20,7 @@ final class JWT implements AuthenticatorInterface
 
     public function isEnabled(): bool
     {
-        return true;
+        return Config::get('JWTSecret') !== null;
     }
 
     public function getUser(Request $request): User|null
@@ -65,7 +65,7 @@ final class JWT implements AuthenticatorInterface
     private function fetchToken(Request $request): string
     {
         // - Tente de récupérer le token dans les headers HTTP.
-        $header = $request->getNormalizedHeaderLine(Config::get('httpAuthHeader'));
+        $header = $request->getNormalizedHeaderLine('Authorization');
         if (!empty($header)) {
             if (preg_match('/Bearer\s+(.*)$/i', $header, $matches)) {
                 return $matches[1];
@@ -89,7 +89,7 @@ final class JWT implements AuthenticatorInterface
 
     private function decodeToken(Request $request, string $token): array
     {
-        $schema = V::arrayType()->oneOf(
+        $schema = V::arrayType()->anyOf(
             new KeySet(
                 new Rule\Key('type', V::equals(self::TOKEN_TYPE_USER)),
                 new Rule\Key('sub', V::intType()),

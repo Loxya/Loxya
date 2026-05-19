@@ -9,6 +9,7 @@
         padding: 0.7rem 1rem;
         background-color: globals.$bg-color-emphasis;
         gap: globals.$spacing-medium;
+        user-select: none;
 
         &__title {
             flex: 1;

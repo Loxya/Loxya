@@ -21,7 +21,7 @@ import Documents from './tabs/Documents';
 import Note from './tabs/Note';
 
 import type { ComponentRef, PropType, Raw } from 'vue';
-import type { EventDetails as Event, EventTechnician } from '@/stores/api/events';
+import type { EventDetails as Event } from '@/stores/api/events';
 import type { Session } from '@/stores/api/session';
 import type { Estimate } from '@/stores/api/estimates';
 import type { Invoice } from '@/stores/api/invoices';
@@ -42,15 +42,15 @@ enum TabIndex {
 /* eslint-enable @typescript-eslint/prefer-enum-initializers */
 
 type Props = {
-    /** L'id de l'événement pour laquelle on veut afficher la modale de détails.  */
+    /** Identifiant de l'événement dont on veut afficher les détails. */
     id: Event['id'],
 
     /**
-     * L'index de l'onglet actif par défaut à l'ouverture.
+     * L'onglet actif par défaut à l'ouverture.
      *
      * @default TabIndex.INFOS
      */
-    defaultTabIndex?: TabIndex,
+    defaultTab?: TabIndex,
 
     /**
      * Fonction appelée lorsque l'événement liée à l'id passé a été mis à jour.
@@ -67,9 +67,12 @@ type Props = {
     onDuplicated?(newEvent: Event): void,
 
     /**
-     * Fonction appelée lorsque l'événement liée à l'id passé a été supprimée.
+     * Fonction appelée lorsque l'événement lié à l'id passé a été supprimé.
      */
     onDeleted?(): void,
+
+    /** Fonction appelée lorsque la modale est fermée. */
+    onClose?(): void,
 };
 
 type InstanceProperties = {
@@ -87,15 +90,15 @@ type Data = {
 const EventDetails = defineComponent({
     name: 'EventDetails',
     modal: {
-        clickToClose: true,
+        dismissible: true,
     },
     props: {
         id: {
             type: Number as PropType<Required<Props>['id']>,
             required: true,
         },
-        defaultTabIndex: {
-            type: Number as PropType<Required<Props>['defaultTabIndex']>,
+        defaultTab: {
+            type: Number as PropType<Required<Props>['defaultTab']>,
             default: TabIndex.INFOS,
             validator: (value: unknown) => (
                 Object.values(TabIndex).includes(value as any)
@@ -111,6 +114,10 @@ const EventDetails = defineComponent({
         },
         onDeleted: {
             type: Function as PropType<Props['onDeleted']>,
+            default: undefined,
+        },
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },
@@ -187,15 +194,6 @@ const EventDetails = defineComponent({
                 return true;
             }
 
-            if (this.isTechniciansEnabled) {
-                // - ... ou qu'il fait partie des techniciens assignés à l'événement.
-                return (this.event.technicians ?? []).some(
-                    (eventTechnician: EventTechnician) => (
-                        currentUser.id === eventTechnician.technician.user_id
-                    ),
-                );
-            }
-
             return false;
         },
 
@@ -264,7 +262,7 @@ const EventDetails = defineComponent({
         // ------------------------------------------------------
 
         async handleTabChange(event: TabChangeEvent) {
-            if (event.prevIndex !== TabIndex.DOCUMENTS) {
+            if (event.prevId !== TabIndex.DOCUMENTS) {
                 return;
             }
 
@@ -321,11 +319,39 @@ const EventDetails = defineComponent({
             this.event.invoices?.unshift(newInvoice);
         },
 
+        handleInvoiceUpdated(updatedInvoice: Invoice) {
+            if (!this.event || !this.event.is_billable) {
+                return;
+            }
+
+            this.event.invoices = this.event.invoices?.map(
+                (invoice: Invoice) => (
+                    invoice.id === updatedInvoice.id
+                        ? updatedInvoice
+                        : invoice
+                ),
+            );
+        },
+
         handleEstimateCreated(newEstimate: Estimate) {
             if (!this.event || !this.event.is_billable) {
                 return;
             }
             this.event.estimates?.unshift(newEstimate);
+        },
+
+        handleEstimateUpdated(updatedEstimate: Estimate) {
+            if (!this.event || !this.event.is_billable) {
+                return;
+            }
+
+            this.event.estimates = this.event.estimates?.map(
+                (estimate: Estimate) => (
+                    estimate.id === updatedEstimate.id
+                        ? updatedEstimate
+                        : estimate
+                ),
+            );
         },
 
         handleEstimateDeleted(estimateId: Estimate['id']) {
@@ -336,6 +362,20 @@ const EventDetails = defineComponent({
             this.event.estimates = this.event.estimates?.filter(
                 (estimate: Estimate) => estimate.id !== estimateId,
             );
+        },
+
+        handleInvoiceDeleted(invoiceId: Invoice['id']) {
+            if (!this.event || !this.event.is_billable) {
+                return;
+            }
+
+            this.event.invoices = this.event.invoices?.filter(
+                (invoice: Invoice) => invoice.id !== invoiceId,
+            );
+        },
+
+        handleRefetchNeeded() {
+            this.fetchData();
         },
 
         handleClose() {
@@ -363,7 +403,7 @@ const EventDetails = defineComponent({
         const {
             $t: __,
             event,
-            defaultTabIndex,
+            defaultTab,
             isFetched,
             showBilling,
             showDocumentsAndNotes,
@@ -376,10 +416,14 @@ const EventDetails = defineComponent({
             handleUpdated,
             handleTabChange,
             handleDuplicated,
-            handleDeleted,
+            handleRefetchNeeded,
             handleEstimateCreated,
+            handleEstimateUpdated,
             handleEstimateDeleted,
             handleInvoiceCreated,
+            handleInvoiceUpdated,
+            handleInvoiceDeleted,
+            handleDeleted,
             handleClose,
         } = this;
 
@@ -387,13 +431,9 @@ const EventDetails = defineComponent({
             return (
                 <div class="EventDetails EventDetails--not-ready">
                     <div class="EventDetails__close">
-                        <Button
-                            type="close"
-                            class="EventDetails__close__button"
-                            onClick={handleClose}
-                        />
+                        <Button type="close" onClick={handleClose} />
                     </div>
-                    <div class="EventDetails__content">
+                    <div class="EventDetails__body">
                         {hasCriticalError ? <CriticalError /> : <Loading class="EventDetails__loading" />}
                     </div>
                 </div>
@@ -409,13 +449,14 @@ const EventDetails = defineComponent({
                     onDuplicated={handleDuplicated}
                     onClose={handleClose}
                 />
-                <div class="EventDetails__content">
-                    <Tabs defaultIndex={defaultTabIndex} onChange={handleTabChange}>
-                        <Tab title={__('informations')} icon="info-circle">
+                <div class="EventDetails__body">
+                    <Tabs defaultActive={defaultTab} onChange={handleTabChange}>
+                        <Tab id={TabIndex.INFOS} title={__('informations')} icon="info-circle">
                             <Infos event={event!} />
                         </Tab>
                         {isTechniciansEnabled && (
                             <Tab
+                                id={TabIndex.TECHNICIANS}
                                 title={__('technicians')}
                                 icon="people-carry"
                                 disabled={!hasTechniciansProblems && !hasEventTechnicians}
@@ -425,6 +466,7 @@ const EventDetails = defineComponent({
                             </Tab>
                         )}
                         <Tab
+                            id={TabIndex.MATERIALS}
                             title={__('material')}
                             icon="box"
                             disabled={!hasMaterials}
@@ -433,29 +475,34 @@ const EventDetails = defineComponent({
                             <Materials event={event!} />
                         </Tab>
                         {showBilling && (
-                            <Tab title={__('estimates')} icon="file-signature">
+                            <Tab id={TabIndex.ESTIMATES} title={__('estimates')} icon="file-signature">
                                 <Estimates
                                     event={event! as Event<true>}
                                     onCreated={handleEstimateCreated}
+                                    onUpdated={handleEstimateUpdated}
                                     onDeleted={handleEstimateDeleted}
+                                    onRefetchNeeded={handleRefetchNeeded}
                                 />
                             </Tab>
                         )}
                         {showBilling && (
-                            <Tab title={__('invoice')} icon="file-invoice-dollar">
+                            <Tab id={TabIndex.INVOICES} title={__('invoice')} icon="file-invoice-dollar">
                                 <Invoices
                                     event={event! as Event<true>}
                                     onCreated={handleInvoiceCreated}
+                                    onUpdated={handleInvoiceUpdated}
+                                    onDeleted={handleInvoiceDeleted}
+                                    onRefetchNeeded={handleRefetchNeeded}
                                 />
                             </Tab>
                         )}
                         {showDocumentsAndNotes && (
-                            <Tab title={__('documents')} icon="file-pdf">
+                            <Tab id={TabIndex.DOCUMENTS} title={__('documents')} icon="file-pdf">
                                 <Documents ref="documents" event={event!} />
                             </Tab>
                         )}
                         {showDocumentsAndNotes && (
-                            <Tab title={__('notes')} icon="clipboard:regular">
+                            <Tab id={TabIndex.NOTE} title={__('notes')} icon="clipboard:regular">
                                 <Note event={event!} onUpdated={handleUpdated} />
                             </Tab>
                         )}

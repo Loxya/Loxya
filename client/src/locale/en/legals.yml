@@ -1,0 +1,262 @@
+vat-exemptions:
+    VATEX-EU-79-C:
+        label: "Art EU 79c - Reimbursement of disbursements"
+        excerpt: "Art. EU 79c"
+    VATEX-EU-132:
+        label: "Art. EU 132 - Public interest activities"
+        excerpt: "Art. EU 132"
+    VATEX-EU-132-1A:
+        label: "Art. EU 132 (a) - Postal services by public operators"
+        excerpt: "Art. EU 132 (a)"
+    VATEX-EU-132-1B:
+        label: "Art. EU 132 (b) - Hospital and medical care (public/approved)"
+        excerpt: "Art. EU 132 (b)"
+    VATEX-EU-132-1C:
+        label: "Art. EU 132 (c) - Medical and paramedical services"
+        excerpt: "Art. EU 132 (c)"
+    VATEX-EU-132-1D:
+        label: "Art. EU 132 (d) - Human organs, blood and milk"
+        excerpt: "Art. EU 132 (d)"
+    VATEX-EU-132-1E:
+        label: "Art. EU 132 (e) - Dental prostheses and technicians"
+        excerpt: "Art. EU 132 (e)"
+    VATEX-EU-132-1F:
+        label: "Art. EU 132 (f) - Independent groups (cost sharing)"
+        excerpt: "Art. EU 132 (f)"
+    VATEX-EU-132-1G:
+        label: "Art. EU 132 (g) - Welfare and social security work"
+        excerpt: "Art. EU 132 (g)"
+    VATEX-EU-132-1H:
+        label: "Art. EU 132 (h) - Child and youth protection"
+        excerpt: "Art. EU 132 (h)"
+    VATEX-EU-132-1I:
+        label: "Art. EU 132 (i) - Education and training"
+        excerpt: "Art. EU 132 (i)"
+    VATEX-EU-132-1J:
+        label: "Art. EU 132 (j) - Private tuition (school/university)"
+        excerpt: "Art. EU 132 (j)"
+    VATEX-EU-132-1K:
+        label: "Art. EU 132 (k) - Staff from religious/philosophical bodies"
+        excerpt: "Art. EU 132 (k)"
+    VATEX-EU-132-1L:
+        label: "Art. EU 132 (l) - Non-profit orgs (common interest)"
+        excerpt: "Art. EU 132 (l)"
+    VATEX-EU-132-1M:
+        label: "Art. EU 132 (m) - Non-profit orgs (sports and physical education)"
+        excerpt: "Art. EU 132 (m)"
+    VATEX-EU-132-1N:
+        label: "Art. EU 132 (n) - Recognized cultural services"
+        excerpt: "Art. EU 132 (n)"
+    VATEX-EU-132-1O:
+        label: "Art. EU 132 (o) - Fund-raising events"
+        excerpt: "Art. EU 132 (o)"
+    VATEX-EU-132-1P:
+        label: "Art. EU 132 (p) - Transport of sick or injured persons"
+        excerpt: "Art. EU 132 (p)"
+    VATEX-EU-132-1Q:
+        label: "Art. EU 132 (q) - Public radio/TV (non-commercial)"
+        excerpt: "Art. EU 132 (q)"
+    VATEX-EU-143:
+        label: "Art. EU 143 - Import exemptions"
+        excerpt: "Art. EU 143"
+    VATEX-EU-143-1A:
+        label: "Art. EU 143 (a) - Import of VAT-exempt goods"
+        excerpt: "Art. EU 143 (a)"
+    VATEX-EU-143-1B:
+        label: "Art. EU 143 (b) - Imports under EU Directives"
+        excerpt: "Art. EU 143 (b)"
+    VATEX-EU-143-1C:
+        label: "Art. EU 143 (c) - Import of goods in free circulation"
+        excerpt: "Art. EU 143 (c)"
+    VATEX-EU-143-1D:
+        label: "Art. EU 143 (d) - Intra-EU acquisition regime (import)"
+        excerpt: "Art. EU 143 (d)"
+    VATEX-EU-143-1E:
+        label: "Art. EU 143 (e) - Re-importation by exporter"
+        excerpt: "Art. EU 143 (e)"
+    VATEX-EU-143-1F:
+        label: "Art. EU 143 (f) - Diplomatic/consular imports"
+        excerpt: "Art. EU 143 (f)"
+    VATEX-EU-143-1FA:
+        label: "Art. EU 143 (fa) - Imports by EU institutions"
+        excerpt: "Art. EU 143 (fa)"
+    VATEX-EU-143-1G:
+        label: "Art. EU 143 (g) - Imports by international bodies"
+        excerpt: "Art. EU 143 (g)"
+    VATEX-EU-143-1H:
+        label: "Art. EU 143 (h) - Imports for NATO forces (other States)"
+        excerpt: "Art. EU 143 (h)"
+    VATEX-EU-143-1I:
+        label: "Art. EU 143 (i) - Imports for UK forces in Cyprus"
+        excerpt: "Art. EU 143 (i)"
+    VATEX-EU-143-1J:
+        label: "Art. EU 143 (j) - Imports of fishing catches"
+        excerpt: "Art. EU 143 (j)"
+    VATEX-EU-143-1K:
+        label: "Art. EU 143 (k) - Gold imports by central banks"
+        excerpt: "Art. EU 143 (k)"
+    VATEX-EU-143-1L:
+        label: "Art. EU 143 (l) - Import of gas, electricity, heat, cooling"
+        excerpt: "Art. EU 143 (l)"
+    VATEX-EU-144:
+        label: "Art. EU 144 - Exempt services linked to import"
+        excerpt: "Art. EU 144"
+    VATEX-EU-146-1E:
+        label: "Art. EU 146 (e) - Exempt services linked to export"
+        excerpt: "Art. EU 146 (e)"
+    VATEX-EU-148:
+        label: "Art EU 148 - International transport"
+        excerpt: "Art. EU 148"
+    VATEX-EU-148-A:
+        label: "Art EU 148 (a) - Fuel for commercial vessels (int.)"
+        excerpt: "Art. EU 148 (a)"
+    VATEX-EU-148-B:
+        label: "Art EU 148 (b) - Fuel for military ships (int.)"
+        excerpt: "Art. EU 148 (b)"
+    VATEX-EU-148-C:
+        label: "Art EU 148 (c) - Ships: maintenance, leasing, hire"
+        excerpt: "Art. EU 148 (c)"
+    VATEX-EU-148-D:
+        label: "Art EU 148 (d) - Other services for international vessels"
+        excerpt: "Art. EU 148 (d)"
+    VATEX-EU-148-E:
+        label: "Art EU 148 (e) - Fuel for aircraft (int. routes)"
+        excerpt: "Art. EU 148 (e)"
+    VATEX-EU-148-F:
+        label: "Art EU 148 (f) - Aircraft: maintenance, leasing, hire"
+        excerpt: "Art. EU 148 (f)"
+    VATEX-EU-148-G:
+        label: "Art EU 148 (g) - Other services for international aircraft"
+        excerpt: "Art. EU 148 (g)"
+    VATEX-EU-151:
+        label: "Art. EU 151 - Transactions treated as exports"
+        excerpt: "Art. EU 151"
+    VATEX-EU-151-1A:
+        label: "Art. EU 151 (a) - Diplomatic/consular supplies"
+        excerpt: "Art. EU 151 (a)"
+    VATEX-EU-151-1AA:
+        label: "Art. EU 151 (aa) - Supplies to EU institutions"
+        excerpt: "Art. EU 151 (aa)"
+    VATEX-EU-151-1B:
+        label: "Art. EU 151 (b) - Supplies to international bodies"
+        excerpt: "Art. EU 151 (b)"
+    VATEX-EU-151-1C:
+        label: "Art. EU 151 (c) - Supplies to NATO forces"
+        excerpt: "Art. EU 151 (c)"
+    VATEX-EU-151-1D:
+        label: "Art. EU 151 (d) - Supplies to NATO forces"
+        excerpt: "Art. EU 151 (d)"
+    VATEX-EU-151-1E:
+        label: "Art. EU 151 (e) - Supplies to UK forces in Cyprus"
+        excerpt: "Art. EU 151 (e)"
+    VATEX-EU-153:
+        label: "Art. EU 153"
+        excerpt: "Art. EU 153"
+    VATEX-EU-159:
+        label: "Art. EU 159 - Services for customs/storage regimes"
+        excerpt: "Art. EU 159"
+    VATEX-EU-309:
+        label: "Art. EU 309 - Travel services outside EU"
+        excerpt: "Art. EU 309"
+    VATEX-EU-AE:
+        label: "Reverse charge"
+        excerpt: "Reverse charge"
+    VATEX-EU-G:
+        label: "Export outside the EU"
+        excerpt: "Export outside the EU"
+    VATEX-EU-IC:
+        label: "Intra-Community supply"
+        excerpt: "Intra-Com. supply"
+    VATEX-EU-O:
+        label: "Out of VAT scope"
+        excerpt: "Out of VAT scope"
+    VATEX-FR-FRANCHISE:
+        label: "Art. 293 B of CGI - Base franchise"
+        excerpt: "Art. 293 B of CGI"
+    VATEX-FR-CNWVAT:
+        label: "Credit note without VAT"
+        excerpt: "Credit note without VAT"
+    VATEX-FR-CGI261-1:
+        label: "Art. 261, 1 of CGI - Operations subject to other taxes"
+        excerpt: "Art. 261, 1 of CGI"
+    VATEX-FR-CGI261-2:
+        label: "Art. 261, 2 of CGI - Agricultural and fisheries activities"
+        excerpt: "Art. 261, 2 of CGI"
+    VATEX-FR-CGI261-3:
+        label: "Art. 261, 3 of CGI - Sales of used goods"
+        excerpt: "Art. 261, 3 of CGI"
+    VATEX-FR-CGI261-4:
+        label: "Art. 261, 4 of CGI - Activities of the professions and various activities"
+        excerpt: "Art. 261, 4 of CGI"
+    VATEX-FR-CGI261-5:
+        label: "Art. 261, 5 of CGI - Real-estate operations"
+        excerpt: "Art. 261, 5 of CGI"
+    VATEX-FR-CGI261-7:
+        label: "Art. 261, 7 of CGI - Non-profit organizations operations"
+        excerpt: "Art. 261, 7 of CGI"
+    VATEX-FR-CGI261-8:
+        label: "Art. 261, 8 of CGI - Goods/services linked to an EU-area disaster"
+        excerpt: "Art. 261, 8 of CGI"
+    VATEX-FR-CGI261A:
+        label: "Art. 261 A of CGI - Free-of-charge provision of property by legal entities"
+        excerpt: "Art. 261 A of CGI"
+    VATEX-FR-CGI261B:
+        label: "Art. 261 B of CGI - Member services by groups carrying out exempt activities"
+        excerpt: "Art. 261 B of CGI"
+    VATEX-FR-CGI261C-1:
+        label: "Art. 261 C, 1° of CGI - Banking and financial transactions"
+        excerpt: "Art. 261 C, 1° of CGI"
+    VATEX-FR-CGI261C-2:
+        label: "Art. 261 C, 2° of CGI - Insurance/reinsurance transactions and related services"
+        excerpt: "Art. 261 C, 2° of CGI"
+    VATEX-FR-CGI261C-3:
+        label: "Art. 261 C, 3° of CGI - Sale of fiscal and postage stamps at their official value"
+        excerpt: "Art. 261 C, 3° of CGI"
+    VATEX-FR-CGI261D-1:
+        label: "Art. 261 D, 1° of CGI - Rentals of land and buildings for agricultural use"
+        excerpt: "Art. 261 D, 1° of CGI"
+    VATEX-FR-CGI261D-1BIS:
+        label: "Art. 261 D, 1° bis of CGI - Leases of immovable property conferring a right in rem"
+        excerpt: "Art. 261 D, 1° bis of CGI"
+    VATEX-FR-CGI261D-2:
+        label: "Art. 261 D, 2° of CGI - Leases of undeveloped land or bare premises"
+        excerpt: "Art. 261 D, 2° of CGI"
+    VATEX-FR-CGI261D-3:
+        label: "Art. 261 D, 3° of CGI - Rights/leases relating to real-estate portfolio management"
+        excerpt: "Art. 261 D, 3° of CGI"
+    VATEX-FR-CGI261D-4:
+        label: "Art. 261 D, 4° of CGI - Rentals of furnished accommodation for residential use"
+        excerpt: "Art. 261 D, 4° of CGI"
+    VATEX-FR-CGI261E-1:
+        label: "Art. 261 E, 1° of CGI - Organisation of games of chance subject to levies"
+        excerpt: "Art. 261 E, 1° of CGI"
+    VATEX-FR-CGI261E-2:
+        label: "Art. 261 E, 2° of CGI - Proceeds from lotteries, horse/sports betting and online circle games"
+        excerpt: "Art. 261 E, 2° of CGI"
+    VATEX-FR-CGI277A:
+        label: "Art. 277 A of CGI - VAT suspensive scheme"
+        excerpt: "Art. 277 A of CGI"
+    VATEX-FR-CGI275:
+        label: "Art. 275 of CGI - VAT-free purchases of goods intended for export or exempt supplies"
+        excerpt: "Art. 275 of CGI"
+    VATEX-FR-298SEXDECIESA:
+        label: "Art. 298 sexdecies A of CGI - Investment gold"
+        excerpt: "Art. 298 sexdecies A of CGI"
+    VATEX-FR-CGI295:
+        label: "Art. 295 of CGI - French territories under Arts. 349 and 355(1) TFEU"
+        excerpt: "Art. 295 of CGI"
+    VATEX-FR-AE:
+        label: "Reverse charge, art. 283-2 of CGI"
+        excerpt: "Art. 283-2 of CGI"
+    CUSTOM-FR-G-SERVICE:
+        label: "VAT not applicable, art. 259-1 du CGI"
+        excerpt: "Art. 259-1 du CGI"
+    CUSTOM-FR-DROM:
+        label: "Delivery to the French overseas territories, art. 294 du CGI"
+        excerpt: "Art. 294 du CGI"
+    CUSTOM-BE-FRANCHISE:
+        label: "Special small-enterprise exemption scheme"
+        excerpt: "Small-enterprise exemption"
+    CUSTOM-BE-AE:
+        label: "Co-contractor / Reverse charge – AR CTVA n° 1, article 20"
+        excerpt: "AR CTVA n° 1, art. 20"

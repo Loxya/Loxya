@@ -4,22 +4,30 @@ exports[`Parks Api all() parse the returned data correctly 1`] = `
 {
   "data": [
     {
-      "country_id": 1,
+      "additional_street": "Hangar 951",
+      "address": "10 rue des canaux
+Hangar 951
+01234 Secretville",
+      "administrative_area": null,
+      "country": /* Country Instance => */ "FR",
       "id": 1,
       "locality": "Secretville",
-      "name": "default",
+      "name": "Défaut",
       "note": null,
       "opening_hours": "Du lundi au vendredi, de 09:00 à 19:00.",
       "postal_code": "01234",
-      "street": "Hangar 951",
+      "street": "10 rue des canaux",
       "total_items": 7,
       "total_stock_quantity": 87,
     },
     {
-      "country_id": null,
+      "additional_street": null,
+      "address": null,
+      "administrative_area": null,
+      "country": /* Country Instance => */ "FR",
       "id": 2,
       "locality": null,
-      "name": "spare",
+      "name": "Spare",
       "note": "Les bidouilles de fond de tiroir",
       "opening_hours": null,
       "postal_code": null,
@@ -41,15 +49,20 @@ exports[`Parks Api all() parse the returned data correctly 1`] = `
 
 exports[`Parks Api create() parse the returned data correctly (with #1) 1`] = `
 {
-  "country_id": 1,
+  "additional_street": "Hangar 951",
+  "address": "10 rue des canaux
+Hangar 951
+01234 Secretville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 1,
   "locality": "Secretville",
-  "name": "default",
+  "name": "Défaut",
   "note": null,
   "opening_hours": "Du lundi au vendredi, de 09:00 à 19:00.",
   "postal_code": "01234",
-  "street": "Hangar 951",
+  "street": "10 rue des canaux",
   "total_items": 7,
   "total_stock_quantity": 87,
 }
@@ -57,11 +70,14 @@ exports[`Parks Api create() parse the returned data correctly (with #1) 1`] = `
 
 exports[`Parks Api create() parse the returned data correctly (with #2) 1`] = `
 {
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 2,
   "locality": null,
-  "name": "spare",
+  "name": "Spare",
   "note": "Les bidouilles de fond de tiroir",
   "opening_hours": null,
   "postal_code": null,
@@ -75,11 +91,11 @@ exports[`Parks Api list() parse the returned data correctly 1`] = `
 [
   {
     "id": 1,
-    "name": "default",
+    "name": "Défaut",
   },
   {
     "id": 2,
-    "name": "spare",
+    "name": "Spare",
   },
 ]
 `;
@@ -96,6 +112,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Console Yamaha CL3",
     "note": null,
+    "origin_country": /* Country Instance => */ "CH",
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": "http://loxya.test/materials/1/picture",
@@ -146,6 +163,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     ],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:00:00",
+    "weight": /* Decimal Instance => */ "24.5",
   },
   {
     "category_id": 1,
@@ -157,6 +175,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Processeur DBX PA2",
     "note": null,
+    "origin_country": /* Country Instance => */ "CH",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -197,6 +216,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     ],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "weight": /* Decimal Instance => */ "6.4",
   },
   {
     "category_id": 2,
@@ -208,6 +228,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "PAR64 LED",
     "note": "Soyez délicats avec ces projos !",
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 4,
     "park_id": 1,
     "picture": null,
@@ -248,6 +269,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     ],
     "tax_id": null,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:02:00",
+    "weight": /* Decimal Instance => */ "1.2",
   },
   {
     "category_id": 2,
@@ -259,6 +281,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Showtec SDS-6",
     "note": null,
+    "origin_country": /* Country Instance => */ "BE",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -303,6 +326,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:03:00",
+    "weight": /* Decimal Instance => */ "3",
   },
   {
     "category_id": 1,
@@ -314,6 +338,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": true,
     "name": "Câble XLR 10m",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 8,
     "park_id": 1,
     "picture": null,
@@ -326,6 +351,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": 2,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:14:00",
+    "weight": /* Decimal Instance => */ "0.35",
   },
   {
     "category_id": 1,
@@ -337,6 +363,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Behringer X Air XR18",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 1,
     "park_id": 1,
     "picture": null,
@@ -384,6 +411,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:15:00",
+    "weight": /* Decimal Instance => */ "4.8",
   },
   {
     "category_id": 3,
@@ -395,6 +423,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Volkswagen Transporter",
     "note": null,
+    "origin_country": null,
     "out_of_order_quantity": 0,
     "park_id": 2,
     "picture": null,
@@ -422,6 +451,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "tags": [],
     "tax_id": null,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:16:00",
+    "weight": null,
   },
   {
     "category_id": 4,
@@ -433,6 +463,7 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "is_hidden_on_bill": false,
     "name": "Décor Thème Forêt",
     "note": null,
+    "origin_country": /* Country Instance => */ "FR",
     "out_of_order_quantity": 0,
     "park_id": 1,
     "picture": null,
@@ -458,23 +489,29 @@ exports[`Parks Api materials() parse the returned data correctly 1`] = `
     "stock_quantity": 2,
     "sub_category_id": null,
     "tags": [],
-    "tax_id": 4,
+    "tax_id": 1,
     "updated_at": /* DateTime Instance => */ "2021-02-12 23:18:00",
+    "weight": null,
   },
 ]
 `;
 
 exports[`Parks Api one() parse the returned data correctly (with #1) 1`] = `
 {
-  "country_id": 1,
+  "additional_street": "Hangar 951",
+  "address": "10 rue des canaux
+Hangar 951
+01234 Secretville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 1,
   "locality": "Secretville",
-  "name": "default",
+  "name": "Défaut",
   "note": null,
   "opening_hours": "Du lundi au vendredi, de 09:00 à 19:00.",
   "postal_code": "01234",
-  "street": "Hangar 951",
+  "street": "10 rue des canaux",
   "total_items": 7,
   "total_stock_quantity": 87,
 }
@@ -482,11 +519,14 @@ exports[`Parks Api one() parse the returned data correctly (with #1) 1`] = `
 
 exports[`Parks Api one() parse the returned data correctly (with #2) 1`] = `
 {
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 2,
   "locality": null,
-  "name": "spare",
+  "name": "Spare",
   "note": "Les bidouilles de fond de tiroir",
   "opening_hours": null,
   "postal_code": null,
@@ -498,15 +538,20 @@ exports[`Parks Api one() parse the returned data correctly (with #2) 1`] = `
 
 exports[`Parks Api restore() parse the returned data correctly (with #1) 1`] = `
 {
-  "country_id": 1,
+  "additional_street": "Hangar 951",
+  "address": "10 rue des canaux
+Hangar 951
+01234 Secretville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 1,
   "locality": "Secretville",
-  "name": "default",
+  "name": "Défaut",
   "note": null,
   "opening_hours": "Du lundi au vendredi, de 09:00 à 19:00.",
   "postal_code": "01234",
-  "street": "Hangar 951",
+  "street": "10 rue des canaux",
   "total_items": 7,
   "total_stock_quantity": 87,
 }
@@ -514,11 +559,14 @@ exports[`Parks Api restore() parse the returned data correctly (with #1) 1`] = `
 
 exports[`Parks Api restore() parse the returned data correctly (with #2) 1`] = `
 {
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 2,
   "locality": null,
-  "name": "spare",
+  "name": "Spare",
   "note": "Les bidouilles de fond de tiroir",
   "opening_hours": null,
   "postal_code": null,
@@ -530,15 +578,20 @@ exports[`Parks Api restore() parse the returned data correctly (with #2) 1`] = `
 
 exports[`Parks Api update() parse the returned data correctly (with #1) 1`] = `
 {
-  "country_id": 1,
+  "additional_street": "Hangar 951",
+  "address": "10 rue des canaux
+Hangar 951
+01234 Secretville",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 1,
   "locality": "Secretville",
-  "name": "default",
+  "name": "Défaut",
   "note": null,
   "opening_hours": "Du lundi au vendredi, de 09:00 à 19:00.",
   "postal_code": "01234",
-  "street": "Hangar 951",
+  "street": "10 rue des canaux",
   "total_items": 7,
   "total_stock_quantity": 87,
 }
@@ -546,11 +599,14 @@ exports[`Parks Api update() parse the returned data correctly (with #1) 1`] = `
 
 exports[`Parks Api update() parse the returned data correctly (with #2) 1`] = `
 {
-  "country_id": null,
+  "additional_street": null,
+  "address": null,
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "has_ongoing_booking": false,
   "id": 2,
   "locality": null,
-  "name": "spare",
+  "name": "Spare",
   "note": "Les bidouilles de fond de tiroir",
   "opening_hours": null,
   "postal_code": null,

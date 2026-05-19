@@ -1,5 +1,4 @@
 import './index.scss';
-import pick from 'lodash/pick';
 import Period from '@/utils/period';
 import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
@@ -12,24 +11,21 @@ import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import { confirm } from '@/utils/alert';
 import isTruthy from '@/utils/isTruthy';
 import formatAmount from '@/utils/formatAmount';
-import showModal from '@/utils/showModal';
 import apiMaterials from '@/stores/api/materials';
 import MaterialPopover from '@/themes/default/components/Popover/Material';
 import Fragment from '@/components/Fragment';
 import Dropdown from '@/themes/default/components/Dropdown';
 import Page from '@/themes/default/components/Page';
 import CriticalError from '@/themes/default/components/CriticalError';
-import { ServerTable, getLegacySavedSearch } from '@/themes/default/components/Table';
+import { ServerTable } from '@/themes/default/components/Table';
 import Button from '@/themes/default/components/Button';
 import Icon from '@/themes/default/components/Icon';
 import TagsList from '@/themes/default/components/TagsList';
 import { Group } from '@/stores/api/groups';
+import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import Quantities from './components/Quantities';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
-import {
-    convertFiltersToRouteQuery,
-    getFiltersFromRoute,
-} from './_utils';
+import { getFiltersFromRoute } from './_utils';
 import {
     persistFilters,
     getPersistedFilters,
@@ -40,13 +36,15 @@ import {
 import AssignTags from '@/themes/default/modals/AssignTags';
 
 import type { DebouncedMethod } from 'lodash';
+import type { CreateElement, Raw } from 'vue';
+import type { SerializedPeriod } from '@/utils/period';
 import type { Filters } from './components/Filters';
-import type { ComponentRef, CreateElement, Raw } from 'vue';
 import type { PaginationParams, SortableParams } from '@/stores/api/@types';
-import type { Columns } from '@/themes/default/components/Table/Server';
+import type { Columns, ServerTableRef } from '@/themes/default/components/Table/Server';
 import type { MaterialWithAvailability as Material } from '@/stores/api/materials';
 import type { Session } from '@/stores/api/session';
 import type { Tag } from '@/stores/api/tags';
+import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type InstanceProperties = {
     nowTimer: ReturnType<typeof setInterval> | undefined,
@@ -58,8 +56,10 @@ type InstanceProperties = {
 
 type Data = {
     filters: Filters,
+    appliedFilters: Filters,
     isLoading: boolean,
-    hasMaterial: boolean,
+    isFetched: boolean,
+    isEmpty: boolean,
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
@@ -88,6 +88,7 @@ const Materials = defineComponent({
             tags: [],
             ...urlFilters,
         };
+        let quantitiesPeriodRaw: Raw<Period> | null = null;
 
         // - Filtres sauvegardés.
         const session = this.$store.state.auth.user as Session;
@@ -95,15 +96,14 @@ const Materials = defineComponent({
             if (urlFilters === undefined) {
                 const savedFilters = getPersistedFilters(FILTERS_PERSISTENCE_KEY, FiltersSchema);
                 if (savedFilters !== null) {
-                    Object.assign(filters, savedFilters);
-                } else {
-                    // - Ancienne sauvegarde éventuelle, dans le component `<Table />`.
-                    const savedSearchLegacy = this.$options.name
-                        ? getLegacySavedSearch(this.$options.name)
-                        : null;
+                    const { quantitiesPeriod: savedQuantitiesPeriodRaw, ...savedFilterFields } = savedFilters;
+                    Object.assign(filters, savedFilterFields);
 
-                    if (savedSearchLegacy !== null) {
-                        Object.assign(filters, { search: [savedSearchLegacy] });
+                    if (savedQuantitiesPeriodRaw !== undefined) {
+                        const savedQuantitiesPeriod = Period.tryFrom(savedQuantitiesPeriodRaw);
+                        if (savedQuantitiesPeriod !== null) {
+                            quantitiesPeriodRaw = markRaw(savedQuantitiesPeriod);
+                        }
                     }
                 }
             }
@@ -114,22 +114,19 @@ const Materials = defineComponent({
         }
 
         return {
+            filters,
+            appliedFilters: { ...filters },
             isLoading: false,
+            isFetched: false,
+            isEmpty: false,
             hasCriticalError: false,
-            hasMaterial: false,
             isTrashDisplayed: false,
             shouldDisplayTrashed: false,
-            quantitiesPeriodRaw: null,
+            quantitiesPeriodRaw,
             now: markRaw(DateTime.now()),
-            filters,
         };
     },
     computed: {
-        shouldPersistSearch(): boolean {
-            const session = this.$store.state.auth.user as Session;
-            return !session.disable_search_persistence;
-        },
-
         title(): string {
             const { $t: __, isTrashDisplayed } = this;
 
@@ -154,6 +151,28 @@ const Materials = defineComponent({
             return this.quantitiesPeriodRaw;
         },
 
+        hasActiveFilters(): boolean {
+            const { appliedFilters } = this;
+            return (
+                appliedFilters.search.length > 0 ||
+                appliedFilters.park !== null ||
+                appliedFilters.category !== null ||
+                appliedFilters.subCategory !== null ||
+                appliedFilters.tags.length > 0
+            );
+        },
+
+        hasContent(): boolean {
+            if (this.isTrashDisplayed) {
+                return true;
+            }
+
+            return (
+                this.isFetched &&
+                (!this.isEmpty || this.hasActiveFilters)
+            );
+        },
+
         columns(): Columns<Material> {
             const isBillingEnabled = config.billingMode !== BillingMode.NONE;
             const {
@@ -171,6 +190,7 @@ const Materials = defineComponent({
                     title: __('reference'),
                     class: 'Materials__cell Materials__cell--ref',
                     sortable: true,
+                    defaultHidden: true,
                     render: (h: CreateElement, material: Material) => (
                         <MaterialPopover material={material}>
                             {material.reference}
@@ -184,7 +204,14 @@ const Materials = defineComponent({
                     sortable: true,
                     render: (h: CreateElement, material: Material) => (
                         <MaterialPopover material={material}>
-                            {material.name}
+                            <span class="Materials__item__name">
+                                <span class="Materials__item__name__name">
+                                    {material.name}
+                                </span>
+                                <span class="Materials__item__name__reference">
+                                    {__('ref-ref', { reference: material.reference })}
+                                </span>
+                            </span>
                         </MaterialPopover>
                     ),
                 },
@@ -376,35 +403,23 @@ const Materials = defineComponent({
     },
     watch: {
         quantitiesPeriod() {
-            this.refreshTable();
+            this.refreshTable(true);
         },
 
         filters: {
-            handler(newFilters: Filters, prevFilters: Filters | undefined) {
+            handler(_: Filters, prevFilters: Filters | undefined) {
                 if (prevFilters !== undefined) {
                     this.refreshTableDebounced!();
                 }
-
-                // - Persistance dans le local storage.
-                if (this.shouldPersistSearch) {
-                    persistFilters(FILTERS_PERSISTENCE_KEY, newFilters);
-                }
-
-                // - Mise à jour de l'URL.
-                const prevRouteQuery = this.$route?.query ?? {};
-                const newRouteQuery = convertFiltersToRouteQuery(newFilters);
-                if (!isEqual(prevRouteQuery, newRouteQuery)) {
-                    this.$router.replace({ query: newRouteQuery });
-                }
+                this.persistState();
             },
             deep: true,
             immediate: true,
         },
 
-        // $route(newRoute: Route) {
-        //     // TODO: Si les filtres récupérés depuis l'url sont différents de ceux dans le state
-        //     //       => On reset les filtres en fonction des nouveaux (ou du local storage si vide) => Comme au boot normal.
-        // },
+        quantitiesPeriodRaw() {
+            this.persistState();
+        },
     },
     created() {
         this.$store.dispatch('parks/fetch');
@@ -423,6 +438,11 @@ const Materials = defineComponent({
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
         this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
+
+        // - On redirige vers l'url canonique si on avait des filtres dans l'URL.
+        if (Object.keys(this.$route?.query ?? {}).length > 0) {
+            this.$router.replace({ query: {} });
+        }
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
@@ -546,7 +566,7 @@ const Materials = defineComponent({
                     return;
                 }
 
-                showModal(this.$modal, AssignTags, {
+                this.$modal.show(AssignTags, {
                     name,
                     defaultTags: tags,
                     persister: (newTags: Array<Tag['id']>) => (
@@ -576,7 +596,7 @@ const Materials = defineComponent({
                 return;
             }
 
-            const $table = this.$refs.table as ComponentRef<typeof ServerTable>;
+            const $table = this.$refs.table as ServerTableRef;
             $table?.showColumnsSelector();
         },
 
@@ -587,10 +607,11 @@ const Materials = defineComponent({
         // ------------------------------------------------------
 
         async fetch(pagination: PaginationParams & SortableParams) {
-            pagination = pick(pagination, ['page', 'limit', 'ascending', 'orderBy']);
             this.isLoading = true;
 
             const { quantitiesPeriod, filters: rawFilters } = this;
+            this.appliedFilters = { ...rawFilters };
+
             const filters = { ...rawFilters, quantitiesPeriod };
 
             try {
@@ -600,8 +621,10 @@ const Materials = defineComponent({
                     ...filters,
                     onlyDeleted: this.shouldDisplayTrashed,
                 });
+
+                this.isFetched = true;
                 this.isTrashDisplayed = this.shouldDisplayTrashed;
-                this.hasMaterial = data.pagination.total.items > 0;
+                this.isEmpty = data.pagination.total.items <= 0;
                 return data;
             } catch (error) {
                 if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
@@ -619,10 +642,28 @@ const Materials = defineComponent({
             return undefined;
         },
 
-        refreshTable() {
+        refreshTable(pageOnly: boolean = false) {
             this.refreshTableDebounced?.cancel();
 
-            (this.$refs.table as ComponentRef<typeof ServerTable>)?.refresh();
+            (this.$refs.table as ServerTableRef)?.refresh(pageOnly);
+        },
+
+        persistState() {
+            const session = this.$store.state.auth.user as Session;
+            if (session.disable_search_persistence) {
+                return;
+            }
+
+            const persistedQuantitiesPeriod: SerializedPeriod | undefined = (
+                this.quantitiesPeriodRaw !== null
+                    ? this.quantitiesPeriodRaw.toSerialized()
+                    : undefined
+            );
+
+            persistFilters(FILTERS_PERSISTENCE_KEY, {
+                ...this.filters,
+                quantitiesPeriod: persistedQuantitiesPeriod,
+            });
         },
     },
     render() {
@@ -634,12 +675,13 @@ const Materials = defineComponent({
             hasCriticalError,
             isAdmin,
             isSupervisor,
-            hasMaterial,
+            hasContent,
             isLoading,
             filters,
             columns,
             isTrashDisplayed,
             quantitiesPeriod,
+            hasActiveFilters,
             handleFiltersChange,
             handleQuantitiesPeriodChange,
             handleFiltersSubmit,
@@ -672,7 +714,6 @@ const Materials = defineComponent({
                         <ServerTable
                             ref="table"
                             key="trash"
-                            rowClass="Materials__row"
                             columns={columns}
                             fetcher={fetch}
                         />
@@ -682,7 +723,7 @@ const Materials = defineComponent({
         }
 
         const actions = [
-            <Button type="add" to={{ name: 'add-material' }} icon="plus" collapsible>
+            <Button type="primary" to={{ name: 'add-material' }} icon="plus" collapsible>
                 {__('page.materials.action-add')}
             </Button>,
             <Dropdown>
@@ -694,7 +735,7 @@ const Materials = defineComponent({
                         >
                             {__('page.materials.manage-properties')}
                         </Button>
-                        {(isAdmin && hasMaterial) && (
+                        {(isAdmin && hasContent) && (
                             <Fragment>
                                 <Button
                                     icon="print"
@@ -707,14 +748,31 @@ const Materials = defineComponent({
                         )}
                     </Fragment>
                 )}
-                <Button icon="table" onClick={handleConfigureColumns}>
-                    {__('configure-columns')}
-                </Button>
+                {hasContent && (
+                    <Button icon="table" onClick={handleConfigureColumns}>
+                        {__('configure-columns')}
+                    </Button>
+                )}
                 <Button icon="trash" onClick={handleToggleShowTrashed}>
                     {__('open-trash-bin')}
                 </Button>
             </Dropdown>,
         ].filter(isTruthy);
+
+        // - Message à afficher lorsque le tableau est vide.
+        const emptyMessage: EmptyMessage = (
+            hasActiveFilters
+                ? { variant: EmptyMessageVariant.NO_RESULTS }
+                : {
+                    text: __('page.materials.empty'),
+                    action: {
+                        type: 'primary',
+                        icon: 'plus',
+                        label: __('page.materials.action-add'),
+                        target: { name: 'add-material' },
+                    },
+                }
+        );
 
         return (
             <Page
@@ -723,15 +781,20 @@ const Materials = defineComponent({
                 actions={actions}
                 loading={isLoading}
                 scopedSlots={{
-                    headerContent: (): JSX.Node => (
-                        <FiltersPanel
-                            values={filters}
-                            quantitiesPeriodValue={quantitiesPeriod}
-                            onSubmit={handleFiltersSubmit}
-                            onFiltersChange={handleFiltersChange}
-                            onQuantitiesPeriodChange={handleQuantitiesPeriodChange}
-                        />
-                    ),
+                    headerContent: (): JSX.Node => {
+                        if (!hasContent) {
+                            return null;
+                        }
+                        return (
+                            <FiltersPanel
+                                values={filters}
+                                quantitiesPeriodValue={quantitiesPeriod}
+                                onSubmit={handleFiltersSubmit}
+                                onFiltersChange={handleFiltersChange}
+                                onQuantitiesPeriodChange={handleQuantitiesPeriodChange}
+                            />
+                        );
+                    },
                 }}
             >
                 <div class="Materials">
@@ -739,10 +802,11 @@ const Materials = defineComponent({
                         ref="table"
                         key="default"
                         name={$options.name}
-                        rowClass="Materials__row"
                         columns={columns}
                         fetcher={fetch}
+                        emptyMessage={emptyMessage}
                         onRowClick={handleRowClick}
+                        sticky
                     />
                 </div>
             </Page>

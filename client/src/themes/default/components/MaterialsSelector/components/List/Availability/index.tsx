@@ -48,6 +48,7 @@ const MaterialsSelectorListAvailability = defineComponent({
         const { __, availability } = this;
         const classNames = ['MaterialsSelectorListAvailability', {
             'MaterialsSelectorListAvailability--warning': availability.stock === 0,
+            'MaterialsSelectorListAvailability--danger': availability.surplus > 0,
         }];
 
         return (

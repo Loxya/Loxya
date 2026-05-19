@@ -110,7 +110,7 @@ const InputImage = defineComponent({
             const { type, size } = file;
             const { $t: __ } = this;
 
-            if (!config.authorizedImageTypes.includes(type)) {
+            if (!config.allowedImageTypes.includes(type)) {
                 this.$toasted.error(__('errors.file-not-a-valid-image'));
                 return;
             }

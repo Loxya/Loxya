@@ -4,10 +4,14 @@
 .Tabs {
     display: flex;
     flex-direction: column;
+    overflow: auto;
     height: 100%;
+    gap: $panel-margin-top;
 
     &__header {
+        flex: 0 0 auto;
         display: flex;
+        overflow: auto hidden;
         margin: 0;
         padding: 0;
         border-bottom: 1px solid $header-border-color;
@@ -23,6 +27,7 @@
 
     &__panel {
         flex: 1;
-        margin-top: $panel-margin-top;
+        overflow: auto;
+        height: 100%;
     }
 }

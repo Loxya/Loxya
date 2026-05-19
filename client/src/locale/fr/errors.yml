@@ -1,6 +1,9 @@
-unexpected: "Une erreur inattendue s'est produite, veuillez ré-essayer."
+unexpected: >-
+    Une erreur inattendue s'est produite, veuillez ré-essayer.
 unexpected-while-saving: >-
     Une erreur inattendue s'est produite lors de l'enregistrement, veuillez ré-essayer.
+unexpected-while-creating: >-
+    Une erreur inattendue s'est produite lors de la création, veuillez ré-essayer.
 unexpected-while-submitting: >-
     Une erreur inattendue s'est produite lors de la soumission, veuillez ré-essayer.
 unexpected-while-deleting: >-
@@ -11,6 +14,8 @@ unexpected-while-calculating: >-
     Une erreur inattendue s'est produite lors du calcul, veuillez ré-essayer.
 unexpected-while-selecting: >-
     Une erreur inattendue s'est produite lors de la sélection, veuillez ré-essayer.
+unexpected-while-generating: >-
+    Une erreur inattendue s'est produite lors de la génération, veuillez ré-essayer.
 unexpected-while-fetching: >-
     Une erreur inattendue s'est produite lors de la récupération des données.
 api-unreachable: >-

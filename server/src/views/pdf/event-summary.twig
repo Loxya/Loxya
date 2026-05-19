@@ -1,4 +1,4 @@
-{% extends 'pdf/base.twig' %}
+{% extends 'pdf/document-live.twig' %}
 
 {% block title %}{{ __('release-sheet') }}{% endblock %}
 
@@ -7,8 +7,8 @@
     <tr>
         <td class="half">
             {{-
-                include('blocks/company-address.twig', {
-                    company,
+                include('blocks/organization.twig', {
+                    organization,
                     showLegalNumbers,
                     showLogo: true,
                 })
@@ -19,6 +19,12 @@
                 <p class="spaceBottom2 size10">{{ event.manager.email }}</p>
                 {%- endif -%}
             {%- endif -%}
+            {%- if isFeatureEnabled(enum('Loxya\\Config\\Enums\\Feature').TECHNICIANS) and event.preparer -%}
+                <h3 class="spaceBottom1">{{ __('preparer', event.preparer.full_name) }}</h3>
+                {%~ if event.preparer.email -%}
+                <p class="spaceBottom2 size10">{{ event.preparer.email }}</p>
+                {%- endif -%}
+            {%- endif ~%}
         </td>
         <td class="half">
             <h1 class="box center spaceBottom5">{{ __('release-sheet') }}</h1>
@@ -30,10 +36,13 @@
                     <td class="third">
                         <h3>{{ __('beneficiary') }}</h3>
                     </td>
-                    <td>
-                        <p class="size12 spaceBottom5">
-                            {{- include('blocks/beneficiary.twig', { beneficiary: beneficiaries[0] }) ~}}
-                        </p>
+                    <td class="size12 spaceBottom5">
+                        {{-
+                            include('blocks/beneficiary.twig', {
+                                referenceCountry: organization.country,
+                                beneficiary: beneficiaries[0],
+                            })
+                        ~}}
                     </td>
                 </tr>
             </table>
@@ -59,7 +68,7 @@
             {%- if event.total_replacement ~%}
             <p class="lighter">
                 {{-
-                    __('total-replacement-amount', [
+                    __('total-replacement-amount-value', [
                         event.total_replacement|format_currency(event.currency, locale=locale),
                     ])
                 -}}
@@ -82,9 +91,9 @@
             <ul class="spaceBottom5">
                 {%- for technician in technicians ~%}
                 <li class="spaceBottom2">
-                    {{ technician['name'] }}
-                    {%- if technician['phone'] is not empty ~%}
-                    <span class="lighter"> - {{ technician['phone'] }}</span>
+                    {{ technician.name }}
+                    {%- if technician.phone is not empty ~%}
+                    <span class="lighter"> - {{ technician.phone|format_phone(technician.country) }}</span>
                     {%- endif ~%}
                     {%- for assignment in technician['assignments'] -%}
                     <br />
@@ -107,7 +116,12 @@
             <ul class="spaceBottom5">
                 {%- for otherBeneficiary in beneficiaries|slice(1) ~%}
                 <li class="spaceBottom2">
-                    {{- include('blocks/beneficiary.twig', { beneficiary: otherBeneficiary }) ~}}
+                    {{-
+                        include('blocks/beneficiary.twig', {
+                            referenceCountry: organization.country,
+                            beneficiary: otherBeneficiary,
+                        })
+                    ~}}
                 </li>
                 {%- endfor ~%}
             </ul>
@@ -127,10 +141,18 @@
 {{ include('blocks/materials/event-summary-by-parks.twig') }}
 {% endif %}
 
-{% if totalisableProperties is not empty %}
+{% if totalisableProperties is not empty or totalWeight is not empty %}
 <h2>{{ __('properties-totals') }}</h2>
 <table class="half spaceBottom5 size8">
     <tbody>
+        {% if totalWeight is not empty -%}
+        <tr>
+            <td>{{ __('weight') }}</td>
+            <td>
+                {{- totalWeight|format_number(locale=locale) }}&nbsp;{{ measurementUnits.materials.weight -}}
+            </td>
+        </tr>
+        {% endif -%}
         {% for property in totalisableProperties -%}
         <tr>
             <td>{{ property.name }}</td>
@@ -150,7 +172,7 @@
 </div>
 {% endif %}
 
-<table class="layout-table">
+<table class="layout-table signature-table">
     <tr>
         <td class="half inset">
             <h3 class="center">{{ __('output') }}</h3>

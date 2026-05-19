@@ -8,7 +8,6 @@ import EventDetails, { TabIndex as EventDetailsTab } from '@/themes/default/moda
 import CriticalError from '@/themes/default/components/CriticalError';
 import MonthCalendar from '@/themes/default/components/MonthCalendar';
 import Loading from '@/themes/default/components/Loading';
-import showModal from '@/utils/showModal';
 
 import type Color from '@/utils/color';
 import type { PropType, Raw } from 'vue';
@@ -121,9 +120,9 @@ const TechnicianViewSchedule = defineComponent({
                 return;
             }
 
-            showModal(this.$modal, EventDetails, {
+            this.$modal.show(EventDetails, {
                 id: assignment.event.id,
-                defaultTabIndex: EventDetailsTab.TECHNICIANS,
+                defaultTab: EventDetailsTab.TECHNICIANS,
                 onClose: () => { this.fetchData(); },
             });
         },

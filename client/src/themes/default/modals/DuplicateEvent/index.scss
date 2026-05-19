@@ -7,6 +7,7 @@
         padding: 0.7rem 1rem;
         background-color: globals.$bg-color-emphasis;
         gap: 10px;
+        user-select: none;
 
         &__title {
             flex: 1;
@@ -39,7 +40,7 @@
     &__footer {
         display: flex;
         justify-content: center;
-        padding: 1.5rem  globals.$spacing-large;
+        padding: 1.5rem globals.$spacing-large;
         background-color: rgb(0 0 0 / 10%);
         gap: globals.$spacing-small;
     }

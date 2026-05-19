@@ -27,6 +27,14 @@ type Props = {
 
     /** Doit-on afficher les informations liées à la facturation ? */
     withBilling: boolean,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param event - L'événement choisi (ou `null` si aucun n'a été sélectionné),
+     *                `undefined` si l'utilisateur a fermé sans aller au bout.
+     */
+    onClose?(event?: EventDetails | null): void,
 };
 
 type Data = {
@@ -39,8 +47,7 @@ const ImportFromEvent = defineComponent({
     name: 'ImportFromEvent',
     modal: {
         width: 700,
-        draggable: true,
-        clickToClose: true,
+        dismissible: true,
     },
     props: {
         bookable: {
@@ -54,6 +61,11 @@ const ImportFromEvent = defineComponent({
         withBilling: {
             type: Boolean as PropType<Required<Props>['withBilling']>,
             default: false,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
         },
     },
     emits: ['close'],

@@ -1,7 +1,8 @@
 import './index.scss';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, inject } from 'vue';
+import { DisabledKey } from '@/themes/default/components/@constants';
 
-import type { PropType } from 'vue';
+import type { Injected, PropType } from 'vue';
 
 type Props = {
     /**
@@ -47,15 +48,16 @@ type Props = {
     onChange?(newValue: string): void,
 };
 
+type InstanceProperties = {
+    injectedDisabled: Injected<typeof DisabledKey>,
+};
+
 /**
  * champ de saisie multi-ligne avec une
  * interface type "bloc-note".
  */
 const Notepad = defineComponent({
     name: 'Notepad',
-    inject: {
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -85,15 +87,15 @@ const Notepad = defineComponent({
         },
     },
     emits: ['input', 'change'],
+    setup: (): InstanceProperties => ({
+        injectedDisabled: inject(DisabledKey, computed(() => false)),
+    }),
     computed: {
         inheritedDisabled(): boolean {
             if (this.disabled !== undefined) {
                 return this.disabled;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
     },
     mounted() {

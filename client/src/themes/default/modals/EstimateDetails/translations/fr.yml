@@ -1,0 +1,87 @@
+title:
+    with-number: "Devis n°\_{number}"
+    without-number: "Devis du {date} à {hour}"
+
+confirm-delete: "Voulez-vous vraiment supprimer ce devis\_?"
+deleted: Le devis a bien été supprimé.
+
+confirm-finalize:
+    "La finalisation va générer le document officiel du devis.
+    Cette action est irréversible, voulez-vous continuer\_?"
+
+issue-date: Date d'émission
+validity: ["Valable {days} jour", "Valable {days} jours"]
+expiry-date:
+    fixed: Date d'échéance
+    delay: Validité
+
+actions:
+    create-invoice: Créer une facture depuis ce devis
+    finalize: Finaliser le devis
+    delete: Supprimer le devis
+
+related-invoices:
+    title: Factures liées
+    remaining: "Reste à facturer\_:"
+    item:
+        label:
+            invoice: "Facture n°\_{number}"
+            credit-note: "Avoir n°\_{number}"
+
+            draft:
+                invoice: "Facture du {date} à {hour}"
+                credit-note: "Avoir du {date} à {hour}"
+
+modals:
+    create-invoice:
+        title:
+            with-number: "Nouvelle facture à partir du devis n°\_{number}"
+            without-number: "Nouvelle facture à partir du devis du {date}"
+        action: Créer la facture
+        created: La facture a bien été créée.
+
+        confirm-no-draft:
+            prepayment:
+                "La facture d'acompte sera créée directement (sans passer par
+                l'étape brouillon). Voulez-vous continuer\_?"
+
+            balance:
+                "La facture sera créée directement (sans passer par l'étape
+                brouillon). Voulez-vous continuer\_?"
+
+        type-choice:
+            prepayment:
+                title: Facture d'acompte
+                description: Permet de facturer seulement une partie du montant du devis.
+            balance:
+                title: Facture de solde
+                description: "Permet de facturer le reste à payer ({amount}) directement."
+            direct:
+                title: Facture
+                description: Permet de facturer la totalité du montant du devis directement.
+
+        prepayment-input-mode:
+            percentage: Pourcentage du devis
+            amount: Montant fixe
+
+        fields:
+            percentage:
+                label: Pourcentage de l'acompte
+                help: "Max. {max}% du total du devis"
+            amount:
+                label: "Montant de l'acompte"
+                help: "Max. {max} (reste à facturer)"
+            order-number: Numéro de bon de commande
+            special-mentions: Mentions spéciales
+            lang:
+                label: Langue de la facture
+                options:
+                    fr: Français
+                    en: Anglais
+            due-date:
+                label: Date d'échéance
+                placeholder:
+                    immediately: Paiement à réception
+                    with-delay:
+                        - "Paiement sous {days} jour"
+                        - "Paiement sous {days} jours"

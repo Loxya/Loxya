@@ -1,13 +1,13 @@
 import { defineComponent } from 'vue';
 import debounce from 'lodash/debounce';
-import VueSelect from 'vue-select';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import formatOptions from '@/utils/formatOptions';
 import apiUsers from '@/stores/api/users';
+import Select from '@/themes/default/components/Select';
 
 import type { DebouncedMethod } from 'lodash';
 import type { PropType } from 'vue';
-import type { Options, Option } from '@/utils/formatOptions';
+import type { Options } from '@/utils/formatOptions';
 import type { User } from '@/stores/api/users';
 
 type Props = {
@@ -37,9 +37,6 @@ type Data = {
     value: User['id'] | null,
 };
 
-/** Longueur minimale du texte lors d'une recherche. */
-const MIN_SEARCH_CHARACTERS = 2;
-
 /** Champ de formulaire de sélection du chef de projet. */
 const EventEditStepInfosManagerSelect = defineComponent({
     name: 'EventEditStepInfosManagerSelect',
@@ -67,20 +64,6 @@ const EventEditStepInfosManagerSelect = defineComponent({
         };
     },
     computed: {
-        selected(): Option<User> | null {
-            const { options, value } = this;
-
-            if (value === null) {
-                return null;
-            }
-
-            const option = options.find((_option: Option<User>) => (
-                _option.value.toString() === value.toString()
-            ));
-
-            return option ?? null;
-        },
-
         options(): Options<User> {
             const { list } = this;
 
@@ -103,17 +86,7 @@ const EventEditStepInfosManagerSelect = defineComponent({
         // -
         // ------------------------------------------------------
 
-        handleSearch(search: string, setLoading: (isLoading: boolean) => void) {
-            if (search.length < MIN_SEARCH_CHARACTERS) {
-                return;
-            }
-            setLoading(true);
-            this.debouncedSearch!(search, setLoading);
-        },
-
-        handleChange(selection: Option<User> | null) {
-            const { value } = selection ?? { value: null };
-
+        handleChange(value: User['id'] | null) {
             this.value = value;
             this.$emit('change', value);
         },
@@ -124,15 +97,13 @@ const EventEditStepInfosManagerSelect = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async search(search: string, setLoading: (isLoading: boolean) => void) {
+        async search(search: string): Promise<void> {
             try {
                 const { data } = await apiUsers.all({ search, limit: 20 });
                 this.list = data;
             } catch (error) {
                 // eslint-disable-next-line no-console
                 console.error(`Error while searching a user (term: "${search}").`, error);
-            } finally {
-                setLoading(false);
             }
         },
 
@@ -147,38 +118,24 @@ const EventEditStepInfosManagerSelect = defineComponent({
     render() {
         const {
             __,
-            selected,
+            value,
             options,
-            handleSearch,
+            debouncedSearch,
             handleChange,
         } = this;
 
         return (
-            <VueSelect
-                value={selected}
+            <Select
+                value={value}
                 options={options}
-                filterable={false}
-                multiple={false}
-                onSearch={handleSearch}
+                searcher={debouncedSearch}
                 onInput={handleChange}
                 placeholder={__('global.start-typing-to-search')}
-                scopedSlots={{
-                    'no-options': ({ search }: { search: string }) => {
-                        if (search.length === 0) {
-                            return __('placeholder-help');
-                        }
-
-                        if (search.length > 0 && search.length < MIN_SEARCH_CHARACTERS) {
-                            return __(
-                                'global.type-at-least-count-chars-to-search',
-                                { count: MIN_SEARCH_CHARACTERS - search.length },
-                                MIN_SEARCH_CHARACTERS - search.length,
-                            );
-                        }
-
-                        return __('global.no-result-found-try-another-search');
-                    },
-                }}
+                noOptionsRenderer={(search: string) => (
+                    search.length === 0
+                        ? __('placeholder-help')
+                        : null
+                )}
             />
         );
     },

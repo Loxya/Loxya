@@ -1,11 +1,23 @@
-unexpected: 'An unexpected error occurred, please try again.'
-unexpected-while-saving: 'An unexpected error occurred while saving, please try again.'
-unexpected-while-submitting: 'An unexpected error occurred while submitting, please try again.'
-unexpected-while-deleting: 'An unexpected error occurred while deleting, please try again.'
-unexpected-while-restoring: 'An unexpected error occurred while restoring, please try again.'
-unexpected-while-calculating: 'An unexpected error occurred while calculating, please try again.'
-unexpected-while-selecting: 'An unexpected error occurred while selecting, please try again.'
-unexpected-while-fetching: An unexpected error occurred while retrieving the data.
+unexpected: >-
+    An unexpected error occurred, please try again.
+unexpected-while-saving: >-
+    An unexpected error occurred while saving, please try again.
+unexpected-while-creating: >-
+    An unexpected error occurred while creating, please try again.
+unexpected-while-submitting: >-
+    An unexpected error occurred while submitting, please try again.
+unexpected-while-deleting: >-
+    An unexpected error occurred while deleting, please try again.
+unexpected-while-restoring: >-
+    An unexpected error occurred while restoring, please try again.
+unexpected-while-calculating: >-
+    An unexpected error occurred while calculating, please try again.
+unexpected-while-selecting: >-
+    An unexpected error occurred while selecting, please try again.
+unexpected-while-generating: >-
+    An unexpected error occurred while generating, please try again.
+unexpected-while-fetching: >-
+    An unexpected error occurred while retrieving the data.
 api-unreachable: >-
     The service is currently unreachable. Please check your internet
     connection and try again.

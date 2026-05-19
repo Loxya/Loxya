@@ -7,7 +7,7 @@ use Loxya\Models\Park;
 
 final class ParkObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function deleting(Park $park): void
     {

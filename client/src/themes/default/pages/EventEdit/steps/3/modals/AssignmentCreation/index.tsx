@@ -10,6 +10,7 @@ import { RequestError } from '@/globals/requester';
 import { defineComponent, markRaw } from 'vue';
 import Button from '@/themes/default/components/Button';
 import FormField from '@/themes/default/components/FormField';
+import { VerticalFormKey } from '@/themes/default/components/@constants';
 import { MIN_TECHNICIAN_ASSIGNMENT_DURATION } from '@/globals/constants';
 
 import type { PropType } from 'vue';
@@ -17,7 +18,7 @@ import type { TechnicianWithEvents } from '@/stores/api/technicians';
 import type { Options } from '@/utils/formatOptions';
 import type { DisableDateFunction } from '@/themes/default/components/DatePicker';
 import type { Role } from '@/stores/api/roles';
-import type { EventDetails, EventAssignmentEdit } from '@/stores/api/events';
+import type { EventDetails, EventAssignmentEdit, EventTechnician } from '@/stores/api/events';
 
 type Props = {
     /** L'événement en cours d'édition. */
@@ -28,6 +29,13 @@ type Props = {
 
     /** La date de début d'assignation à utiliser par défaut (si disponible). */
     defaultStartDate?: DateTime,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param assignment - L'assignation créée si la sauvegarde a été menée à son terme.
+     */
+    onClose?(assignment?: EventTechnician): void,
 };
 
 type EditData = Omit<EventAssignmentEdit, 'technician_id'>;
@@ -48,10 +56,10 @@ const EventEditStepTechniciansAssignmentCreation = defineComponent({
     name: 'EventEditStepTechniciansAssignmentCreation',
     modal: {
         width: 600,
-        clickToClose: false,
+        dismissible: false,
     },
     provide: {
-        verticalForm: true,
+        [VerticalFormKey as symbol]: true,
     },
     props: {
         event: {
@@ -64,6 +72,11 @@ const EventEditStepTechniciansAssignmentCreation = defineComponent({
         },
         defaultStartDate: {
             type: DateTime as PropType<Props['defaultStartDate']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },

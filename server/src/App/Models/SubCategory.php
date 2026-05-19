@@ -48,7 +48,7 @@ final class SubCategory extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkName($value)
+    public function checkName(mixed $value)
     {
         V::notEmpty()
             ->length(2, 96)
@@ -69,7 +69,7 @@ final class SubCategory extends BaseModel implements Serializable
         return !$alreadyExists ?: 'subcategory-already-in-use-for-this-category';
     }
 
-    public function checkCategoryId($value)
+    public function checkCategoryId(mixed $value)
     {
         V::notEmpty()->intVal()->check($value);
         return Category::includes($value);
@@ -135,7 +135,7 @@ final class SubCategory extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = ['name'];
+    protected array $orderable = ['name'];
 
     public function scopeSearch(Builder $query, string|array $term): Builder
     {

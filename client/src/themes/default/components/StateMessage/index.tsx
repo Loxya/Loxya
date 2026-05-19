@@ -10,7 +10,7 @@ import EmptyIllustration from './illustrations/empty.svg?inline';
 import LockedIllustration from './illustrations/locked.svg?inline';
 
 import type { PropType } from 'vue';
-import type { Location } from 'vue-router';
+import type { RawLocation } from 'vue-router';
 import type { Type as ButtonType } from '@/themes/default/components/Button';
 import type { Props as IconProps } from '@/themes/default/components/Icon';
 
@@ -96,7 +96,7 @@ export type Action = {
      * Si non définie, un élément HTML `<button>` sera utilisé et
      * vous devriez écouter l'événement `onClick` pour réagir au click.
      */
-    target?: string | Location,
+    target?: RawLocation,
 
     /**
      * Si l'action secondaire est un lien, permet d'indiquer que c'est un lien externe.

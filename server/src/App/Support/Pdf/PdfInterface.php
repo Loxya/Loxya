@@ -10,8 +10,6 @@ interface PdfInterface
 {
     public function getName(): string;
 
-    public function getHtml(): string;
-
     //
     // - Output methods.
     //
@@ -19,8 +17,6 @@ interface PdfInterface
     public function asBinaryString(): string;
 
     public function asResponse(Response $response): ResponseInterface;
-
-    public function asResponseHtml(Response $response): ResponseInterface;
 
     public function asMailAttachment(): array;
 }

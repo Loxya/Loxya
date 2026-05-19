@@ -12,7 +12,7 @@ final class PdfTest extends TestCase
     public function testAsBinaryString(): void
     {
         $html = file_get_contents(TESTS_FILES_FOLDER . DS . 'pdf.html');
-        $this->assertNotEmpty((new Pdf('test-pdf', $html, new I18n('fr')))->asBinaryString());
+        $this->assertNotEmpty((new Pdf('test-pdf', $html))->asBinaryString());
     }
 
     public function testCreateFromTemplateNotFoundError(): void

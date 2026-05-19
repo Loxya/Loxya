@@ -1,14 +1,11 @@
 import { dataFactory } from './@utils';
 import omit from 'lodash/omit';
-import countries from './countries';
-import users from './users';
 import events from './events';
 import roles from './roles';
 
 const data = [
     {
         id: 1,
-        user_id: 2,
         first_name: 'Roger',
         last_name: 'Rabbit',
         full_name: 'Roger Rabbit',
@@ -16,17 +13,17 @@ const data = [
         email: 'tester2@loxya.com',
         phone: null,
         street: null,
+        additional_street: null,
         postal_code: null,
+        administrative_area: null,
         locality: null,
-        country_id: null,
-        full_address: null,
-        country: null,
+        country: 'FR',
+        address: null,
         note: null,
         roles: [
             roles.default(1),
             roles.default(3),
         ],
-        user: users.default(2),
         events: [
             {
                 id: 1,
@@ -44,24 +41,23 @@ const data = [
     },
     {
         id: 2,
-        user_id: null,
         first_name: 'Jean',
-        last_name: 'Technicien',
-        full_name: 'Jean Technicien',
+        last_name: 'Garcia',
+        full_name: 'Jean Garcia',
         nickname: null,
-        email: 'client@technicien.com',
+        email: 'jg@loxya.fr',
         phone: '+33645698520',
         street: null,
+        additional_street: null,
         postal_code: null,
+        administrative_area: null,
         locality: null,
-        country_id: 2,
-        full_address: null,
-        country: countries.default(2),
+        country: 'CH',
+        address: null,
         note: null,
         roles: [
             roles.default(2),
         ],
-        user: null,
         events: [
             {
                 id: 2,

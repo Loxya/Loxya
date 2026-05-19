@@ -1,5 +1,10 @@
 {%- set showPark = withoutPark == false and material.material.park.name is not empty -%}
 {%- set showLocation = material.material.parkLocation.label is not empty -%}
+{%- set showProperties = (
+    material.material.properties is not empty or
+    material.material.weight is not empty or
+    material.material.origin_country is not empty
+) -%}
 <tr>
     {% if showPictures -%}
     <td class="picture-cell">
@@ -12,12 +17,32 @@
     <td>{{ material.reference }}</td>
     <td>
         {{- material.name }}
-        {%- if showPark -%}
+        {%- if showPark or showLocation -%}
+            {%-
+                set location = (
+                    (showPark ? material.material.park.name : '') ~
+                    ((showPark and showLocation) ? ': ' : '') ~
+                    (showLocation ? material.material.parkLocation.label : '')
+                )
+            -%}
             {{- ' ' -}}
-            <em class="lighter">({{ material.material.park.name }})</em>
+            <em class="lighter">({{ location }})</em>
         {%- endif -%}
-        {%- if material.material.properties is not empty -%}
+        {%- if showProperties -%}
             <br />
+            {% if material.material.weight is not empty -%}
+            <span class="lighter">
+                {{- __('weight-value', [
+                    material.material.weight|format_number(locale=locale),
+                    measurementUnits.materials.weight,
+                ]) -}}
+            </span>
+            {% endif -%}
+            {% if material.material.origin_country is not empty -%}
+            <span class="lighter">
+                {{- __('origin-country-value', [material.material.origin_country.getName(locale)]) -}}
+            </span>
+            {% endif -%}
             {%- for property in material.material.properties -%}
                 {{ include('blocks/materials/property.twig', { property }) -}}
             {%- endfor -%}

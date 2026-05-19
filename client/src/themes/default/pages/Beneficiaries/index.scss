@@ -12,16 +12,6 @@
         flex: 1;
     }
 
-    &:not(&--trashed) {
-        #{$block}__row {
-            cursor: pointer;
-
-            &:hover > #{$block}__cell {
-                background-color: color.adjust(globals.$bg-color-table-td, $lightness: 5%);
-            }
-        }
-    }
-
     &__cell {
         &__empty {
             color: globals.$text-light-color;
@@ -34,6 +24,10 @@
         &--address,
         &--note {
             display: none;
+        }
+
+        &--phone {
+            white-space: nowrap;
         }
 
         &--address {
@@ -67,6 +61,16 @@
             &--note {
                 display: table-cell;
             }
+        }
+    }
+
+    &__name {
+        display: inline-flex;
+        align-items: center;
+        gap: globals.$spacing-small;
+
+        &__warning {
+            color: globals.$text-warning-color;
         }
     }
 

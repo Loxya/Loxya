@@ -3,13 +3,14 @@
 .EventEdit {
     display: flex;
     flex-wrap: wrap;
+    overflow: auto;
     height: 100%;
 
     &__sidebar {
         position: fixed;
         display: none;
         flex-direction: column;
-        width: 160px;
+        width: 180px;
         padding: 0 0 7px;
         text-align: right;
         gap: globals.$spacing-medium;
@@ -22,6 +23,7 @@
     &__body {
         flex: 1;
         overflow: auto;
+        height: 100%;
     }
 
     //
@@ -34,7 +36,7 @@
         }
 
         &__body {
-            margin-left: 180px;
+            margin-left: 200px;
         }
     }
 

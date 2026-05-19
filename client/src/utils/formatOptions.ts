@@ -1,11 +1,18 @@
-type DataShape = { id: string | number, name?: string };
+import type { Simplify } from 'type-fest';
+
+export type DataShape = { id: string | number, name?: string };
 
 /** Représente une option de sélection avec une valeur et un libellé. */
-export type Option<T extends DataShape> = {
-    value: T['id'],
+type RawOption<T extends string | number> = {
     label: string,
-    data?: T,
+    value: T,
 };
+
+/** Représente une option de sélection liée à une donnée formatée. */
+export type Option<T extends DataShape> = Simplify<(
+    & RawOption<T['id']>
+    & { data: T }
+)>;
 
 /** Représente un tableau d'objets {@link Option}. */
 export type Options<T extends DataShape> = Array<Option<T>>;

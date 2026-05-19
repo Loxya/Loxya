@@ -1,0 +1,47 @@
+title: New invoice
+created: The invoice has been created successfully.
+
+actions:
+    next-step: Next step
+    prev-step: Previous step
+
+steps:
+    buyer-and-lines:
+        title: Content
+        fields:
+            buyer:
+                label: Buyer
+                placeholder: Search for a beneficiary...
+                change: Change
+                not-invoiceable:
+                    label: Not invoiceable
+                    tooltip:
+                        with-company: >-
+                            This beneficiary cannot be invoiced as is, some required
+                            information is missing or invalid on the linked company's
+                            profile.
+                        without-company: >-
+                            This beneficiary cannot be invoiced as is, some required
+                            information is missing or invalid on their profile.
+
+            lines:
+                label: Invoice lines
+
+    other-informations:
+        title: Others informations
+        action: Create invoice
+        fields:
+            order-number: Purchase order number
+            special-mentions: Special mentions
+            lang:
+                label: Invoice language
+                options:
+                    fr: French
+                    en: English
+            due-date:
+                label: Due date
+                placeholder:
+                    immediately: Payment upon receipt
+                    with-delay:
+                        - "Payment within {days} day"
+                        - "Payment within {days} days"

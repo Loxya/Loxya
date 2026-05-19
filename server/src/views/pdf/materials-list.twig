@@ -1,14 +1,17 @@
-{% extends 'pdf/base.twig' %}
+{% extends 'pdf/document-live.twig' %}
 
-{% block style %}
-.listing-title {
-    page-break-after: avoid;
-}
+{% block head %}
+{{ parent() }}
+<style type="text/css">
+    .listing-title {
+        page-break-after: avoid;
+    }
 
-.listing-table > tbody > tr > td {
-    height: 6mm;
-    font-size: 8pt;
-}
+    .listing-table > tbody > tr > td {
+        height: 6mm;
+        font-size: 8pt;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -16,8 +19,8 @@
     <tr>
         <td class="third">
             {{-
-                include('blocks/company-address.twig', {
-                    company,
+                include('blocks/organization.twig', {
+                    organization,
                     showLegalNumbers: false,
                     showLogo: false,
                 })

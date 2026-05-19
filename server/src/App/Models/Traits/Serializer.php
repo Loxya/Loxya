@@ -3,80 +3,21 @@ declare(strict_types=1);
 
 namespace Loxya\Models\Traits;
 
-use Adbar\Dot as DotArray;
 use Brick\Math\BigDecimal as Decimal;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use Loxya\Contracts\Serializable;
+use Loxya\Support\Address;
+use Loxya\Support\Country;
 
 /**
- * @property array<string, string> $serializedNames
+ * @phpstan-require-extends \Loxya\Models\BaseModel
  */
 trait Serializer
 {
     public function serialize(): array
     {
-        $data = $this->attributesForSerialization();
-
-        if (!property_exists(static::class, 'serializedNames')) {
-            return $data;
-        }
-
-        $data = new DotArray($data);
-
-        // @phpstan-ignore-next-line
-        foreach (static::$serializedNames as $originalPath => $aliasPath) {
-            if ($aliasPath !== null) {
-                $data->set($aliasPath, $data->get($originalPath, null));
-            }
-            $data->delete($originalPath);
-        }
-
-        return $data->all();
-    }
-
-    // ------------------------------------------------------
-    // -
-    // -    Méthodes utilitaires
-    // -
-    // ------------------------------------------------------
-
-    public static function serializeValidation(array $data): array
-    {
-        if (!property_exists(static::class, 'serializedNames')) {
-            return $data;
-        }
-
-        $data = new DotArray($data);
-
-        // @phpstan-ignore-next-line
-        foreach (static::$serializedNames as $originalPath => $aliasPath) {
-            if ($data->has($originalPath) && !$data->has($aliasPath)) {
-                $data->set($aliasPath, $data->get($originalPath));
-            }
-            $data->delete($originalPath);
-        }
-
-        return $data->all();
-    }
-
-    public static function unserialize(array $data): array
-    {
-        if (!property_exists(static::class, 'serializedNames')) {
-            return $data;
-        }
-
-        $data = new DotArray($data);
-
-        // @phpstan-ignore-next-line
-        foreach (static::$serializedNames as $originalPath => $aliasPath) {
-            if ($data->has($aliasPath) && !$data->has($originalPath)) {
-                $data->set($originalPath, $data->get($aliasPath));
-            }
-            $data->delete($aliasPath);
-        }
-
-        return $data->all();
+        return $this->attributesForSerialization();
     }
 
     // ------------------------------------------------------
@@ -85,7 +26,7 @@ trait Serializer
     // -
     // ------------------------------------------------------
 
-    protected function attributesForSerialization()
+    protected function attributesForSerialization(): array
     {
         $attributes = $this->getArrayableAttributes();
         $attributes = $this->addDateAttributesToArray($attributes);
@@ -110,7 +51,7 @@ trait Serializer
         return $attributes;
     }
 
-    protected function mutateAttributeForSerialization($key, $value)
+    protected function mutateAttributeForSerialization(string $key, mixed $value): mixed
     {
         $value = $this->transformModelValue($key, $value);
 
@@ -119,8 +60,12 @@ trait Serializer
                 return $value->serialize();
             }
 
-            if ($value instanceof Decimal) {
+            if ($value instanceof Decimal || $value instanceof Country) {
                 return (string) $value;
+            }
+
+            if ($value instanceof Address) {
+                return $value->format();
             }
 
             if ($value instanceof \DateTimeInterface) {

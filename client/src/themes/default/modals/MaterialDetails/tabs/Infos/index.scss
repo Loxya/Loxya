@@ -1,0 +1,112 @@
+@use '~@/themes/default/style/globals';
+
+.MaterialDetailsModalInfos {
+    $block: &;
+
+    flex: 1;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    padding: globals.$spacing-medium;
+    gap: globals.$spacing-large;
+
+    &__picture {
+        overflow: hidden;
+        width: 350px;
+        height: 200px;
+        margin-bottom: globals.$spacing-small;
+        border-radius: globals.$border-radius-large;
+        background-color: #fff;
+
+        &__image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        &--placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 150px;
+            border: 1px solid rgb(255 255 255 / 10%);
+            background-color: globals.$bg-color-emphasis;
+
+            @include globals.icon('image', 'regular') {
+                color: globals.$text-muted-color;
+                font-size: 6rem;
+            }
+        }
+    }
+
+    &__general-infos {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: globals.$spacing-small;
+    }
+
+    &__description {
+        margin: 0 0 globals.$spacing-small;
+        white-space: pre-wrap;
+    }
+
+    &__infos {
+        @extend %reset-dl;
+
+        &__item {
+            $sub-block: &;
+
+            display: flex;
+            align-items: center;
+            gap: globals.$spacing-small;
+
+            &__label {
+                flex: 0 0 180px;
+                margin: 0;
+                font-weight: 600;
+            }
+
+            &__value {
+                @extend %reset-dd;
+
+                flex: 1;
+                white-space: pre-wrap;
+            }
+
+            &__empty {
+                color: globals.$text-light-color;
+                font-style: italic;
+            }
+
+            &--warning {
+                #{$sub-block}__value {
+                    color: globals.$text-warning-color;
+                    font-weight: 600;
+                }
+            }
+
+            &--danger {
+                #{$sub-block}__value {
+                    color: globals.$text-danger-color;
+                    font-weight: 600;
+                }
+            }
+        }
+
+        &__billing {
+            margin: globals.$spacing-small 0;
+        }
+    }
+
+    &__notes {
+        &__title {
+            margin: 0 0 globals.$spacing-thin;
+        }
+
+        &__text {
+            margin: 0 0 globals.$spacing-small;
+            white-space: pre-wrap;
+        }
+    }
+}

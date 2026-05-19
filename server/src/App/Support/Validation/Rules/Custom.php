@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace Loxya\Support\Validation\Rules;
 
+use Loxya\Support\Validation\ValidationException;
+use Loxya\Support\Validation\ValidationsException;
 use Respect\Validation\Exceptions\NestedValidationException;
-use Respect\Validation\Exceptions\ValidationException;
+use Respect\Validation\Exceptions\ValidationException as CoreValidationException;
 use Respect\Validation\Rules\AbstractRule;
 use Respect\Validation\Validatable;
 
@@ -33,7 +35,7 @@ final class Custom extends AbstractRule
             return;
         }
 
-        if ($result instanceof ValidationException) {
+        if ($result instanceof CoreValidationException) {
             $this->setTemplate(
                 $result instanceof NestedValidationException
                     ? $result->getFullMessage()
@@ -65,7 +67,9 @@ final class Custom extends AbstractRule
 
         try {
             $result = ($this->callback)(...$arguments);
-        } catch (ValidationException $e) {
+        } catch (ValidationException | ValidationsException $e) {
+            throw new \LogicException('Custom validator should not use `safeAssert` / `safeCheck`.');
+        } catch (CoreValidationException $e) {
             $result = $e;
         }
 
@@ -76,12 +80,14 @@ final class Custom extends AbstractRule
                 }
                 $result->assert($input);
                 return true;
-            } catch (ValidationException $e) {
+            } catch (ValidationException | ValidationsException) {
+                throw new \LogicException('Custom validator should not use `safeAssert` / `safeCheck`.');
+            } catch (CoreValidationException $e) {
                 $result = $e;
             }
         }
 
-        if ($result instanceof ValidationException) {
+        if ($result instanceof CoreValidationException) {
             if ($this->name !== null) {
                 $result->setName($this->name);
             }

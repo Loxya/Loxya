@@ -1,9 +1,24 @@
 @use '~@/themes/default/style/globals';
 
 .EventEditStepBeneficiaries {
-    max-width: 800px;
-    min-width: 250px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    height: 100%;
+    gap: globals.$spacing-medium;
+
+    &__wrapper {
+        flex: 1;
+        overflow: auto;
+        height: 100%;
+        padding: 0 globals.$spacing-large;
+    }
+
+    &__content {
+        width: 100%;
+        max-width: 650px;
+        margin: 0 auto;
+    }
 
     &__title {
         margin-top: 0;
@@ -17,8 +32,9 @@
 
     &__actions {
         display: flex;
-        justify-content: space-between;
-        padding: globals.$spacing-large 0;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: globals.$spacing-small 0;
         gap: globals.$spacing-small;
     }
 }

@@ -21,6 +21,11 @@
         }
     }
 
+    &__warning {
+        width: 100%;
+        margin-bottom: globals.$spacing-large;
+    }
+
     &__no-estimate,
     &__create-new {
         color: globals.$text-light-color;
@@ -41,7 +46,7 @@
 
     &__list {
         width: 100%;
-        max-width: 500px;
+        max-width: 600px;
         margin: 0;
         padding: 0;
         font-size: 1.1rem;
@@ -51,7 +56,9 @@
             list-style: none;
 
             & + & {
-                margin-top: globals.$spacing-medium;
+                margin-top: globals.$spacing-small;
+                padding-top: globals.$spacing-small;
+                border-top: 1px solid globals.$divider-color;
             }
         }
     }
@@ -67,7 +74,7 @@
         }
 
         &__button {
-            margin-top: 5px;
+            margin-top: globals.$spacing-small;
         }
     }
 }

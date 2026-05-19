@@ -2,22 +2,25 @@ import './index.scss';
 import Queue from 'p-queue';
 import Day from '@/utils/day';
 import isEqual from 'lodash/isEqual';
+import isTruthy from '@/utils/isTruthy';
 import config from '@/globals/config';
 import debounce from 'lodash/debounce';
 import DateTime from '@/utils/datetime';
 import { HttpCode, RequestError } from '@/globals/requester';
-import showModal from '@/utils/showModal';
 import { Group } from '@/stores/api/groups';
 import parseInteger from '@/utils/parseInteger';
 import stringIncludes from '@/utils/stringIncludes';
 import mergeDifference from '@/utils/mergeDifference';
 import { defineComponent, markRaw } from 'vue';
+import { BookingsViewMode } from '@/stores/api/users';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
 import bookingFormatterFactory from '@/utils/formatTimelineBooking';
 import apiBookings, { BookingEntity } from '@/stores/api/bookings';
-import Page from '@/themes/default/components/Page';
+import ViewModeSwitch from '../../components/ViewModeSwitch';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Timeline from '@/themes/default/components/Timeline';
+import Button from '@/themes/default/components/Button';
+import Page from '@/themes/default/components/Page';
 import Header from './components/Header';
 import Caption from './components/Caption';
 import {
@@ -434,7 +437,7 @@ const ScheduleCalendar = defineComponent({
 
             switch (booking.entity) {
                 case BookingEntity.EVENT: {
-                    showModal(this.$modal, EventDetails, {
+                    this.$modal.show(EventDetails, {
                         id: booking.id,
                         async onUpdated(event: EventDetailsType) {
                             try {
@@ -541,6 +544,7 @@ const ScheduleCalendar = defineComponent({
                 if (error instanceof RequestError && error.httpCode === HttpCode.RangeNotSatisfiable) {
                     const $timeline = this.$refs.timeline as ComponentRef<typeof Timeline>;
                     $timeline?.zoomIn(1, false);
+                    this.isLoading = false;
                     return;
                 }
 
@@ -576,6 +580,7 @@ const ScheduleCalendar = defineComponent({
             filters,
             isLoading,
             isSaving,
+            isTeamMember,
             centerDate,
             defaultPeriod,
             hasCriticalError,
@@ -604,6 +609,14 @@ const ScheduleCalendar = defineComponent({
                 name="schedule-calendar"
                 title={title}
                 loading={isLoading || isSaving}
+                actions={[
+                    <ViewModeSwitch mode={BookingsViewMode.CALENDAR} />,
+                    isTeamMember && (
+                        <Button type="primary" icon="plus" to={{ name: 'add-event' }} collapsible>
+                            {__('page.schedule.calendar.add-event')}
+                        </Button>
+                    ),
+                ].filter(isTruthy)}
             >
                 <div class="ScheduleCalendar">
                     <Header

@@ -7,6 +7,7 @@
         padding: 0.7rem 1rem;
         background-color: globals.$bg-color-emphasis;
         gap: globals.$spacing-medium;
+        user-select: none;
 
         &__title {
             flex: 1;
@@ -38,15 +39,14 @@
     // - Content
     //
 
+    &__rate {
+        --input-width: 450px;
+    }
+
     &__sub-taxes {
         margin-top: globals.$spacing-large;
 
         &__item {
-            &__is-rate {
-                // stylelint-disable-next-line declaration-no-important
-                text-align: center !important;
-            }
-
             &__value {
                 width: 200px;
             }
@@ -54,7 +54,7 @@
 
         &__add-button {
             margin-top: globals.$spacing-small;
-            margin-left: 10px;
+            margin-left: 5px;
         }
     }
 }

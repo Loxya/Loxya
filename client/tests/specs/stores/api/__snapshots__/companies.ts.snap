@@ -1,38 +1,46 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Companies Api all() parse the returned data correctly 1`] = `
 {
   "data": [
     {
-      "country": {
-        "code": "FR",
-        "id": 1,
-        "name": "France",
-      },
-      "country_id": 1,
-      "full_address": "1, company st.
-1234 Megacity",
+      "additional_street": "Bâtiment D",
+      "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+      "administrative_area": null,
+      "country": /* Country Instance => */ "FR",
       "id": 1,
+      "invoice_identifier": "0225:123456789_LOCATION",
+      "is_public_entity": false,
       "legal_name": "Testing, Inc",
-      "locality": "Megacity",
-      "note": "Just for tests",
-      "phone": "+4123456789",
-      "postal_code": "1234",
-      "registration_id": null,
-      "street": "1, company st.",
+      "locality": "Annecy",
+      "note": "Anciennement Machin, Inc.",
+      "phone": /* Phone Instance => */ "+33123456789",
+      "postal_code": "74000",
+      "registration_id": "12345678900001",
+      "service_code": null,
+      "street": "10 avenue de la gare",
+      "vat_number": "FR32123456789",
     },
     {
-      "country": null,
-      "country_id": null,
-      "full_address": null,
+      "additional_street": null,
+      "address": "Rue de Cornavin, 1
+1000 Lausanne",
+      "administrative_area": null,
+      "country": /* Country Instance => */ "CH",
       "id": 2,
+      "invoice_identifier": null,
+      "is_public_entity": false,
       "legal_name": "Obscure",
-      "locality": null,
+      "locality": "1000",
       "note": null,
-      "phone": null,
+      "phone": /* Phone Instance => */ "+41211234567",
       "postal_code": null,
-      "registration_id": "123456789",
-      "street": null,
+      "registration_id": "CHE-123.456.789",
+      "service_code": null,
+      "street": "Rue de Cornavin, 1",
+      "vat_number": "CHE-123.456.789 TVA",
     },
   ],
   "pagination": {
@@ -48,111 +56,135 @@ exports[`Companies Api all() parse the returned data correctly 1`] = `
 
 exports[`Companies Api create() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
-  "full_address": "1, company st.
-1234 Megacity",
+  "additional_street": "Bâtiment D",
+  "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "id": 1,
+  "invoice_identifier": "0225:123456789_LOCATION",
+  "is_public_entity": false,
   "legal_name": "Testing, Inc",
-  "locality": "Megacity",
-  "note": "Just for tests",
-  "phone": "+4123456789",
-  "postal_code": "1234",
-  "registration_id": null,
-  "street": "1, company st.",
+  "locality": "Annecy",
+  "note": "Anciennement Machin, Inc.",
+  "phone": /* Phone Instance => */ "+33123456789",
+  "postal_code": "74000",
+  "registration_id": "12345678900001",
+  "service_code": null,
+  "street": "10 avenue de la gare",
+  "vat_number": "FR32123456789",
 }
 `;
 
 exports[`Companies Api create() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": null,
-  "country_id": null,
-  "full_address": null,
+  "additional_street": null,
+  "address": "Rue de Cornavin, 1
+1000 Lausanne",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "id": 2,
+  "invoice_identifier": null,
+  "is_public_entity": false,
   "legal_name": "Obscure",
-  "locality": null,
+  "locality": "1000",
   "note": null,
-  "phone": null,
+  "phone": /* Phone Instance => */ "+41211234567",
   "postal_code": null,
-  "registration_id": "123456789",
-  "street": null,
+  "registration_id": "CHE-123.456.789",
+  "service_code": null,
+  "street": "Rue de Cornavin, 1",
+  "vat_number": "CHE-123.456.789 TVA",
 }
 `;
 
 exports[`Companies Api one() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
-  "full_address": "1, company st.
-1234 Megacity",
+  "additional_street": "Bâtiment D",
+  "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "id": 1,
+  "invoice_identifier": "0225:123456789_LOCATION",
+  "is_public_entity": false,
   "legal_name": "Testing, Inc",
-  "locality": "Megacity",
-  "note": "Just for tests",
-  "phone": "+4123456789",
-  "postal_code": "1234",
-  "registration_id": null,
-  "street": "1, company st.",
+  "locality": "Annecy",
+  "note": "Anciennement Machin, Inc.",
+  "phone": /* Phone Instance => */ "+33123456789",
+  "postal_code": "74000",
+  "registration_id": "12345678900001",
+  "service_code": null,
+  "street": "10 avenue de la gare",
+  "vat_number": "FR32123456789",
 }
 `;
 
 exports[`Companies Api one() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": null,
-  "country_id": null,
-  "full_address": null,
+  "additional_street": null,
+  "address": "Rue de Cornavin, 1
+1000 Lausanne",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "id": 2,
+  "invoice_identifier": null,
+  "is_public_entity": false,
   "legal_name": "Obscure",
-  "locality": null,
+  "locality": "1000",
   "note": null,
-  "phone": null,
+  "phone": /* Phone Instance => */ "+41211234567",
   "postal_code": null,
-  "registration_id": "123456789",
-  "street": null,
+  "registration_id": "CHE-123.456.789",
+  "service_code": null,
+  "street": "Rue de Cornavin, 1",
+  "vat_number": "CHE-123.456.789 TVA",
 }
 `;
 
 exports[`Companies Api update() parse the returned data correctly (with #1) 1`] = `
 {
-  "country": {
-    "code": "FR",
-    "id": 1,
-    "name": "France",
-  },
-  "country_id": 1,
-  "full_address": "1, company st.
-1234 Megacity",
+  "additional_street": "Bâtiment D",
+  "address": "10 avenue de la gare
+Bâtiment D
+74000 Annecy",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "FR",
   "id": 1,
+  "invoice_identifier": "0225:123456789_LOCATION",
+  "is_public_entity": false,
   "legal_name": "Testing, Inc",
-  "locality": "Megacity",
-  "note": "Just for tests",
-  "phone": "+4123456789",
-  "postal_code": "1234",
-  "registration_id": null,
-  "street": "1, company st.",
+  "locality": "Annecy",
+  "note": "Anciennement Machin, Inc.",
+  "phone": /* Phone Instance => */ "+33123456789",
+  "postal_code": "74000",
+  "registration_id": "12345678900001",
+  "service_code": null,
+  "street": "10 avenue de la gare",
+  "vat_number": "FR32123456789",
 }
 `;
 
 exports[`Companies Api update() parse the returned data correctly (with #2) 1`] = `
 {
-  "country": null,
-  "country_id": null,
-  "full_address": null,
+  "additional_street": null,
+  "address": "Rue de Cornavin, 1
+1000 Lausanne",
+  "administrative_area": null,
+  "country": /* Country Instance => */ "CH",
   "id": 2,
+  "invoice_identifier": null,
+  "is_public_entity": false,
   "legal_name": "Obscure",
-  "locality": null,
+  "locality": "1000",
   "note": null,
-  "phone": null,
+  "phone": /* Phone Instance => */ "+41211234567",
   "postal_code": null,
-  "registration_id": "123456789",
-  "street": null,
+  "registration_id": "CHE-123.456.789",
+  "service_code": null,
+  "street": "Rue de Cornavin, 1",
+  "vat_number": "CHE-123.456.789 TVA",
 }
 `;

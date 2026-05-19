@@ -29,9 +29,14 @@ final class Kernel
 
     protected Container $container;
 
+    public static function booted(): bool
+    {
+        return !is_null(static::$instance);
+    }
+
     public static function boot(): static
     {
-        if (!is_null(static::$instance)) {
+        if (self::booted()) {
             return static::$instance;
         }
         return static::$instance = new static();
@@ -39,7 +44,7 @@ final class Kernel
 
     public static function get(): static
     {
-        if (is_null(static::$instance)) {
+        if (!self::booted()) {
             throw new \LogicException("Attempt to retrieve the kernel before it boots.");
         }
         return static::$instance;
@@ -201,7 +206,7 @@ final class Kernel
         $this->container->set('database', $database);
 
         // - Configuration du fonctionnement des modèles.
-        // TODO: Model::preventSilentlyDiscardingAttributes();
+        // TODO: Model::preventSilentlyDiscardingAttributes(Config::getEnv() !== 'production');
         Model::preventAccessingMissingAttributes();
 
         // - Morphs
@@ -216,10 +221,13 @@ final class Kernel
         Models\EventTechnician::observe(Observers\EventTechnicianObserver::class);
         Models\EventPosition::observe(Observers\EventPositionObserver::class);
         Models\EventMaterial::observe(Observers\EventMaterialObserver::class);
+        Models\InvoicePayment::observe(Observers\InvoicePaymentObserver::class);
         Models\Material::observe(Observers\MaterialObserver::class);
         Models\Property::observe(Observers\PropertyObserver::class);
         Models\PropertyCategory::observe(Observers\PropertyCategoryObserver::class);
+        Models\Person::observe(Observers\PersonObserver::class);
         Models\Beneficiary::observe(Observers\BeneficiaryObserver::class);
+        Models\Company::observe(Observers\CompanyObserver::class);
         Models\Park::observe(Observers\ParkObserver::class);
         Models\Technician::observe(Observers\TechnicianObserver::class);
         Models\User::observe(Observers\UserObserver::class);

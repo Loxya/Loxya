@@ -4,6 +4,12 @@
 // - Variantes
 //
 
+$error-variant: (
+    icon: 'exclamation-circle',
+    background: globals.$bg-color-emphasis-danger,
+    color: globals.$color-emphasis-danger-base,
+) !default;
+
 $warning-variant: (
     icon: 'exclamation-triangle',
     background: globals.$bg-color-emphasis-warning,

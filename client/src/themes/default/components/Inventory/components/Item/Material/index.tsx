@@ -1,7 +1,6 @@
 import './index.scss';
-import showModal from '@/utils/showModal';
 import { defineComponent } from 'vue';
-import QuantityInput from '@/themes/default/components/QuantityInput';
+import InputQuantity from '@/themes/default/components/InputQuantity';
 import Dropdown from '@/themes/default/components/Dropdown';
 import Button from '@/themes/default/components/Button';
 import { normalizeComment } from '../../../_utils';
@@ -271,7 +270,7 @@ const InventoryItemMaterial = defineComponent({
 
             const prevComment = this.inventoryComment ?? null;
             const newComment: string | null | undefined = (
-                await showModal(this.$modal, CommentEdition, {
+                await this.$modal.show(CommentEdition, {
                     material: this.material,
                     defaultValue: prevComment,
                 })
@@ -425,26 +424,28 @@ const InventoryItemMaterial = defineComponent({
                         </div>
                         <div class="InventoryItemMaterial__actual-quantity">
                             {isReadOnlyQuantity ? actualQuantity : (
-                                <QuantityInput
+                                <InputQuantity
                                     value={actualQuantity}
                                     onChange={handleActualQuantityChange}
                                     limit={!strict ? undefined : {
                                         min: 0,
                                         max: currentlyAwaitedActualQuantity,
                                     }}
+                                    inline
                                 />
                             )}
                         </div>
                         {withBrokenCount && (
                             <div class="InventoryItemMaterial__quantity-broken">
                                 {isReadOnlyQuantity ? brokenQuantity : (
-                                    <QuantityInput
+                                    <InputQuantity
                                         value={brokenQuantity}
                                         onChange={handleBrokenQuantityChange}
                                         limit={!strict ? undefined : {
                                             min: 0,
                                             max: currentlyAwaitedBrokenQuantity,
                                         }}
+                                        inline
                                     />
                                 )}
                             </div>

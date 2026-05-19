@@ -1,0 +1,59 @@
+title: Devis
+action: Nouveau devis
+empty: Aucun devis émis pour le moment.
+
+columns:
+    number: Numéro
+    issue-date: Date d'émission
+    due-date: Date d'échéance
+    buyer: Bénéficiaire
+    total-without-taxes: "Montant H.T."
+    total-with-taxes: "Montant T.T.C."
+    status: Statut
+
+filters:
+    status:
+        label: Statut
+        placeholder: Tous les statuts
+
+    issue-date:
+        label: Date d'émission
+        placeholder: Toute date d'émission
+        operators:
+            exact:
+                label: "Exactement le"
+                alias: "="
+            before:
+                label: "Avant le"
+                alias: "<"
+            after:
+                label: "Après le"
+                alias: ">"
+
+    due-date:
+        label: Date d'échéance
+        placeholder: Toute date d'échéance
+        operators:
+            exact:
+                label: "Exactement le"
+                alias: "="
+            before:
+                label: "Avant le"
+                alias: "<"
+            after:
+                label: "Après le"
+                alias: ">"
+
+    amount:
+        label: Montant HT
+        placeholder: Tout montant
+        operators:
+            exact:
+                label: "Égal à"
+                alias: "="
+            before:
+                label: "Plus petit que"
+                alias: "<"
+            after:
+                label: "Plus grand que"
+                alias: ">"

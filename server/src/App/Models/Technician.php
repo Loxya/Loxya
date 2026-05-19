@@ -14,10 +14,12 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Loxya\Config\Enums\Feature;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Address;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -35,11 +37,12 @@ use Loxya\Support\Validation\Validator as V;
  * @property-read string|null $email
  * @property-read string|null $phone
  * @property-read string|null $street
+ * @property-read string|null $additional_street
  * @property-read string|null $postal_code
+ * @property-read string|null $administrative_area
  * @property-read string|null $locality
- * @property-read int|null $country_id
- * @property-read Country|null $country
- * @property-read string|null $full_address
+ * @property-read Address $address
+ * @property-read Country $country
  * @property string|null $note
  * @property-read CarbonImmutable $created_at
  * @property-read CarbonImmutable|null $updated_at
@@ -82,7 +85,7 @@ final class Technician extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkPersonId($value)
+    public function checkPersonId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -166,10 +169,12 @@ final class Technician extends BaseModel implements Serializable
         'email',
         'phone',
         'street',
+        'additional_street',
         'postal_code',
+        'administrative_area',
         'locality',
-        'full_address',
-        'country_id',
+        'address',
+        'country',
         'user_id',
     ];
 
@@ -248,6 +253,17 @@ final class Technician extends BaseModel implements Serializable
         return $this->person->street;
     }
 
+    public function getAdditionalStreetAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The technician\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->additional_street;
+    }
+
     public function getPostalCodeAttribute(): string|null
     {
         if (!$this->person) {
@@ -257,6 +273,17 @@ final class Technician extends BaseModel implements Serializable
             );
         }
         return $this->person->postal_code;
+    }
+
+    public function getAdministrativeAreaAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The technician\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->administrative_area;
     }
 
     public function getLocalityAttribute(): string|null
@@ -270,18 +297,7 @@ final class Technician extends BaseModel implements Serializable
         return $this->person->locality;
     }
 
-    public function getCountryIdAttribute(): int|null
-    {
-        if (!$this->person) {
-            throw new \LogicException(
-                'The technician\'s related person is missing, ' .
-                'this relation should always be defined.',
-            );
-        }
-        return $this->person->country_id;
-    }
-
-    public function getCountryAttribute(): Country|null
+    public function getCountryAttribute(): Country
     {
         if (!$this->person) {
             throw new \LogicException(
@@ -292,7 +308,7 @@ final class Technician extends BaseModel implements Serializable
         return $this->person->country;
     }
 
-    public function getFullAddressAttribute(): string|null
+    public function getAddressAttribute(): Address
     {
         if (!$this->person) {
             throw new \LogicException(
@@ -300,29 +316,7 @@ final class Technician extends BaseModel implements Serializable
                 'this relation should always be defined.',
             );
         }
-        return $this->person->full_address;
-    }
-
-    public function getUserIdAttribute(): int|null
-    {
-        if (!$this->person) {
-            throw new \LogicException(
-                'The technician\'s related person is missing, ' .
-                'this relation should always be defined.',
-            );
-        }
-        return $this->person->user?->id;
-    }
-
-    public function getUserAttribute(): User|null
-    {
-        if (!$this->person) {
-            throw new \LogicException(
-                'The technician\'s related person is missing, ' .
-                'this relation should always be defined.',
-            );
-        }
-        return $this->person->user;
+        return $this->person->address;
     }
 
     /** @return Collection<array-key, Role> */
@@ -349,7 +343,7 @@ final class Technician extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
         'full_name',
         'email',
         'nickname',
@@ -388,6 +382,7 @@ final class Technician extends BaseModel implements Serializable
 
     public function scopeCustomOrderBy(Builder $query, string $column, string $direction = 'asc'): Builder
     {
+        Assert::inArray($direction, ['asc', 'desc'], "Invalid direction.");
         Assert::inArray($column, ['full_name', 'email', 'nickname'], "Invalid order field.");
 
         if (!in_array($column, ['full_name', 'email'], true)) {
@@ -418,7 +413,7 @@ final class Technician extends BaseModel implements Serializable
         $person->fill($data['person'] ?? []);
 
         if (!$this->isValid() || !$person->isValid()) {
-            throw new ValidationException(array_merge(
+            throw new ValidationsException(array_merge(
                 $this->validationErrors(),
                 ['person' => $person->validationErrors()],
             ));
@@ -479,14 +474,11 @@ final class Technician extends BaseModel implements Serializable
     {
         /** @var Technician $technician */
         $technician = tap(clone $this, static function (Technician $technician) use ($format) {
-            if ($format !== self::SERIALIZE_SUMMARY) {
-                $technician->append(['country']);
-            }
             if ($format === self::SERIALIZE_DEFAULT) {
                 $technician->append(['roles']);
             }
             if ($format === self::SERIALIZE_DETAILS) {
-                $technician->append(['user', 'roles']);
+                $technician->append(['roles']);
             }
         });
 
@@ -499,12 +491,12 @@ final class Technician extends BaseModel implements Serializable
                 'nickname',
                 'phone',
                 'street',
+                'additional_street',
                 'postal_code',
+                'administrative_area',
                 'locality',
-                'country_id',
                 'country',
-                'full_address',
-                'user_id',
+                'address',
                 'note',
             ]);
         }
@@ -512,6 +504,7 @@ final class Technician extends BaseModel implements Serializable
         return $data
             ->delete([
                 'person_id',
+                'user_id',
                 'is_preparer',
                 'created_at',
                 'updated_at',
@@ -530,9 +523,11 @@ final class Technician extends BaseModel implements Serializable
             'email',
             'phone',
             'street',
+            'additional_street',
             'postal_code',
+            'administrative_area',
             'locality',
-            'country_id',
+            'country',
         ];
         foreach ($personFields as $field) {
             $originalPath = sprintf('person.%s', $field);
@@ -582,9 +577,11 @@ final class Technician extends BaseModel implements Serializable
             'last_name',
             'phone',
             'street',
+            'additional_street',
             'postal_code',
+            'administrative_area',
             'locality',
-            'country_id',
+            'country',
         ];
         foreach ($personFields as $field) {
             $originalPath = sprintf('person.%s', $field);

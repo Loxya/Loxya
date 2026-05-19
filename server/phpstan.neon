@@ -4,6 +4,7 @@ parameters:
 
     paths:
         - ./src
+        - ./libs
         - ./tests
 
     excludePaths:
@@ -18,6 +19,7 @@ parameters:
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Eloquent\\Model::.+\(\)#'
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder::.+\(\)\.#'
         - '#Cannot call method .+\(\) on array<Illuminate\\Database\\Eloquent\\Builder>\|Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Eloquent\\Collection\|Illuminate\\Database\\Eloquent\\Model\.#'
+        - '#Cannot access property \$.+ on array<Illuminate\\Database\\Eloquent\\Builder>\|Illuminate\\Database\\Eloquent\\Builder\|Illuminate\\Database\\Eloquent\\Collection\|Illuminate\\Database\\Eloquent\\Model\.#'
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\(HasMany|BelongsToMany|MorphToMany|MorphMany|BelongsTo)::.+\(\)\.#'
         - '#Call to an undefined method Illuminate\\Support\\HigherOrderCollectionProxy::.+\(\)\.#'
         - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$.+#'

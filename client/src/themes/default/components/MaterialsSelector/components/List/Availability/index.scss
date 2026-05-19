@@ -9,12 +9,15 @@
 
     &__surplus {
         display: block;
-        margin-top: 3px;
         color: globals.$text-warning-color;
         font-style: italic;
     }
 
     &--warning {
         color: globals.$text-warning-color;
+    }
+
+    &--danger {
+        color: globals.$text-danger-color;
     }
 }

@@ -1,4 +1,5 @@
 @use '~@/themes/default/style/globals';
+@use 'sass:map';
 
 .SearchPanel {
     $block: &;
@@ -48,7 +49,7 @@
 
     &__modal {
         position: absolute;
-        z-index: 100;
+        z-index: map.get(globals.$layers, 'dropdowns');
         top: 0;
         left: 0;
         display: flex;

@@ -1,0 +1,136 @@
+title:
+    invoice: "Invoice No.\_{number}"
+    credit-note: "Credit note No.\_{number}"
+
+    draft:
+        invoice: "Invoice of {date} at {hour}"
+        credit-note: "Credit note of {date} at {hour}"
+
+actions:
+    create-credit-note: Create a credit note for this invoice
+    finalize: Finalize the invoice
+    delete: Delete the draft
+    download-ubl: Download as UBL
+
+confirm-delete: Do you really want to delete this invoice draft?
+deleted: The draft has been successfully deleted.
+
+confirm-create-credit-note: |-
+    Are you sure you want to create a credit note for this invoice?
+
+    The credit note will be created directly (without going through the draft
+    step) and the invoice will be marked as "cancelled". Do you want to continue?
+
+confirm-finalize: >-
+    Finalizing will produce the official invoice document.
+    This action cannot be undone, do you want to continue?
+
+issue-date: Issue date
+expiry-date:
+    fixed: Due date
+    delay: Payment Terms
+
+payment-terms:
+    immediately: Payment due on receipt
+    with-delay:
+        - "Payment due in {days} day"
+        - "Payment due in {days} days"
+
+parent-estimate:
+    title: Related estimate
+    label:
+        with-number: "Estimate No.\_{number}"
+        without-number: "Estimate of {date} at {hour}"
+
+parent-invoice:
+    title: Original invoice
+    label:
+        with-number: "Invoice No.\_{number}"
+        without-number: "Invoice of {date} at {hour}"
+
+child-invoice:
+    title:
+        invoice: Related invoice
+        credit-note: Related credit note
+    label:
+        invoice: "Invoice No.\_{number}"
+        credit-note: "Credit note No.\_{number}"
+
+        draft:
+            invoice: "Invoice of {date} at {hour}"
+            credit-note: "Credit note of {date} at {hour}"
+
+prepayment-invoices:
+    title: Linked prepayment invoices
+    label:
+        invoice: "Invoice No.\_{number}"
+        credit-note: "Credit note No.\_{number}"
+
+        draft:
+            invoice: "Invoice of {date} at {hour}"
+            credit-note: "Credit note of {date} at {hour}"
+
+payments:
+    title: Payments
+    add: Add payment
+    empty: No payments recorded yet.
+    total: Total paid
+    remaining: Remaining
+
+    cancel:
+        label: Cancel payment
+        confirm: >-
+            To "cancel" this payment, the system will record a negative payment
+            equivalent to the original one. Do you want to continue?
+        error: An unexpected error occurred while cancelling the payment.
+
+    settle:
+        label: Settle invoice
+        confirm: >-
+            This will add a payment of {amount} matching the remaining balance
+            of this invoice. Do you want to continue?
+        error: An unexpected error occurred while adding the payment.
+
+refunds:
+    title: Refunds
+    add: Add refund
+    empty: No refunds recorded yet.
+    total: Total refunded
+    remaining: Remaining to refund
+
+    cancel:
+        label: Cancel refund
+        confirm: >-
+            To "cancel" this refund, the system will record a negative refund
+            equivalent to the original one. Do you want to continue?
+        error: An unexpected error occurred while cancelling the refund.
+
+    settle:
+        label: Settle refund
+        confirm: >-
+            This will record a refund of {amount} matching the remaining balance
+            to refund. Do you want to continue?
+        error: An unexpected error occurred while recording the refund.
+
+modals:
+    add-payment:
+        title:
+            payment: "New payment - Invoice No.\_{number}"
+            refund: "New refund - Invoice No.\_{number}"
+        created:
+            payment: The payment has been successfully saved.
+            refund: The refund has been successfully saved.
+        fields:
+            amount: Amount
+            method: Method
+            reference:
+                label: Reference
+                placeholder: Transaction reference, check number...
+        taxes-breakdown:
+            title:
+                default: Breakdown by tax rate
+                simple: Breakdown by VAT rate
+            line: "Rate {rate}%"
+        action:
+            payment: Save payment
+            refund: Save refund

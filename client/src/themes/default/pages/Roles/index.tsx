@@ -2,7 +2,6 @@ import './index.scss';
 import { defineComponent } from 'vue';
 import apiRoles from '@/stores/api/roles';
 import { confirm } from '@/utils/alert';
-import showModal from '@/utils/showModal';
 import stringCompare from '@/utils/stringCompare';
 import Page from '@/themes/default/components/Page';
 import CriticalError from '@/themes/default/components/CriticalError';
@@ -52,7 +51,7 @@ const Roles = defineComponent({
 
         async handleCreate() {
             const newRole: Role | undefined = (
-                await showModal(this.$modal, EditRole)
+                await this.$modal.show(EditRole)
             );
 
             // - Si l'ajout a été annulé, on retourne sans autre.
@@ -75,7 +74,7 @@ const Roles = defineComponent({
             this.processing.push(id);
 
             const updatedRole: Role | undefined = (
-                await showModal(this.$modal, EditRole, { role })
+                await this.$modal.show(EditRole, { role })
             );
 
             this.$delete(this.processing, this.processing.indexOf(id));
@@ -174,35 +173,22 @@ const Roles = defineComponent({
             );
         }
 
-        if (roles.length === 0) {
-            return (
-                <Page name="roles" title={__('title')} help={__('help')} centered>
-                    <div class="Roles">
-                        <EmptyMessage
-                            message={__('no-role-yet')}
-                            action={{
-                                icon: 'plus',
-                                type: 'add',
-                                label: __('create-first-role'),
-                                onClick: handleCreate,
-                            }}
-                        />
-                    </div>
-                </Page>
-            );
-        }
+        const renderContent = (): JSX.Node => {
+            if (roles.length === 0) {
+                return (
+                    <EmptyMessage
+                        message={__('no-role-yet')}
+                        action={{
+                            icon: 'plus',
+                            type: 'primary',
+                            label: __('create-first-role'),
+                            onClick: handleCreate,
+                        }}
+                    />
+                );
+            }
 
-        return (
-            <Page
-                name="roles"
-                title={__('title')}
-                help={__('help')}
-                actions={[
-                    <Button type="add" onClick={handleCreate} collapsible>
-                        {__('action-add')}
-                    </Button>,
-                ]}
-            >
+            return (
                 <ul class="Roles__list">
                     {roles.map(({ id, name, is_used: isUsed }: Role) => (
                         <li key={id} class="Roles__list__item">
@@ -230,6 +216,23 @@ const Roles = defineComponent({
                         </li>
                     ))}
                 </ul>
+            );
+        };
+
+        return (
+            <Page
+                name="roles"
+                title={__('title')}
+                help={__('help')}
+                actions={[
+                    <Button type="primary" icon="plus" onClick={handleCreate} collapsible>
+                        {__('action-add')}
+                    </Button>,
+                ]}
+            >
+                <div class="Roles">
+                    {renderContent()}
+                </div>
             </Page>
         );
     },

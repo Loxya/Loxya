@@ -79,32 +79,18 @@ const SettingsSchema = z.strictObject({
         defaultTax: z.number().nullable(),
     }),
     estimates: z.strictObject({
-        customText: z.strictObject({
-            title: z.string().nullable(),
-            content: z.string().nullable(),
-        }).optional(),
-        showBookingDescription: z.boolean(),
-        showMobilizationPeriod: z.boolean(),
         showTotalReplacementPrice: z.boolean(),
-        showPictures: z.boolean(),
         showDescriptions: z.boolean(),
         showReplacementPrices: z.boolean(),
-        showUnitPrices: z.boolean(),
         showTotalisableProperties: z.boolean(),
+        specialMentions: z.string().nullish(),
     }),
     invoices: z.strictObject({
-        customText: z.strictObject({
-            title: z.string().nullable(),
-            content: z.string().nullable(),
-        }).optional(),
-        showBookingDescription: z.boolean(),
-        showMobilizationPeriod: z.boolean(),
         showTotalReplacementPrice: z.boolean(),
-        showPictures: z.boolean(),
         showDescriptions: z.boolean(),
         showReplacementPrices: z.boolean(),
-        showUnitPrices: z.boolean(),
         showTotalisableProperties: z.boolean(),
+        specialMentions: z.string().nullish(),
     }),
 });
 

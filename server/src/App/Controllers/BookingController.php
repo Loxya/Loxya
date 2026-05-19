@@ -149,7 +149,6 @@ final class BookingController extends BaseController
         $orderBy = $request->getStringQueryParam('orderBy', 'mobilization_start_date');
         $ascending = $request->getBooleanQueryParam('ascending');
         $limit = $request->getIntegerQueryParam('limit');
-
         $search = $request->getSearchArrayQueryParam('search');
         $categoryId = $request->getQueryParam('category');
         $parkId = $request->getIntegerQueryParam('park');
@@ -244,7 +243,7 @@ final class BookingController extends BaseController
             // - Événements.
             Event::class => (
                 Event::inPeriod($period, withOverdue: true)
-                    ->with(['materials', 'beneficiaries', 'technicians'])
+                    ->prepareSerialize(Event::SERIALIZE_BOOKING_EXCERPT)
             ),
         ]);
 

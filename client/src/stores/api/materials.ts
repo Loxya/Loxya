@@ -9,8 +9,8 @@ import { withPaginationEnvelope } from './@schema';
 
 import type { Raw } from 'vue';
 import type Period from '@/utils/period';
+import type Country from '@/utils/country';
 import type { ProgressCallback, RequestConfig } from '@/globals/requester';
-import type { PaginatedData, SortableParams, PaginationParams } from './@types';
 import type { Park } from './parks';
 import type { Category } from './categories';
 import type { Event } from './events';
@@ -23,6 +23,11 @@ import type { ZodRawShape } from 'zod';
 import type { Simplify } from 'type-fest';
 import type { DegressiveRate } from './degressive-rates';
 import type { Tax } from './taxes';
+import type {
+    PaginatedData,
+    SortableParams,
+    PaginationParams,
+} from './@types';
 
 // ------------------------------------------------------
 // -
@@ -46,10 +51,12 @@ const MaterialBaseSchema = z.strictObject({
     description: z.string().nullable(),
     category_id: z.number().nullable(),
     sub_category_id: z.number().nullable(),
-    rental_price: z.decimal().nullable().optional(),
-    degressive_rate_id: z.number().nullable().optional(),
-    tax_id: z.number().nullable().optional(),
+    rental_price: z.decimal().nullish(),
+    degressive_rate_id: z.number().nullish(),
+    tax_id: z.number().nullish(),
     replacement_price: z.decimal().nullable(),
+    weight: z.decimal().nullable(),
+    origin_country: z.country().nullable(),
     stock_quantity: z.number().nullable().transform(
         (value: number | null): number => value ?? 0,
     ),
@@ -191,6 +198,8 @@ export type MaterialEdit = {
     stock_quantity: string | number | null,
     out_of_order_quantity: string | number | null,
     replacement_price: string | null,
+    weight: string | null,
+    origin_country: Raw<Country> | null,
     is_hidden_on_bill: boolean,
     is_discountable: boolean,
     note: string | null,

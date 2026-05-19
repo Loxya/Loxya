@@ -1,0 +1,50 @@
+@use '~@/themes/default/style/globals';
+
+.Badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: globals.$border-radius-normal;
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+    //
+    // - Variantes
+    //
+
+    &--default {
+        background-color: globals.$label-default-background-color;
+        color: globals.$label-default-color;
+    }
+
+    &--warning {
+        background-color: globals.$label-warning-background-color;
+        color: globals.$label-warning-color;
+    }
+
+    &--info {
+        background-color: globals.$label-info-background-color;
+        color: globals.$label-info-color;
+    }
+
+    &--success {
+        background-color: globals.$label-success-background-color;
+        color: globals.$label-success-color;
+    }
+
+    &--danger {
+        background-color: globals.$label-danger-background-color;
+        color: globals.$label-danger-color;
+    }
+
+    //
+    // - Tailles
+    //
+
+    &--large {
+        padding: 6px 10px;
+        font-size: 1.1rem;
+    }
+}

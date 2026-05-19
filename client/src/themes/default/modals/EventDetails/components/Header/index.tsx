@@ -8,7 +8,6 @@ import { ApiErrorCode } from '@/stores/api/@codes';
 import { defineComponent, markRaw } from 'vue';
 import { getBookingIconFromEvent } from '@/utils/getBookingIcon';
 import { confirm } from '@/utils/alert';
-import showModal from '@/utils/showModal';
 import apiEvents from '@/stores/api/events';
 import DuplicateEvent from '@/themes/default/modals/DuplicateEvent';
 import Icon from '@/themes/default/components/Icon';
@@ -231,7 +230,11 @@ const EventDetailsHeader = defineComponent({
         },
 
         isRemovable(): boolean {
-            return !this.isConfirmed && !this.isReturnInventoryDone;
+            return (
+                this.isTeamMember &&
+                !this.isConfirmed &&
+                !this.isReturnInventoryDone
+            );
         },
 
         isDuplicable(): boolean {
@@ -318,8 +321,8 @@ const EventDetailsHeader = defineComponent({
         },
 
         async handleDelete() {
-            const { __, event: { id }, isTeamMember, isRemovable, isDeleting } = this;
-            if (!isRemovable || !isTeamMember || isDeleting) {
+            const { __, event: { id }, isRemovable, isDeleting } = this;
+            if (!isRemovable || isDeleting) {
                 return;
             }
 
@@ -349,7 +352,7 @@ const EventDetailsHeader = defineComponent({
                 return;
             }
 
-            const newEvent = await showModal(this.$modal, DuplicateEvent, { event });
+            const newEvent = await this.$modal.show(DuplicateEvent, { event });
             if (newEvent === undefined) {
                 return;
             }

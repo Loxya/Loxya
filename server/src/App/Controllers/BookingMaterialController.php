@@ -12,6 +12,7 @@ use Loxya\Models\Event;
 use Loxya\Models\EventMaterial;
 use Loxya\Models\Material;
 use Loxya\Support\Arr;
+use Loxya\Support\Invoicing\TaxRegime;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Exception\HttpNotFoundException;
@@ -58,8 +59,8 @@ final class BookingMaterialController extends BaseController
 
         $selection = array_unique((array) $request->getParsedBody());
         $validFields = $booking->is_billable
-            ? ['name', 'reference', 'degressive_rate', 'unit_price', 'taxes']
-            : ['name', 'reference'];
+            ? ['name', 'reference', 'unit_replacement_price', 'degressive_rate', 'unit_price', 'taxes']
+            : ['name', 'reference', 'unit_replacement_price'];
 
         if (
             empty($selection) ||
@@ -70,6 +71,8 @@ final class BookingMaterialController extends BaseController
         }
 
         $currencyChanged = $booking->currency !== Config::get('currency');
+
+        // - On vérifie que le prix unitaire est bien re-synchronisable si c'est demandé...
         if ($currencyChanged && in_array('unit_price', $selection, true)) {
             throw new HttpBadRequestException(
                 $request,
@@ -77,23 +80,20 @@ final class BookingMaterialController extends BaseController
                 "the booking currency differ from the global one.",
             );
         }
-        if ($currencyChanged && in_array('taxes', $selection, true)) {
-            $canResyncTaxes = (new Collection($material->tax?->asFlatArray() ?? []))
-                ->every('is_rate', true);
 
-            if (!$canResyncTaxes) {
-                throw new HttpBadRequestException(
-                    $request,
-                    "Resynchronization of taxes is not possible when " .
-                    "the booking currency differ from the global one.",
-                );
-            }
+        // - On vérifie que les taxes sont bien re-synchronisables si c'est demandé...
+        $isVatExempted = Config::get('organization.isVatExempted', false);
+        if (in_array('taxes', $selection, true) && $isVatExempted) {
+            throw new HttpUnprocessableEntityException($request, (
+                "The tax management is disabled, taxes cannot be resynchronized."
+            ));
         }
 
         $attributes = [
             'name' => 'name',
             'reference' => 'reference',
             'unit_price' => 'rental_price',
+            'unit_replacement_price' => 'replacement_price',
         ];
         foreach ($attributes as $attribute => $materialAttribute) {
             if (in_array($attribute, $selection, true)) {
@@ -114,7 +114,13 @@ final class BookingMaterialController extends BaseController
         }
 
         if (in_array('taxes', $selection, true)) {
-            $bookingMaterial->taxes = $material->tax?->asFlatArray();
+            $isDefaultStandardTaxRegime = $bookingMaterial->default_tax_regime === TaxRegime::STANDARD->value;
+            $tax = $isDefaultStandardTaxRegime ? $bookingMaterial->defaultTax : null;
+
+            $bookingMaterial->tax_regime = $bookingMaterial->default_tax_regime;
+            $bookingMaterial->tax_exemption_code = $bookingMaterial->default_tax_exemption_code;
+            $bookingMaterial->taxes = $isDefaultStandardTaxRegime ? $tax?->asFlatArray() : null;
+            $bookingMaterial->tax()->associate($tax);
         }
 
         $bookingMaterial->save();

@@ -1,11 +1,13 @@
 import './index.scss';
-import config from '@/globals/config';
+import config, { BillingMode } from '@/globals/config';
 import { defineComponent } from 'vue';
 import { BookingsViewMode } from '@/stores/api/users';
 import { Group } from '@/stores/api/groups';
+import SubMenu from './SubMenu';
 import Item from './Item';
 
 import type { Session } from '@/stores/api/session';
+import type { Props as SubMenuProps } from './SubMenu';
 import type { Props as ItemProps } from './Item';
 
 /** Menu principal de la barre latérale du layout par défaut. */
@@ -24,29 +26,34 @@ const DefaultLayoutSidebarMainMenu = defineComponent({
             ]);
         },
 
+        isBillingEnabled(): boolean {
+            return config.billingMode !== BillingMode.NONE;
+        },
+
         isTechniciansEnabled(): boolean {
             return config.features.technicians;
         },
 
-        links(): ItemProps[] {
+        items(): Array<ItemProps | SubMenuProps> {
             const {
                 __,
                 isAdmin,
                 isTeamMember,
+                isBillingEnabled,
                 isTechniciansEnabled,
             } = this;
 
-            const links: ItemProps[] = [];
+            const items: Array<ItemProps | SubMenuProps> = [];
 
             const { default_bookings_view: defaultBookingsView } = this.$store.state.auth.user as Session;
             if (defaultBookingsView === BookingsViewMode.LISTING) {
-                links.push({
+                items.push({
                     icon: 'list',
                     label: __('schedule-listing'),
                     to: { name: 'schedule:listing' },
                 });
             } else {
-                links.push({
+                items.push({
                     icon: 'calendar-alt',
                     label: __('schedule-calendar'),
                     to: { name: 'schedule:calendar' },
@@ -54,29 +61,49 @@ const DefaultLayoutSidebarMainMenu = defineComponent({
             }
 
             if (isTeamMember) {
-                links.push({
-                    icon: 'box',
-                    label: __('materials'),
-                    to: { name: 'materials' },
-                });
+                items.push(
+                    {
+                        icon: 'box',
+                        label: __('materials'),
+                        to: { name: 'materials' },
+                    },
+                    {
+                        icon: 'address-book',
+                        label: __('beneficiaries'),
+                        to: { name: 'beneficiaries' },
+                    },
+                );
+
+                if (isBillingEnabled) {
+                    items.push({
+                        icon: 'file-invoice',
+                        label: __('billing'),
+                        items: [
+                            {
+                                icon: 'file-invoice-dollar',
+                                label: __('global.invoices'),
+                                to: { name: 'invoices' },
+                            },
+                            {
+                                icon: 'file-contract',
+                                label: __('global.estimates'),
+                                to: { name: 'estimates' },
+                            },
+                        ],
+                    });
+                }
 
                 if (isTechniciansEnabled) {
-                    links.push({
+                    items.push({
                         icon: 'people-carry',
                         label: __('technicians'),
                         to: { name: 'technicians' },
                     });
                 }
-
-                links.push({
-                    icon: 'address-book',
-                    label: __('beneficiaries'),
-                    to: { name: 'beneficiaries' },
-                });
             }
 
             if (isAdmin) {
-                links.push(
+                items.push(
                     {
                         icon: 'industry',
                         label: __('parks'),
@@ -90,7 +117,7 @@ const DefaultLayoutSidebarMainMenu = defineComponent({
                 );
             }
 
-            return links;
+            return items;
         },
     },
     methods: {
@@ -109,20 +136,34 @@ const DefaultLayoutSidebarMainMenu = defineComponent({
         },
     },
     render() {
-        const { links } = this;
+        const { items } = this;
 
         return (
             <ul class="DefaultLayoutSidebarMainMenu">
-                {links.map(({ label, icon, to, counter, exact }: ItemProps) => (
-                    <Item
-                        key={label}
-                        label={label}
-                        to={to}
-                        icon={icon}
-                        counter={counter}
-                        exact={exact}
-                    />
-                ))}
+                {items.map((item: ItemProps | SubMenuProps) => {
+                    if ('items' in item) {
+                        return (
+                            <SubMenu
+                                key={item.label}
+                                label={item.label}
+                                icon={item.icon}
+                                counter={item.counter}
+                                items={item.items}
+                            />
+                        );
+                    }
+
+                    return (
+                        <Item
+                            key={item.label}
+                            label={item.label}
+                            to={item.to}
+                            icon={item.icon}
+                            counter={item.counter}
+                            exact={item.exact}
+                        />
+                    );
+                })}
             </ul>
         );
     },

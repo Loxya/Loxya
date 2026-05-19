@@ -1,0 +1,59 @@
+title: Estimates
+action: New estimate
+empty: No estimate issued at the moment.
+
+columns:
+    number: Number
+    issue-date: Issue date
+    due-date: Due date
+    buyer: Beneficiary
+    total-without-taxes: "Amount excl. taxes"
+    total-with-taxes: "Amount incl. taxes"
+    status: Status
+
+filters:
+    status:
+        label: Status
+        placeholder: All statuses
+
+    issue-date:
+        label: Issue date
+        placeholder: All issue date
+        operators:
+            exact:
+                label: "Exactly"
+                alias: "="
+            before:
+                label: "Before"
+                alias: "<"
+            after:
+                label: "After"
+                alias: ">"
+
+    due-date:
+        label: Due date
+        placeholder: All due date
+        operators:
+            exact:
+                label: "Exactly"
+                alias: "="
+            before:
+                label: "Before"
+                alias: "<"
+            after:
+                label: "After"
+                alias: ">"
+
+    amount:
+        label: Amount (excl. taxes)
+        placeholder: All amount
+        operators:
+            exact:
+                label: "Equal to"
+                alias: "="
+            before:
+                label: "Less than"
+                alias: "<"
+            after:
+                label: "Greater than"
+                alias: ">"

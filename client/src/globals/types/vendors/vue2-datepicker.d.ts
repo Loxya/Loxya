@@ -54,17 +54,29 @@ declare module 'vue2-datepicker' {
         formatter?: Formatter,
         valueType?: 'date' | 'timestamp' | 'format' | string,
         defaultValue?: Date,
+        value?: (
+            | Date
+            | string
+            | number
+            | null
+            | [
+                Date | string | number | null,
+                Date | string | number | null,
+            ]
+        ),
         lang?: Translations,
         placeholder?: string,
         editable?: boolean,
         clearable?: boolean,
+        readonly?: boolean | 'start' | 'end',
         confirm?: boolean,
         confirmText?: string,
         multiple?: boolean,
         disabled?: boolean,
-        disabledDate?(date: Date, currentValue: [?Date, ?Date]): boolean,
-        disabledTime?(date: Date, side: 0 | 1): boolean,
         appendToBody?: boolean,
+        calculatePosition?($popup: HTMLElement, $field: HTMLElement): (void | (() => void)),
+        disabledDate?(date: Date, currentValue: 0 | 1 | [Date?, Date?]): boolean,
+        disabledTime?(date: Date, side: 0 | 1): boolean,
         inline?: boolean,
         inputClass?: string,
         inputAttr?(): Record<string, any>,
@@ -77,6 +89,7 @@ declare module 'vue2-datepicker' {
         partialUpdate?: boolean,
         rangeSeparator?: string,
         showWeekNumber?: boolean,
+        showTimePanel?: boolean,
         hourStep?: number,
         minuteStep?: number,
         secondStep?: number,
@@ -91,10 +104,12 @@ declare module 'vue2-datepicker' {
         timeTitleFormat?: string,
         timePickerOptions?: (
             | TimePickerOptions
-            | ((selectedDate: Date, type?: 'start' | 'end') => TimePickerOptionValue[])
+            | ((selectedDate: Date, side: 'start' | 'end') => TimePickerOptionValue[])
         ),
         prefixClass?: string,
         scrollDuration?: number,
+        onInput?(newValue: string | null | [start: string | null, end: string | null]): void,
+        onClose?(): void,
     }>;
 
     export default Datepicker;

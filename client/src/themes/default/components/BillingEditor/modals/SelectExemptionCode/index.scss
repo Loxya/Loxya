@@ -1,0 +1,82 @@
+@use '~@/themes/default/style/globals';
+
+.BillingEditorSelectExemptionCodeModal {
+    display: flex;
+    flex-direction: column;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: globals.$bg-color-emphasis;
+        gap: globals.$spacing-medium;
+        user-select: none;
+
+        &__heading {
+            flex: 1;
+
+            &__title {
+                overflow: hidden;
+                margin: 0 0 globals.$spacing-thin;
+                font-size: 1.15rem;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            &__description {
+                margin: 0;
+                color: globals.$text-soft-color;
+                font-size: 0.9rem;
+            }
+        }
+
+        &__close-button {
+            flex: 0 0 8px;
+        }
+    }
+
+    &__body {
+        overflow-y: auto;
+        max-height: 350px;
+        padding: 5px 0;
+    }
+
+    &__list {
+        @extend %reset-list;
+
+        &__item {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            gap: 12px;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+
+            @include globals.icon('circle') {
+                flex-shrink: 0;
+                color: globals.$text-soft-color;
+                font-size: 0.85rem;
+                font-weight: 400;
+                transition: color 150ms ease;
+            }
+
+            &__label {
+                flex: 1;
+                color: globals.$text-base-color;
+                font-size: 0.95rem;
+            }
+
+            &:hover {
+                background-color: rgb(255 255 255 / 7%);
+
+                &::before {
+                    color: globals.$text-base-color;
+                }
+            }
+
+            & + & {
+                border-top: 1px solid globals.$bg-color-emphasis;
+            }
+        }
+    }
+}

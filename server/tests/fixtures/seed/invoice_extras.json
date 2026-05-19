@@ -1,2 +1,147 @@
 [
+    {
+        "id": 1,
+        "invoice_id": 3,
+        "is_service": false,
+        "description": "Écran 27 pouces",
+        "unit_price": "150.00",
+        "quantity": 1,
+        "total_without_discount": "150.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "150.00",
+        "tax_regime": "K",
+        "tax_exemption_code": null,
+        "taxes": null
+    },
+    {
+        "id": 2,
+        "invoice_id": 3,
+        "is_service": true,
+        "description": "Déduction fidélité",
+        "unit_price": "-75.00",
+        "quantity": 1,
+        "total_without_discount": "-75.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "-75.00",
+        "tax_regime": "K",
+        "tax_exemption_code": null,
+        "taxes": null
+    },
+    {
+        "id": 3,
+        "invoice_id": 4,
+        "is_service": false,
+        "description": "Prestation A",
+        "unit_price": "500.00",
+        "quantity": 1,
+        "total_without_discount": "500.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "500.00",
+        "tax_regime": "E",
+        "tax_exemption_code": "VATEX-EU-79-C",
+        "taxes": null
+    },
+    {
+        "id": 4,
+        "invoice_id": 4,
+        "is_service": true,
+        "description": "Prestation B",
+        "unit_price": "200.00",
+        "quantity": 1,
+        "total_without_discount": "200.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "200.00",
+        "tax_regime": "E",
+        "tax_exemption_code": "VATEX-EU-151-1D",
+        "taxes": null
+    },
+    {
+        "id": 5,
+        "invoice_id": 4,
+        "is_service": false,
+        "description": "Produit de première nécessité",
+        "unit_price": "5.00",
+        "quantity": 1,
+        "total_without_discount": "5.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "5.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "0.000" }
+        ]
+    },
+    {
+        "id": 6,
+        "invoice_id": 5,
+        "is_service": true,
+        "description": "Prepayment for estimate of 1/30/2021",
+        "unit_price": "82.93",
+        "quantity": 1,
+        "total_without_discount": "82.93",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "82.93",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ]
+    },
+    {
+        "id": 7,
+        "invoice_id": 5,
+        "is_service": true,
+        "description": "Prepayment for estimate of 1/30/2021",
+        "unit_price": "0.46",
+        "quantity": 1,
+        "total_without_discount": "0.46",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "0.46",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "5.500" }
+        ]
+    },
+    {
+        "id": 8,
+        "invoice_id": 6,
+        "is_service": true,
+        "description": "Prestation principale",
+        "unit_price": "1000.00",
+        "quantity": 1,
+        "total_without_discount": "1000.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "1000.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ]
+    },
+    {
+        "id": 9,
+        "invoice_id": 6,
+        "is_service": true,
+        "description": "Remise commerciale",
+        "unit_price": "-100.00",
+        "quantity": 1,
+        "total_without_discount": "-100.00",
+        "discount_rate": "0.0000",
+        "total_discount": "0.00",
+        "total_without_taxes": "-100.00",
+        "tax_regime": "S",
+        "tax_exemption_code": null,
+        "taxes": [
+            { "value": "20.000" }
+        ]
+    }
 ]

@@ -28,6 +28,11 @@ final class Token
         \DateTimeInterface $expiresAt,
         array $payload,
     ): string {
+        $secret = Config::get('JWTSecret');
+        if ($secret === null) {
+            throw new \LogicException('Token secret should be defined.');
+        }
+
         $payload = [
             'scope' => $scope->value,
             'iat' => CarbonImmutable::now()->getTimestamp(),
@@ -35,7 +40,7 @@ final class Token
             'fpt' => self::generateFingerprint($request),
             ...$payload,
         ];
-        return JWT::encode($payload, Config::get('JWTSecret'), 'HS256');
+        return JWT::encode($payload, $secret, 'HS256');
     }
 
     /**
@@ -54,7 +59,12 @@ final class Token
         string $token,
         ?Validatable $schema = null,
     ): array {
-        $key = new JWTKey(Config::get('JWTSecret'), 'HS256');
+        $secret = Config::get('JWTSecret');
+        if ($secret === null) {
+            throw new \LogicException('Token secret should be defined.');
+        }
+
+        $key = new JWTKey($secret, 'HS256');
         $decoded = (array) JWT::decode($token, $key);
 
         // - Scope
@@ -86,6 +96,12 @@ final class Token
 
     private static function generateFingerprint(Request $request): string
     {
+        // - En développement on utilise un fingerprint stable pour éviter
+        //   d'être déconnecté à chaque utilisation des devtools notamment.
+        if (Config::getEnv() === 'development') {
+            return '__DEV__';
+        }
+
         $userAgent = $request->getHeaderLine('user-agent') ?? '';
         $acceptLanguage = $request->getHeaderLine('accept-language') ?? '';
         return md5(serialize([$userAgent, $acceptLanguage]));

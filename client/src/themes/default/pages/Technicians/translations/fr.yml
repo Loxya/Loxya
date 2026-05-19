@@ -25,10 +25,12 @@ sub-pages:
         deleted: Technicien supprimé.
         restored: Technicien restauré.
 
+        empty: Aucun technicien enregistré pour le moment.
+
     timeline:
         title: Planning des techniciens
 
         add-technician: Ajouter un technicien
 
-        no-technicians: Il n'y a aucun technicien pour le moment.
+        no-technicians: Aucun technicien enregistré pour le moment.
         no-technicians-with-this-search: Aucun technicien n'a été trouvé avec cette recherche.

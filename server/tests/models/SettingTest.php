@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Loxya\Tests;
 
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Models\Setting;
+use Loxya\Support\Validation\ValidationsException;
 
 final class SettingTest extends TestCase
 {
@@ -44,32 +44,18 @@ final class SettingTest extends TestCase
                 'defaultDegressiveRate' => 1,
             ],
             'estimates' => [
-                'customText' => [
-                    'title' => "Modalité de paiement",
-                    'content' => "Paiement par virement ou chèque.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de nous contacter pour toute precision concernant ce devis.",
             ],
             'invoices' => [
-                'customText' => [
-                    'title' => null,
-                    'content' => "Paiement attendu sous 30 jours.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
         ];
         $this->assertSameCanonicalize($expected, $result);
@@ -103,24 +89,16 @@ final class SettingTest extends TestCase
                 'defaultDegressiveRate' => 1,
             ],
             'estimates' => [
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
             ],
             'invoices' => [
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
             ],
         ];
         $this->assertSameCanonicalize($expected, $result);
@@ -159,27 +137,7 @@ final class SettingTest extends TestCase
                 'value' => 'dfe7cd82-52b9-4c9b-aaed-033df210f23b',
             ],
             [
-                'key' => 'estimates.customText.content',
-                'value' => "Paiement par virement ou chèque.",
-            ],
-            [
-                'key' => 'estimates.customText.title',
-                'value' => "Modalité de paiement",
-            ],
-            [
-                'key' => 'estimates.showBookingDescription',
-                'value' => false,
-            ],
-            [
                 'key' => 'estimates.showDescriptions',
-                'value' => false,
-            ],
-            [
-                'key' => 'estimates.showMobilizationPeriod',
-                'value' => false,
-            ],
-            [
-                'key' => 'estimates.showPictures',
                 'value' => false,
             ],
             [
@@ -195,8 +153,8 @@ final class SettingTest extends TestCase
                 'value' => false,
             ],
             [
-                'key' => 'estimates.showUnitPrices',
-                'value' => true,
+                'key' => 'estimates.specialMentions',
+                'value' => "Merci de nous contacter pour toute precision concernant ce devis.",
             ],
             [
                 'key' => 'eventSummary.customText.content',
@@ -231,27 +189,7 @@ final class SettingTest extends TestCase
                 'value' => false,
             ],
             [
-                'key' => 'invoices.customText.content',
-                'value' => "Paiement attendu sous 30 jours.",
-            ],
-            [
-                'key' => 'invoices.customText.title',
-                'value' => null,
-            ],
-            [
-                'key' => 'invoices.showBookingDescription',
-                'value' => false,
-            ],
-            [
                 'key' => 'invoices.showDescriptions',
-                'value' => false,
-            ],
-            [
-                'key' => 'invoices.showMobilizationPeriod',
-                'value' => false,
-            ],
-            [
-                'key' => 'invoices.showPictures',
                 'value' => false,
             ],
             [
@@ -267,8 +205,8 @@ final class SettingTest extends TestCase
                 'value' => false,
             ],
             [
-                'key' => 'invoices.showUnitPrices',
-                'value' => true,
+                'key' => 'invoices.specialMentions',
+                'value' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
             [
                 'key' => 'returnInventory.mode',
@@ -311,13 +249,13 @@ final class SettingTest extends TestCase
 
     public function testBulkEditBadKey(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Setting::bulkEdit(['inexistant' => 'some-text']);
     }
 
     public function testBulkEditBadValue(): void
     {
-        $this->expectException(ValidationException::class);
+        $this->expectException(ValidationsException::class);
         Setting::bulkEdit(['eventSummary.materialDisplayMode' => 'not-valid']);
     }
 
@@ -337,10 +275,8 @@ final class SettingTest extends TestCase
             'calendar.public.displayedPeriod' => 'both',
             'billing.defaultDegressiveRate' => 3,
             'billing.defaultTax' => 2,
-            'estimates.customText.title' => 'Test',
-            'estimates.customText.content' => null,
-            'estimates.showBookingDescription' => true,
             'estimates.showReplacementPrices' => false,
+            'estimates.specialMentions' => 'Test',
         ]);
         $expected = [
             'eventSummary' => [
@@ -374,32 +310,18 @@ final class SettingTest extends TestCase
                 'defaultDegressiveRate' => 3,
             ],
             'estimates' => [
-                'customText' => [
-                    'title' => "Test",
-                    'content' => null,
-                ],
-                'showBookingDescription' => true,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => false,
-                'showUnitPrices' => true,
+                'specialMentions' => "Test",
             ],
             'invoices' => [
-                'customText' => [
-                    'title' => null,
-                    'content' => "Paiement attendu sous 30 jours.",
-                ],
-                'showBookingDescription' => false,
-                'showMobilizationPeriod' => false,
                 'showTotalReplacementPrice' => false,
                 'showTotalisableProperties' => false,
-                'showPictures' => false,
                 'showDescriptions' => false,
                 'showReplacementPrices' => true,
-                'showUnitPrices' => true,
+                'specialMentions' => "Merci de préciser votre nom et prénom dans l'intitulé du virement.",
             ],
         ];
         $this->assertEquals($expected, Setting::getList());

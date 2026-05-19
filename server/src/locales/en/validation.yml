@@ -71,10 +71,7 @@
     "Must not contain letters (a-z) or \"{{additionalChars}}\"."
 
 "{{name}} must be a valid postal code on {{countryCode}}":
-    "Must be a valid postal code on {{countryCode}}."
-
-"{{name}} must not be a valid postal code on {{countryCode}}":
-    "Must not be a valid postal code on {{countryCode}}."
+    "This postal code is invalid."
 
 "{{name}} must contain only space characters":
     "Must contain only space characters."
@@ -301,10 +298,10 @@
 "{{name}} must not be a valid CNPJ number":
     "Must not be a valid CNPJ number."
 
-"{{name}} must be an URL":
-    "Must be an URL."
+"{{name}} must be a URL":
+    "This URL is invalid."
 
-"{{name}} must not be an URL":
+"{{name}} must not be a URL":
     "Must not be an URL."
 
 "{{name}} must start with {{startValue}}":
@@ -420,12 +417,6 @@
 
 "{{name}} must not contain consonants or {{additionalChars}}":
     "Must not contain consonants or \"{{additionalChars}}\"."
-
-"{{name}} must be a subdivision code of {{countryName}}":
-    "Must be a subdivision code of {{countryName}}."
-
-"{{name}} must not be a subdivision code of {{countryName}}":
-    "Must not be a subdivision code of {{countryName}}."
 
 "{{name}} is always invalid":
     "This field should not be specified."
@@ -627,12 +618,6 @@
 
 "{{name}} must not be a valid telephone number":
     "Must not be a valid telephone number."
-
-"{{name}} must be a valid telephone number for country {{countryName}}":
-    "Must be a valid telephone number for the specified country."
-
-"{{name}} must not be a valid telephone number for country {{countryName}}":
-    "Must not be a valid telephone number for the specified country."
 
 "Must have keys {{keys}}":
     "Must have keys {{keys}}."
@@ -977,7 +962,7 @@
     "Must not contain any of the values {{needles}}."
 
 "{{name}} must have {{decimals}} decimals":
-    "Must have {{decimals}} decimals."
+    "Invalid value (max. {{decimals}} decimal places)."
 
 "{{name}} must not have {{decimals}} decimals":
     "Must not have {{decimals}} decimals."
@@ -1108,6 +1093,9 @@ invalid-name-like:
 invalid-positive-amount:
     "This amount is invalid, it must be positive and with a maximum of two decimal places."
 
+invalid-positive-number:
+    "This number must be positive."
+
 facility-closed-at-this-start-date-day:
     "The facility is closed at this start date."
 
@@ -1150,6 +1138,15 @@ end-time-must-be-after-start-time:
 end-date-must-be-after-start-date:
     "The end date must come after the start date."
 
+due-date-must-be-after-estimate-date:
+    "The due date must come after the estimate date."
+
+due-date-must-be-after-invoice-date:
+    "The due date must come after the invoice date."
+
+due-date-or-due-delay-required:
+    "A due date or a payment delay is required."
+
 start-date-too-close:
     "The start date is too close."
 
@@ -1179,9 +1176,6 @@ unavailable-quantity:
 
 event-cannot-be-archived:
     "An event cannot be archived if its return inventory is not done!"
-
-reservation-cannot-be-archived:
-    "A reservation cannot be archived if its return inventory is not done!"
 
 field-contains-invalid-values:
     "This field contains invalid values."
@@ -1267,12 +1261,21 @@ invalid-csv-delimiter:
 invalid-csv-file-encoding:
     "The encoding of the CSV file is invalid."
 
+payment-amount-exceeds-remaining-due:
+    "The payment amount cannot exceed the remaining amount due."
+
+payment-reversal-exceeds-paid-amount:
+    "The reversed amount cannot exceed the total already collected."
+
 #
 # - Existence messages
 #
 
 invoice-number-already-in-use:
     "An invoice already exists with this number."
+
+estimate-number-already-in-use:
+    "An estimate already exists with this number."
 
 category-name-already-in-use:
     "A category already exists with this name."
@@ -1322,6 +1325,12 @@ tax-name-already-in-use:
 tax-component-name-already-in-use:
     "This tax component name is already used in the same tax."
 
+tax-rate-not-allowed-for-country:
+    "This rate is not among the allowed rates."
+
+tax-rate-already-in-use:
+    "A tax with this rate already exists."
+
 degressive-rate-name-already-in-use:
     "A degressive rate with this name already exists."
 
@@ -1330,6 +1339,9 @@ degressive-rate-day-already-exists:
 
 invalid-hexadecimal-color:
     "Invalid color code (should be an hexadecimal code)."
+
+invalid-decimal:
+    "Invalid value (max. {{scale}} decimal places)."
 
 at-least-one-field-must-be-defined-for-park-location:
     "At least one field must be defined for the park location."

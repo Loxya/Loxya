@@ -6,13 +6,21 @@ import Step5 from './5';
 import Step6 from './6';
 
 import type { RawComponent } from 'vue';
-import type { Step } from '@/themes/default/components/Stepper';
 
-export default new Map<Step['id'], RawComponent>([
-    [1, Step1],
-    [2, Step2],
-    [3, Step3],
-    [4, Step4],
-    [5, Step5],
-    [6, Step6],
+export enum Step {
+    INFORMATIONS = 1,
+    BENEFICIARIES = 2,
+    TECHNICIANS = 3,
+    MATERIALS = 4,
+    BILLING = 5,
+    SUMMARY = 6,
+}
+
+export default new Map<Step, RawComponent>([
+    [Step.INFORMATIONS, Step1],
+    [Step.BENEFICIARIES, Step2],
+    [Step.TECHNICIANS, Step3],
+    [Step.MATERIALS, Step4],
+    [Step.BILLING, Step5],
+    [Step.SUMMARY, Step6],
 ]);

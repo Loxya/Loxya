@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Loxya\Errors\Enums\ApiErrorCode;
 use Loxya\Errors\Exception\ApiException;
 use Loxya\Errors\Exception\HttpSpecializedException;
-use Loxya\Errors\Exception\ValidationException;
+use Loxya\Support\Validation\ValidationsException;
 use Slim\Exception\HttpException;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Interfaces\ErrorRendererInterface;
@@ -57,7 +57,7 @@ final class JsonErrorRenderer implements ErrorRendererInterface
                 : $output;
         }
 
-        if ($exception instanceof ValidationException) {
+        if ($exception instanceof ValidationsException) {
             $output['code'] = ApiErrorCode::VALIDATION_FAILED->value;
             $output['message'] = $exception->getMessage();
             $output['details'] = $exception->getValidationErrors();

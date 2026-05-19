@@ -61,14 +61,14 @@ final class ChangeReturnQuantityColumnOfEventMaterials extends AbstractMigration
         $qb
             ->update(sprintf('%sevent_materials', $prefix))
             ->set(['quantity_returned' => '0'])
-            ->where(['quantity_returned IS' => null])
+            ->whereNull('quantity_returned')
             ->execute();
 
         $qb = $this->getUpdateBuilder();
         $qb
             ->update(sprintf('%sevent_materials', $prefix))
             ->set(['quantity_returned_broken' => '0'])
-            ->where(['quantity_returned_broken IS' => null])
+            ->whereNull('quantity_returned_broken')
             ->execute();
 
         $table = $this->table('event_materials');

@@ -56,12 +56,4 @@ describe('Bookings Api', () => {
             await expect(apiBookings.resynchronizeMaterial(datum.entity, datum.id, 2, ['name', 'reference'])).resolves.toMatchSnapshot();
         });
     });
-
-    describe('resynchronizeExtra()', () => {
-        it('parse the returned data correctly', async () => {
-            const datum = data.default(2);
-            jest.spyOn(requester, 'put').mockResolvedValue(datum.extras[0]);
-            await expect(apiBookings.resynchronizeExtra(datum.entity, datum.id, 1, ['taxes'])).resolves.toMatchSnapshot();
-        });
-    });
 });

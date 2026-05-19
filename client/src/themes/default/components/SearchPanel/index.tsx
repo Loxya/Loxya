@@ -2,15 +2,16 @@ import './index.scss';
 import omit from 'lodash/omit';
 import { defineComponent } from 'vue';
 import { z } from '@/utils/validation';
-import ClickOutside from 'vue-click-outside';
 import { MountingPortal as Portal } from 'portal-vue';
 import Button from '@/themes/default/components/Button';
 import Select from '@/themes/default/components/Select';
 import DatePicker from '@/themes/default/components/DatePicker';
-import { hasChanged } from './_utils';
+import { hasChangedFilters, generateTokens } from './_utils';
 import Search, {
+    TokenKind,
     TokenValueSchema,
-    TokenDefinitionSchema,
+    TokenOperatorValueSchema,
+    createTokenDefinitionSchema,
 } from '@/themes/default/components/Search';
 import {
     computePosition,
@@ -20,102 +21,55 @@ import {
     offset,
 } from '@floating-ui/dom';
 
-import type { ComponentRef, PropType, Raw } from 'vue';
+import type Day from '@/utils/day';
 import type Period from '@/utils/period';
+import type { ComponentRef, PropType, Raw } from 'vue';
+import type { SchemaInfer } from '@/utils/validation';
 import type { SelectRef } from '@/themes/default/components/Select';
 import type { DatePickerRef } from '@/themes/default/components/DatePicker';
-import type { Simplify } from 'type-fest';
-import type {
-    TokenValue,
-    CustomToken,
-    TokenDefinition,
-} from '@/themes/default/components/Search';
+import type { Token, TokenValue, TokenDefinition } from '@/themes/default/components/Search';
 
-export enum FilterKind {
-    /** Une liste de valeurs sélectionnables. */
-    LIST = 'list',
+const FilterDefinitionSchema = createTokenDefinitionSchema({
+    /**
+     * Le placeholder affiché dans les listes de sélection
+     * du dropdown "Filtres" lorsqu'aucune valeur n'est
+     * sélectionnée pour ce champ.
+     *
+     * Si cette valeur n'est pas spécifiée, le champ
+     * n’apparaîtra pas dans le dropdown "Filtres".
+     */
+    placeholder: z.string().optional(),
+});
 
-    /** Champ de type sélecteur de période. */
-    PERIOD = 'period',
-}
+export const ComplexFilterValueSchema = z.strictObject({
+    operator: TokenOperatorValueSchema,
+    value: TokenValueSchema,
+});
 
-const FilterDefinitionSchema = z.union([
-    TokenDefinitionSchema.extend({
-        placeholder: z.string(),
-        kind: z.literal(FilterKind.LIST).optional(),
-    }),
-    TokenDefinitionSchema
-        .pick({ type: true, icon: true, title: true, disabled: true })
-        .extend({
-            placeholder: z.string(),
-            kind: z.literal(FilterKind.PERIOD),
-        }),
+export const FilterValueSchema = z.union([
+    TokenValueSchema,
+    ComplexFilterValueSchema,
 ]);
 
-const FiltersSchema = z
+export const FiltersSchema = z
     .object({ search: z.string().array() })
     .catchall(
         z.union([
-            TokenValueSchema,
-            TokenValueSchema.array(),
-            z.period(),
+            FilterValueSchema,
+            FilterValueSchema.array(),
             z.null(),
         ]),
     );
 
-export type FilterDefinition = Simplify<(
-    | (
-        & TokenDefinition
-        & {
-            /**
-             * Le placeholder affiché dans les listes de sélection
-             * du dropdown "Filtres" lorsqu'aucune valeur n'est
-             * sélectionnée pour ce champ.
-             */
-            placeholder: string,
-
-            /**
-             * Le type de champ.
-             *
-             * Valeurs possibles:
-             * - `list`: Une liste de valeurs sélectionnables (défaut).
-             * - `period`: Une sélecteur de période.
-             */
-            kind?: FilterKind,
-        }
-    )
-    | (
-        & Pick<TokenDefinition, 'type' | 'icon' | 'title' | 'disabled'>
-        & {
-            /**
-             * Le placeholder affiché dans les listes de sélection
-             * du dropdown "Filtres" lorsqu'aucune valeur n'est
-             * sélectionnée pour ce champ.
-             */
-            placeholder: string,
-
-            /** Champ de type sélecteur de période. */
-            kind: FilterKind.PERIOD,
-        }
-    )
-)>;
+export type FilterDefinition = SchemaInfer<typeof FilterDefinitionSchema>;
+export type ComplexFilterValue = SchemaInfer<typeof ComplexFilterValueSchema>;
+export type FilterValue = SchemaInfer<typeof FilterValueSchema>;
+export type Filters = SchemaInfer<typeof FiltersSchema>;
 
 type ModalFilterComponentRef = (
     | SelectRef
     | DatePickerRef
 );
-
-type Filters = {
-    search: string[],
-    [filter: FilterDefinition['type']]: (
-        | TokenValue
-        | TokenValue[]
-        | Raw<Period>
-        | null
-    ),
-};
-
-type Tokens = Array<CustomToken | string>;
 
 type Props<F extends Filters = Filters> = {
     /**
@@ -148,7 +102,7 @@ type InstanceProperties = {
 };
 
 type Data = {
-    tokens: Tokens,
+    tokens: Token[],
     search: string,
     showModal: boolean,
     modalPosition: Position,
@@ -156,7 +110,6 @@ type Data = {
 
 const SearchPanel = defineComponent({
     name: 'SearchPanel',
-    directives: { ClickOutside },
     props: {
         definitions: {
             type: Array as PropType<Required<Props>['definitions']>,
@@ -195,17 +148,22 @@ const SearchPanel = defineComponent({
         modalPosition: { x: 0, y: 0 },
     }),
     computed: {
-        hasModalFilters(): boolean {
-            return this.definitions.some((definition: FilterDefinition) => {
-                if (definition.disabled) {
-                    return false;
-                }
+        coreDefinitions(): TokenDefinition[] {
+            return this.definitions.map(
+                (definition: FilterDefinition): TokenDefinition => (
+                    omit(definition, ['placeholder']) as TokenDefinition
+                ),
+            );
+        },
 
-                return (
-                    (definition.kind ?? FilterKind.LIST) !== FilterKind.LIST ||
-                    ((definition as TokenDefinition).unique ?? true)
-                );
-            });
+        modalDefinitions(): FilterDefinition[] {
+            return this.definitions.filter((definition: FilterDefinition) => (
+                !definition.disabled && this.isDefinitionUsableInModal(definition)
+            ));
+        },
+
+        hasModalFilters(): boolean {
+            return this.modalDefinitions.length > 0;
         },
 
         modalFiltersCount(): number {
@@ -213,16 +171,9 @@ const SearchPanel = defineComponent({
                 return 0;
             }
 
-            return this.definitions.reduce(
+            return this.modalDefinitions.reduce(
                 (total: number, definition: FilterDefinition) => {
                     if (definition.disabled) {
-                        return total;
-                    }
-
-                    if (
-                        (definition.kind ?? FilterKind.LIST) === FilterKind.LIST &&
-                        !((definition as TokenDefinition).unique ?? true)
-                    ) {
                         return total;
                     }
 
@@ -238,16 +189,6 @@ const SearchPanel = defineComponent({
         isModalFilterEmpty(): boolean {
             return this.modalFiltersCount === 0;
         },
-
-        coreDefinitions(): TokenDefinition[] {
-            return this.definitions
-                .filter((definition: FilterDefinition) => (
-                    (definition.kind ?? 'list') === 'list'
-                ))
-                .map((definition: FilterDefinition): TokenDefinition => (
-                    omit(definition, ['placeholder', 'kind']) as TokenDefinition
-                ));
-        },
     },
     watch: {
         hasModalFilters(hasModalFilters: boolean) {
@@ -255,57 +196,20 @@ const SearchPanel = defineComponent({
                 this.showModal = false;
             }
         },
+        coreDefinitions() {
+            const generate = generateTokens(this.coreDefinitions);
+            this.tokens = generate(this.values, this.tokens);
+        },
         values: {
             handler(newValues: Filters) {
-                const { coreDefinitions: definitions, tokens: prevTokens } = this;
-
-                const existingTokens: Tokens = [];
-
-                // - Recherche textuelle.
-                const newTerms = new Set(newValues.search);
-                prevTokens.forEach((_token: Tokens[number], index: number) => {
-                    if (typeof _token !== 'string' || !newTerms.has(_token)) {
-                        return;
-                    }
-
-                    newTerms.delete(_token);
-                    existingTokens[index] = _token;
-                });
-
-                this.search = [...newTerms].join(' ');
-
-                // - Custom tokens.
-                const newTokens: Tokens = [];
-                definitions.forEach((definition: TokenDefinition) => {
-                    if (definition.disabled) {
-                        return;
-                    }
-
-                    const newValue = newValues[definition.type] ?? null;
-                    const index = prevTokens.findIndex(
-                        (_token: Tokens[number]) => (
-                            typeof _token !== 'string' &&
-                            _token.type === definition.type
-                        ),
-                    );
-                    if (newValue !== null && (!Array.isArray(newValue) || newValue.length > 0)) {
-                        const token = { type: definition.type, value: newValue };
-                        if (index !== -1) {
-                            existingTokens[index] = token as Tokens[number];
-                        } else {
-                            newTokens.push(token as Tokens[number]);
-                        }
-                    }
-                });
-
-                this.tokens = existingTokens.concat(...newTerms, ...newTokens)
-                    .filter((token: Tokens[number] | undefined) => token !== undefined);
+                const generate = generateTokens(this.coreDefinitions);
+                this.tokens = generate(newValues, this.tokens);
             },
             immediate: true,
             deep: true,
         },
         tokens: {
-            handler(newTokens: Tokens) {
+            handler(newTokens: Token[]) {
                 const definitionsMap: Map<FilterDefinition['type'], FilterDefinition> = new Map(
                     this.definitions.map((definition: FilterDefinition) => (
                         [definition.type, definition]
@@ -313,8 +217,11 @@ const SearchPanel = defineComponent({
                 );
 
                 const newValues: Filters = newTokens.reduce(
-                    (result: Filters, _token: Tokens[number]) => {
+                    (result: Filters, _token: Token) => {
                         if (typeof _token === 'string') {
+                            if (!result.search.includes(_token)) {
+                                result.search.push(_token);
+                            }
                             return result;
                         }
 
@@ -327,20 +234,22 @@ const SearchPanel = defineComponent({
                             return result;
                         }
 
-                        let value = _token.value as any;
-                        if (
-                            (definition.kind ?? FilterKind.LIST) === FilterKind.LIST &&
-                            !((definition as TokenDefinition).unique ?? true)
-                        ) {
-                            value = ((result[definition.type] ?? []) as TokenValue[])
-                                .concat(_token.value as any);
+                        let value: FilterValue | FilterValue[] = (
+                            _token.operator !== undefined
+                                ? (omit(_token, 'type') as FilterValue)
+                                : _token.value
+                        );
+                        if (!(definition.unique ?? true)) {
+                            value = [
+                                ...(result[definition.type] ?? []) as FilterValue[],
+                                value as FilterValue,
+                            ];
                         }
                         return { ...result, [definition.type]: value };
                     },
-                    this.getDefaultValues({ keepModalOnly: true, keepSearch: true }),
+                    this.getDefaultValues(),
                 );
-
-                if (!hasChanged(this.values, newValues)) {
+                if (!hasChangedFilters(this.values, newValues)) {
                     return;
                 }
 
@@ -354,12 +263,28 @@ const SearchPanel = defineComponent({
     },
     mounted() {
         this.registerModalPositionUpdater();
+
+        // - Gestion du clique en dehors de la modale des filtres.
+        const clickHandler = (
+            'ontouchstart' in document.documentElement
+                ? 'touchstart'
+                : 'mousedown'
+        );
+        document.addEventListener(clickHandler, this.handleGlobalClick);
     },
     updated() {
         this.registerModalPositionUpdater();
     },
     beforeDestroy() {
         this.cleanupModalPositionUpdater();
+
+        // - Cleanup de la gestion du clique en dehors de la modale des filtres.
+        const clickHandler = (
+            'ontouchstart' in document.documentElement
+                ? 'touchstart'
+                : 'mousedown'
+        );
+        document.removeEventListener(clickHandler, this.handleGlobalClick);
     },
     methods: {
         // ------------------------------------------------------
@@ -387,68 +312,76 @@ const SearchPanel = defineComponent({
             this.$emit('submit');
         },
 
-        handleFilterChange(type: FilterDefinition['type'], newValue: TokenValue | Raw<Period> | null) {
-            const definition = this.definitions.find(
+        handleFilterChange(type: FilterDefinition['type'], newValue: TokenValue | null) {
+            // - On ne prend que les definitions compatibles avec la modale.
+            const definition = this.modalDefinitions.find(
                 (_definition: FilterDefinition) => _definition.type === type,
             );
             if (definition === undefined || definition.disabled) {
                 return;
             }
 
-            // - Les champs non unique ne sont pas proposés dans le dropdown.
-            const isList = (definition.kind ?? FilterKind.LIST) === FilterKind.LIST;
-            if (isList && !((definition as TokenDefinition).unique ?? true)) {
-                return;
-            }
-
             // - On vérifie que la valeur a bien changé.
-            const oldValue = this.values[definition.type] ?? (
-                isList && (definition as TokenDefinition).multiSelect ? [] : null
+            const isList = (
+                definition.kind === undefined ||
+                definition.kind === TokenKind.LIST
             );
-            if (!hasChanged(oldValue, newValue)) {
+            const oldValue = this.values[definition.type] ?? (
+                isList && definition.multiSelect ? [] : null
+            );
+            if (!hasChangedFilters(oldValue, newValue)) {
                 return;
             }
 
             this.$emit('change', { ...this.values, [type]: newValue });
         },
 
-        handleFiltersClear() {
-            this.$emit('change', this.getDefaultValues({ keepSearch: true }));
+        handleModalFiltersClear() {
+            this.$emit('change', this.getDefaultValues({ keepCoreOnly: true }));
         },
 
-        handleClickOutsideModal(e: Event) {
-            // - Si l'élément cliqué n'est plus dans le DOM, on part du principe
-            //   qu'il faisait partie de la modale des filtres, sans quoi le clic
-            //   serait considéré comme "outside" et fermerait la modale.
-            //   (e.g. Un tag supprimé, bouton de reset, ...).
-            if (!((e.target as HTMLElement).isConnected ?? true)) {
+        handleGlobalClick(e: Event) {
+            if (!this.showModal) {
+                return;
+            }
+
+            const $modal = this.$refs.modal as HTMLElement | undefined;
+            if ($modal === undefined) {
+                return;
+            }
+
+            const $target = e.target! as HTMLElement;
+            const $ancestors = e.composedPath();
+            $ancestors.unshift($target);
+
+            const isOutside = (
+                !$modal.contains($target) &&
+                !$ancestors.includes($modal)
+            );
+            if (!isOutside) {
                 return;
             }
 
             // - Vérifie si ce n'est pas un click dans un des filtres de la fenêtre modale.
-            const isModalFilterClick = this.definitions.some(
-                (definition: FilterDefinition): boolean => {
-                    const $filter = this.$refs[`modalFilters[${definition.type}]`] as ModalFilterComponentRef | undefined;
-                    if ($filter === undefined) {
-                        return false;
-                    }
+            const isModalFilterClick = this.modalDefinitions.some((definition: FilterDefinition): boolean => {
+                const $filter = this.$refs[`modalFilters[${definition.type}]`] as ModalFilterComponentRef | undefined;
+                if ($filter === undefined) {
+                    return false;
+                }
 
-                    const kind = definition.kind ?? FilterKind.LIST;
-                    if (kind === FilterKind.PERIOD) {
-                        /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-                        const $picker = $filter.$refs?.picker as ComponentRef | undefined;
-                        const $popup = $picker?.$refs?.popup as ComponentRef | undefined;
-                        /* eslint-enable @typescript-eslint/no-unnecessary-type-assertion */
+                const kind = definition.kind ?? TokenKind.LIST;
+                if (kind === TokenKind.PERIOD || kind === TokenKind.DATE) {
+                    const $picker = $filter.$refs?.picker as ComponentRef | undefined;
+                    const $popup = $picker?.$refs?.popup as ComponentRef | undefined;
 
-                        return (
-                            ($picker?.$el.contains(e.target as HTMLElement) ?? false) ||
-                            ($popup?.$el.contains(e.target as HTMLElement) ?? false)
-                        );
-                    }
+                    return (
+                        ($picker?.$el.contains($target) ?? false) ||
+                        ($popup?.$el.contains($target) ?? false)
+                    );
+                }
 
-                    return $filter.$el.contains(e.target as HTMLElement);
-                },
-            );
+                return $filter.$el.contains($target);
+            });
             if (isModalFilterClick) {
                 return;
             }
@@ -456,7 +389,7 @@ const SearchPanel = defineComponent({
             // - Si c'est un click sur le bouton d'affichage des filtres, on ignore.
             const $modalButton = this.$refs.modalButton as ComponentRef<typeof Button>;
             const $modalButtonNode = $modalButton?.$el as HTMLElement | undefined;
-            if ($modalButtonNode!.contains(e.target as Element)) {
+            if ($modalButtonNode!.contains($target)) {
                 return;
             }
 
@@ -469,30 +402,60 @@ const SearchPanel = defineComponent({
         // -
         // ------------------------------------------------------
 
-        getDefaultValues(options: { keepModalOnly?: boolean, keepSearch?: boolean } = {}): Filters {
-            const { keepModalOnly = false, keepSearch = false } = options;
+        isDefinitionUsableInModal(definition: FilterDefinition): boolean {
+            if (definition.placeholder === undefined) {
+                return false;
+            }
+
+            // - Si c'est un filtre avec entrée textuelle...
+            //   => On ne l'affiche pas dans la modale.
+            const isTextual = (
+                definition.kind === TokenKind.TEXT ||
+                definition.kind === TokenKind.FLOAT ||
+                definition.kind === TokenKind.INTEGER
+            );
+            if (isTextual) {
+                return false;
+            }
+
+            // - Idem si c'est un token booléen.
+            // TODO: À implémenter ?
+            if (definition.kind === TokenKind.BOOLEAN) {
+                return false;
+            }
+
+            // - Si le filtre requiert un opérateur...
+            //   => On ne l'affiche pas dans la modale.
+            if ((definition.operators ?? []).length > 0) {
+                return false;
+            }
+
+            // - On ne garde que les filtres "uniques" pour la modale.
+            return definition.unique ?? true;
+        },
+
+        getDefaultValues(options: { keepCoreOnly?: boolean } = {}): Filters {
+            const { keepCoreOnly = false } = options;
 
             return this.definitions.reduce(
                 (values: Partial<Filters>, definition: FilterDefinition) => {
-                    const isList = (definition.kind ?? FilterKind.LIST) === FilterKind.LIST;
-                    if (!isList && keepModalOnly) {
-                        return { ...values, [definition.type]: this.values[definition.type] };
+                    const isList = (
+                        definition.kind === undefined ||
+                        definition.kind === TokenKind.LIST
+                    );
+                    let defaultValue: FilterValue | null = null;
+                    if (!(definition.unique ?? true) || (isList && definition.multiSelect)) {
+                        defaultValue = [];
                     }
 
-                    let defaultValue: TokenValue | Period | null = null;
-                    if (
-                        isList &&
-                        (
-                            (definition as TokenDefinition).multiSelect ||
-                            !((definition as TokenDefinition).unique ?? true)
-                        )
-                    ) {
-                        defaultValue = [];
+                    if (keepCoreOnly && !this.isDefinitionUsableInModal(definition)) {
+                        const _value = this.values[definition.type] ?? defaultValue;
+                        return { ...values, [definition.type]: _value };
                     }
 
                     return { ...values, [definition.type]: defaultValue };
                 },
-                { search: keepSearch ? [...this.values.search] : [] },
+                { search: keepCoreOnly ? [...this.values.search] : [] },
             ) as Filters;
         },
 
@@ -547,17 +510,16 @@ const SearchPanel = defineComponent({
             values,
             search,
             showModal,
-            definitions,
+            modalDefinitions,
             hasModalFilters,
             modalPosition,
             modalFiltersCount,
             isModalFilterEmpty,
-            handleFiltersClear,
+            handleModalFiltersClear,
             handleToggleModal,
             handleSearchSubmit,
             handleSearchChange,
             handleFilterChange,
-            handleClickOutsideModal,
         } = this;
 
         return (
@@ -596,15 +558,13 @@ const SearchPanel = defineComponent({
                                 left: `${modalPosition.x}px`,
                                 top: `${modalPosition.y}px`,
                             }}
-                            v-clickOutside={handleClickOutsideModal}
                         >
-                            {definitions.map((definition: FilterDefinition) => {
-                                const isList = (definition.kind ?? FilterKind.LIST) === FilterKind.LIST;
-                                if (isList && !((definition as TokenDefinition).unique ?? true)) {
-                                    return null;
-                                }
-
-                                const isMultiSelect = isList && (definition as TokenDefinition).multiSelect;
+                            {modalDefinitions.map((definition: FilterDefinition) => {
+                                const isList = (
+                                    definition.kind === undefined ||
+                                    definition.kind === TokenKind.LIST
+                                );
+                                const isMultiSelect = isList && definition.multiSelect;
                                 const value = values[definition.type] ?? (isMultiSelect ? [] : null);
 
                                 const highlighted = !definition.disabled && (
@@ -613,42 +573,52 @@ const SearchPanel = defineComponent({
                                         : value !== null
                                 );
 
-                                if (definition.kind === FilterKind.PERIOD) {
-                                    return (
-                                        <DatePicker
-                                            ref={`modalFilters[${definition.type}]`}
-                                            key={definition.type}
-                                            type="date"
-                                            placeholder={definition.placeholder}
-                                            disabled={definition.disabled}
-                                            highlight={highlighted}
-                                            value={value as Period<true>}
-                                            onChange={(newValue: Raw<Period> | null) => {
-                                                handleFilterChange(definition.type, newValue);
-                                            }}
-                                            withSnippets
-                                            clearable
-                                            range
-                                        />
-                                    );
+                                switch (definition.kind) {
+                                    case TokenKind.DATE:
+                                    case TokenKind.PERIOD: {
+                                        return (
+                                            <DatePicker
+                                                ref={`modalFilters[${definition.type}]`}
+                                                key={definition.type}
+                                                type="date"
+                                                placeholder={definition.placeholder}
+                                                disabled={definition.disabled}
+                                                highlight={highlighted}
+                                                range={definition.kind === TokenKind.PERIOD}
+                                                value={value as Period<true> | Day}
+                                                onChange={(newValue: Raw<Period> | Raw<Day> | null) => {
+                                                    handleFilterChange(definition.type, newValue);
+                                                }}
+                                                withSnippets
+                                                clearable
+                                            />
+                                        );
+                                    }
+                                    case TokenKind.LIST:
+                                    case undefined: {
+                                        return (
+                                            <Select
+                                                ref={`modalFilters[${definition.type}]`}
+                                                key={definition.type}
+                                                class="SearchPanel__modal__filter"
+                                                options={definition.options}
+                                                disabled={definition.disabled}
+                                                placeholder={definition.placeholder}
+                                                multiple={definition.multiSelect ?? false}
+                                                highlight={highlighted}
+                                                value={value as string | number | Array<string | number> | null}
+                                                onChange={(newValue: TokenValue | null) => {
+                                                    handleFilterChange(definition.type, newValue);
+                                                }}
+                                            />
+                                        );
+                                    }
+                                    default: {
+                                        // eslint-disable-next-line no-console
+                                        console.warn(`Unsupported kind in \`<SearchPanel />\` modal: \`${definition.kind}\`.`);
+                                        return null;
+                                    }
                                 }
-
-                                return (
-                                    <Select
-                                        ref={`modalFilters[${definition.type}]`}
-                                        key={definition.type}
-                                        class="SearchPanel__modal__filter"
-                                        options={definition.options}
-                                        disabled={definition.disabled}
-                                        placeholder={definition.placeholder}
-                                        multiple={definition.multiSelect ?? false}
-                                        highlight={highlighted}
-                                        value={value as string | number | Array<string | number> | null}
-                                        onChange={(newValue: TokenValue | null) => {
-                                            handleFilterChange(definition.type, newValue);
-                                        }}
-                                    />
-                                );
                             })}
                             {!isModalFilterEmpty && (
                                 <Button
@@ -656,7 +626,7 @@ const SearchPanel = defineComponent({
                                     icon="backspace"
                                     class="SearchPanel__modal__reset"
                                     tooltip={__('clear-filters')}
-                                    onClick={handleFiltersClear}
+                                    onClick={handleModalFiltersClear}
                                 />
                             )}
                         </div>
@@ -674,9 +644,14 @@ const SearchPanel = defineComponent({
 type SearchPanelGeneric = <F extends Filters>(props: Props<F>) => JSX.Element;
 
 export type {
-    TokenOptions,
     TokenOption,
+    TokenOptions,
 } from '@/themes/default/components/Search';
+
+export {
+    TokenKind as FilterKind,
+    hasChangedFilters,
+};
 
 export type SearchPanelRef = ComponentRef<typeof SearchPanel>;
 export default SearchPanel as any as SearchPanelGeneric;

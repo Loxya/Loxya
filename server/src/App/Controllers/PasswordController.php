@@ -246,6 +246,12 @@ final class PasswordController extends BaseController
             throw new HttpForbiddenException($request);
         }
 
+        // - Si l'utilisateur est passé admin entre temps, on
+        //   empêche la réinitialisation de mot de passe via ce flux.
+        if ($user->group === Group::ADMINISTRATION) {
+            throw new HttpForbiddenException($request);
+        }
+
         $user->password = $postData['password'];
         $user->save();
 

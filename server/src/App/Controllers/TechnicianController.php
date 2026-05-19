@@ -3,13 +3,10 @@ declare(strict_types=1);
 
 namespace Loxya\Controllers;
 
-use DI\Container;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Illuminate\Database\Eloquent\Builder;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\Feature;
-use Loxya\Controllers\Traits\Crud;
-use Loxya\Errors\Exception\ValidationException;
 use Loxya\Http\Request;
 use Loxya\Models\Document;
 use Loxya\Models\Enums\Group;
@@ -17,8 +14,8 @@ use Loxya\Models\Event;
 use Loxya\Models\EventTechnician;
 use Loxya\Models\Technician;
 use Loxya\Services\Auth;
-use Loxya\Services\I18n;
 use Loxya\Support\Arr;
+use Loxya\Support\Validation\ValidationsException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Exception\HttpBadRequestException;
@@ -28,37 +25,6 @@ use Slim\Http\Response;
 
 final class TechnicianController extends BaseController
 {
-    use Crud\GetOne {
-        getOne as protected _originalGetOne;
-    }
-    use Crud\SoftDelete {
-        delete as protected _originalDelete;
-        restore as protected _originalRestore;
-    }
-
-    private I18n $i18n;
-
-    public function __construct(Container $container, I18n $i18n)
-    {
-        parent::__construct($container);
-
-        $this->i18n = $i18n;
-    }
-
-    // ------------------------------------------------------
-    // -
-    // -    Actions
-    // -
-    // ------------------------------------------------------
-
-    public function getOne(Request $request, Response $response): ResponseInterface
-    {
-        if (!isFeatureEnabled(Feature::TECHNICIANS)) {
-            throw new HttpNotFoundException($request, "Technician feature is disabled.");
-        }
-        return $this->_originalGetOne($request, $response);
-    }
-
     public function getAll(Request $request, Response $response): ResponseInterface
     {
         if (!isFeatureEnabled(Feature::TECHNICIANS)) {
@@ -66,12 +32,12 @@ final class TechnicianController extends BaseController
         }
 
         $search = $request->getSearchArrayQueryParam('search');
+        $isPreparer = $request->getBooleanQueryParam('isPreparer', null);
         $limit = $request->getIntegerQueryParam('limit');
-        $ascending = $request->getBooleanQueryParam('ascending', true);
         $availabilityPeriod = $request->getPeriodQueryParam('availabilityPeriod');
         $role = $request->getIntegerQueryParam('role');
         $onlyDeleted = $request->getBooleanQueryParam('deleted', false);
-        $orderBy = $request->getOrderByQueryParam('orderBy', Technician::class);
+        $orderBy = $request->getOrderByQueryParams('orderBy', 'ascending', Technician::class);
 
         $query = Technician::query()
             ->when(
@@ -89,6 +55,9 @@ final class TechnicianController extends BaseController
                     ))
                 ),
             )
+            ->when($isPreparer !== null, static fn (Builder $subQuery) => (
+                $subQuery->where('is_preparer', (bool) $isPreparer)
+            ))
             ->when($role !== null, static fn (Builder $subQuery) => (
                 $subQuery->whereHas('roles', static fn (Builder $rolesQuery) => (
                     $rolesQuery->where('roles.id', $role)
@@ -97,7 +66,9 @@ final class TechnicianController extends BaseController
             ->when($onlyDeleted, static fn (Builder $subQuery) => (
                 $subQuery->onlyTrashed()
             ))
-            ->customOrderBy($orderBy, $ascending ? 'asc' : 'desc');
+            ->when($orderBy !== null, static fn (Builder $subQuery) => (
+                $subQuery->customOrderBy($orderBy['column'], $orderBy['direction'])
+            ));
 
         $results = $this->paginate($request, $query, $limit);
         return $response->withJson($results, StatusCode::STATUS_OK);
@@ -205,6 +176,19 @@ final class TechnicianController extends BaseController
         return $response->withJson($results, StatusCode::STATUS_OK);
     }
 
+    public function getOne(Request $request, Response $response): ResponseInterface
+    {
+        if (!isFeatureEnabled(Feature::TECHNICIANS)) {
+            throw new HttpNotFoundException($request, "Technician feature is disabled.");
+        }
+
+        $id = $request->getIntegerAttribute('id');
+        $technician = Technician::findOrFail($id);
+
+        $data = static::_formatOne($technician);
+        return $response->withJson($data, StatusCode::STATUS_OK);
+    }
+
     public function getEvents(Request $request, Response $response): ResponseInterface
     {
         if (!isFeatureEnabled(Feature::TECHNICIANS)) {
@@ -285,9 +269,9 @@ final class TechnicianController extends BaseController
 
         try {
             $technician = Technician::new($postData, $withUser);
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Technician::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         $technician = static::_formatOne($technician);
@@ -319,9 +303,9 @@ final class TechnicianController extends BaseController
 
         try {
             $technician->edit($postData, $withUser);
-        } catch (ValidationException $e) {
+        } catch (ValidationsException $e) {
             $errors = Technician::serializeValidation($e->getValidationErrors());
-            throw new ValidationException($errors);
+            throw new ValidationsException($errors);
         }
 
         $technician = static::_formatOne($technician);
@@ -333,7 +317,19 @@ final class TechnicianController extends BaseController
         if (!isFeatureEnabled(Feature::TECHNICIANS)) {
             throw new HttpNotFoundException($request, "Technician feature is disabled.");
         }
-        return $this->_originalDelete($request, $response);
+
+        $id = $request->getIntegerAttribute('id');
+        $technician = Technician::withTrashed()->findOrFail($id);
+
+        $isDeleted = $technician->trashed()
+            ? $technician->forceDelete()
+            : $technician->delete();
+
+        if (!$isDeleted) {
+            throw new \RuntimeException("An unknown error occurred while deleting the technician.");
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 
     public function restore(Request $request, Response $response): ResponseInterface
@@ -341,7 +337,19 @@ final class TechnicianController extends BaseController
         if (!isFeatureEnabled(Feature::TECHNICIANS)) {
             throw new HttpNotFoundException($request, "Technician feature is disabled.");
         }
-        return $this->_originalRestore($request, $response);
+
+        $id = $request->getIntegerAttribute('id');
+
+        $technician = Technician::query()
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        if (!$technician->restore()) {
+            throw new \RuntimeException(sprintf("Unable to restore the technician %d.", $id));
+        }
+
+        $data = static::_formatOne($technician);
+        return $response->withJson($data, StatusCode::STATUS_OK);
     }
 
     // ------------------------------------------------------

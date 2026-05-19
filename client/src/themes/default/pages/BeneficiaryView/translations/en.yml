@@ -1,6 +1,19 @@
 title-simple: Details of beneficiary
 title: "Beneficiary: \"{name}\""
 
+warnings:
+    not-invoiceable:
+        with-company:
+            message: |-
+                The billing details of the company linked to this beneficiary are incomplete or invalid.
+                Please complete or correct this information in order to generate estimates or invoices for this beneficiary.
+            action: Edit company
+        without-company:
+            message: |-
+                This beneficiary's billing details are incomplete or invalid.
+                Please complete or correct this information in order to generate estimates or invoices for this beneficiary.
+            action: Edit beneficiary
+
 #
 # - Tabs
 #
@@ -10,18 +23,34 @@ infos:
     borrowings-count: Borrowings count
     no-borrowing: None.
     next-borrowings-title: Current and future borrowings
-    no-borrowing-planned: No events planned.
+    no-borrowing-planned: No reservations or events planned.
 
 billing:
     title: Estimates & Invoices
-    nothing: There are no estimates or invoices for this beneficiary at the moment.
-    no-estimates: No estimates for this beneficiary for now.
-    estimates-title: Estimate
-    estimates-count: ["{count} estimate", "{count} estimates"]
-    no-invoices: No invoices for this beneficiary.
-    invoices-title: Invoices
-    invoices-count: ["{count} invoice", "{count} invoices"]
-    invoices-total-excl-tax: "Total excl. tax: {amount}"
+
+    estimates:
+        title: Estimate
+        count: ["{count} estimate", "{count} estimates"]
+        empty: No estimates for this beneficiary.
+
+        columns:
+            number: Number
+            issue-date: Issue date
+            total-without-taxes: "Amount excl. taxes"
+            total-with-taxes: "Amount incl. taxes"
+            status: Status
+
+    invoices:
+        title: Invoices
+        count: ["{count} invoice", "{count} invoices"]
+        empty: No invoices for this beneficiary.
+
+        columns:
+            number: Number
+            issue-date: Issue date
+            total-without-taxes: "Amount excl. taxes"
+            total-with-taxes: "Amount incl. taxes"
+            status: Status
 
 borrowings:
     title: Borrowings ({count})

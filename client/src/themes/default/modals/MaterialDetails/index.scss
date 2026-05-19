@@ -1,0 +1,69 @@
+@use '~@/themes/default/style/globals';
+
+.MaterialDetailsModal {
+    $block: &;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+
+    &__close {
+        padding: 10px;
+        text-align: right;
+    }
+
+    &__loading {
+        flex: 1;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        background-color: globals.$bg-color-emphasis;
+        gap: globals.$spacing-medium;
+        user-select: none;
+
+        &__title {
+            flex: 1;
+
+            &__name {
+                margin: 0 0 globals.$spacing-thin;
+            }
+
+            &__reference {
+                color: globals.$text-soft-color;
+            }
+        }
+
+        &__actions {
+            flex: 0 0 auto;
+            display: flex;
+            gap: globals.$spacing-thin;
+        }
+
+        &__close-button {
+            flex: 0 0 auto;
+        }
+    }
+
+    &__body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        height: 100%;
+        padding: 20px;
+    }
+
+    //
+    // - États.
+    //
+
+    &--not-ready {
+        #{$block}__body {
+            padding-bottom: 50px;
+        }
+    }
+}

@@ -1,53 +1,214 @@
 @use '~@/themes/default/style/globals';
 
 .StepperItem {
-    display: flex;
-    align-items: center;
-    padding: globals.$spacing-medium;
-    border: 1px solid globals.$text-muted-color;
-    border-radius: 1.5rem;
-    color: globals.$text-muted-color;
-    font-size: 1.1rem;
-    text-align: left;
-    gap: globals.$spacing-small;
-    transition: all 300ms;
-    user-select: none;
+    $block: &;
 
-    &__icon {
-        min-width: 15px;
+    &__link {
+        outline: none;
+        text-decoration: none;
+        user-select: none;
     }
 
-    &__number {
-        &::after {
-            content: '-';
-            margin-left: globals.$spacing-small;
+    //
+    // - Variante: Verticale
+    //
+
+    &--vertical {
+        #{$block}__link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 1px solid globals.$text-muted-color;
+            border-radius: 99999px;
+            color: globals.$text-muted-color;
+            font-size: 1.1rem;
+            text-align: left;
+            gap: globals.$spacing-medium;
+            transition: all 300ms;
+            opacity: 1;
+        }
+
+        #{$block}__icon {
+            min-width: 15px;
+            text-align: center;
+        }
+
+        #{$block}__content {
+            display: flex;
+            align-items: center;
+            gap: globals.$spacing-small;
+        }
+
+        #{$block}__number {
+            &::after {
+                content: '-';
+                margin-left: globals.$spacing-small;
+            }
+        }
+
+        #{$block}__text {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        //
+        // - États
+        //
+
+        &#{$block}--reachable {
+            #{$block}__link {
+                border-color: globals.$text-base-color;
+                color: globals.$text-base-color;
+                cursor: pointer;
+                opacity: 0.5;
+            }
+        }
+
+        &#{$block}--validated {
+            #{$block}__link {
+                border-color: globals.$text-success-color;
+                color: globals.$text-success-color;
+                opacity: 0.5;
+            }
+        }
+
+        &#{$block}--behind {
+            #{$block}__link {
+                border-color: globals.$text-success-color;
+                color: globals.$text-success-color;
+                cursor: pointer;
+                opacity: 1;
+            }
+        }
+
+        &#{$block}--active {
+            #{$block}__link {
+                border-color: globals.$text-base-color;
+                color: globals.$text-base-color;
+                cursor: default;
+                opacity: 1;
+            }
         }
     }
 
-    &__name {
-        flex: 1;
-        font-weight: 600;
-    }
-
     //
-    // - États
+    // - Variante: Horizontale
     //
 
-    &--reachable {
-        border-color: globals.$text-soft-color;
-        color: globals.$text-soft-color;
-        cursor: pointer;
-    }
+    &--horizontal {
+        $indicator-size: 28px;
+        $indicator-margin: 3px;
 
-    &--active {
-        border-color: globals.$text-base-color;
-        color: globals.$text-base-color;
-        cursor: default;
-    }
+        #{$block}__link {
+            cursor: default;
+        }
 
-    &--validated {
-        border-color: globals.$text-success-color;
-        color: globals.$text-success-color;
-        cursor: pointer;
+        #{$block}__content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            max-width: 140px;
+            margin: auto;
+            color: globals.$text-soft-color;
+            white-space: nowrap;
+            gap: 3px;
+        }
+
+        #{$block}__number {
+            position: relative;
+            z-index: 1;
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: $indicator-size;
+            height: $indicator-size;
+            margin: 3px;
+            border: 1px solid globals.$divider-color;
+            border-radius: 50%;
+            background-color: globals.$bg-color-body;
+            color: globals.$text-soft-color;
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1;
+            transition-property: color, background-color, border-color;
+            transition-duration: 400ms;
+            transition-timing-function: ease-in-out;
+            user-select: none;
+
+            &::before {
+                content: '';
+                position: absolute;
+                z-index: -1;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+            }
+        }
+
+        #{$block}__text {
+            display: block;
+            overflow: hidden;
+            width: 100%;
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.2;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        //
+        // - États
+        //
+
+        &#{$block}--reachable {
+            #{$block}__link {
+                cursor: pointer;
+            }
+
+            #{$block}__number {
+                background-color: globals.$divider-color;
+            }
+        }
+
+        &#{$block}--behind,
+        &#{$block}--active {
+            #{$block}__content {
+                color: globals.$text-base-color;
+            }
+
+            #{$block}__number {
+                border-color: globals.$primary-color;
+                background-color: globals.$primary-color;
+                color: #fff;
+            }
+        }
+
+        &#{$block}--active {
+            #{$block}__link {
+                cursor: default;
+            }
+
+            #{$block}__number {
+                &::after {
+                    content: '';
+                    position: absolute;
+                    z-index: 2;
+                    inset: calc(-1 * calc(1px + 3px));
+                    display: block;
+                    border: 1px solid globals.$primary-color;
+                    border-radius: 100%;
+                    box-shadow: inset 0 0 0 2px globals.$bg-color-body;
+                    pointer-events: none;
+                }
+            }
+
+            #{$block}__text {
+                font-weight: 600;
+            }
+        }
     }
 }

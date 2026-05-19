@@ -11,11 +11,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Loxya\Config\Config;
 use Loxya\Contracts\Serializable;
-use Loxya\Errors\Exception\ValidationException;
+use Loxya\Models\Enums\LegalEntityType;
 use Loxya\Models\Traits\Serializer;
+use Loxya\Support\Address;
 use Loxya\Support\Arr;
 use Loxya\Support\Assert;
+use Loxya\Support\Country;
+use Loxya\Support\Invoicing\BuyerInterface;
+use Loxya\Support\Validation\ValidationsException;
 use Loxya\Support\Validation\Validator as V;
 
 /**
@@ -35,13 +40,17 @@ use Loxya\Support\Validation\Validator as V;
  * @property-read string|null $email
  * @property-read string|null $phone
  * @property-read string|null $street
+ * @property-read string|null $additional_street
  * @property-read string|null $postal_code
+ * @property-read string|null $administrative_area
  * @property-read string|null $locality
- * @property-read int|null $country_id
- * @property-read Country|null $country
- * @property-read string|null $full_address
+ * @property-read Address $address
+ * @property-read Country $country
+ * @property-read bool $is_invoiceable
+ * @property-read string|null $language
  * @property string|null $note
  * @property-read array $stats
+ * @property-read bool $is_deleted
  * @property-read CarbonImmutable $created_at
  * @property-read CarbonImmutable|null $updated_at
  * @property-read CarbonImmutable|null $deleted_at
@@ -52,7 +61,7 @@ use Loxya\Support\Validation\Validator as V;
  *
  * @method static Builder|static search(string|string[] $term)
  */
-final class Beneficiary extends BaseModel implements Serializable
+final class Beneficiary extends BaseModel implements Serializable, BuyerInterface
 {
     use Serializer;
     use SoftDeletes;
@@ -81,7 +90,7 @@ final class Beneficiary extends BaseModel implements Serializable
     // -
     // ------------------------------------------------------
 
-    public function checkPersonId($value)
+    public function checkPersonId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -105,9 +114,9 @@ final class Beneficiary extends BaseModel implements Serializable
         return !$alreadyExists ?: 'person-already-a-beneficiary';
     }
 
-    public function checkReference($value)
+    public function checkReference(mixed $value)
     {
-        V::optional(V::length(null, 191))->check($value);
+        V::nullable(V::length(null, 191))->check($value);
 
         if (!$value) {
             return true;
@@ -124,7 +133,7 @@ final class Beneficiary extends BaseModel implements Serializable
         return !$alreadyExists ?: 'reference-already-in-use';
     }
 
-    public function checkCompanyId($value)
+    public function checkCompanyId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -167,14 +176,14 @@ final class Beneficiary extends BaseModel implements Serializable
 
     public function estimates(): HasMany
     {
-        return $this->hasMany(Estimate::class, 'beneficiary_id')
-            ->orderBy('date', 'desc');
+        return $this->hasMany(Estimate::class, 'buyer_id')
+            ->customOrderBy('date', 'desc');
     }
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(Invoice::class, 'beneficiary_id')
-            ->orderBy('date', 'desc');
+        return $this->hasMany(Invoice::class, 'buyer_id')
+            ->customOrderBy('date', 'desc');
     }
 
     // ------------------------------------------------------
@@ -190,11 +199,16 @@ final class Beneficiary extends BaseModel implements Serializable
         'email',
         'phone',
         'street',
+        'additional_street',
         'postal_code',
+        'administrative_area',
         'locality',
-        'full_address',
-        'country_id',
+        'address',
+        'country',
+        'language',
         'user_id',
+        'is_invoiceable',
+        'is_deleted',
     ];
 
     protected $casts = [
@@ -278,6 +292,17 @@ final class Beneficiary extends BaseModel implements Serializable
         return $this->person->street;
     }
 
+    public function getAdditionalStreetAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The beneficiary\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->additional_street;
+    }
+
     public function getPostalCodeAttribute(): string|null
     {
         if (!$this->person) {
@@ -287,6 +312,17 @@ final class Beneficiary extends BaseModel implements Serializable
             );
         }
         return $this->person->postal_code;
+    }
+
+    public function getAdministrativeAreaAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The beneficiary\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->administrative_area;
     }
 
     public function getLocalityAttribute(): string|null
@@ -300,18 +336,7 @@ final class Beneficiary extends BaseModel implements Serializable
         return $this->person->locality;
     }
 
-    public function getCountryIdAttribute(): int|null
-    {
-        if (!$this->person) {
-            throw new \LogicException(
-                'The beneficiary\'s related person is missing, ' .
-                'this relation should always be defined.',
-            );
-        }
-        return $this->person->country_id;
-    }
-
-    public function getCountryAttribute(): Country|null
+    public function getCountryAttribute(): Country
     {
         if (!$this->person) {
             throw new \LogicException(
@@ -322,7 +347,7 @@ final class Beneficiary extends BaseModel implements Serializable
         return $this->person->country;
     }
 
-    public function getFullAddressAttribute(): string|null
+    public function getAddressAttribute(): Address
     {
         if (!$this->person) {
             throw new \LogicException(
@@ -330,7 +355,7 @@ final class Beneficiary extends BaseModel implements Serializable
                 'this relation should always be defined.',
             );
         }
-        return $this->person->full_address;
+        return $this->person->address;
     }
 
     public function getUserIdAttribute(): int|null
@@ -342,6 +367,17 @@ final class Beneficiary extends BaseModel implements Serializable
             );
         }
         return $this->person->user?->id;
+    }
+
+    public function getLanguageAttribute(): string|null
+    {
+        if (!$this->person) {
+            throw new \LogicException(
+                'The beneficiary\'s related person is missing, ' .
+                'this relation should always be defined.',
+            );
+        }
+        return $this->person->language;
     }
 
     public function getUserAttribute(): User|null
@@ -376,6 +412,105 @@ final class Beneficiary extends BaseModel implements Serializable
         return $this->getRelationValue('invoices');
     }
 
+    public function getIsDeletedAttribute(): bool
+    {
+        return $this->trashed();
+    }
+
+    public function getIsInvoiceableAttribute(): bool
+    {
+        if (!$this->exists) {
+            return false;
+        }
+
+        $sellerCountry = Config::getOrganizationCountry();
+        return $sellerCountry->isInvoiceable($this);
+    }
+
+    // ------------------------------------------------------
+    // -
+    // -    Profil "acheteur" du bénéficiaire
+    // -
+    // ------------------------------------------------------
+
+    public function getBuyerType(): LegalEntityType
+    {
+        return $this->company !== null
+            ? LegalEntityType::COMPANY
+            : LegalEntityType::INDIVIDUAL;
+    }
+
+    public function getBuyerFirstName(): string|null
+    {
+        return $this->first_name;
+    }
+
+    public function getBuyerLastName(): string|null
+    {
+        return $this->last_name;
+    }
+
+    public function getBuyerLegalName(): string|null
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->legal_name
+            : null;
+    }
+
+    public function getBuyerRegistrationId(): string|null
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->registration_id
+            : null;
+    }
+
+    public function isBuyerPublicEntity(): bool
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? ($this->company?->is_public_entity ?? false)
+            : false;
+    }
+
+    public function getBuyerVatNumber(): string|null
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->vat_number
+            : null;
+    }
+
+    public function getBuyerServiceCode(): string|null
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->service_code
+            : null;
+    }
+
+    public function getBuyerInvoiceIdentifier(): string|null
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->invoice_identifier
+            : null;
+    }
+
+    public function getBuyerAddress(): Address
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->address
+            : $this->address;
+    }
+
+    public function getBuyerPhone(): string|null
+    {
+        return $this->getBuyerType() === LegalEntityType::COMPANY
+            ? $this->company?->phone
+            : $this->phone;
+    }
+
+    public function getBuyerEmail(): string|null
+    {
+        return $this->email;
+    }
+
     // ------------------------------------------------------
     // -
     // -    Setters
@@ -389,13 +524,18 @@ final class Beneficiary extends BaseModel implements Serializable
         'note',
     ];
 
+    public function setReferenceAttribute(mixed $value): void
+    {
+        $this->attributes['reference'] = $value === '' ? null : $value;
+    }
+
     // ------------------------------------------------------
     // -
     // -    Query Scopes
     // -
     // ------------------------------------------------------
 
-    protected $orderable = [
+    protected array $orderable = [
         'full_name',
         'reference',
         'company',
@@ -436,9 +576,8 @@ final class Beneficiary extends BaseModel implements Serializable
 
     public function scopeCustomOrderBy(Builder $query, string $column, string $direction = 'asc'): Builder
     {
-        if (!in_array($column, ['full_name', 'reference', 'company', 'email'], true)) {
-            throw new \InvalidArgumentException("Invalid order field.");
-        }
+        Assert::inArray($column, ['full_name', 'reference', 'company', 'email'], "Invalid order field.");
+        Assert::inArray($direction, ['asc', 'desc'], "Invalid direction.");
 
         if (!in_array($column, ['full_name', 'company', 'email'], true)) {
             return $query->orderBy($column, $direction);
@@ -482,19 +621,23 @@ final class Beneficiary extends BaseModel implements Serializable
     public function edit(array $data): static
     {
         $this->fill(Arr::except($data, ['person', 'user', 'user_id']));
+        $isIndividual = $this->company_id === null;
 
         $person = $this->person ?? new Person();
         $person->fill($data['person'] ?? []);
 
-        if (!$this->isValid() || !$person->isValid()) {
-            throw new ValidationException(array_merge(
+        if (
+            !$this->isValid() ||
+            !$person->isValid(enforceBuyerValidation: $isIndividual)
+        ) {
+            throw new ValidationsException(array_merge(
                 $this->validationErrors(),
-                ['person' => $person->validationErrors()],
+                ['person' => $person->validationErrors(enforceBuyerValidation: $isIndividual)],
             ));
         }
 
-        return dbTransaction(function () use ($person) {
-            if (!$person->save()) {
+        return dbTransaction(function () use ($person, $isIndividual) {
+            if (!$person->save(['enforceBuyerValidation' => $isIndividual])) {
                 throw new \RuntimeException("Unable to save the beneficiary's related person.");
             }
             $this->person()->associate($person);
@@ -517,9 +660,7 @@ final class Beneficiary extends BaseModel implements Serializable
     {
         /** @var Beneficiary $beneficiary */
         $beneficiary = tap(clone $this, static function (Beneficiary $beneficiary) use ($format) {
-            if ($format !== self::SERIALIZE_SUMMARY) {
-                $beneficiary->append(['country', 'company']);
-            }
+            $beneficiary->append(['company']);
 
             if ($format === self::SERIALIZE_DETAILS) {
                 $beneficiary->append(['user', 'stats']);
@@ -531,24 +672,29 @@ final class Beneficiary extends BaseModel implements Serializable
         if ($format === self::SERIALIZE_SUMMARY) {
             $data->delete([
                 'user_id',
-                'first_name',
-                'last_name',
                 'phone',
                 'street',
+                'additional_street',
                 'postal_code',
+                'administrative_area',
                 'locality',
-                'country_id',
-                'full_address',
+                'country',
+                'address',
                 'company_id',
+                'color',
+                'language',
                 'note',
+                'can_make_reservation',
+                'is_invoiceable',
+                'is_deleted',
             ]);
         }
 
         return $data
             ->delete([
-                'person_id',
                 'color',
                 'can_make_reservation',
+                'person_id',
                 'created_at',
                 'updated_at',
                 'deleted_at',
@@ -566,9 +712,11 @@ final class Beneficiary extends BaseModel implements Serializable
             'email',
             'phone',
             'street',
+            'additional_street',
             'postal_code',
+            'administrative_area',
             'locality',
-            'country_id',
+            'country',
         ];
         foreach ($personFields as $field) {
             $originalPath = sprintf('person.%s', $field);
@@ -618,9 +766,11 @@ final class Beneficiary extends BaseModel implements Serializable
             'last_name',
             'phone',
             'street',
+            'additional_street',
             'postal_code',
+            'administrative_area',
             'locality',
-            'country_id',
+            'country',
         ];
         foreach ($personFields as $field) {
             $originalPath = sprintf('person.%s', $field);

@@ -2,5 +2,24 @@ title-create: Nouvelle société
 title-edit-simple: Modifier la société
 title-edit: "Modifier la société «\_{name}\_»"
 
-attached-persons: Personnes associées à la société
 saved: Société sauvegardée.
+
+#
+# - Formulaire
+#
+
+is-public-entity: "Entité publique (administration, organisme public, ...)\_?"
+service-code: Code de service
+
+invoice-routing-identifier-customize:
+    label: "Personnaliser l'identifiant e-facturation\_?"
+    help: >-
+        Par défaut, l'identifiant de routage e-facturation est déduit automatiquement de
+        l'identifiant d'entreprise. Si le client vous a communiqué un identifiant spécifique
+        (ex. avec un suffixe de routage), vous pouvez le renseigner ici.
+
+invoice-routing-identifier:
+    label: Identifiant de routage e-facturation
+    help: |-
+        Identifiant utilisé pour acheminer les factures électroniques vers le bon destinataire.
+        Vous pouvez obtenir cette information directement auprès du client.

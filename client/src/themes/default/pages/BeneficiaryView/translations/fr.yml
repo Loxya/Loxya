@@ -1,6 +1,19 @@
 title-simple: Détails du bénéficiaire
 title: "Bénéficiaire\_: «\_{name}\_»"
 
+warnings:
+    not-invoiceable:
+        with-company:
+            message: |-
+                Les données de facturation de l'entreprise liée à ce bénéficiaire sont incomplètes ou invalides.
+                Veuillez compléter ou corriger ces informations pour pouvoir générer des devis ou factures pour ce bénéficiaire.
+            action: Modifier l'entreprise
+        without-company:
+            message: |-
+                Les données de facturation de ce bénéficiaire sont incomplètes ou invalides.
+                Veuillez compléter ou corriger ces informations pour pouvoir générer des devis ou factures pour ce bénéficiaire.
+            action: Modifier le bénéficiaire
+
 #
 # - Tabs
 #
@@ -10,18 +23,34 @@ infos:
     borrowings-count: Nombre d'emprunts
     no-borrowing: Aucun.
     next-borrowings-title: Emprunts en cours ou à venir
-    no-borrowing-planned: Aucun événement prévu.
+    no-borrowing-planned: Aucune réservation ni événement prévu.
 
 billing:
     title: Devis & Factures
-    nothing: Aucun devis ni facture au nom de ce bénéficiaire pour le moment.
-    no-estimates: Aucun devis au nom de ce bénéficiaire pour le moment.
-    estimates-title: Devis
-    estimates-count: ["{count} devis", "{count} devis"]
-    no-invoices: Aucune facture émise pour ce bénéficiaire.
-    invoices-title: Factures
-    invoices-count: ["{count} facture", "{count} factures"]
-    invoices-total-excl-tax: "Total H.T.\_: {amount}"
+
+    estimates:
+        title: Devis
+        count: ["{count} devis", "{count} devis"]
+        empty: Aucune devis émis pour ce bénéficiaire.
+
+        columns:
+            number: Numéro
+            issue-date: Date
+            total-without-taxes: "Montant H.T."
+            total-with-taxes: "Montant T.T.C."
+            status: Statut
+
+    invoices:
+        title: Factures
+        count: ["{count} facture", "{count} factures"]
+        empty: Aucune facture émise pour ce bénéficiaire.
+
+        columns:
+            number: Numéro
+            issue-date: Date d'émission
+            total-without-taxes: "Montant H.T."
+            total-with-taxes: "Montant T.T.C."
+            status: Statut
 
 borrowings:
     title: Emprunts ({count})

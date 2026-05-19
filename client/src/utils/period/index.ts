@@ -5,7 +5,7 @@ import { PartReadableFormat, ReadableFormat } from './_constants';
 import DateTime, { DateTimeReadableFormat } from '@/utils/datetime';
 import Decimal from 'decimal.js';
 
-import type { SchemaInfer } from '@/utils/validation';
+import type { SchemaInput } from '@/utils/validation';
 import type { ManipulateUnit as DayManipulateUnit } from '@/utils/day';
 import type { I18nTranslate } from 'vuex-i18n';
 import type {
@@ -21,18 +21,18 @@ export const SerializedPeriodSchema = z.strictObject({
 });
 
 /** Une période sérialisée. */
-export type SerializedPeriod = SchemaInfer<typeof SerializedPeriodSchema>;
+export type SerializedPeriod = SchemaInput<typeof SerializedPeriodSchema>;
 
 /** Une période. */
 class Period<IsFullDays extends boolean = boolean> {
     /** La date de début de la période. */
-    private _start: DateTime;
+    private readonly _start: DateTime;
 
     /** La date de fin de la période. */
-    private _end: DateTime;
+    private readonly _end: DateTime;
 
     /** La période est-t'elle du type "journées entières" ? */
-    private _isFullDays: IsFullDays;
+    private readonly _isFullDays: IsFullDays;
 
     constructor(period: Period<IsFullDays>);
     // @see https://github.com/microsoft/TypeScript/issues/54157#issuecomment-1869747935
@@ -84,7 +84,7 @@ class Period<IsFullDays extends boolean = boolean> {
             (
                 typeof end === 'string' ||
                 (isFullDays && end instanceof Day) ||
-                (!isFullDays && (end instanceof DateTime || start instanceof Date))
+                (!isFullDays && (end instanceof DateTime || end instanceof Date))
             ),
             `Invalid end date for period: should be either a string or an instance of ` +
             `\`Day\` if it's a full day period, or a instance of \`DateTime\` otherwise`,
@@ -307,7 +307,11 @@ class Period<IsFullDays extends boolean = boolean> {
     public asHours(asDecimal?: false): number;
     public asHours(asDecimal: boolean = false): number | Decimal {
         if (asDecimal) {
-            return new Decimal(this._end.diff(this._start, 'hours'));
+            // - On utilise les dates en UTC pour s'affranchir des problèmes
+            //   liés aux périodes qui chevauchent un changement d'heure.
+            const startDateUtc = this._start.toRawDateTime().utc(true);
+            const endDateUtc = this._end.toRawDateTime().utc(true);
+            return new Decimal(endDateUtc.diff(startDateUtc, 'hours', true));
         }
 
         const start = this._start.startOf('hour');
@@ -315,7 +319,10 @@ class Period<IsFullDays extends boolean = boolean> {
             ? this._end.endOfHour(true)
             : this._end;
 
-        return Math.max(end.diff(start, 'hours'), 1);
+        // - Idem, on utilise les dates en UTC (cf. ci-dessus).
+        const startDateUtc = start.toRawDateTime().utc(true);
+        const endDateUtc = end.toRawDateTime().utc(true);
+        return Math.max(endDateUtc.diff(startDateUtc, 'hours'), 1);
     }
 
     /**
@@ -347,6 +354,23 @@ class Period<IsFullDays extends boolean = boolean> {
         return (
             currentPeriodHourly.start.isBefore(otherPeriodHourly.end) &&
             currentPeriodHourly.end.isAfter(otherPeriodHourly.start)
+        );
+    }
+
+    /**
+     * Vérifie si la période courante "contient" une autre période.
+     *
+     * @param otherPeriod - L'autre période à comparer.
+     *
+     * @returns `true` si les périodes se chevauchent, `false` sinon.
+     */
+    public contain(otherPeriod: Period): boolean {
+        const currentPeriodHourly = this.setFullDays(false);
+        const otherPeriodHourly = otherPeriod.setFullDays(false);
+
+        return (
+            currentPeriodHourly.start.isSameOrBefore(otherPeriodHourly.start) &&
+            currentPeriodHourly.end.isSameOrAfter(otherPeriodHourly.end)
         );
     }
 

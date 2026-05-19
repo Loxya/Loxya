@@ -1,32 +1,48 @@
 import { dataFactory } from './@utils';
-import countries from './countries';
 
 const data = [
     {
         id: 1,
         legal_name: 'Testing, Inc',
-        registration_id: null,
-        street: '1, company st.',
-        postal_code: '1234',
-        locality: 'Megacity',
-        country_id: 1,
-        full_address: `1, company st.\n1234 Megacity`,
-        phone: '+4123456789',
-        note: 'Just for tests',
-        country: countries.default(1),
+        is_public_entity: false,
+        registration_id: '12345678900001',
+        vat_number: 'FR32123456789',
+        invoice_identifier: '0225:123456789_LOCATION',
+        service_code: null,
+        street: '10 avenue de la gare',
+        additional_street: 'Bâtiment D',
+        postal_code: '74000',
+        administrative_area: null,
+        locality: 'Annecy',
+        country: 'FR',
+        address: (
+            `10 avenue de la gare\n` +
+            `Bâtiment D\n` +
+            `74000 Annecy`
+        ),
+        phone: '+33123456789',
+        note: `Anciennement Machin, Inc.`,
     },
     {
         id: 2,
         legal_name: 'Obscure',
-        registration_id: '123456789',
-        street: null,
+        is_public_entity: false,
+        registration_id: 'CHE-123.456.789',
+        vat_number: 'CHE-123.456.789 TVA',
+        invoice_identifier: null,
+        service_code: null,
+        street: `Rue de Cornavin, 1`,
+        additional_street: null,
         postal_code: null,
-        locality: null,
-        country_id: null,
-        full_address: null,
-        phone: null,
+        administrative_area: null,
+        locality: '1000',
+        country: 'CH',
+        address: (
+            `Rue de Cornavin, 1\n` +
+            `1000 Lausanne`
+        ),
+        phone: '+41211234567',
         note: null,
-        country: null,
     },
 ];
 

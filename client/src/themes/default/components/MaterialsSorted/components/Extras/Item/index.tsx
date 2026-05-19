@@ -56,6 +56,16 @@ const MaterialsSortedExtrasItem = defineComponent({
             return this.extra.quantity;
         },
 
+        discountRate(): Decimal {
+            return 'discount_rate' in this.extra
+                ? this.extra.discount_rate
+                : new Decimal(0);
+        },
+
+        hasDiscount(): boolean {
+            return !this.discountRate.isZero();
+        },
+
         totalWithoutTaxes(): Decimal {
             return 'total_without_taxes' in this.extra
                 ? this.extra.total_without_taxes
@@ -67,8 +77,10 @@ const MaterialsSortedExtrasItem = defineComponent({
             extra,
             unitPrice,
             quantity,
+            discountRate,
             totalWithoutTaxes,
             withBilling,
+            hasDiscount,
             currency,
         } = this;
 
@@ -87,7 +99,7 @@ const MaterialsSortedExtrasItem = defineComponent({
                     <td
                         class={[
                             'MaterialsSortedExtrasItem__col',
-                            'MaterialsSortedExtrasItem__col--unit-price',
+                            'MaterialsSortedExtrasItem__col--price',
                         ]}
                     >
                         {formatAmount(unitPrice, currency)}
@@ -110,7 +122,17 @@ const MaterialsSortedExtrasItem = defineComponent({
                     <td
                         class={[
                             'MaterialsSortedExtrasItem__col',
-                            'MaterialsSortedExtrasItem__col--total-price',
+                            'MaterialsSortedExtrasItem__col--discount',
+                        ]}
+                    >
+                        {hasDiscount ? `-${discountRate.toString()}%` : null}
+                    </td>
+                )}
+                {withBilling && (
+                    <td
+                        class={[
+                            'MaterialsSortedExtrasItem__col',
+                            'MaterialsSortedExtrasItem__col--total',
                         ]}
                     >
                         {formatAmount(totalWithoutTaxes, currency)}

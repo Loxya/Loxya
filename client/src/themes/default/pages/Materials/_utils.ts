@@ -51,33 +51,4 @@ export const getFiltersFromRoute = (route: Route): Partial<Filters> | undefined 
     return Object.keys(filters).length > 0 ? filters : undefined;
 };
 
-export const convertFiltersToRouteQuery = (filters: Filters): Route['query'] => {
-    const query: Route['query'] = {};
-
-    // - Recherche textuelle.
-    if (filters.search.length > 0) {
-        query.search = filters.search;
-    }
-
-    // - Parc.
-    if (filters.park !== null) {
-        query.park = filters.park.toString();
-    }
-
-    // - Catégorie.
-    if (filters.category !== null) {
-        query.category = filters.category.toString();
-    }
-
-    // - Sous-catégorie
-    if (filters.subCategory !== null) {
-        query.subCategory = filters.subCategory.toString();
-    }
-
-    // - Tags
-    if (filters.tags.length > 0) {
-        query.tags = filters.tags.join(',');
-    }
-
-    return query;
-};
+export { hasChangedFilters } from '@/themes/default/components/MaterialsFilters';

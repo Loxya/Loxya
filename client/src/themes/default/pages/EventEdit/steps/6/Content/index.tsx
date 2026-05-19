@@ -87,6 +87,7 @@ const EventEditStepOverviewContent = defineComponent({
         },
     },
     render() {
+        const { beneficiaries } = this.event;
         const {
             $t: __,
             event,
@@ -99,7 +100,6 @@ const EventEditStepOverviewContent = defineComponent({
             arePeriodsUnified,
             isTechniciansEnabled,
         } = this;
-        const { beneficiaries } = event;
 
         return (
             <div class="EventEditStepOverviewContent">
@@ -220,7 +220,7 @@ const EventEditStepOverviewContent = defineComponent({
                                                     {!!technician.phone && (
                                                         <Fragment>
                                                             {' '}-{' '}
-                                                            <span>{technician.phone}</span>
+                                                            <span>{technician.phone.toReadable()}</span>
                                                         </Fragment>
                                                     )}
                                                 </div>
@@ -276,7 +276,7 @@ const EventEditStepOverviewContent = defineComponent({
                                 />
                             </div>
                             <div class="EventEditStepOverviewContent__materials__totals">
-                                <Totals booking={event} />
+                                <Totals booking={event} withReplacementAmount />
                             </div>
                         </Fragment>
                     )}

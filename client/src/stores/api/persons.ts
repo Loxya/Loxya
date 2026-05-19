@@ -1,6 +1,5 @@
 import { z } from '@/utils/validation';
 import { withPaginationEnvelope } from './@schema';
-import { CountrySchema } from './countries';
 import requester from '@/globals/requester';
 
 import type { SchemaInfer } from '@/utils/validation';
@@ -18,15 +17,15 @@ export const PersonSchema = z.strictObject({
     first_name: z.string(),
     last_name: z.string(),
     full_name: z.string(),
-    // TODO [zod@>3.22.4]: Remettre `email()`.
-    email: z.string().nullable(),
-    phone: z.string().nullable(),
+    email: z.email().nullable(),
+    phone: z.phone().nullable(),
     street: z.string().nullable(),
+    additional_street: z.string().nullable(),
     postal_code: z.string().nullable(),
+    administrative_area: z.string().nullable(),
     locality: z.string().nullable(),
-    country_id: z.number().nullable(),
-    country: z.lazy(() => CountrySchema).nullable(),
-    full_address: z.string().nullable(),
+    country: z.country(),
+    address: z.string().nullable(),
 });
 
 // ------------------------------------------------------

@@ -9,7 +9,7 @@ import Notepad from '@/themes/default/components/Notepad';
 import Button from '@/themes/default/components/Button';
 
 import type { PropType } from 'vue';
-import type { EventDetails, EventTechnician } from '@/stores/api/events';
+import type { EventDetails } from '@/stores/api/events';
 import type { DebouncedMethod } from 'lodash';
 import type { Session } from '@/stores/api/session';
 
@@ -104,15 +104,6 @@ const EventDetailsNote = defineComponent({
             const currentUser: Session = this.$store.state.auth.user;
             if (this.event.manager?.id === currentUser.id) {
                 return false;
-            }
-
-            if (this.isTechniciansEnabled) {
-                // - ... ou qu'il fait partie des techniciens assignés à l'événement.
-                return !(this.event.technicians ?? []).some(
-                    (eventTechnician: EventTechnician) => (
-                        currentUser.id === eventTechnician.technician.user_id
-                    ),
-                );
             }
 
             return true;

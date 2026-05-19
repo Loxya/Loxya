@@ -21,7 +21,12 @@ describe('formatOptions', () => {
 
     it('returns a set of options with given list of entities and custom function to create label', () => {
         const entities = [
-            { id: 1, title: 'test1', phone: '0123456789', company: null },
+            {
+                id: 1,
+                title: 'test1',
+                phone: '0123456789',
+                company: null,
+            },
             {
                 id: 2,
                 title: 'test2',

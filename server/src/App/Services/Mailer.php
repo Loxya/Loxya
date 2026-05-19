@@ -91,7 +91,7 @@ final class Mailer
     /**
      * @return list<array{ recipients: string[], subject: string, message: string, attachments: array }>
      */
-    public function getSent(?int $count = null): array
+    public function getSent(): array
     {
         return $this->sent;
     }
@@ -240,7 +240,7 @@ final class Mailer
             $mail->SMTPAutoTLS = $withAuth;
             $mail->Username = $withAuth ? $smtpConfig['username'] : null;
             $mail->Password = $withAuth ? $smtpConfig['password'] : null;
-            $mail->SMTPSecure = $withAuth ? $smtpConfig['security'] : '';
+            $mail->SMTPSecure = $withAuth ? ($smtpConfig['security'] ?: '') : '';
             $mail->SMTPOptions = [
                 'ssl' => [
                     'verify_peer' => false,

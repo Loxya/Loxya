@@ -42,7 +42,7 @@ final class MaterialProperty extends BaseModel
     // -
     // ------------------------------------------------------
 
-    public function checkMaterialId($value)
+    public function checkMaterialId(mixed $value)
     {
         V::nullable(V::intVal())->check($value);
 
@@ -61,7 +61,7 @@ final class MaterialProperty extends BaseModel
             : true;
     }
 
-    public function checkPropertyId($value)
+    public function checkPropertyId(mixed $value)
     {
         V::notEmpty()->intVal()->check($value);
 
@@ -100,7 +100,7 @@ final class MaterialProperty extends BaseModel
         return !$alreadyExists;
     }
 
-    public function checkValue($value)
+    public function checkValue(mixed $value)
     {
         // - Si la valeur est `null` ou que la propriété parente n'est
         //   pas récupérable, on laisse passer.

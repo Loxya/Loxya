@@ -1,18 +1,23 @@
 import './index.scss';
 import invariant from 'invariant';
-import { confirm } from '@/utils/alert';
 import { defineComponent } from 'vue';
-import apiEvents from '@/stores/api/events';
 import { Group } from '@/stores/api/groups';
 import Fragment from '@/components/Fragment';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
-import Link from '@/themes/default/components/Link';
-import Invoice, { InvoiceLayout } from './components/Invoice';
+import Alert from '@/themes/default/components/Alert';
+import Invoice from './components/Invoice';
+
+// - Modales
+import CreateInvoiceModal from './modals/CreateInvoiceModal';
+import InvoiceDetailsModal from '@/themes/default/modals/InvoiceDetails';
+import EstimateDetailsModal from '@/themes/default/modals/EstimateDetails';
 
 import type { PropType } from 'vue';
+import type { Location } from 'vue-router';
+import type { Beneficiary } from '@/stores/api/beneficiaries';
+import type { Invoice as InvoiceType, InvoiceDetails } from '@/stores/api/invoices';
 import type { EventDetails } from '@/stores/api/events';
-import type { Invoice as InvoiceType } from '@/stores/api/invoices';
 
 type Props = {
     /** L'événement dont on souhaite gérer les factures. */
@@ -23,11 +28,27 @@ type Props = {
      *
      * @param invoice - La facture nouvellement créé.
      */
-    onCreated?(invoice: InvoiceType): void,
-};
+    onCreated?(invoice: InvoiceDetails): void,
 
-type Data = {
-    isCreating: boolean,
+    /**
+     * Fonction appelée lorsqu'une facture a été mise à jour.
+     *
+     * @param invoice - La facture mise à jour.
+     */
+    onUpdated?(invoice: InvoiceDetails): void,
+
+    /**
+     * Fonction appelée lorsqu'une facture a été supprimée.
+     *
+     * @param id - Identifiant de la facture supprimée.
+     */
+    onDeleted?(id: InvoiceType['id']): void,
+
+    /**
+     * Fonction appelée lorsqu'un rechargement complet
+     * des données est nécessaire.
+     */
+    onRefetchNeeded?(): void,
 };
 
 /** L'onglet "Factures" de la modale de détails d'un événement. */
@@ -35,7 +56,7 @@ const EventDetailsInvoices = defineComponent({
     name: 'EventDetailsInvoices',
     props: {
         event: {
-            type: Object as PropType<Required<Props>['event']>,
+            type: Object as PropType<Props['event']>,
             required: true,
             validator: (event: EventDetails) => (
                 event.is_billable &&
@@ -47,11 +68,28 @@ const EventDetailsInvoices = defineComponent({
             type: Function as PropType<Props['onCreated']>,
             default: undefined,
         },
+        // eslint-disable-next-line vue/no-unused-properties
+        onUpdated: {
+            type: Function as PropType<Props['onUpdated']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onDeleted: {
+            type: Function as PropType<Props['onDeleted']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onRefetchNeeded: {
+            type: Function as PropType<Props['onRefetchNeeded']>,
+            default: undefined,
+        },
     },
-    emits: ['created'],
-    data: (): Data => ({
-        isCreating: false,
-    }),
+    emits: [
+        'created',
+        'updated',
+        'deleted',
+        'refetchNeeded',
+    ],
     computed: {
         isBillable(): boolean {
             return (
@@ -60,23 +98,41 @@ const EventDetailsInvoices = defineComponent({
             );
         },
 
-        invoice(): InvoiceType | null {
-            return [...(this.event.invoices ?? [])].shift() ?? null;
+        invoices(): InvoiceType[] {
+            return this.event.invoices ?? [];
         },
 
         hasInvoice(): boolean {
-            return this.invoice !== null;
+            return this.invoices.length > 0;
         },
 
-        previousInvoices(): InvoiceType[] {
-            return (this.event.invoices ?? []).slice(1);
+        mainBeneficiary(): Beneficiary | null {
+            return [...this.event.beneficiaries].shift() ?? null;
         },
 
-        hasBeneficiary(): boolean {
-            return this.event.beneficiaries.length > 0;
+        hasBilledMaterials(): boolean {
+            const { materials } = this.event;
+            return materials.some((material) => (
+                !material.unit_price.isZero() ||
+                !material.total_without_taxes.isZero() ||
+                !(material.material.is_hidden_on_bill ?? false)
+            ));
         },
 
-        userCanEdit(): boolean {
+        hasBilledLines(): boolean {
+            const { extras } = this.event;
+            return this.hasBilledMaterials || extras.length > 0;
+        },
+
+        isCreationAvailable(): boolean {
+            return (
+                this.mainBeneficiary !== null &&
+                this.mainBeneficiary.is_invoiceable &&
+                this.hasBilledLines
+            );
+        },
+
+        userCanCreate(): boolean {
             return this.$store.getters['auth/is']([
                 Group.ADMINISTRATION,
                 Group.SUPERVISION,
@@ -98,28 +154,75 @@ const EventDetailsInvoices = defineComponent({
         // ------------------------------------------------------
 
         async handleCreate() {
-            if (this.isCreating) {
+            const invoice = await this.$modal.show(CreateInvoiceModal, {
+                event: this.event,
+            });
+            if (invoice === undefined) {
                 return;
             }
-            const { __, event: { id } } = this;
+            this.$emit('created', invoice);
 
-            // - Confirmation.
-            const isConfirmed = await confirm(__('confirm-create'));
-            if (!isConfirmed) {
-                return;
+            let isDeleted: boolean = false;
+            let shouldRefetch: boolean = false;
+            let updatedInvoice: InvoiceDetails | null = null;
+            let nextOpen = null as { kind: 'estimate' | 'invoice', id: number } | null;
+
+            await this.$modal.show(InvoiceDetailsModal, {
+                id: invoice.id,
+                onUpdated: (updated: InvoiceDetails) => {
+                    updatedInvoice = updated;
+                },
+                onDeleted: () => { isDeleted = true; },
+                onCreditNoteCreated: () => { shouldRefetch = true; },
+                onRequestOpen: (kind, id): void => {
+                    nextOpen = { kind, id };
+                },
+            });
+
+            while (nextOpen !== null) {
+                const current = nextOpen;
+                nextOpen = null;
+
+                /* eslint-disable @typescript-eslint/no-loop-func, no-await-in-loop */
+                if (current.kind === 'estimate') {
+                    await this.$modal.show(EstimateDetailsModal, {
+                        id: current.id,
+                        onChange: () => { shouldRefetch = true; },
+                        onRequestOpen: (kind, id): void => {
+                            nextOpen = { kind, id };
+                        },
+                    });
+                } else {
+                    await this.$modal.show(InvoiceDetailsModal, {
+                        id: current.id,
+                        onChange: () => { shouldRefetch = true; },
+                        onRequestOpen: (kind, id): void => {
+                            nextOpen = { kind, id };
+                        },
+                    });
+                }
+                /* eslint-enable @typescript-eslint/no-loop-func, no-await-in-loop */
             }
-            this.isCreating = true;
 
-            try {
-                const invoice = await apiEvents.createInvoice(id);
-
-                this.$emit('created', invoice);
-                this.$toasted.success(__('invoice-created'));
-            } catch {
-                this.$toasted.error(__('error-while-generating'));
-            } finally {
-                this.isCreating = false;
+            if (shouldRefetch) {
+                this.$emit('refetchNeeded');
+            } else if (isDeleted) {
+                this.$emit('deleted', invoice.id);
+            } else if (updatedInvoice !== null) {
+                this.$emit('updated', updatedInvoice);
             }
+        },
+
+        handleUpdated(invoice: InvoiceType) {
+            this.$emit('updated', invoice);
+        },
+
+        handleDeleted(id: InvoiceType['id']) {
+            this.$emit('deleted', id);
+        },
+
+        handleRefetchNeeded() {
+            this.$emit('refetchNeeded');
         },
 
         // ------------------------------------------------------
@@ -139,23 +242,82 @@ const EventDetailsInvoices = defineComponent({
     render() {
         const {
             __,
-            invoice,
-            previousInvoices,
-            isCreating,
+            event,
+            invoices,
             isBillable,
             hasInvoice,
-            userCanEdit,
-            hasBeneficiary,
+            hasBilledLines,
+            isCreationAvailable,
+            mainBeneficiary,
+            userCanCreate,
             handleCreate,
+            handleUpdated,
+            handleDeleted,
+            handleRefetchNeeded,
         } = this;
 
         if (!isBillable) {
             return null;
         }
 
+        const renderWarningIfAny = (): JSX.Element | null => {
+            if (!userCanCreate) {
+                return null;
+            }
+
+            // - S'il n'y a pas de lignes de facture...
+            if (!hasBilledLines) {
+                return (
+                    <Alert
+                        type="warning"
+                        action={{
+                            label: __('warnings.empty.action'),
+                            target: {
+                                name: 'edit-event',
+                                params: { id: event.id.toString() },
+                            },
+                        }}
+                        class="EventDetailsInvoices__warning"
+                    >
+                        {__('warnings.empty.message')}
+                    </Alert>
+                );
+            }
+
+            // - Si le bénéficiaire n'est pas complet...
+            if (mainBeneficiary !== null && !mainBeneficiary.is_invoiceable) {
+                const beneficiaryName = mainBeneficiary.company !== null
+                    ? mainBeneficiary.company.legal_name
+                    : mainBeneficiary.full_name;
+
+                const beneficiaryLocation: Location = mainBeneficiary.company !== null
+                    ? { name: 'edit-company', params: { id: mainBeneficiary.company.id.toString() } }
+                    : { name: 'edit-beneficiary', params: { id: mainBeneficiary.id.toString() } };
+
+                const messageKey = hasInvoice
+                    ? 'warnings.beneficiary-not-invoiceable.message.with-invoices'
+                    : 'warnings.beneficiary-not-invoiceable.message.without-invoices';
+
+                return (
+                    <Alert
+                        type="warning"
+                        action={{
+                            label: __('warnings.beneficiary-not-invoiceable.action'),
+                            target: beneficiaryLocation,
+                        }}
+                        class="EventDetailsInvoices__warning"
+                    >
+                        {__(messageKey, { name: beneficiaryName })}
+                    </Alert>
+                );
+            }
+
+            return null;
+        };
+
         const renderContent = (): JSX.Element => {
             if (!hasInvoice) {
-                if (!hasBeneficiary) {
+                if (mainBeneficiary === null) {
                     return (
                         <div class="EventDetailsInvoices__not-billable">
                             <h3 class="EventDetailsInvoices__not-billable__title">
@@ -169,64 +331,60 @@ const EventDetailsInvoices = defineComponent({
                 }
 
                 return (
-                    <div class="EventDetailsInvoices__no-invoice">
-                        <p class="EventDetailsInvoices__no-invoice__text">
-                            {__('no-invoice-help')}
-                        </p>
-                        <p class="EventDetailsInvoices__no-invoice__text">
-                            {
-                                userCanEdit
-                                    ? __('create-invoice-help')
-                                    : __('contact-someone-to-create-invoice')
-                            }
-                        </p>
-                        {userCanEdit && (
-                            <Button type="add" loading={isCreating} onClick={handleCreate}>
-                                {__('create-invoice')}
-                            </Button>
-                        )}
-                    </div>
+                    <Fragment>
+                        {renderWarningIfAny()}
+                        <div class="EventDetailsInvoices__no-invoice">
+                            <p class="EventDetailsInvoices__no-invoice__text">
+                                {__('no-invoice-help')}
+                            </p>
+                            {isCreationAvailable && (
+                                <Fragment>
+                                    <p class="EventDetailsInvoices__no-invoice__text">
+                                        {
+                                            userCanCreate
+                                                ? __('actions.create.help')
+                                                : __('contact-someone-to-create-invoice')
+                                        }
+                                    </p>
+                                    {userCanCreate && (
+                                        <Button type="add" onClick={handleCreate}>
+                                            {__('actions.create.label')}
+                                        </Button>
+                                    )}
+                                </Fragment>
+                            )}
+                        </div>
+                    </Fragment>
                 );
             }
 
             return (
                 <Fragment>
-                    <div class="EventDetailsInvoices__current-invoice">
-                        <Invoice invoice={invoice!} />
-                    </div>
-                    {(hasBeneficiary && userCanEdit) && (
-                        <div class="EventDetailsInvoices__regenerate">
-                            <p class="EventDetailsInvoices__regenerate__text">
-                                {__('regenerate-help')}
+                    {renderWarningIfAny()}
+                    <ul class="EventDetailsInvoices__list">
+                        {invoices.map((invoiceItem: InvoiceType) => (
+                            <li key={invoiceItem.id} class="EventDetailsInvoices__list__item">
+                                <Invoice
+                                    invoice={invoiceItem}
+                                    onUpdated={handleUpdated}
+                                    onDeleted={handleDeleted}
+                                    onRefetchNeeded={handleRefetchNeeded}
+                                />
+                            </li>
+                        ))}
+                    </ul>
+                    {(isCreationAvailable && userCanCreate) && (
+                        <div class="EventDetailsInvoices__create-new">
+                            <p class="EventDetailsInvoices__create-new__text">
+                                {__('actions.create-new.help')}
                             </p>
-                            <Link
-                                icon="sync"
-                                class="EventDetailsInvoices__regenerate__link"
+                            <Button
+                                type="add"
+                                class="EventDetailsInvoices__create-new__button"
                                 onClick={handleCreate}
                             >
-                                {__('create-new-invoice')}
-                            </Link>
-                        </div>
-                    )}
-                    {previousInvoices.length > 0 && (
-                        <div class="EventDetailsInvoices__previous-invoices">
-                            <h3 class="EventDetailsInvoices__previous-invoices__title">
-                                {__('previous-invoices')}
-                            </h3>
-                            <ul class="EventDetailsInvoices__previous-invoices__list">
-                                {previousInvoices.map((previousInvoice: InvoiceType) => (
-                                    <li
-                                        key={previousInvoice.id}
-                                        class="EventDetailsInvoices__previous-invoices__list__item"
-                                    >
-                                        <Invoice
-                                            invoice={previousInvoice}
-                                            layout={InvoiceLayout.HORIZONTAL}
-                                            outdated
-                                        />
-                                    </li>
-                                ))}
-                            </ul>
+                                {__('actions.create-new.label')}
+                            </Button>
                         </div>
                     )}
                 </Fragment>

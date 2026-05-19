@@ -45,12 +45,12 @@ const CompanyEdit = defineComponent({
             const { $t: __, isNew, isFetched, company } = this;
 
             if (isNew) {
-                return __('page.company.title-create');
+                return __('page.company-edit.title-create');
             }
 
             return isFetched
-                ? __('page.company.title-edit', { name: company!.legal_name })
-                : __('page.company.title-edit-simple');
+                ? __('page.company-edit.title-edit', { name: company!.legal_name })
+                : __('page.company-edit.title-edit-simple');
         },
     },
     mounted() {
@@ -120,7 +120,7 @@ const CompanyEdit = defineComponent({
                 this.validationErrors = null;
 
                 // - Redirection...
-                this.$toasted.success(__('page.company.saved'));
+                this.$toasted.success(__('page.company-edit.saved'));
                 this.$router.back();
             } catch (error) {
                 this.isSaving = false;

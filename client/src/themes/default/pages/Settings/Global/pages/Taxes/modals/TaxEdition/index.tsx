@@ -10,8 +10,7 @@ import Fragment from '@/components/Fragment';
 import FormField from '@/themes/default/components/FormField';
 import Input from '@/themes/default/components/Input';
 import EmptyMessage from '@/themes/default/components/EmptyMessage';
-import { ClientTable, Variant as TableVariant } from '@/themes/default/components/Table';
-import SwitchToggle from '@/themes/default/components/SwitchToggle';
+import { ClientTable } from '@/themes/default/components/Table';
 import Fieldset from '@/themes/default/components/Fieldset';
 import Button from '@/themes/default/components/Button';
 
@@ -35,6 +34,13 @@ type TaxEdit = Simplify<(
 type Props = {
     /** La taxe à éditer. */
     tax?: Tax,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param updatedTax - La taxe sauvegardée si la modification a été menée à son terme.
+     */
+    onClose?(updatedTax?: Tax): void,
 };
 
 type Data = {
@@ -46,32 +52,53 @@ type Data = {
 const getComponentDefaults = (savedData?: TaxComponent): TaxComponentEdit => ({
     key: uniqueId(),
     name: savedData?.name ?? null,
-    is_rate: savedData?.is_rate ?? true,
     value: savedData?.value.toString() ?? null,
 });
 
-const getDefaults = (savedData?: Tax): TaxEdit => ({
-    name: savedData?.name ?? null,
-    is_group: savedData?.is_group ?? false,
-    is_rate: savedData?.is_group ? null : (savedData?.is_rate ?? true),
-    value: savedData?.is_group ? null : (savedData?.value.toString() ?? null),
-    components: !savedData?.is_group ? [] : (
-        (savedData.components ?? []).map((component: TaxComponent) => (
-            getComponentDefaults(component)
-        ))
-    ),
-});
+const getDefaults = (savedData?: Tax): TaxEdit => {
+    const { country } = config.organization;
+    const isSimpleVatSystem = !!country.hasSimpleVatSystem;
+
+    if (isSimpleVatSystem) {
+        return {
+            name: null,
+            is_group: false,
+            value: (
+                !savedData?.is_group
+                    ? (savedData?.value.toString() ?? null)
+                    : null
+            ),
+            components: [],
+        };
+    }
+
+    return {
+        name: savedData?.name ?? null,
+        is_group: savedData?.is_group ?? false,
+        value: savedData?.is_group ? null : (savedData?.value.toString() ?? null),
+        components: !savedData?.is_group ? [] : (
+            (savedData.components ?? []).map((component: TaxComponent) => (
+                getComponentDefaults(component)
+            ))
+        ),
+    };
+};
 
 /** Modale d'edition d'une taxe. */
 const ModalTaxEdition = defineComponent({
     name: 'ModalTaxEdition',
     modal: {
         width: 800,
-        clickToClose: false,
+        dismissible: false,
     },
     props: {
         tax: {
             type: Object as PropType<Props['tax']>,
+            default: undefined,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
             default: undefined,
         },
     },
@@ -84,19 +111,30 @@ const ModalTaxEdition = defineComponent({
         };
     },
     computed: {
+        isSimpleVatSystem(): boolean {
+            const { country } = config.organization;
+            return !!country.hasSimpleVatSystem;
+        },
+
         isNew(): boolean {
             return this.tax === undefined;
         },
 
         title(): string {
-            const { __, isNew, tax } = this;
+            const { __, __s, isNew, isSimpleVatSystem, tax } = this;
 
-            return !isNew
-                ? __('modal-title.edit', { name: tax!.name })
-                : __('modal-title.new');
+            if (isNew || tax!.is_group) {
+                return isNew
+                    ? __s('modal-title.new')
+                    : __('modal-title.edit.default', { name: tax!.name! });
+            }
+
+            return !isSimpleVatSystem
+                ? __('modal-title.edit.default', { name: tax!.name ?? `${tax!.value.toString()}%` })
+                : __('modal-title.edit.simple', { rate: `${tax!.value.toString()}%` });
         },
 
-        componentsColumns(): Columns<TaxComponentEdit> {
+        componentsColumns(): Columns<TaxComponentEdit, 'key'> {
             const { __, data, handleRemoveComponent } = this;
             const validationErrors = this.validationErrors?.components ?? [];
 
@@ -125,33 +163,6 @@ const ModalTaxEdition = defineComponent({
                     },
                 },
                 {
-                    key: 'is_rate',
-                    title: __('fields.components.fields.is-rate.label'),
-                    class: 'ModalTaxEdition__sub-taxes__item__is-rate',
-                    render: (h: CreateElement, { key }: TaxComponentEdit) => {
-                        // - Récupère le composant depuis le state sans quoi il n'est pas réactif.
-                        const component = data.components.find(
-                            (_component: TaxComponentEdit) => _component.key === key,
-                        );
-                        if (!component) {
-                            return null;
-                        }
-
-                        return (
-                            <SwitchToggle
-                                value={component.is_rate ?? false}
-                                options={[
-                                    { label: __('fields.components.fields.is-rate.options.rate'), value: true },
-                                    { label: __('fields.components.fields.is-rate.options.fixed-price'), value: false },
-                                ]}
-                                onInput={(value: boolean) => {
-                                    component.is_rate = value;
-                                }}
-                            />
-                        );
-                    },
-                },
-                {
                     key: 'value',
                     title: __('fields.components.fields.value'),
                     class: 'ModalTaxEdition__sub-taxes__item__value',
@@ -169,8 +180,8 @@ const ModalTaxEdition = defineComponent({
                             <Input
                                 type="number"
                                 min={0}
-                                max={component.is_rate ? 100 : undefined}
-                                addon={component.is_rate ? '%' : config.currency.symbol}
+                                max={100}
+                                addon="%"
                                 v-model={component.value}
                                 invalid={!!validationErrors?.[index]?.value}
                             />
@@ -221,9 +232,7 @@ const ModalTaxEdition = defineComponent({
 
             if (!isGroup) {
                 this.data.components = [];
-                this.data.is_rate ??= true;
             } else {
-                this.data.is_rate = null;
                 this.data.value = null;
             }
         },
@@ -251,9 +260,20 @@ const ModalTaxEdition = defineComponent({
             }
 
             // - On supprime l'erreur de validation liée à la ligne si elle existe,
-            //   pour éviter qu'elle ne soit transférée à une autre ligne.
-            if (this.validationErrors?.components !== undefined) {
-                this.$delete(this.validationErrors?.components, componentIndex);
+            //   et on décale les clés suivantes pour rester alignés avec les indexes.
+            const componentErrors = this.validationErrors?.components;
+            if (componentErrors !== undefined) {
+                this.$set(this.validationErrors!, 'components', (() => {
+                    const reindexed: Record<number, any> = {};
+                    Object.entries(componentErrors).forEach(([rawKey, error]: [string, any]) => {
+                        const errorIndex = Number(rawKey);
+                        if (errorIndex === componentIndex) {
+                            return;
+                        }
+                        reindexed[errorIndex > componentIndex ? errorIndex - 1 : errorIndex] = error;
+                    });
+                    return reindexed;
+                })());
             }
 
             // - On supprime le composant.
@@ -279,7 +299,6 @@ const ModalTaxEdition = defineComponent({
                     ? { ...data, components: [] }
                     : {
                         ...data,
-                        is_rate: null,
                         value: null,
                         components: data.components.map(
                             (component: TaxComponentEdit) => (
@@ -321,6 +340,11 @@ const ModalTaxEdition = defineComponent({
 
             return this.$t(key, params, count);
         },
+
+        __s(key: string, params?: Record<string, number | string>, count?: number): string {
+            const systemSuffix = this.isSimpleVatSystem ? 'simple' : 'default';
+            return this.__(`${key}.${systemSuffix}`, params, count);
+        },
     },
     render() {
         const {
@@ -329,6 +353,7 @@ const ModalTaxEdition = defineComponent({
             title,
             componentsColumns,
             isSaving,
+            isSimpleVatSystem,
             validationErrors,
             handleAddComponent,
             handleIsGroupChange,
@@ -350,55 +375,50 @@ const ModalTaxEdition = defineComponent({
                 </div>
                 <div class="ModalTaxEdition__body">
                     <form class="ModalTaxEdition__form" onSubmit={handleSubmit}>
-                        <FormField
-                            type="text"
-                            ref="inputName"
-                            label={__('fields.name.label')}
-                            placeholder={__('fields.name.placeholder')}
-                            autocomplete="off"
-                            error={validationErrors?.name}
-                            v-model={data.name}
-                            required
-                        />
-                        <FormField
-                            type="switch"
-                            label={__('fields.is-group.label')}
-                            help={__('fields.is-group.help')}
-                            error={validationErrors?.is_group}
-                            onChange={handleIsGroupChange}
-                            value={data.is_group}
-                            required
-                        />
-                        {!data.is_group && (
+                        {!isSimpleVatSystem && (
+                            <FormField
+                                type="text"
+                                ref="inputName"
+                                label={__('fields.name.label')}
+                                placeholder={__('fields.name.placeholder')}
+                                autocomplete="off"
+                                error={validationErrors?.name}
+                                value={data.name}
+                                onInput={(value: string) => {
+                                    data.name = value;
+                                }}
+                                required
+                            />
+                        )}
+                        {!isSimpleVatSystem && (
                             <FormField
                                 type="switch"
-                                label={__('fields.is-rate.label')}
-                                error={validationErrors?.is_rate}
-                                v-model={data.is_rate}
-                                options={[
-                                    { label: __('fields.is-rate.options.rate'), value: true },
-                                    { label: __('fields.is-rate.options.fixed-price'), value: false },
-                                ]}
+                                label={__('fields.is-group.label')}
+                                help={__('fields.is-group.help')}
+                                error={validationErrors?.is_group}
+                                onChange={handleIsGroupChange}
+                                value={data.is_group}
                                 required
                             />
                         )}
-                        {!data.is_group && (
+                        {(!isSimpleVatSystem || !data.is_group) && (
                             <FormField
                                 type="number"
-                                label={(
-                                    data.is_rate
-                                        ? __('fields.value.label-rate')
-                                        : __('fields.value.label-fixed-price')
-                                )}
+                                class="ModalTaxEdition__rate"
+                                ref={isSimpleVatSystem ? 'inputName' : undefined}
+                                label={__('fields.value')}
                                 error={validationErrors?.value}
-                                v-model={data.value}
+                                value={data.value}
                                 min={0}
-                                max={data.is_rate ? 100 : undefined}
-                                addon={data.is_rate ? '%' : config.currency.symbol}
+                                max={100}
+                                addon="%"
+                                onInput={(value: string) => {
+                                    data.value = value;
+                                }}
                                 required
                             />
                         )}
-                        {!!data.is_group && (
+                        {(!isSimpleVatSystem && data.is_group) && (
                             <Fieldset
                                 class="ModalTaxEdition__sub-taxes"
                                 title={__('fields.components.label')}
@@ -418,8 +438,7 @@ const ModalTaxEdition = defineComponent({
                                     <Fragment>
                                         <ClientTable
                                             uniqueKey="key"
-                                            variant={TableVariant.MINIMALIST}
-                                            resizable={false}
+                                            variant="minimalist"
                                             paginated={false}
                                             columns={componentsColumns}
                                             data={data.components}

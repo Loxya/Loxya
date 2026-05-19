@@ -1,0 +1,425 @@
+legal-types:
+    FR:
+        EI:
+            short: "EI"
+            long: "Sole proprietorship (EI)"
+        ME:
+            short: "EI"
+            long: "Micro-enterprise / Self-employed"
+        SARL:
+            short: "SARL"
+            long: "Limited liability company (SARL)"
+        EURL:
+            short: "EURL"
+            long: "Single-member limited liability company (EURL)"
+        SAS:
+            short: "SAS"
+            long: "Simplified joint-stock company (SAS)"
+        SASU:
+            short: "SASU"
+            long: "Single-member simplified joint-stock company (SASU)"
+        SA:
+            short: "SA"
+            long: "Public limited company (SA)"
+        SNC:
+            short: "SNC"
+            long: "General partnership (SNC)"
+        SCS:
+            short: "SCS"
+            long: "Limited partnership (SCS)"
+        SCA:
+            short: "SCA"
+            long: "Partnership limited by shares (SCA)"
+        SCP:
+            short: "SCP"
+            long: "Professional partnership (SCP)"
+        SCC:
+            short: "SCC"
+            long: "Cooperative civil company (SCC)"
+        SCEA:
+            short: "SCEA"
+            long: "Agricultural civil company (SCEA)"
+        SCI:
+            short: "SCI"
+            long: "Real estate civil company (SCI)"
+        GIE:
+            short: "GIE"
+            long: "Economic interest group (GIE)"
+        COOP:
+            short: "Cooperative"
+            long: "Cooperative"
+        ASSO:
+            short: "Association"
+            long: "Association"
+        FOND:
+            short: "Foundation"
+            long: "Foundation"
+        COLL:
+            short: "Local authority"
+            long: "Local authority"
+        EPA:
+            short: "EPA"
+            long: "Public administrative establishment"
+        EPIC:
+            short: "EPIC"
+            long: "Public industrial and commercial establishment"
+        EPLE:
+            short: "EPLE"
+            long: "Local public educational establishment"
+        EPSCP:
+            short: "EPSCP"
+            long: "University / major public institution"
+        GIP:
+            short: "GIP"
+            long: "Public interest group (GIP)"
+    BE:
+        EI:
+            short: "EI"
+            long: "Sole proprietorship / Self-employed (EI)"
+        SRL:
+            short: "SRL"
+            long: "Private limited company (SRL)"
+        SA:
+            short: "SA"
+            long: "Public limited company (SA)"
+        SC:
+            short: "SC"
+            long: "Cooperative company (SC)"
+        SNC:
+            short: "SNC"
+            long: "General partnership"
+        SCOMM:
+            short: "SCOMM"
+            long: "Limited partnership"
+        ASBL:
+            short: "ASBL"
+            long: "Non-profit association (ASBL)"
+        AISBL:
+            short: "AISBL"
+            long: "International non-profit association (AISBL)"
+        FP:
+            short: "Private foundation"
+            long: "Private foundation"
+        FUP:
+            short: "Public utility foundation"
+            long: "Public utility foundation"
+    CH:
+        RI:
+            short: "Sole proprietorship"
+            long: "Sole proprietorship"
+        SARL:
+            short: "SàRL"
+            long: "Limited liability company (SàRL)"
+        SA:
+            short: "SA"
+            long: "Public limited company (SA)"
+        SNC:
+            short: "SNC"
+            long: "General partnership"
+        SCM:
+            short: "SCM"
+            long: "Limited partnership"
+        SC:
+            short: "SC"
+            long: "Cooperative company"
+        ASSO:
+            short: "Association"
+            long: "Association"
+        FOND:
+            short: "Foundation"
+            long: "Foundation"
+
+vat-exemptions:
+    VATEX-EU-79-C:
+        label: "Art EU 79c - Reimbursement of disbursements"
+        mention: "VAT not applicable, art. 79c of VAT Directive 2006/112/EC"
+    VATEX-EU-132:
+        label: "Art. EU 132 - Public interest activities"
+        mention: "VAT not applicable, art. 132 of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1A:
+        label: "Art. EU 132 (a) - Postal services by public operators"
+        mention: "VAT not applicable, art. 132 (a) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1B:
+        label: "Art. EU 132 (b) - Hospital and medical care (public/approved)"
+        mention: "VAT not applicable, art. 132 (b) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1C:
+        label: "Art. EU 132 (c) - Medical and paramedical services"
+        mention: "VAT not applicable, art. 132 (c) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1D:
+        label: "Art. EU 132 (d) - Human organs, blood and milk"
+        mention: "VAT not applicable, art. 132 (d) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1E:
+        label: "Art. EU 132 (e) - Dental prostheses and technicians"
+        mention: "VAT not applicable, art. 132 (e) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1F:
+        label: "Art. EU 132 (f) - Independent groups (cost sharing)"
+        mention: "VAT not applicable, art. 132 (f) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1G:
+        label: "Art. EU 132 (g) - Welfare and social security work"
+        mention: "VAT not applicable, art. 132 (g) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1H:
+        label: "Art. EU 132 (h) - Child and youth protection"
+        mention: "VAT not applicable, art. 132 (h) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1I:
+        label: "Art. EU 132 (i) - Education and training"
+        mention: "VAT not applicable, art. 132 (i) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1J:
+        label: "Art. EU 132 (j) - Private tuition (school/university)"
+        mention: "VAT not applicable, art. 132 (j) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1K:
+        label: "Art. EU 132 (k) - Staff from religious/philosophical bodies"
+        mention: "VAT not applicable, art. 132 (k) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1L:
+        label: "Art. EU 132 (l) - Non-profit orgs (common interest)"
+        mention: "VAT not applicable, art. 132 (l) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1M:
+        label: "Art. EU 132 (m) - Non-profit orgs (sports and physical education)"
+        mention: "VAT not applicable, art. 132 (m) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1N:
+        label: "Art. EU 132 (n) - Recognized cultural services"
+        mention: "VAT not applicable, art. 132 (n) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1O:
+        label: "Art. EU 132 (o) - Fund-raising events"
+        mention: "VAT not applicable, art. 132 (o) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1P:
+        label: "Art. EU 132 (p) - Transport of sick or injured persons"
+        mention: "VAT not applicable, art. 132 (p) of VAT Directive 2006/112/EC"
+    VATEX-EU-132-1Q:
+        label: "Art. EU 132 (q) - Public radio/TV (non-commercial)"
+        mention: "VAT not applicable, art. 132 (q) of VAT Directive 2006/112/EC"
+    VATEX-EU-143:
+        label: "Art. EU 143 - Import exemptions"
+        mention: "VAT not applicable, art. 143 of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1A:
+        label: "Art. EU 143 (a) - Import of VAT-exempt goods"
+        mention: "VAT not applicable, art. 143 (a) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1B:
+        label: "Art. EU 143 (b) - Imports under EU Directives"
+        mention: "VAT not applicable, art. 143 (b) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1C:
+        label: "Art. EU 143 (c) - Import of goods in free circulation"
+        mention: "VAT not applicable, art. 143 (c) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1D:
+        label: "Art. EU 143 (d) - Intra-EU acquisition regime (import)"
+        mention: "VAT not applicable, art. 143 (d) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1E:
+        label: "Art. EU 143 (e) - Re-importation by exporter"
+        mention: "VAT not applicable, art. 143 (e) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1F:
+        label: "Art. EU 143 (f) - Diplomatic/consular imports"
+        mention: "VAT not applicable, art. 143 (f) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1FA:
+        label: "Art. EU 143 (fa) - Imports by EU institutions"
+        mention: "VAT not applicable, art. 143 (fa) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1G:
+        label: "Art. EU 143 (g) - Imports by international bodies"
+        mention: "VAT not applicable, art. 143 (g) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1H:
+        label: "Art. EU 143 (h) - Imports for NATO forces (other States)"
+        mention: "VAT not applicable, art. 143 (h) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1I:
+        label: "Art. EU 143 (i) - Imports for UK forces in Cyprus"
+        mention: "VAT not applicable, art. 143 (i) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1J:
+        label: "Art. EU 143 (j) - Imports of fishing catches"
+        mention: "VAT not applicable, art. 143 (j) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1K:
+        label: "Art. EU 143 (k) - Gold imports by central banks"
+        mention: "VAT not applicable, art. 143 (k) of VAT Directive 2006/112/EC"
+    VATEX-EU-143-1L:
+        label: "Art. EU 143 (l) - Import of gas, electricity, heat, cooling"
+        mention: "VAT not applicable, art. 143 (l) of VAT Directive 2006/112/EC"
+    VATEX-EU-144:
+        label: "Art. EU 144 - Exempt services linked to import"
+        mention: "VAT not applicable, art. 144 of VAT Directive 2006/112/EC"
+    VATEX-EU-146-1E:
+        label: "Art. EU 146 (e) - Exempt services linked to export"
+        mention: "VAT not applicable, art. 146 (e) of VAT Directive 2006/112/EC"
+    VATEX-EU-148:
+        label: "Art EU 148 - International transport"
+        mention: "VAT not applicable, Art EU 148"
+    VATEX-EU-148-A:
+        label: "Art EU 148 (a) - Fuel for commercial vessels (int.)"
+        mention: "VAT not applicable, Art EU 148 (a)"
+    VATEX-EU-148-B:
+        label: "Art EU 148 (b) - Fuel for military ships (int.)"
+        mention: "VAT not applicable, Art EU 148 (b)"
+    VATEX-EU-148-C:
+        label: "Art EU 148 (c) - Ships: maintenance, leasing, hire"
+        mention: "VAT not applicable, Art EU 148 (c)"
+    VATEX-EU-148-D:
+        label: "Art EU 148 (d) - Other services for international vessels"
+        mention: "VAT not applicable, Art EU 148 (d)"
+    VATEX-EU-148-E:
+        label: "Art EU 148 (e) - Fuel for aircraft (int. routes)"
+        mention: "VAT not applicable, Art EU 148 (e)"
+    VATEX-EU-148-F:
+        label: "Art EU 148 (f) - Aircraft: maintenance, leasing, hire"
+        mention: "VAT not applicable, Art EU 148 (f)"
+    VATEX-EU-148-G:
+        label: "Art EU 148 (g) - Other services for international aircraft"
+        mention: "VAT not applicable, Art EU 148 (g)"
+    VATEX-EU-151:
+        label: "Art. EU 151 - Transactions treated as exports"
+        mention: "VAT not applicable, art. 151 of VAT Directive 2006/112/EC"
+    VATEX-EU-151-1A:
+        label: "Art. EU 151 (a) - Diplomatic/consular supplies"
+        mention: "VAT not applicable, art. 151 (a) of VAT Directive 2006/112/EC"
+    VATEX-EU-151-1AA:
+        label: "Art. EU 151 (aa) - Supplies to EU institutions"
+        mention: "VAT not applicable, art. 151 (aa) of VAT Directive 2006/112/EC"
+    VATEX-EU-151-1B:
+        label: "Art. EU 151 (b) - Supplies to international bodies"
+        mention: "VAT not applicable, art. 151 (b) of VAT Directive 2006/112/EC"
+    VATEX-EU-151-1C:
+        label: "Art. EU 151 (c) - Supplies to NATO forces"
+        mention: "VAT not applicable, art. 151 (c) of VAT Directive 2006/112/EC"
+    VATEX-EU-151-1D:
+        label: "Art. EU 151 (d) - Supplies to NATO forces"
+        mention: "VAT not applicable, art. 151 (d) of VAT Directive 2006/112/EC"
+    VATEX-EU-151-1E:
+        label: "Art. EU 151 (e) - Supplies to UK forces in Cyprus"
+        mention: "VAT not applicable, art. 151 (e) of VAT Directive 2006/112/EC"
+    VATEX-EU-153:
+        label: "Art. EU 153"
+        mention: "Art. EU 153"
+    VATEX-EU-159:
+        label: "Art. EU 159 - Services for customs/storage regimes"
+        mention: "VAT not applicable, art. 159 of VAT Directive 2006/112/EC"
+    VATEX-EU-309:
+        label: "Art. EU 309 - Travel services outside EU"
+        mention: "VAT not applicable, art. 309 of VAT Directive 2006/112/EC"
+    VATEX-EU-AE:
+        label: "Reverse charge"
+        mention: "Reverse charge"
+    # VATEX-EU-D:
+    #     label: "Intra-EU acquisition of used transport"
+    #     mention: "Intra-EU acquisition of used transport"
+    # VATEX-EU-F:
+    #     label: "Second-hand goods (margin scheme)"
+    #     mention: "Second-hand goods (margin scheme)"
+    VATEX-EU-G:
+        label: "Export outside the EU"
+        mention: "Export outside the EU"
+    # VATEX-EU-I:
+    #     label: "Works of art (margin scheme)"
+    #     mention: "Works of art (margin scheme)"
+    VATEX-EU-IC:
+        label: "Intra-Community supply"
+        mention: "Intra-Community supply"
+    # VATEX-EU-J:
+    #     label: "Collectors' items/antiques (margin)"
+    #     mention: "Collectors' items/antiques (margin)"
+    VATEX-EU-O:
+        label: "Out of VAT scope"
+        mention: "Out of VAT scope"
+    VATEX-FR-FRANCHISE:
+        label: "Art. 293 B of CGI - Base franchise"
+        mention: "VAT not applicable, art. 293 B of CGI"
+    VATEX-FR-CNWVAT:
+        label: "Credit note without VAT"
+        mention: "Credit note without VAT"
+    VATEX-FR-CGI261-1:
+        label: "Art. 261, 1 of CGI - Operations subject to other taxes"
+        mention: "VAT not applicable, art. 261, 1 of CGI"
+    VATEX-FR-CGI261-2:
+        label: "Art. 261, 2 of CGI - Agricultural and fisheries activities"
+        mention: "VAT not applicable, art. 261, 2 of CGI"
+    VATEX-FR-CGI261-3:
+        label: "Art. 261, 3 of CGI - Sales of used goods"
+        mention: "VAT not applicable, art. 261, 3 of CGI"
+    VATEX-FR-CGI261-4:
+        label: "Art. 261, 4 of CGI - Activities of the professions and various activities"
+        mention: "VAT not applicable, art. 261, 4 of CGI"
+    VATEX-FR-CGI261-5:
+        label: "Art. 261, 5 of CGI - Real-estate operations"
+        mention: "VAT not applicable, art. 261, 5 of CGI"
+    VATEX-FR-CGI261-7:
+        label: "Art. 261, 7 of CGI - Non-profit organizations operations"
+        mention: "VAT not applicable, art. 261, 7 of CGI"
+    VATEX-FR-CGI261-8:
+        label: "Art. 261, 8 of CGI - Goods/services linked to an EU-area disaster"
+        mention: "VAT not applicable, art. 261, 8 of CGI"
+    VATEX-FR-CGI261A:
+        label: "Art. 261 A of CGI - Free-of-charge provision of property by legal entities"
+        mention: "VAT not applicable, art. 261 A of CGI"
+    VATEX-FR-CGI261B:
+        label: "Art. 261 B of CGI - Member services by groups carrying out exempt activities"
+        mention: "VAT not applicable, art. 261 B of CGI"
+    VATEX-FR-CGI261C-1:
+        label: "Art. 261 C, 1° of CGI - Banking and financial transactions"
+        mention: "VAT not applicable, art. 261 C, 1° of CGI"
+    VATEX-FR-CGI261C-2:
+        label: "Art. 261 C, 2° of CGI - Insurance/reinsurance transactions and related services"
+        mention: "VAT not applicable, art. 261 C, 2° of CGI"
+    VATEX-FR-CGI261C-3:
+        label: "Art. 261 C, 3° of CGI - Sale of fiscal and postage stamps at their official value"
+        mention: "VAT not applicable, art. 261 C, 3° of CGI"
+    VATEX-FR-CGI261D-1:
+        label: "Art. 261 D, 1° of CGI - Rentals of land and buildings for agricultural use"
+        mention: "VAT not applicable, art. 261 D, 1° of CGI"
+    VATEX-FR-CGI261D-1BIS:
+        label: "Art. 261 D, 1° bis of CGI - Leases of immovable property conferring a right in rem"
+        mention: "VAT not applicable, art. 261 D, 1° bis of CGI"
+    VATEX-FR-CGI261D-2:
+        label: "Art. 261 D, 2° of CGI - Leases of undeveloped land or bare premises"
+        mention: "VAT not applicable, art. 261 D, 2° of CGI"
+    VATEX-FR-CGI261D-3:
+        label: "Art. 261 D, 3° of CGI - Rights/leases relating to real-estate portfolio management"
+        mention: "VAT not applicable, art. 261 D, 3° of CGI"
+    VATEX-FR-CGI261D-4:
+        label: "Art. 261 D, 4° of CGI - Rentals of furnished accommodation for residential use"
+        mention: "VAT not applicable, art. 261 D, 4° of CGI"
+    VATEX-FR-CGI261E-1:
+        label: "Art. 261 E, 1° of CGI - Organisation of games of chance subject to levies"
+        mention: "VAT not applicable, art. 261 E, 1° of CGI"
+    VATEX-FR-CGI261E-2:
+        label: "Art. 261 E, 2° of CGI - Proceeds from lotteries, horse/sports betting and online circle games"
+        mention: "VAT not applicable, art. 261 E, 2° of CGI"
+    VATEX-FR-CGI277A:
+        label: "Art. 277 A of CGI - VAT suspensive scheme"
+        mention: "VAT not applicable, art. 277 A of CGI"
+    VATEX-FR-CGI275:
+        label: "Art. 275 of CGI - VAT-free purchases of goods intended for export or exempt supplies"
+        mention: "VAT not applicable, art. 275 of CGI"
+    VATEX-FR-298SEXDECIESA:
+        label: "Art. 298 sexdecies A of CGI - Investment gold"
+        mention: "VAT not applicable, art. 298 sexdecies A of CGI"
+    VATEX-FR-CGI295:
+        label: "Art. 295 of CGI - French territories under Arts. 349 and 355(1) TFEU"
+        mention: "VAT not applicable, art. 295 of CGI"
+    VATEX-FR-AE:
+        label: "Reverse charge, art. 283-2 of CGI"
+        mention: "Reverse charge, art. 283-2 of CGI"
+    CUSTOM-FR-G-SERVICE:
+        label: "VAT not applicable, art. 259-1 du CGI"
+        mention: "VAT not applicable, art. 259-1 of CGI"
+    CUSTOM-FR-DROM:
+        label: "Delivery to the French overseas territories, art. 294 du CGI"
+        mention: "VAT not applicable, art. 294 of CGI"
+    CUSTOM-BE-FRANCHISE:
+        label: "Special small-enterprise exemption scheme"
+        mention: "Special small-enterprise exemption scheme – VAT not applicable"
+    CUSTOM-BE-AE:
+        label: "Co-contractor / Reverse charge – AR CTVA n° 1, article 20"
+        mention: "Reverse charge – AR CTVA n° 1, article 20"
+
+mentions:
+    global:
+        share-capital:
+            short: "%s with a share capital of %s"
+            full: "%s %s with a share capital of %s"
+
+    FR:
+        vat-due-on-invoice: >-
+            VAT paid on debits.
+
+        no-early-payment-discount: >-
+            No discount will be granted for payments received before the due date.
+
+        late-payment-penalty: >-
+            Any late payment will result in a penalty payable from the due date,
+            calculated on the basis of three times the legal interest rate.
+
+        late-payment-flat-fee: >-
+            Flat-rate compensation for collection costs in the event of late payment: €40.

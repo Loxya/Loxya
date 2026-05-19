@@ -1,0 +1,19 @@
+
+#
+# - Tabs
+#
+
+informations:
+    title: Informations
+
+    degressive-rate:
+        label: Tarif dégressif
+        empty: Aucun tarif dégressif appliqué.
+
+    tax:
+        label:
+            default: Taxe
+            simple: Taux de T.V.A.
+        empty:
+            default: Aucune (exempté sans motif explicite).
+            simple: Aucun (exempté sans motif explicite).

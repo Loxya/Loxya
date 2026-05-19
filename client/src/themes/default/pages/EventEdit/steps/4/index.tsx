@@ -1,4 +1,5 @@
 import './index.scss';
+import { Step } from '..';
 import config from '@/globals/config';
 import debounce from 'lodash/debounce';
 import { defineComponent } from 'vue';
@@ -113,14 +114,24 @@ const EventEditStepMaterials = defineComponent({
             if (this.isSaving) {
                 return;
             }
-            this.saveAndGoToStep(this.isTechniciansEnabled ? 3 : 2);
+
+            this.saveAndGoToStep((
+                this.isTechniciansEnabled
+                    ? Step.TECHNICIANS
+                    : Step.BENEFICIARIES
+            ));
         },
 
         handleNextClick() {
             if (this.isSaving) {
                 return;
             }
-            this.saveAndGoToStep(this.event.is_billable ? 5 : 6);
+
+            this.saveAndGoToStep((
+                this.event.is_billable
+                    ? Step.BILLING
+                    : Step.SUMMARY
+            ));
         },
 
         // ------------------------------------------------------
@@ -129,7 +140,11 @@ const EventEditStepMaterials = defineComponent({
         // -
         // ------------------------------------------------------
 
-        async saveAndGoToStep(nextStep: number) {
+        async saveAndGoToStep(nextStep: Step) {
+            if (this.isSaving) {
+                return;
+            }
+
             try {
                 await this.save(true);
             } catch {

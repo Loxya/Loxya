@@ -145,7 +145,12 @@ final class Period implements PeriodInterface, Arrayable, \JsonSerializable
         }
 
         $startDate = $this->getStartDate()->startOfHour();
-        return max($startDate->diffInHours($endDate), 1);
+
+        // - On utilise les dates en UTC pour s'affranchir des problèmes
+        //   liés aux périodes qui chevauchent un changement d'heure.
+        $startDateUtc = $startDate->shiftTimezone('UTC');
+        $endDateUtc = $endDate->shiftTimezone('UTC');
+        return max($startDateUtc->diffInHours($endDateUtc), 1);
     }
 
     /**
@@ -273,7 +278,7 @@ final class Period implements PeriodInterface, Arrayable, \JsonSerializable
      */
     public function isPastOrOngoing(): bool
     {
-        return $this->start->isPast();
+        return !$this->start->isFuture();
     }
 
     /**

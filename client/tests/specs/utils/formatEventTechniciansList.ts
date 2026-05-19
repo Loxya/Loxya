@@ -1,6 +1,7 @@
 import formatEventTechniciansList from '@/utils/formatEventTechniciansList';
 import events from '@fixtures/parsed/events';
 import Period from '@/utils/period';
+import Phone from '@/utils/phone';
 
 describe('formatEventTechniciansList', () => {
     it('returns an empty array when nothing passed', () => {
@@ -28,8 +29,9 @@ describe('formatEventTechniciansList', () => {
 
         // - Second technician with 1 assigned period
         expect(result[1].id).toBe(2);
-        expect(result[1].name).toBe('Jean Technicien');
-        expect(result[1].phone).toBe('+33645698520');
+        expect(result[1].name).toBe('Jean Garcia');
+        expect(result[1].phone).toBeInstanceOf(Phone);
+        expect(result[1].phone!.number).toBe('+33645698520');
         expect(result[1].periods).toHaveLength(1);
 
         // - First period of technician 2

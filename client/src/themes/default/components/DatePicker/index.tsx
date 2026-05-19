@@ -3,7 +3,9 @@ import Day from '@/utils/day';
 import warning from 'warning';
 import Period from '@/utils/period';
 import DateTime from '@/utils/datetime';
-import { defineComponent, markRaw } from 'vue';
+import { computed, defineComponent, inject, markRaw } from 'vue';
+import { computePosition, autoUpdate, flip, shift, offset } from '@floating-ui/dom';
+import { DisabledKey, InvalidKey } from '@/themes/default/components/@constants';
 import CoreDatePicker from 'vue2-datepicker';
 import Fragment from '@/components/Fragment';
 import Switch from '@/themes/default/components/SwitchToggle';
@@ -19,7 +21,7 @@ import {
     MINUTES_STEP,
 } from './utils/normalizer';
 
-import type { ComponentRef, PropType, Raw } from 'vue';
+import type { ComponentRef, Injected, PropType, Raw } from 'vue';
 import type {
     Formatter,
     Translations,
@@ -36,22 +38,27 @@ import type {
     DisableDateFunction,
 } from './_types';
 
+/** Séparateur des valeurs en mode "période". */
+export const RANGE_SEPARATOR = '  ⇒  ';
+
 type Props<
     T extends Type = Type,
     IsRange extends boolean = boolean,
     WithFullDaysToggle extends boolean = boolean,
 > = {
     /**
-     * Le nom du champ (attribut `[name]`).
+     * Le nom du champ (attribut `[name]`) associé.
      *
-     * Ceci permettra notamment de récupérer la valeur du champ dans
+     * Ceci permettra notamment de récupérer la valeur du picker dans
      * le jeu de données d'un formulaire parent lors de la soumission
      * (`submit`) de celui-ci.
+     *
+     * Note : N'a aucun effet en mode `standalone`.
      */
     name?: string,
 
     /**
-     * Le type de champ de sélection de date parmi :
+     * Le type de sélecteur de date parmi :
      * - `date`: Sélection de date sans heure.
      * - `datetime`: Sélection de date et heure.
      *
@@ -83,7 +90,8 @@ type Props<
      * dans le cas contraire en `DATETIME`.
      *
      * À noter aussi que si cette option est activée et que la prop. `name` est spécifiée, un champ
-     * hidden `isFullDays` sera utilisé pour stocker la valeur courante du switch.
+     * hidden `isFullDays` sera utilisé pour stocker la valeur courante du switch (disponible
+     * uniquement mode non `standalone`).
      *
      * @default false
      */
@@ -116,40 +124,74 @@ type Props<
      */
     disabledDate?: DisableDateFunction,
 
-    /** La valeur actuelle du champ. */
+    /** La valeur actuelle du sélecteur. */
     value?: Value<T, IsRange>,
 
     /**
      * L'éventuel texte affiché en filigrane dans le
-     * champ quand celui-ci est vide.
+     * champ associé quand celui-ci est vide.
+     *
+     * Note : N'a aucun effet en mode `standalone`.
      */
     placeholder?: string,
 
-    /** Le champ est-il désactivé ?  */
+    /**
+     * Le sélecteur est-il désactivé ?
+     *
+     * @default false
+     */
     disabled?: boolean,
 
-    /** Le champ doit-il être mis en surbrillance ? */
+    /**
+     * Le champ doit-il être mis en surbrillance ?
+     *
+     * Note : N'a aucun effet en mode `standalone`.
+     *
+     * @default false
+     */
     highlight?: boolean,
 
     /**
-     * Le champ est-il en lecture seule ?
+     * Le sélecteur est-il en lecture seule ?
      *
      * Cette prop. peut recevoir les valeurs suivantes:
      * - Un booléen qui aura un effet similaire à la prop. `disabled`.
      * - Les chaînes `start` ou `end`, uniquement utilisables quand le sélecteur
      *   de date est en mode `range`. Ceci aura pour effet de mettre en lecture
      *   seule seulement la partie indiqué tout en laissant l'autre modifiable.
+     *
+     * @default false
      */
     readonly?: boolean | 'start' | 'end',
 
-    /** Le champ doit-il être marqué comme invalide ? */
+    /**
+     * Le champ associé doit-il être marqué comme invalide ?
+     *
+     * Note : N'a aucun effet en mode `standalone`.
+     *
+     * @default false
+     */
     invalid?: boolean,
 
-    /** Le champ peut-il être vidé ? */
+    /**
+     * Le champ associé peut-il être vidé ?
+     *
+     * Note : N'a aucun effet en mode `standalone`.
+     *
+     * @default false
+     */
     clearable?: boolean,
 
     /**
-     * Fonction appelée lorsque la valeur du champ change.
+     * Le sélecteur est-il en mode "autonome" ?
+     * (affiché directement, sans champ de formulaire)
+     *
+     * @default false
+     */
+    standalone?: boolean,
+
+    /**
+     * Fonction appelée lorsque la valeur du sélecteur / champ associé change.
      *
      * @param newValue - La nouvelle valeur du champ.
      * @param isFullDays - Est-ce que la période est en jours entiers ?
@@ -160,7 +202,7 @@ type Props<
         : (newValue: Value<T, IsRange>) => void,
 
     /**
-     * Fonction appelée lorsque la valeur du champ change.
+     * Fonction appelée lorsque la valeur du sélecteur / champ associé change.
      *
      * @param newValue - La nouvelle valeur du champ.
      * @param isFullDays - Est-ce que la période est en jours entiers ?
@@ -172,6 +214,8 @@ type Props<
 };
 
 type InstanceProperties = {
+    injectedInvalid: Injected<typeof InvalidKey>,
+    injectedDisabled: Injected<typeof DisabledKey>,
     nowTimer: ReturnType<typeof setInterval> | undefined,
 };
 
@@ -197,10 +241,6 @@ const PICKER_TRANSLATIONS: Record<string, Translations> = {
 /** Un sélecteur de date(s), heure(s) et période. */
 const DatePicker = defineComponent({
     name: 'DatePicker',
-    inject: {
-        'input.invalid': { default: false },
-        'input.disabled': { default: false },
-    },
     props: {
         name: {
             type: String as PropType<Props['name']>,
@@ -268,6 +308,10 @@ const DatePicker = defineComponent({
             type: Boolean as PropType<Props['clearable']>,
             default: false,
         },
+        standalone: {
+            type: Boolean as PropType<Props['standalone']>,
+            default: false,
+        },
         placeholder: {
             type: String as PropType<Props['placeholder']>,
             default: undefined,
@@ -289,7 +333,23 @@ const DatePicker = defineComponent({
             typeof props.readonly === 'boolean' || props.range,
             'The prop `readonly` should be passed as boolean when used with a non-range `<Datepicker />`.',
         );
-        return { nowTimer: undefined };
+        warning(
+            props.standalone === false ||
+            (
+                props.name === undefined &&
+                props.placeholder === undefined &&
+                props.invalid === undefined &&
+                props.highlight === false &&
+                props.clearable === false
+            ),
+            'The prop `name`, `placeholder`, `highlight`, `invalid` and `clearable` ' +
+            'cannot be user with a standalone `<Datepicker />`.',
+        );
+        return {
+            nowTimer: undefined,
+            injectedInvalid: inject(InvalidKey, computed(() => false)),
+            injectedDisabled: inject(DisabledKey, computed(() => false)),
+        };
     },
     data: (): Data => ({
         showTimePanel: false,
@@ -326,23 +386,17 @@ const DatePicker = defineComponent({
         },
 
         inheritedInvalid(): boolean {
-            if (this.invalid !== undefined) {
-                return this.invalid;
+            if (this.standalone || this.invalid !== undefined) {
+                return this.invalid ?? false;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.invalid'];
+            return this.injectedInvalid;
         },
 
         inheritedDisabled(): boolean {
-            if (this.disabled !== undefined) {
-                return this.disabled;
+            if (this.standalone || this.disabled !== undefined) {
+                return this.disabled ?? false;
             }
-
-            // @ts-expect-error -- Normalement fixé lors du passage à Vue 3 (et son meilleur typage).
-            // @see https://github.com/vuejs/core/pull/6804
-            return this['input.disabled'];
+            return !!this.injectedDisabled;
         },
 
         normalizedReadonly(): boolean | 'start' | 'end' {
@@ -606,6 +660,32 @@ const DatePicker = defineComponent({
         // -
         // ------------------------------------------------------
 
+        calculatePopupPosition($popup: HTMLElement, $field: HTMLElement): () => void {
+            return autoUpdate($field, $popup, async () => {
+                const { x, y } = await computePosition($field, $popup, {
+                    placement: 'bottom-start',
+                    strategy: 'fixed',
+                    middleware: [
+                        offset(3),
+                        flip({ padding: 8 }),
+                        shift({ padding: 8 }),
+                    ],
+                });
+
+                // - On ne fait rien si la popup a été détachée du DOM avant
+                //   que la promesse de `computePosition` ne se résolve.
+                if (!$popup.isConnected) {
+                    return;
+                }
+
+                Object.assign($popup.style, {
+                    position: 'fixed',
+                    top: `${y}px`,
+                    left: `${x}px`,
+                });
+            });
+        },
+
         __(key: string, params?: Record<string, number | string>, count?: number): string {
             key = !key.startsWith('global.')
                 ? `components.DatePicker.${key}`
@@ -639,7 +719,9 @@ const DatePicker = defineComponent({
             withSnippets,
             highlight,
             clearable,
+            standalone,
             timePickerOptions,
+            calculatePopupPosition,
             handleToggleFullDays,
             handleToggleMode,
             handleInput,
@@ -718,7 +800,7 @@ const DatePicker = defineComponent({
         };
 
         const renderHiddenInput = (): JSX.Element | null => {
-            if (!name || disabled) {
+            if (standalone || !name || disabled) {
                 return null;
             }
 
@@ -757,6 +839,7 @@ const DatePicker = defineComponent({
         const className = ['DatePicker', {
             'DatePicker--invalid': invalid,
             'DatePicker--highlight': highlight,
+            'DatePicker--standalone': highlight,
         }];
 
         return (
@@ -764,6 +847,8 @@ const DatePicker = defineComponent({
                 <CoreDatePicker
                     ref="picker"
                     class="DatePicker__input"
+                    popupClass="DatePicker__popup"
+                    calculatePosition={calculatePopupPosition}
                     disabled={disabled}
                     readonly={readonly}
                     type={type}
@@ -785,7 +870,8 @@ const DatePicker = defineComponent({
                     disabledTime={disabledDateFactory('minute')}
                     showTimePanel={showTimePanel}
                     timePickerOptions={timePickerOptions}
-                    rangeSeparator="  ⇒  "
+                    inline={standalone}
+                    rangeSeparator={RANGE_SEPARATOR}
                     confirmText={__('global.done')}
                     scopedSlots={{
                         ...(withHeader ? { header: () => renderHeader() } : {}),

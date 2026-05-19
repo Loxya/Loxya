@@ -1,0 +1,47 @@
+[
+    {
+        "id": 1,
+        "invoice_id": 1,
+        "date": "2020-02-01 10:00:00",
+        "method": "card",
+        "amount": "200.00",
+        "taxes_breakdown": null,
+        "reference": "PAY-0001",
+        "created_at": "2020-02-01 10:00:00"
+    },
+    {
+        "id": 2,
+        "invoice_id": 1,
+        "date": "2020-02-10 15:30:00",
+        "method": "transfer",
+        "amount": "150.00",
+        "taxes_breakdown": null,
+        "reference": null,
+        "created_at": "2020-02-10 15:30:00"
+    },
+    {
+        "id": 3,
+        "invoice_id": 2,
+        "date": "2020-06-20 09:15:00",
+        "method": "transfer",
+        "amount": "3985.21",
+        "taxes_breakdown": [
+            { "rate": "20.000", "amount": "2856.61" },
+            { "rate": "10.000", "amount": "1128.60" }
+        ],
+        "reference": "PAY-0002",
+        "created_at": "2020-06-20 09:15:00"
+    },
+    {
+        "id": 4,
+        "invoice_id": 6,
+        "date": "2021-08-15 14:00:00",
+        "method": "cheque",
+        "amount": "580.00",
+        "taxes_breakdown": [
+            { "rate": "20.000", "amount": "580.00" }
+        ],
+        "reference": null,
+        "created_at": "2021-08-15 14:00:00"
+    }
+]

@@ -1,1 +1,9 @@
 $base-font-family: 'Avenir', Helvetica, Arial, sans-serif;
+
+$layers: (
+    // - Attention, pour les modales, les layers seront
+    //   incrémentés pour chaque nouvelle modale ouverte.
+    'modals': 1000,
+    'dropdowns': 10000,
+    'tooltips': 10100,
+);

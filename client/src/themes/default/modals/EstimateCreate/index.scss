@@ -1,0 +1,44 @@
+@use '~@/themes/default/style/globals';
+
+.EstimateCreateModal {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        padding: 0.7rem 1rem;
+        background-color: globals.$bg-color-emphasis;
+        gap: globals.$spacing-medium;
+        user-select: none;
+
+        &__title {
+            flex: 1;
+            overflow: hidden;
+            margin: 0;
+            font-size: 1.3rem;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            @include globals.icon('file-signature') {
+                margin-right: 0.6rem;
+            }
+        }
+
+        &__close-button {
+            flex: 0 0 auto;
+        }
+    }
+
+    &__stepper {
+        flex: 0 0 auto;
+        padding: globals.$spacing-large;
+    }
+
+    &__body {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+}

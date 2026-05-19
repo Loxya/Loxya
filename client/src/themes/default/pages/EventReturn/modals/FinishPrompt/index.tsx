@@ -13,6 +13,14 @@ type Props = {
 
     /** Indique si l'inventaire de retour a du matériel cassé. */
     hasBroken: boolean,
+
+    /**
+     * Fonction appelée lorsque la modale est fermée.
+     *
+     * @param date - La date choisie pour clore l'inventaire (ou `null` =
+     *               "maintenant"), `undefined` si l'utilisateur a fermé sans aller au bout.
+     */
+    onClose?(date?: DateTime | null): void,
 };
 
 type Data = {
@@ -34,6 +42,11 @@ const EventReturnFinishPromptModal = defineComponent({
         hasBroken: {
             type: Boolean as PropType<Props['hasBroken']>,
             required: true,
+        },
+        // eslint-disable-next-line vue/no-unused-properties
+        onClose: {
+            type: Function as PropType<Props['onClose']>,
+            default: undefined,
         },
     },
     emits: ['close'],

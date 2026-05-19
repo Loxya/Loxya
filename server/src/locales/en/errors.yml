@@ -1,0 +1,13 @@
+critical:
+    title: An error occurred
+    content: |-
+        An unexpected error occurred and the request could not be processed.
+        If the problem persists, please contact our technical support.
+
+not-installed:
+    title: Installation incomplete
+    content: |-
+        The application is not yet ready to be used, because the installation process is not completed.
+
+        If you are the administrator of this instance, please
+        refer to the documentation to finalize Loxya's installation.

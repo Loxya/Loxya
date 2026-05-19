@@ -4,6 +4,14 @@ import Fragment from '@/components/Fragment';
 import type { PropType } from 'vue';
 
 type Props = {
+    /**
+     * Identifiant de l'onglet.
+     *
+     * Si fourni, cette valeur sera passée dans les événements
+     * de changement d'onglet ({@link TabChangeEvent}).
+     */
+    id?: number | string,
+
     /** Le titre de l'onglet. */
     title: string,
 
@@ -42,6 +50,10 @@ const Tab = defineComponent({
     props: {
         // - Ces props sont utilisées dans le composant parent 'Tabs'.
         /* eslint-disable vue/no-unused-properties */
+        id: {
+            type: [Number, String] as PropType<Props['id']>,
+            default: undefined,
+        },
         title: {
             type: String as PropType<Props['title']>,
             required: true,

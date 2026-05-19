@@ -3,20 +3,23 @@ import isEqual from 'lodash/isEqual';
 import DateTime from '@/utils/datetime';
 import { HttpCode, RequestError } from '@/globals/requester';
 import debounce from 'lodash/debounce';
-import showModal from '@/utils/showModal';
 import stringIncludes from '@/utils/stringIncludes';
 import mergeDifference from '@/utils/mergeDifference';
 import { defineComponent, markRaw } from 'vue';
 import apiTechnicians from '@/stores/api/technicians';
 import { DEBOUNCE_WAIT_DURATION } from '@/globals/constants';
+import { TechniciansViewMode } from '@/stores/api/users';
 import assignmentFormatterFactory from '@/utils/formatTimelineAssignment';
 import Page from '@/themes/default/components/Page';
 import Header from './components/Header';
+import Button from '@/themes/default/components/Button';
+import Dropdown from '@/themes/default/components/Dropdown';
 import Loading from '@/themes/default/components/Loading';
 import EmptyMessage from '@/themes/default/components/EmptyMessage';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Timeline from '@/themes/default/components/Timeline';
+import ViewModeSwitch from '../../components/ViewModeSwitch';
 import Fragment from '@/components/Fragment';
 import {
     MIN_ZOOM,
@@ -306,7 +309,7 @@ const TechniciansTimeline = defineComponent({
             }
 
             let shouldRefetch = false;
-            await showModal(this.$modal, EventDetails, {
+            await this.$modal.show(EventDetails, {
                 id: assignment.event_id,
                 onUpdated: () => {
                     shouldRefetch = true;
@@ -408,7 +411,7 @@ const TechniciansTimeline = defineComponent({
                     <EmptyMessage
                         message={__('no-technicians')}
                         action={{
-                            type: 'add',
+                            type: 'primary',
                             icon: 'user-plus',
                             label: __('add-technician'),
                             target: { name: 'add-technician' },
@@ -443,22 +446,43 @@ const TechniciansTimeline = defineComponent({
             );
         };
 
+        // - Actions de la page.
+        const actions = [
+            <ViewModeSwitch mode={TechniciansViewMode.TIMELINE} />,
+            <Button
+                type="primary"
+                icon="user-plus"
+                to={{ name: 'add-technician' }}
+                collapsible
+            >
+                {__('page.action-add')}
+            </Button>,
+            <Dropdown>
+                <Button icon="tools" to={{ name: 'roles' }}>
+                    {__('page.manage-roles')}
+                </Button>
+            </Dropdown>,
+        ];
+
         return (
             <Page
                 name="technicians-planning"
                 title={__('title')}
                 loading={isLoading}
+                actions={actions}
             >
                 <div class="TechniciansPlanning">
-                    <Header
-                        ref="header"
-                        filters={filters}
-                        centerDate={centerDate}
-                        isLoading={isLoading}
-                        onRefresh={handleRefresh}
-                        onChangeCenterDate={handleChangeCenterDate}
-                        onFiltersChange={handleFiltersChange}
-                    />
+                    {hasTechnicians && (
+                        <Header
+                            ref="header"
+                            filters={filters}
+                            centerDate={centerDate}
+                            isLoading={isLoading}
+                            onRefresh={handleRefresh}
+                            onChangeCenterDate={handleChangeCenterDate}
+                            onFiltersChange={handleFiltersChange}
+                        />
+                    )}
                     <div class="TechniciansPlanning__content">
                         {renderContent()}
                     </div>

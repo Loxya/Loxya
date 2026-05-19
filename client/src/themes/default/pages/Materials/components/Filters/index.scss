@@ -11,6 +11,7 @@
     }
 
     &__quantities-period {
+        display: none;
         max-width: 100%;
         min-width: 320px;
 
@@ -22,6 +23,12 @@
     //
     // - Responsive
     //
+
+    @media (min-width: globals.$screen-tablet) {
+        &__quantities-period {
+            display: block;
+        }
+    }
 
     @media (min-width: globals.$screen-desktop) {
         &__search {

@@ -56,9 +56,7 @@ describe('Utils / datetime', () => {
 
         it('allows getting the start of ... a week', () => {
             expect(new DateTime('2024-06-12 14:30:24').isStartOfWeek()).toBeFalsy();
-
-            // NOTE: On est en anglais => Premier jour de la semaine le dimanche.
-            expect(new DateTime('2024-06-09 00:00:00').isStartOfWeek()).toBeTruthy();
+            expect(new DateTime('2024-06-10 00:00:00').isStartOfWeek()).toBeTruthy();
         });
 
         it('allows getting the start of ... a day', () => {

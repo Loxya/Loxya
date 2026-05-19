@@ -23,19 +23,41 @@
         }
     }
 
-    &__locality {
-        display: flex;
+    &__address {
         margin: globals.$spacing-medium 0;
 
-        #{$block}__postal-code {
-            flex: unset;
-            width: 120px;
+        &__group {
+            display: flex;
+            gap: 10px;
+
+            & + & {
+                margin-top: globals.$spacing-medium;
+            }
         }
 
-        #{$block}__city {
+        &__part {
             flex: 1;
-            margin: 0 0 0 10px;
+            margin: 0 !important;
+
+            &--administrative-area {
+                max-width: 250px;
+            }
+
+            &--postal-code {
+                max-width: 140px;
+            }
         }
+    }
+
+    &__color {
+        --input-width: 160px;
+    }
+
+    &__user-account {
+        display: flex;
+        align-items: center;
+        margin: globals.$spacing-medium 0;
+        gap: globals.$spacing-medium;
     }
 
     &__existing-user {
@@ -65,6 +87,27 @@
             line-height: 1.4;
             text-overflow: ellipsis;
             word-break: break-all;
+        }
+    }
+
+    &__user-create,
+    &__user-reuse {
+        margin-top: globals.$spacing-medium;
+    }
+
+    &__user-create {
+        &__identifiers {
+            display: flex;
+
+            #{$block}__pseudo {
+                flex: 1;
+                margin: 0;
+            }
+
+            #{$block}__user-email {
+                flex: 1;
+                margin: 0 0 0 10px;
+            }
         }
     }
 

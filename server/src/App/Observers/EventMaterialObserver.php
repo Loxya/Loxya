@@ -9,7 +9,7 @@ use Loxya\Models\EventMaterial;
 
 final class EventMaterialObserver
 {
-    public $afterCommit = true;
+    public bool $afterCommit = true;
 
     public function created(EventMaterial $eventMaterial): void
     {

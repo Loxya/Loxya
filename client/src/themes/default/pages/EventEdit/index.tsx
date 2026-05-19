@@ -10,16 +10,16 @@ import Page from '@/themes/default/components/Page';
 import Loading from '@/themes/default/components/Loading';
 import Stepper from '@/themes/default/components/Stepper';
 import MiniSummary from './components/MiniSummary';
-import STEPS_COMPONENTS from './steps';
+import STEPS_COMPONENTS, { Step } from './steps';
 
 import type { RawComponent } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
-import type { Step } from '@/themes/default/components/Stepper';
+import type { Step as StepData } from '@/themes/default/components/Stepper';
 
 type Data = (
     & {
         id: EventDetails['id'] | null,
-        currentStepId: Step['id'],
+        currentStep: Step,
         isLoading: boolean,
         isDirty: boolean,
         criticalError: ErrorType | null,
@@ -37,7 +37,7 @@ const EventEdit = defineComponent({
     data(): Data {
         return {
             id: parseInteger(this.$route.params.id),
-            currentStepId: 1,
+            currentStep: Step.INFORMATIONS,
             isDirty: false,
             isLoading: false,
             isFetched: false,
@@ -77,36 +77,36 @@ const EventEdit = defineComponent({
                 : __('page.event-edit.title-simple');
         },
 
-        steps(): Step[] {
+        steps(): Array<StepData<Step>> {
             const { $t: __, event, isBillable, isTechniciansEnabled } = this;
             const isPersisted = event !== null;
 
             return [
                 {
-                    id: 1,
+                    id: Step.INFORMATIONS,
                     name: __('page.event-edit.steps.informations.title'),
                     filled: true,
                 },
                 {
-                    id: 2,
+                    id: Step.BENEFICIARIES,
                     name: __('page.event-edit.steps.beneficiaries.title'),
                     reachable: isPersisted,
                     filled: (event?.beneficiaries ?? []).length > 0,
                 },
                 isTechniciansEnabled && {
-                    id: 3,
+                    id: Step.TECHNICIANS,
                     name: __('page.event-edit.steps.technicians.title'),
                     reachable: isPersisted,
                     filled: (event?.technicians ?? []).length > 0,
                 },
                 {
-                    id: 4,
+                    id: Step.MATERIALS,
                     name: __('page.event-edit.steps.materials.title'),
                     reachable: isPersisted,
                     filled: (event?.materials ?? []).length > 0,
                 },
                 isBillable && {
-                    id: 5,
+                    id: Step.BILLING,
                     name: __('page.event-edit.steps.billing.title'),
                     reachable: isPersisted,
                     filled: (
@@ -115,7 +115,7 @@ const EventEdit = defineComponent({
                     ),
                 },
                 {
-                    id: 6,
+                    id: Step.SUMMARY,
                     name: __('page.event-edit.steps.summary.title'),
                     reachable: isPersisted,
                     filled: (
@@ -156,8 +156,8 @@ const EventEdit = defineComponent({
             this.isDirty = false;
         },
 
-        handleOpenStep(stepId: number) {
-            this.currentStepId = stepId;
+        handleOpenStep(step: Step) {
+            this.currentStep = step;
             this.isDirty = false;
         },
 
@@ -172,10 +172,10 @@ const EventEdit = defineComponent({
                     }
 
                     e.preventDefault();
-                    const prevReachableStep = ((): Step | null => {
-                        const { steps, currentStepId } = this;
+                    const prevReachableStep = ((): StepData<Step> | null => {
+                        const { steps, currentStep } = this;
 
-                        let index = steps.findIndex((step: Step) => step.id === currentStepId);
+                        let index = steps.findIndex((step: StepData) => step.id === currentStep);
                         if (index === -1) {
                             return null;
                         }
@@ -190,7 +190,7 @@ const EventEdit = defineComponent({
                         return null;
                     })();
                     if (prevReachableStep !== null) {
-                        this.currentStepId = prevReachableStep.id;
+                        this.currentStep = prevReachableStep.id;
                         this.isDirty = false;
                     }
 
@@ -204,10 +204,10 @@ const EventEdit = defineComponent({
 
                     e.preventDefault();
 
-                    const nextReachableStep = ((): Step | null => {
-                        const { steps, currentStepId } = this;
+                    const nextReachableStep = ((): StepData<Step> | null => {
+                        const { steps, currentStep } = this;
 
-                        let index = steps.findIndex((step: Step) => step.id === currentStepId);
+                        let index = steps.findIndex((step: StepData) => step.id === currentStep);
                         if (index === -1) {
                             return null;
                         }
@@ -222,7 +222,7 @@ const EventEdit = defineComponent({
                         return null;
                     })();
                     if (nextReachableStep !== null) {
-                        this.currentStepId = nextReachableStep.id;
+                        this.currentStep = nextReachableStep.id;
                         this.isDirty = false;
                     }
                     break;
@@ -286,7 +286,7 @@ const EventEdit = defineComponent({
             pageTitle,
             event,
             steps,
-            currentStepId,
+            currentStep,
             isDirty,
             isFetched,
             isLoading,
@@ -310,7 +310,7 @@ const EventEdit = defineComponent({
                 return null;
             }
 
-            const StepComponent: RawComponent | undefined = STEPS_COMPONENTS.get(currentStepId);
+            const StepComponent: RawComponent | undefined = STEPS_COMPONENTS.get(currentStep);
             return StepComponent === undefined ? null : (
                 <StepComponent
                     event={event}
@@ -330,7 +330,7 @@ const EventEdit = defineComponent({
                     <div class="EventEdit__sidebar">
                         <Stepper
                             steps={steps}
-                            currentStepId={currentStepId}
+                            currentStepId={currentStep}
                             onOpenStep={handleOpenStep}
                         />
                         <MiniSummary

@@ -1,5 +1,8 @@
 # check=skip=SecretsUsedInArgOrEnv
 
+# - Doit correspondre à la version du `.nvmrc`
+ARG NODE_VERSION=22.19.0
+
 FROM php:8.3-fpm-alpine AS app-base
 WORKDIR /
 
@@ -7,10 +10,13 @@ LABEL description="Application de gestion de location de matériel simple, effic
 LABEL maintainer="Loxya Team <technical@loxya.com>"
 
 ENV TZ=Europe/Paris
+ENV LANG=fr_FR.UTF-8
 
 # - Persistent / Runtime dependencies
 RUN set -eux; \
     apk add --no-cache \
+        autoconf \
+        gcc \
         curl \
         nginx \
         supervisor \
@@ -18,6 +24,9 @@ RUN set -eux; \
         unzip \
         dcron \
         logrotate \
+        weasyprint=66.0-r0 \
+        fontconfig \
+        ttf-dejavu \
         jq;
 
 # - User / Group "loxya"
@@ -33,7 +42,7 @@ RUN set -eux; \
 COPY ./config/logrotate /etc/logrotate.d/loxya
 
 # - PHP Extension Installer
-COPY --from=mlocati/php-extension-installer:2.8.5 /usr/bin/install-php-extensions /usr/local/bin/
+COPY --from=mlocati/php-extension-installer:2.9.20 /usr/bin/install-php-extensions /usr/local/bin/
 
 # - PHP extensions
 RUN \
@@ -111,11 +120,21 @@ CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
 HEALTHCHECK --timeout=10s CMD curl --silent --fail http://127.0.0.1/php-ping || exit 1
 
+FROM node:${NODE_VERSION}-alpine AS node
+
 FROM app-base AS app-dev
 
+# - Node
+COPY --from=node /usr/lib /usr/lib
+COPY --from=node /usr/local/share /usr/local/share
+COPY --from=node /usr/local/lib /usr/local/lib
+COPY --from=node /usr/local/include /usr/local/include
+COPY --from=node /usr/local/bin /usr/local/bin
+COPY --from=node /opt /opt
+
 RUN set -eux; \
-    apk add --no-cache \
-        git;
+    apk add --no-cache git; \
+    npm install -g prettier@3.8.1;
 
 # - Git configuration
 COPY ./config/gitconfig /etc/gitconfig
@@ -124,7 +143,7 @@ COPY ./config/gitconfig /etc/gitconfig
 COPY ./config/vhosts/default.dev.conf /etc/nginx/vhosts/default.conf
 
 # - Composer
-COPY --from=composer:2.8.10 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.9.2 /usr/bin/composer /usr/bin/composer
 
 # - Working dir
 WORKDIR /opt/loxya
@@ -137,8 +156,10 @@ RUN set -eux; \
         /tmp/loxya \
         /var/loxya/data \
         /var/loxya/cache \
-        /var/loxya/data/bills \
-        /var/loxya/data/imports \
+        /var/loxya/data/events \
+        /var/loxya/data/technicians \
+        /var/loxya/data/invoices \
+        /var/loxya/data/estimates \
         /var/loxya/data/materials; \
     chown -R loxya:loxya \
         /etc/loxya \
@@ -157,13 +178,11 @@ RUN set -eux; \
         /opt/loxya/src/var/logs \
         /opt/loxya/src/var/cache \
         /opt/loxya/src/var/tmp \
-        /opt/loxya/src/App/Config/install.json \
         /opt/loxya/src/App/Config/settings.json; \
     ln -snf /var/loxya/data /opt/loxya/data; \
     ln -snf /tmp/loxya /opt/loxya/src/var/tmp; \
     ln -snf /var/loxya/logs /opt/loxya/src/var/logs; \
     ln -snf /var/loxya/cache /opt/loxya/src/var/cache; \
-    ln -snf /etc/loxya/install.json /opt/loxya/src/App/Config/install.json; \
     ln -snf /etc/loxya/settings.json /opt/loxya/src/App/Config/settings.json;
 
 VOLUME ["/etc/loxya", "/var/loxya"]

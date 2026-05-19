@@ -2,13 +2,11 @@ import './index.scss';
 import invariant from 'invariant';
 import config from '@/globals/config';
 import { defineComponent } from 'vue';
-import showModal from '@/utils/showModal';
 import isMaterialResyncable from './utils/isMaterialResyncable';
 import apiMaterials from '@/stores/api/materials';
 import CriticalError from '@/themes/default/components/CriticalError';
 import Loading from '@/themes/default/components/Loading';
 import Button from '@/themes/default/components/Button';
-import Dropdown from '@/themes/default/components/Dropdown';
 import FiltersPanel from './components/Filters';
 import List from './components/List';
 import store from './store';
@@ -69,7 +67,7 @@ type Props = {
 
     /**
      * Fonction appelée lorsque le sélecteur de matériel est prêt.
-     * (Déclenché lorsque la récupération du matériel est terminée notamment)
+     * (déclenché lorsque la récupération du matériel est terminée notamment)
      */
     onReady?(): void,
 
@@ -79,6 +77,12 @@ type Props = {
      * @param materials - La nouvelle sélection de matériel.
      */
     onChange?(materials: SelectedMaterial[]): void,
+
+    /**
+     * Fonction appelée lorsque une ou plusieurs sous-listes de matériel changent.
+     * (Un changement peut-être l'ajout, la suppression, le renommage d'un liste)
+     */
+    onSubListChange?(): void,
 
     /**
      * Fonction appelée lorsque les données d'un matériel ont été resynchronisées.
@@ -219,6 +223,11 @@ const MaterialsSelector = defineComponent({
             return this.bookable?.is_billable ?? false;
         },
 
+        withResync(): boolean {
+            const { bookable } = this;
+            return bookable !== undefined;
+        },
+
         hasSelectedMaterials(): boolean {
             return !store.getters.isEmpty;
         },
@@ -288,7 +297,7 @@ const MaterialsSelector = defineComponent({
 
             const withBilling = this.withBillingFinal;
             const event: EventDetails | undefined = (
-                await showModal(this.$modal, ImportFromEvent, {
+                await this.$modal.show(ImportFromEvent, {
                     materials: this.materials,
                     bookable: this.bookable,
                     withBilling,
@@ -300,6 +309,10 @@ const MaterialsSelector = defineComponent({
         },
 
         async handleResyncMaterialData(materialId: SourceMaterial['id']) {
+            if (!this.withResync) {
+                return;
+            }
+
             const material = this.materials.find(({ id }: SourceMaterial) => id === materialId);
             if (!material || !isMaterialResyncable(material, this.withBillingFinal)) {
                 return;
@@ -307,8 +320,8 @@ const MaterialsSelector = defineComponent({
 
             const withBilling = this.withBillingFinal;
             const updatedMaterial: EmbeddedMaterial | undefined = (
-                await showModal(this.$modal, ResyncMaterialData, {
-                    bookable: this.bookable,
+                await this.$modal.show(ResyncMaterialData, {
+                    bookable: this.bookable!,
                     withBilling,
                     material,
                 })
@@ -428,6 +441,7 @@ const MaterialsSelector = defineComponent({
             isEditOnly,
             isFetched,
             materials,
+            withResync,
             hasCriticalError,
             hasSelectedMaterials,
             withBillingFinal: withBilling,
@@ -454,16 +468,13 @@ const MaterialsSelector = defineComponent({
         }
 
         const renderImportActions = (): JSX.Element => (
-            <Dropdown label={__('add-materials-from.dropdown.title')}>
-                <Button
-                    type="add"
-                    class="Dropdown__item"
-                    onClick={handleEventImport}
-                    disabled={isEditOnly}
-                >
-                    {__('add-materials-from.an-event')}
-                </Button>
-            </Dropdown>
+            <Button
+                type="add"
+                onClick={handleEventImport}
+                disabled={isEditOnly}
+            >
+                {__('add-materials-from.an-event')}
+            </Button>
         );
 
         return (
@@ -486,6 +497,7 @@ const MaterialsSelector = defineComponent({
                         filters={filters}
                         materials={materials}
                         withBilling={withBilling}
+                        withResync={withResync}
                         isEditOnly={isEditOnly}
                         onRequestResyncMaterialData={handleResyncMaterialData}
                         onRequestShowAllMaterials={handleShowAllMaterials}

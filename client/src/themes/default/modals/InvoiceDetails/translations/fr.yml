@@ -1,0 +1,136 @@
+title:
+    invoice: "Facture n°\_{number}"
+    credit-note: "Avoir n°\_{number}"
+
+    draft:
+        invoice: "Facture du {date} à {hour}"
+        credit-note: "Avoir du {date} à {hour}"
+
+actions:
+    create-credit-note: Créer un avoir pour cette facture
+    finalize: Finaliser la facture
+    delete: Supprimer le brouillon
+    download-ubl: Télécharger au format UBL
+
+confirm-delete: "Voulez-vous vraiment supprimer ce brouillon de facture\_?"
+deleted: Le brouillon a bien été supprimé.
+
+confirm-create-credit-note:
+    "Êtes-vous sûr de vouloir créer un avoir pour cette facture\_?
+    \n\n
+    L'avoir sera créé directement (sans passer par l'étape brouillon)
+    et la facture sera marquée comme «\_annulée\_». Voulez-vous continuer\_?"
+
+confirm-finalize:
+    "La finalisation va générer le document officiel de la facture.
+    Cette action est irréversible, voulez-vous continuer\_?"
+
+issue-date: Date d'émission
+expiry-date:
+    fixed: Date d'échéance
+    delay: Conditions de paiement
+
+payment-terms:
+    immediately: Paiement à réception
+    with-delay:
+        - "Paiement sous {days} jour"
+        - "Paiement sous {days} jours"
+
+parent-estimate:
+    title: Devis lié
+    label:
+        with-number: "Devis n°\_{number}"
+        without-number: "Devis du {date} à {hour}"
+
+parent-invoice:
+    title: Facture d'origine
+    label:
+        with-number: "Facture n°\_{number}"
+        without-number: "Facture du {date} à {hour}"
+
+child-invoice:
+    title:
+        invoice: Facture liée
+        credit-note: Avoir lié
+    label:
+        invoice: "Facture n°\_{number}"
+        credit-note: "Avoir n°\_{number}"
+
+        draft:
+            invoice: "Facture du {date} à {hour}"
+            credit-note: "Avoir du {date} à {hour}"
+
+prepayment-invoices:
+    title: Factures d'acomptes liées
+    label:
+        invoice: "Facture n°\_{number}"
+        credit-note: "Avoir n°\_{number}"
+
+        draft:
+            invoice: "Facture du {date} à {hour}"
+            credit-note: "Avoir du {date} à {hour}"
+
+payments:
+    title: Paiements
+    add: Ajouter un paiement
+    empty: Aucun paiement enregistré pour le moment.
+    total: Total encaissé
+    remaining: Restant dû
+
+    cancel:
+        label: Annuler le paiement
+        confirm:
+            "Pour «\_annuler\_» ce paiement, le système va enregistrer un paiement
+            négatif équivalent au paiement d'origine, voulez-vous continuer\_?"
+        error: Une erreur est survenue lors de l'annulation du paiement.
+
+    settle:
+        label: Solder la facture
+        confirm:
+            "Cela va enregistrer un paiement de {amount} correspondant au reste à
+            payer sur cette facture, voulez-vous continuer\_?"
+        error: Une erreur est survenue lors de l'enregistrement du paiement.
+
+refunds:
+    title: Remboursements
+    add: Ajouter un remboursement
+    empty: Aucun remboursement enregistré pour le moment.
+    total: Total remboursé
+    remaining: Restant à rembourser
+
+    cancel:
+        label: Annuler le remboursement
+        confirm:
+            "Pour «\_annuler\_» ce remboursement, le système va enregistrer un remboursement
+            négatif équivalent à celui d'origine, voulez-vous continuer\_?"
+        error: Une erreur est survenue lors de l'annulation du remboursement.
+
+    settle:
+        label: Solder le remboursement
+        confirm:
+            "Cela va enregistrer un remboursement de {amount} correspondant au reste
+            à rembourser, voulez-vous continuer\_?"
+        error: Une erreur est survenue lors de l'enregistrement du remboursement.
+
+modals:
+    add-payment:
+        title:
+            payment: "Nouveau paiement - Facture n°\_{number}"
+            refund: "Nouveau remboursement - Facture n°\_{number}"
+        created:
+            payment: Le paiement a bien été enregistré.
+            refund: Le remboursement a bien été enregistré.
+        fields:
+            amount: Montant
+            method: Moyen de paiement
+            reference:
+                label: Référence
+                placeholder: Référence de transaction, numéro de chèque...
+        taxes-breakdown:
+            title:
+                default: Ventilation par taux de taxe
+                simple: Ventilation par taux de T.V.A.
+            line: "Taux {rate}\_%"
+        action:
+            payment: Enregistrer le paiement
+            refund: Enregistrer le remboursement

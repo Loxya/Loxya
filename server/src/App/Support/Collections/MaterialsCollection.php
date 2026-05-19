@@ -9,6 +9,16 @@ use Loxya\Models\EventMaterial;
 use Loxya\Models\InvoiceMaterial;
 use Loxya\Models\Material;
 
+/**
+ * @template T of (
+ *     Material
+ *     |EventMaterial
+ *     |InvoiceMaterial
+ *     |EstimateMaterial
+ * )
+ *
+ * @extends Collection<array-key, T>
+ */
 class MaterialsCollection extends Collection
 {
     public const GLOBAL_LIST = '__global__';
@@ -16,7 +26,7 @@ class MaterialsCollection extends Collection
     /**
      * Trie une collection de matériel par catégorie.
      *
-     * @return Collection Une nouvelle collection avec les catégories en clé
+     * @return Collection<string, MaterialsCollection<T>> Une nouvelle collection avec les catégories en clé
      */
     public function byCategories(): Collection
     {
@@ -45,7 +55,7 @@ class MaterialsCollection extends Collection
     /**
      * Trie une collection de materiel par sous-catégorie.
      *
-     * @return Collection Une nouvelle collection avec les sous-catégories en clé
+     * @return Collection<string, MaterialsCollection<T>> Une nouvelle collection avec les sous-catégories en clé
      */
     public function bySubCategories(): Collection
     {
@@ -79,7 +89,7 @@ class MaterialsCollection extends Collection
     /**
      * Trie une collection de materiel par parc.
      *
-     * @return Collection Une nouvelle collection avec les parcs en clé.
+     * @return Collection<string, MaterialsCollection<T>> Une nouvelle collection avec les parcs en clé.
      */
     public function byParks(): Collection
     {

@@ -13,11 +13,5 @@
         flex-direction: column;
         overflow: hidden;
         height: 100%;
-
-        &__content {
-            flex: 1;
-            overflow: auto;
-            height: 100%;
-        }
     }
 }

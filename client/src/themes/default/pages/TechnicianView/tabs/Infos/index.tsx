@@ -2,7 +2,6 @@ import './index.scss';
 import { defineComponent } from 'vue';
 
 import type { PropType } from 'vue';
-import type { GroupDetails } from '@/stores/api/groups';
 import type { TechnicianDetails } from '@/stores/api/technicians';
 import type { Role } from '@/stores/api/roles';
 
@@ -27,16 +26,8 @@ const TechnicianViewInfos = defineComponent({
         },
 
         email(): string | null {
-            const { email, user } = this.technician;
-            return email ?? user?.email ?? null;
-        },
-
-        userGroup(): GroupDetails | null {
-            const { user } = this.technician;
-            if (!user) {
-                return null;
-            }
-            return this.$store.getters['groups/get'](user.group);
+            const { email } = this.technician;
+            return email ?? null;
         },
     },
     mounted() {
@@ -52,14 +43,13 @@ const TechnicianViewInfos = defineComponent({
         },
     },
     render() {
-        const { __, completeName, email, userGroup } = this;
+        const { __, completeName, email } = this;
         const {
             phone,
             country,
-            user,
             note,
-            full_address: address,
             roles,
+            address,
         } = this.technician;
 
         return (
@@ -74,7 +64,7 @@ const TechnicianViewInfos = defineComponent({
                                 {__('global.phone')}
                             </dt>
                             <dd class="TechnicianViewInfos__info__value">
-                                {phone ?? (
+                                {phone?.toReadable() ?? (
                                     <span class="TechnicianViewInfos__info__empty">
                                         {__('global.not-specified')}
                                     </span>
@@ -110,31 +100,11 @@ const TechnicianViewInfos = defineComponent({
                                 {__('global.country')}
                             </dt>
                             <dd class="TechnicianViewInfos__info__value">
-                                {country?.name ?? (
-                                    <span class="TechnicianViewInfos__info__empty">
-                                        {__('global.not-specified')}
-                                    </span>
-                                )}
+                                {country.name}
                             </dd>
                         </dl>
                     </div>
                     <div class="TechnicianViewInfos__main__extras">
-                        {!!user && (
-                            <dl class="TechnicianViewInfos__info">
-                                <dt class="TechnicianViewInfos__info__label">
-                                    {__('user-account')}
-                                </dt>
-                                <dd class="TechnicianViewInfos__info__value">
-                                    <span class="TechnicianViewInfos__pseudo">
-                                        <span class="TechnicianViewInfos__pseudo__at">@</span>
-                                        <span class="TechnicianViewInfos__pseudo__value">{user.pseudo}</span>
-                                    </span>
-                                    {userGroup !== null && (
-                                        <span class="TechnicianViewInfos__user-group">({userGroup.name})</span>
-                                    )}
-                                </dd>
-                            </dl>
-                        )}
                         {!!note && (
                             <dl class="TechnicianViewInfos__info">
                                 <dt class="TechnicianViewInfos__info__label">

@@ -1,0 +1,783 @@
+{% extends 'pdf/document' %}
+
+{% set isCreditNote = totalWithTaxes.isNegative() %}
+
+{% macro organization(organization, showLegalNumbers, showLogo) %}
+    {% set hasLegalNumbers = showLegalNumbers and (
+        organization.identifier is not empty or
+        organization.activityCode is not empty or
+        organization.vatNumber is not empty
+    ) %}
+    {%- if showLogo and organization.logo is not empty ~%}
+        <img src="{{ baseUrl }}/img/{{ organization.logo }}" style="width: 75mm;" />
+    {%- endif ~%}
+    <div class="spaceBottom2 size12 strong">
+        {% if organization.name is not empty %}
+            {{- organization.name }}<br />
+        {%- endif ~%}
+        {{ organization.address|nl2br }}<br />
+        {{ organization.country.getName(locale) }}
+    </div>
+    {%- if hasLegalNumbers ~%}
+    <div class="spaceBottom2 size10">
+        {% if organization.identifier is not empty %}
+            {%- set registrationIdScheme = organization.country.getCompanyIdentifierScheme(organization.identifier) -%}
+            {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+            {{- __(registrationIdTranslationKey, organization.identifier, __('business-registration-id.generic', organization.identifier)) }}<br />
+        {%~ endif %}
+        {% if organization.vatNumber is not empty %}
+            {%- set vatNumberTranslationKey = 'vat-number.' ~ (organization.country.code ?? 'generic') -%}
+            {{- __(vatNumberTranslationKey, organization.vatNumber, __('vat-number.generic', organization.vatNumber)) }}<br />
+        {%~ endif %}
+        {% if organization.activityCode is not empty %}
+            {%- set activityCodeTranslationKey = 'business-activity-code.' ~ (organization.country.code ?? 'generic') -%}
+            {{- __(activityCodeTranslationKey, organization.activityCode, __('business-activity-code.generic', organization.activityCode)) }}<br />
+        {%~ endif %}
+    </div>
+    {%- endif -%}
+    {%- if organization.phone is not empty or organization.email is not empty ~%}
+    <div class="spaceBottom2 size10">
+        {% if organization.phone is not empty %}
+            {{- __('phone', organization.phone|format_phone(organization.country)) }}<br />
+        {%~ endif %}
+        {% if organization.email is not empty %}
+            {{- __('email', organization.email) }}
+        {%~ endif %}
+    </div>
+    {%- endif -%}
+{% endmacro %}
+
+{% macro beneficiary(beneficiary, referenceCountry) %}
+    {% set company = beneficiary.company %}
+    {% set hasLegalNumbers = (
+        company.registration_id is not empty or
+        company.vat_number is not empty
+    ) %}
+    <div class="spaceBottom2">
+        {%- if company is not empty ~%}
+        <strong>{{ company.legal_name }}</strong><br />
+        {{ __('contact-dots') }}&#32;
+        {%- endif -%}
+        {{ beneficiary.full_name }}<br />
+        {% if company.address is not empty ~%}
+            {{- company.address|nl2br }}<br />
+            {%~ if referenceCountry is not defined or not referenceCountry.isSame(company.country) %}
+                {{ company.country.getName(locale) }}<br />
+            {%~ endif %}
+        {% elseif beneficiary.address is not empty ~%}
+            {{- beneficiary.address|nl2br }}<br />
+            {%~ if referenceCountry is not defined or not referenceCountry.isSame(beneficiary.country) %}
+                {{ beneficiary.country.getName(locale) }}<br />
+            {%~ endif %}
+        {% endif -%}
+        {% if beneficiary.reference is not empty -%}
+            <small>({{ __('reference-value', beneficiary.reference) }})</small><br />
+        {% endif -%}
+    </div>
+    {%- if hasLegalNumbers ~%}
+    <div class="spaceBottom2 size10">
+        {% if company.registration_id is not empty %}
+            {%- set registrationIdScheme = company.country.getCompanyIdentifierScheme(company.registration_id) -%}
+            {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+            {{ __(registrationIdTranslationKey, company.registration_id, __('business-registration-id.generic', company.registration_id)) }}<br />
+        {% endif %}
+        {% if company.vat_number is not empty %}
+            {%- set vatNumberTranslationKey = 'vat-number.' ~ (company.country.code ?? 'generic') -%}
+            {{- __(vatNumberTranslationKey, company.vat_number, __('vat-number.generic', company.vat_number)) }}<br />
+        {%~ endif %}
+    </div>
+    {%- endif -%}
+    {%- if company.phone is not empty or beneficiary.phone is not empty or beneficiary.email is not empty ~%}
+    <div class="size8">
+        {% if company.phone is not empty -%}
+            {{ __('phone', company.phone|format_phone(company.country)) }}<br />
+        {% elseif beneficiary.phone is not empty -%}
+            {{ __('phone', beneficiary.phone|format_phone(beneficiary.country)) }}<br />
+        {% endif -%}
+        {% if beneficiary.email is not empty -%}
+            {{ __('email', beneficiary.email) }}<br />
+        {%- endif -%}
+    </div>
+    {%- endif -%}
+{% endmacro %}
+
+{% block title %}
+    {%- if not isCreditNote -%}
+        {{ __('invoice-number', number) }}
+    {%- else -%}
+        {{ __('credit-note-number', number) }}
+    {%- endif -%}
+{% endblock %}
+
+{% block head %}
+{{ parent() }}
+<style type="text/css">
+    @page {
+        @bottom-center {
+            content: element(main-footer);
+        }
+    }
+    h1 {
+        font-size: 1.5rem;
+        margin: 0 0 3mm 0;
+    }
+    h2 {
+        font-size: 1.25rem;
+        margin: 0 0 3mm 0;
+    }
+    h3 {
+        font-size: 1.125rem;
+        margin: 0 0 3mm 0;
+    }
+    h4 {
+        font-size: 1rem;
+        margin: 0 0 3mm 0;
+    }
+    p {
+        font-size: 1rem;
+        margin: 0 0 3mm 0;
+    }
+    small {
+        font-size: 0.85rem;
+    }
+    ul, ol {
+        margin: 2mm 0 3mm 0;
+        padding: 0;
+    }
+    li {
+        list-style: none;
+        border-left: 2px solid #ccc;
+        padding-left: 1mm;
+    }
+    table {
+        width: 100%;
+        table-layout: auto;
+        margin: 0 0 3mm 0;
+        border-spacing: 0;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 1mm 2mm;
+        border-top: 1pt solid #888;
+        border-left: 1pt solid #888;
+        vertical-align: top;
+    }
+    th {
+        text-align: left;
+    }
+    th:last-child, td:last-child {
+        border-right: 1pt solid #888;
+    }
+    tr:last-child > td {
+        border-bottom: 1pt solid #888;
+    }
+    .layout-table > tbody > tr > td {
+        border: none;
+        padding: 0;
+    }
+    .listing-table {
+        margin-bottom: 8mm;
+    }
+    .listing-table > thead > tr {
+        page-break-after: avoid;
+    }
+    .listing-table > thead > tr > th {
+        font-size: 0.8rem;
+        border-left: 1pt solid #ccc;
+        border-right: 1pt solid #ccc;
+        border-bottom: 1pt solid #888;
+        vertical-align: middle;
+    }
+    .listing-table > tbody > tr > td {
+        padding: 2mm;
+        font-size: 0.7rem;
+        border: none;
+        border-left: 1pt solid #ccc;
+        border-right: 1pt solid #ccc;
+        border-bottom: 1pt solid #ccc;
+        vertical-align: middle;
+    }
+    .listing-table > tbody > tr > td.section-title {
+        padding: 4mm 2mm 2mm;
+        font-size: 0.8rem;
+        color: #888;
+    }
+    .listing-table > thead > tr > th:first-child,
+    .listing-table > tbody > tr > td:first-child {
+        border-left: 1pt solid #888 !important;
+    }
+    .listing-table > thead > tr > th:last-child,
+    .listing-table > tbody > tr > td:last-child {
+        border-right: 1pt solid #888 !important;
+    }
+    .listing-table__item__label {
+        font-weight: 600;
+    }
+    .listing-table__item__sub-name {
+        margin-top: 2px;
+        font-size: 0.6rem;
+    }
+    .listing-table__item__label,
+    .listing-table__item__sub-name {
+        display: block;
+    }
+    .totals-table {
+        width: 50%;
+        margin: 0 0 5mm auto;
+    }
+    .totals-table--legacy {
+        width: 100%;
+        margin: 0;
+    }
+    .totals-table > tbody > tr > td {
+        border-bottom: 1pt solid #888;
+        text-align: right;
+        vertical-align: middle;
+    }
+    .totals-table--legacy > tbody > tr > td {
+        text-align: center;
+    }
+    .inset {
+        padding: 5mm 3mm 8mm !important;
+        border: 1pt solid #999 !important;
+    }
+    .half { width: 50%; }
+    .third { width: 33.33%; }
+    .two-third { width: 66.66%; }
+    .max50mm { max-width: 50mm; }
+    .left { text-align: left; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .sizeTitle { font-size: 16pt; }
+    .sizeSubtitle { font-size: 14pt; }
+    .size12 { font-size: 1rem; }
+    .size10 { font-size: 0.9rem; }
+    .size8 { font-size: 0.85rem; }
+    .size7 { font-size: 7pt; }
+    .vspace2 { margin: 0; padding: 2mm 0; }
+    .vspace5 { margin: 0; padding: 5mm 0; }
+    .vspace10 { margin: 0; padding: 10mm 0; }
+    .spaceBottom1 { margin-bottom: 1mm; }
+    .spaceBottom2 { margin-bottom: 2mm; }
+    .spaceBottom5 { margin-bottom: 5mm; }
+    .indent5 { padding-left: 5mm; }
+    .indent10 { padding-left: 10mm; }
+    .box {
+        padding: 1mm;
+        background-color: #eee;
+        border-radius: 3pt;
+    }
+    .strong { font-weight: 700; }
+    .normal { font-weight: 400; }
+    .light { color: #333; }
+    .lighter { color: #666; }
+    .lightest { color: #aaa; }
+    .highlight { color: #e60000; }
+    .changePage { page-break-before: always; }
+
+    .main-footer {
+        position: running(main-footer);
+        text-align: center;
+        font-size: 7pt;
+        word-break: break-all;
+        color: #aaa;
+    }
+
+    @media screen {
+        .changePage {
+            break-before: column;
+        }
+
+        .main-footer {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<table class="layout-table">
+    <tr>
+        <td class="half">
+            {{- _self.organization(seller, true, true) ~}}
+        </td>
+        <td class="half">
+            {% set currencyName = currency|currency_name(locale)|ucfirst -%}
+            <h2 class="box center">
+                {%- if not isCreditNote -%}
+                    {{ __('invoice-title', [currencyName, number]) }}
+                {%- else -%}
+                    {{ __('credit-note-title', [currencyName, number]) }}
+                {%- endif -%}
+            </h2>
+            <table class="layout-table spaceBottom5">
+                <tr>
+                    <td class="size12">{{ __('on-date', date|format_date('short', locale=locale))|ucfirst }}</td>
+                    <td class="size12 right">{{ __('page', 1) }}</td>
+                </tr>
+            </table>
+            <p>{{ __('beneficiary') }}</p>
+            <h2>
+                {{- _self.beneficiary(beneficiary, seller.country) ~}}
+            </h2>
+        </td>
+    </tr>
+</table>
+
+<div class="vspace5">
+    <p class="strong">{{ __('event', booking.title) }}</p>
+    <p class="strong">
+        {{ booking.period|format_period('full', locale=locale)|ucfirst -}}
+        {% if booking.location %}, {{ __('in-location', booking.location) }}{% endif ~%}
+    </p>
+    {%- if showTotalReplacementPrice and totalReplacement is not null -%}
+    <p>{{ __('total-replacement-amount-value', [totalReplacement|format_currency(currency, locale=locale)]) }}</p>
+    {% endif -%}
+    <table>
+        <thead>
+            <tr>
+                <th>{{ __('category') }}</th>
+                <th class="center">{{ __('quantity') }}</th>
+                {%- if isLegacy ~%}
+                <th class="right">{{ __(hasTaxes ? 'daily-total-excl-tax' : 'daily-total') }}</th>
+                {%- else ~%}
+                <th class="right">{{ __(hasTaxes ? 'total-excl-tax' : 'total') }}</th>
+                {%- endif ~%}
+            </tr>
+        </thead>
+        <tbody>
+            {%- for category in categoriesSubTotals ~%}
+            <tr>
+                <td>
+                    {%- if category.id == '__UNCATEGORIZED__' -%}
+                        {{ __('not-categorized') }}
+                    {%- elseif category.id == '__OTHER__' -%}
+                        {{ __('category-other') }}
+                    {%- else -%}
+                        {{ category.name }}
+                    {%- endif -%}
+                </td>
+                <td class="center">{{ __n('items-count', category.quantity) }}</td>
+                <td class="right">
+                    {{ category.subTotal|format_currency(currency, locale=locale) }}
+                </td>
+            </tr>
+            {%- endfor ~%}
+        </tbody>
+    </table>
+    <p class="size8 lighter">{{ __('note-detail-next-page') }}</p>
+</div>
+
+{% if isLegacy %}
+<div class="vspace5 size8">
+    <table class="totals-table totals-table--legacy">
+        <thead>
+            <tr>
+                <th>{{ __('daily-total') }}</th>
+                <th>{{ __('degressive-rate') }}</th>
+                {%- if hasGlobalDiscount ~%}
+                <th>{{ __('discount') }}</th>
+                {%- endif ~%}
+                <th colspan="2">{{ __('totals') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="center">
+                <td>
+                    <div class="vspace2">
+                        {{ dailyTotal|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+                <td>
+                    <div class="vspace2">
+                        ×&nbsp;<strong>{{ degressiveRate|format_number(locale=locale) }}</strong>
+                        <span class="lighter">({{ __n('number-of-days', booking.period.asDays) }})</span>
+                    </div>
+                </td>
+                {% if hasGlobalDiscount -%}
+                <td rowspan="{{ hasTaxes ? (totalTaxes|length + 2) : 2 }}">
+                    <div class="vspace2">
+                        {{
+                            __('discount-of-amount', [
+                                globalDiscountRate|format_percent_number({max_fraction_digit: 4}, locale=locale),
+                                totalWithoutGlobalDiscount|format_currency(currency, locale=locale),
+                            ])
+                        }}
+                    </div>
+                    <div class="vspace5 strong">
+                        - {{ totalGlobalDiscount|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+                {% endif -%}
+                <td rowspan="{{ hasTaxes ? 1 : 2 }}">
+                    <div class="vspace2 center">
+                        {% if hasTaxes -%}
+                            {{ __('total-excl-tax') }}
+                        {% else -%}
+                            <strong class="size10">{{ __('total-due') }}</strong><br />
+                            <span class="size9">{{ __('tax-not-applicable') }}</span>
+                        {% endif -%}
+                    </div>
+                </td>
+                <td rowspan="{{ hasTaxes ? 1 : 2 }}">
+                    <div class="vspace2 right">
+                        {{ totalWithoutTaxes|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+            </tr>
+            {%- set firstTax = hasTaxes ? totalTaxes|first : null -%}
+            {%- set otherTaxes = hasTaxes ? totalTaxes|slice(1) : null ~%}
+            <tr class="center">
+                <td rowspan="{{ hasTaxes ? (totalTaxes|length + 1) : 1 }}" colspan="2">
+                    <div class="vspace5 strong">
+                        = {{ totalWithoutGlobalDiscount|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+                {% if hasTaxes -%}
+                <td>
+                    <div class="vspace2 center">
+                        {%-
+                            set firstTaxValue = firstTax.is_rate
+                                ? firstTax.value|format_percent_number({max_fraction_digit: 3}, locale=locale)
+                                : firstTax.value|format_currency(currency, locale=locale)
+                        ~%}
+                        {{ firstTax.name }} ({{ firstTaxValue }})
+                    </div>
+                </td>
+                <td>
+                    <div class="vspace2 right">
+                        {{ firstTax.total|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+                {%- endif ~%}
+            </tr>
+            {%- for tax in otherTaxes ~%}
+            <tr class="center">
+                <td>
+                    <div class="vspace2 center">
+                        {%-
+                            set taxValue = tax.is_rate
+                                ? tax.value|format_percent_number({max_fraction_digit: 3}, locale=locale)
+                                : null
+                        ~%}
+                        {{ tax.name }}{{ taxValue is not null ? ' (' ~ taxValue ~ ')' : '' }}
+                    </div>
+                </td>
+                <td>
+                    <div class="vspace2 right">
+                        {{ tax.total|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+            </tr>
+            {%- endfor -%}
+            {%- if hasTaxes ~%}
+            <tr>
+                <td>
+                    <div class="vspace2 strong center">
+                        {{ __('total-incl-taxes') }}<br>
+                        {{ __('total-due') }}
+                    </div>
+                </td>
+                <td>
+                    <div class="vspace2 right strong">
+                        {{ totalWithTaxes|format_currency(currency, locale=locale) }}
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<table class="totals-table">
+    <tbody>
+        <tr>
+            <td>{{ __('duration') }}</td>
+            <td>{{ __n('number-of-days', booking.period.asDays) }}</td>
+        </tr>
+        {% if hasGlobalDiscount or hasTaxes -%}
+        <tr>
+            <td>{{ __(hasGlobalDiscount ? 'subtotal' : 'total-excl-tax') }}</td>
+            <td>
+                {{-
+                    hasGlobalDiscount
+                        ? totalWithoutGlobalDiscount|format_currency(currency, locale=locale)
+                        : totalWithoutTaxes|format_currency(currency, locale=locale)
+                -}}
+            </td>
+        </tr>
+        {% endif -%}
+        {% if hasGlobalDiscount -%}
+        <tr>
+            <td>{{ __('discount-rate', globalDiscountRate|format_percent_number({max_fraction_digit: 4}, locale=locale)) }}</td>
+            <td>- {{ totalGlobalDiscount|format_currency(currency, locale=locale) }}</td>
+        </tr>
+        {% if hasTaxes -%}
+        <tr class="strong">
+            <td>{{ __('total-excl-tax') }}</td>
+            <td>{{ totalWithoutTaxes|format_currency(currency, locale=locale) }}</td>
+        </tr>
+        {% endif -%}
+        {% endif -%}
+        {% if hasTaxes -%}
+        {% for tax in totalTaxes %}
+        <tr>
+            <td>
+                {%-
+                    set taxValue = tax.is_rate
+                        ? tax.value|format_percent_number({max_fraction_digit: 3}, locale=locale)
+                        : null
+                ~%}
+                {{ tax.name }}{{ taxValue is not null ? ' (' ~ taxValue ~ ')' : '' }}
+            </td>
+            <td>{{ tax.total|format_currency(currency, locale=locale) }}</td>
+        </tr>
+        {% endfor -%}
+        {% endif -%}
+        <tr>
+            <td>
+                {% if hasTaxes -%}{{ __('total-incl-taxes') }}{% endif -%}
+                <div class="strong size12">
+                    {%- if not isCreditNote -%}
+                        {{ __('total-due') }}
+                    {%- else -%}
+                        {{ __('total-credit') }}
+                    {%- endif -%}
+                </div>
+                {%- if not hasTaxes -%}{{ __('tax-not-applicable') }}{% endif ~%}
+            </td>
+            <td class="size12 strong">
+                {{ totalWithTaxes|format_currency(currency, locale=locale) }}
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% if specialMentions is not empty %}
+<div class="vspace2">
+    <p class="size10">
+        {{~ specialMentions|nl2br }}
+    </p>
+</div>
+{% endif %}
+{% endif %}
+<div class="changePage vspace5">
+    <table class="layout-table">
+        <tr>
+            <td class="half">
+                {{- _self.organization(seller, false, true) ~}}
+            </td>
+            <td class="half">
+                <h2 class="box center">
+                    {%- if not isCreditNote -%}
+                        {{ __('invoice-details-title', number) }}
+                    {%- else -%}
+                        {{ __('credit-note-details-title', number) }}
+                    {%- endif -%}
+                </h2>
+                <table class="layout-table">
+                    <tr>
+                        <td class="size12">{{ __('on-date', date|format_date('short', locale=locale))|ucfirst }}</td>
+                        <td class="size12 right">{{ __('page', 2) }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+{% if extras|length > 0 %}
+<h2>{{ __('materials') }}</h2>
+{% endif %}
+{%
+    set categoryColspan = (isLegacy or not hasMaterialDiscount ? 4 : 5)
+        + (showDescriptions ? 1 : 0)
+%}
+<table class="listing-table">
+    <thead>
+        <tr>
+            <th>{{ __('designation') }}</th>
+            {%- if showDescriptions ~%}
+            <th>{{ __('description') }}</th>
+            {%- endif ~%}
+            <th class="center">{{ __('qty') }}</th>
+            <th class="center">{{ __(hasTaxes ? 'unit-price-excl-tax' : 'unit-price') }}</th>
+            {%- if not isLegacy and hasMaterialDiscount ~%}
+            <th class="center">{{ __('discount') }}</th>
+            {%- endif -%}
+            <th class="right">{{ __(hasTaxes ? 'total-excl-tax' : 'total') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%- for subCategory, materialsList in materials ~%}
+            <tr>
+                <td class="section-title" colspan="{{ categoryColspan }}">
+                    {%- if subCategory == '--' -%}
+                        {{ __('not-categorized') }}
+                    {%- else -%}
+                        {{ subCategory|replace({ '__other': __('other-materials') }) }}
+                    {%- endif -%}
+                </td>
+            </tr>
+            {%- for material in materialsList ~%}
+            <tr>
+                <td>
+                    <span class="listing-table__item__name">{{ material.name }}</span>
+                    <span class="listing-table__item__sub-name">
+                        {{- __('reference-value', material.reference ) -}}
+                        {%- if showReplacementPrices and material.unit_replacement_price is not null -%}
+                        {{- ' ' }}&bull;{{ ' ' -}}
+                        {{-
+                            __('unit-replacement-value-short', (
+                                (material.unit_replacement_price ?? 0)|format_currency(currency, locale=locale))
+                            )
+                        -}}
+                        {%- endif -%}
+                    </span>
+                </td>
+                {% if showDescriptions -%}
+                <td class="max50mm">
+                    {{- material.material.description|nl2br -}}
+                </td>
+                {% endif -%}
+                <td class="center">{{ material.quantity }}</td>
+                <td class="center">
+                    {% if isLegacy -%}
+                    {{ material.unit_price|format_currency(currency, locale=locale) }}
+                    {%- else -%}
+                    {{ material.unit_price_period|format_currency(currency, locale=locale) }}
+                    {%- endif ~%}
+                </td>
+                {%- if not isLegacy and hasMaterialDiscount ~%}
+                <td class="center">
+                    {{-
+                        not material.discount_rate.isZero()
+                            ? material.discount_rate.dividedBy(100, 6)|format_percent_number({ max_fraction_digit: 4 }, locale=locale)
+                            : null
+                    -}}
+                </td>
+                {%- endif ~%}
+                <td class="right">
+                    {{ material.total_without_taxes|format_currency(currency, locale=locale) }}
+                </td>
+            </tr>
+            {%- endfor %}
+        {%- endfor ~%}
+    </tbody>
+</table>
+{%- if extras|length > 0 ~%}
+<h2>{{ __('category-other') }}</h2>
+<table class="listing-table">
+    <thead>
+        <tr>
+            <th>{{ __('designation') }}</th>
+            <th class="center">{{ __('qty') }}</th>
+            <th class="center">{{ __(hasTaxes ? 'unit-price-excl-tax' : 'unit-price') }}</th>
+            <th class="right">{{ __(hasTaxes ? 'total-excl-tax' : 'total') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%~ for extra in extras %}
+            <tr>
+                <td>{{ extra.description }}</td>
+                <td class="center">{{ extra.quantity }}</td>
+                <td class="center">
+                    {{ extra.unit_price|format_currency(currency, locale=locale) }}
+                </td>
+                <td class="right">
+                    {{ extra.total_without_taxes|format_currency(currency, locale=locale) }}
+                </td>
+            </tr>
+        {%- endfor ~%}
+    </tbody>
+</table>
+{%- endif ~%}
+{% if showTotalisableProperties and totalisableProperties is not empty %}
+<h2>{{ __('properties-totals') }}</h2>
+<table class="half spaceBottom5 size8">
+    <tbody>
+        {%- for attribute in totalisableProperties ~%}
+        <tr>
+            <td>{{ attribute.name }}</td>
+            <td>{{ attribute.value|format_number(locale=locale) }}&nbsp;{{ attribute.unit }}</td>
+        </tr>
+        {%- endfor ~%}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}
+
+{% block running %}
+<footer class="main-footer">
+    {% set organizationCountry = organization.country %}
+    {% set legalType = (
+        organizationCountry.mustShowLegalType() and organization.legalType is not empty
+            ? __('legals.legal-types.' ~ organization.legalType.value ~ '.short')
+            : null
+    ) %}
+    {% if (
+        organizationCountry.mustShowShareCapital() and
+        organization.shareCapital is not empty and
+        organizationCountry.canHaveShareCapital(organization.legalType ?? null)
+    ) %}
+        {% set legalType = __('legals.mentions.global.share-capital.short', [
+            legalType ?? __('company'),
+            organization.shareCapital|format_currency(organizationCountry.currency, locale=locale, attrs={
+                'min_fraction_digit': 0,
+            }),
+        ]) %}
+    {% endif %}
+
+    {# - Ligne 1. #}
+    {% set line1 = [] %}
+    {% if legalType is not null %}
+        {% set line1 = line1|merge([legalType]) %}
+    {% endif %}
+    {% if organizationCountry.canShowActivityCode() and organization.activityCode is not empty %}
+        {% set activityCodeTranslationKey = 'business-activity-code.' ~ (organizationCountry.code ?? 'generic') %}
+        {% set activityCode = __([activityCodeTranslationKey, 'business-activity-code.generic'], organization.activityCode) %}
+        {% set line1 = line1|merge([activityCode]) %}
+    {% endif %}
+    {% if organization.identifier is not empty %}
+        {% if organizationCountry.mustShowTradeRegister() and organization.tradeRegistryCity is not empty %}
+            {% set mainRegistrationId = organizationCountry.inferMainCompanyIdentifier(organization.identifier) %}
+            {% set fullRegistrationIdTranslationKey = 'business-registration-id-full.' ~ (organizationCountry.code ?? 'generic') %}
+            {% set registrationId = __(
+                [fullRegistrationIdTranslationKey, 'business-registration-id-full.generic'],
+                [organization.tradeRegistryCity, mainRegistrationId],
+            ) %}
+        {% else %}
+            {%- set registrationIdScheme = organization.country.getCompanyIdentifierScheme(organization.identifier) -%}
+            {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+            {% set registrationId = __([registrationIdTranslationKey, 'business-registration-id.generic'], organization.identifier) %}
+        {% endif %}
+        {% set line1 = line1|merge([registrationId]) %}
+    {% endif %}
+
+    {# - Ligne 2. #}
+    {% set line2 = [] %}
+    {% if organization.address is not empty %}
+        {% set line2 = line2|merge([organization.address|replace({ "\n": " " })]) %}
+    {% endif %}
+    {% if not organization.isVatExempted and organization.vatNumber is not empty %}
+        {%- set vatNumberTranslationKey = 'vat-number.' ~ (organization.country.code ?? 'generic') -%}
+        {% set line2 = line2|merge([__([vatNumberTranslationKey, 'vat-number.generic'], organization.vatNumber)]) %}
+    {%~ endif %}
+
+    {# - Output. #}
+    {% if line1 is not empty %}
+        {% if organization.name is not empty %}
+            {% set line1 = [organization.name]|merge(line1) %}
+        {% endif %}
+        {{- line1|join(' | ') -}}
+        {%- if line2 is not empty -%}
+            <br />
+        {%- endif %}
+    {% endif %}
+    {% if line2 is not empty %}
+        {% if line1 is empty and organization.name is not empty %}
+            {% set line2 = [organization.name]|merge(line2) %}
+        {% endif %}
+        {{- line2|join(' | ') -}}
+    {% endif %}
+</footer>
+{% endblock %}

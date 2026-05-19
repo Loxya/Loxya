@@ -1,7 +1,86 @@
 @use '~@/themes/default/style/globals';
 
 .Stepper {
-    display: flex;
-    flex-direction: column;
-    gap: globals.$spacing-medium;
+    $block: &;
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        gap: globals.$spacing-medium;
+    }
+
+    //
+    // - Variante: Horizontale
+    //
+
+    &--horizontal {
+        $indicator-size: 28px;
+
+        --steps-count: 1;
+
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(calc(var(--steps-count) * 2), 1fr);
+
+        #{$block}__list {
+            position: relative;
+            z-index: 1;
+            flex-direction: row;
+            grid-column: 1 / -1;
+            grid-row: 1;
+            gap: normal;
+
+            &__item {
+                flex: 1;
+                min-width: 0;
+                text-align: center;
+            }
+        }
+
+        #{$block}__progressbar {
+            --progressbar-value: 0;
+
+            position: relative;
+            z-index: 0;
+            top: calc((#{$indicator-size} + 2 * 2px) / 2 + 2px / 2);
+            display: inline-grid;
+            overflow: hidden;
+            width: 100%;
+            height: 2px;
+            outline: 0;
+            border-radius: 0.25rem;
+            background-color: globals.$divider-color;
+            vertical-align: middle;
+            pointer-events: none;
+            grid-column: 2 / calc(var(--steps-count) * 2);
+            grid-row: 1 / -1;
+            grid-template-columns: 1fr;
+            grid-template-rows: 100%;
+
+            &__bar {
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-start;
+                width: 100%;
+                height: 100%;
+                grid-column: 1 / -1;
+                grid-row: 1 / -1;
+            }
+
+            &__value {
+                display: flex;
+                overflow: hidden;
+                width: calc(var(--progressbar-value, 0) * 1%);
+                background-color: globals.$primary-color;
+                grid-column: 1 / -1;
+                grid-row: 1 / -1;
+                transition: width ease 600ms;
+            }
+        }
+    }
 }

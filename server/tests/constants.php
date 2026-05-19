@@ -15,6 +15,8 @@ define('TESTS_FILES_FOLDER', TESTS_FIXTURES_FOLDER . DS . 'files');
 
 define('TESTS_SNAPSHOTS_FOLDER', TESTS_FIXTURES_FOLDER . DS . 'snapshots');
 
+define('TESTS_SCHEMAS_FOLDER', TESTS_FIXTURES_FOLDER . DS . 'schemas');
+
 //
 // - Chemins core.
 //

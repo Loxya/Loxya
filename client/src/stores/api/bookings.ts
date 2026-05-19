@@ -16,13 +16,15 @@ import type Decimal from 'decimal.js';
 import type Period from '@/utils/period';
 import type { ZodRawShape } from 'zod';
 import type { Tax } from '@/stores/api/taxes';
+import type TaxRegime from '@/utils/invoicing/tax-regime';
+import type VatExemptionCode from '@/utils/invoicing/vat-exemption-code';
 import type { Material, UNCATEGORIZED } from '@/stores/api/materials';
 import type { Category } from '@/stores/api/categories';
 import type { Park } from '@/stores/api/parks';
 import type { SchemaInfer } from '@/utils/validation';
 import type {
     EventTax,
-    EventTaxTotal,
+    EventLineTax,
 } from '@/stores/api/events';
 import type {
     PaginatedData,
@@ -168,8 +170,8 @@ export type BookingMaterial<IsBillable extends boolean = boolean> =
 
 export type BookingExtra = SchemaInfer<typeof BookingExtraSchema>;
 
+export type BookingLineTax = EventLineTax;
 export type BookingTax = EventTax;
-export type BookingTaxTotal = EventTaxTotal;
 
 //
 // - Édition
@@ -180,25 +182,32 @@ export type MaterialQuantity = {
     quantity: number,
 };
 
+export type BillingLineTaxData = {
+    name?: string,
+    value: Raw<Decimal>,
+};
+
 export type MaterialBillingData = {
     id: Material['id'],
     unit_price: Raw<Decimal>,
     discount_rate: Raw<Decimal>,
-};
-
-export type ExtraBillingTaxData = {
-    name: string,
-    is_rate: boolean,
-    value: Raw<Decimal>,
+    tax_regime: TaxRegime | null,
+    tax_exemption_code: VatExemptionCode | null,
+    tax_id: Tax['id'] | null,
+    taxes?: BillingLineTaxData[] | null,
 };
 
 export type ExtraBillingData = {
-    id: number | null,
+    uuid: string,
+    is_service: boolean,
     description: string | null,
     quantity: number,
     unit_price: Raw<Decimal> | null,
+    discount_rate: Raw<Decimal>,
+    tax_regime: TaxRegime | null,
+    tax_exemption_code: VatExemptionCode | null,
     tax_id: Tax['id'] | null,
-    taxes?: ExtraBillingTaxData[],
+    taxes?: BillingLineTaxData[] | null,
 };
 
 export type BillingData = {
@@ -211,6 +220,7 @@ export type MaterialResynchronizableField = (
     | 'name'
     | 'reference'
     | 'unit_price'
+    | 'unit_replacement_price'
     | 'degressive_rate'
     | 'taxes'
 );
@@ -295,10 +305,10 @@ const resynchronizeMaterial = async (
 const resynchronizeExtra = async (
     entity: BookingEntity,
     id: Booking['id'],
-    extraId: BookingExtra['id'],
+    extraUuid: BookingExtra['uuid'],
     selection: ExtraResynchronizableField[],
 ): Promise<BookingExtra> => {
-    const response = await requester.put(`/bookings/${entity}/${id}/extras/${extraId}/resynchronize`, selection);
+    const response = await requester.put(`/bookings/${entity}/${id}/extras/${extraUuid}/resynchronize`, selection);
     return BookingExtraSchema.parse(response);
 };
 

@@ -3,14 +3,16 @@ import DateTime from '@/utils/datetime';
 import config, { ReturnPolicy } from '@/globals/config';
 import { defineComponent, markRaw } from 'vue';
 import { Group } from '@/stores/api/groups';
-import Icon from '@/themes/default/components/Icon';
+import Link from '@/themes/default/components/Link';
 import Button from '@/themes/default/components/Button';
 import Totals from '@/themes/default/components/Totals';
 
+import type Phone from '@/utils/phone';
 import type Period from '@/utils/period';
 import type { PropType, Raw } from 'vue';
 import type { EventDetails, EventTechnician } from '@/stores/api/events';
 import type { Beneficiary } from '@/stores/api/beneficiaries';
+import type Country from '@/utils/country';
 
 type Props = {
     /** L'événement dont on veut afficher les informations. */
@@ -52,26 +54,42 @@ const EventDetailsInfos = defineComponent({
             return this.event.technicians.length > 0;
         },
 
-        beneficiaryFullAddress(): string | null {
+        beneficiaryAddress(): string | null {
             if (!this.hasBeneficiaries) {
                 return null;
             }
             const mainBeneficiary = [...this.event.beneficiaries].shift()!;
-            const { company } = mainBeneficiary;
+            const subject = mainBeneficiary.company !== null
+                ? mainBeneficiary.company
+                : mainBeneficiary;
 
-            return !company || !company.full_address
-                ? mainBeneficiary.full_address
-                : company.full_address;
+            let { address } = subject;
+            if (address !== null && !subject.country.isSame(config.mainCountry)) {
+                address += `\n${subject.country.name}`;
+            }
+            return address;
         },
 
-        beneficiaryPhone(): string | null {
+        beneficiaryCountry(): Country | null {
             if (!this.hasBeneficiaries) {
                 return null;
             }
             const mainBeneficiary = [...this.event.beneficiaries].shift()!;
             const { company } = mainBeneficiary;
 
-            return !company || !company.phone
+            return company === null
+                ? mainBeneficiary.country
+                : company.country;
+        },
+
+        beneficiaryPhone(): Phone | null {
+            if (!this.hasBeneficiaries) {
+                return null;
+            }
+            const mainBeneficiary = [...this.event.beneficiaries].shift()!;
+            const { company } = mainBeneficiary;
+
+            return company === null || !company.phone
                 ? mainBeneficiary.phone
                 : company.phone;
         },
@@ -206,7 +224,7 @@ const EventDetailsInfos = defineComponent({
             hasOverdue,
             overduePeriod,
             hasBeneficiaries,
-            beneficiaryFullAddress,
+            beneficiaryAddress,
             beneficiaryPhone,
             beneficiaryEmail,
             isTechniciansEnabled,
@@ -242,16 +260,14 @@ const EventDetailsInfos = defineComponent({
                         ]}
                     >
                         <span class="EventDetailsInfos__summary__details__item__value">
-                            {__('in', { location })}{' '}
-                            <a
-                                rel="noopener noreferrer nofollow"
-                                class="EventDetailsInfos__summary__details__item__link"
-                                href={`https://maps.google.com/?q=${location}`}
-                                title={__('open-in-google-maps')}
-                                target="_blank"
-                            >
-                                <Icon name="external-link-alt" />
-                            </a>
+                            {__('in', { location })}
+                            <Link
+                                icon="external-link-alt"
+                                to={`https://maps.google.com/?q=${location}`}
+                                class="EventDetailsInfos__summary__details__item__external-link"
+                                tooltip={{ placement: 'bottom', content: __('open-in-google-maps') }}
+                                external
+                            />
                         </span>
                     </p>,
                 );
@@ -385,39 +401,44 @@ const EventDetailsInfos = defineComponent({
             <div class="EventDetailsInfos">
                 <div class="EventDetailsInfos__summary">
                     {hasBeneficiaries && (
-                        <div class="EventDetailsInfos__summary__beneficiaries">
-                            <ul class="EventDetailsInfos__summary__beneficiaries__names">
-                                <span class="EventDetailsInfos__summary__beneficiaries__names__label">
-                                    {__('for-dots')}
-                                </span>
-                                {beneficiaries.map((beneficiary: Beneficiary) => {
-                                    const { company, full_name: fullName } = beneficiary;
-                                    return (
-                                        <li class="EventDetailsInfos__summary__beneficiaries__names__item">
-                                            <span class="EventDetailsInfos__summary__beneficiaries__names__item__name">
-                                                {`${fullName}${company ? ` (${company.legal_name})` : ''}`}
-                                            </span>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                            <div class="EventDetailsInfos__summary__main-beneficiary">
-                                {!!beneficiaryFullAddress && (
-                                    <p class="EventDetailsInfos__summary__main-beneficiary__address">
-                                        {beneficiaryFullAddress}
-                                    </p>
-                                )}
-                                {!!beneficiaryPhone && (
-                                    <p class="EventDetailsInfos__summary__main-beneficiary__phone">
-                                        {__('modal.event-details.infos.beneficiary-phone')}{' '}
-                                        <a href={`tel:${beneficiaryPhone}`}>{beneficiaryPhone}</a>
-                                    </p>
-                                )}
-                                {!!beneficiaryEmail && (
-                                    <p class="EventDetailsInfos__summary__main-beneficiary__email">
-                                        {__('modal.event-details.infos.beneficiary-email')}{' '}
-                                        <a href={`mailto:${beneficiaryEmail}`}>{beneficiaryEmail}</a>
-                                    </p>
+                        <div class="EventDetailsInfos__summary__beneficiary">
+                            <div class="EventDetailsInfos__summary__beneficiary__content">
+                                <ul class="EventDetailsInfos__summary__beneficiary__names">
+                                    {beneficiaries.map((beneficiary: Beneficiary) => {
+                                        const { company, full_name: fullName } = beneficiary;
+                                        return (
+                                            <li class="EventDetailsInfos__summary__beneficiary__names__item">
+                                                <span class="EventDetailsInfos__summary__beneficiary__names__item__name">
+                                                    {`${fullName}${company ? ` (${company.legal_name})` : ''}`}
+                                                </span>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                                {!!(beneficiaryAddress || beneficiaryPhone || beneficiaryEmail) && (
+                                    <div class="EventDetailsInfos__summary__beneficiary__infos">
+                                        {!!beneficiaryAddress && (
+                                            <address class="EventDetailsInfos__summary__beneficiary__address">
+                                                {beneficiaryAddress}
+                                            </address>
+                                        )}
+                                        {!!(beneficiaryPhone || beneficiaryEmail) && (
+                                            <div class="EventDetailsInfos__summary__beneficiary__reachability">
+                                                {!!beneficiaryPhone && (
+                                                    <p class="EventDetailsInfos__summary__beneficiary__phone">
+                                                        {__('modal.event-details.infos.beneficiary-phone')}{' '}
+                                                        <a href={beneficiaryPhone.toURI()}>{beneficiaryPhone.toReadable()}</a>
+                                                    </p>
+                                                )}
+                                                {!!beneficiaryEmail && (
+                                                    <p class="EventDetailsInfos__summary__beneficiary__email">
+                                                        {__('modal.event-details.infos.beneficiary-email')}{' '}
+                                                        <a href={`mailto:${beneficiaryEmail}`}>{beneficiaryEmail}</a>
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -434,9 +455,11 @@ const EventDetailsInfos = defineComponent({
                     )}
                 </div>
                 {description && (
-                    <p class="EventDetailsInfos__description">
-                        {description}
-                    </p>
+                    <div class="EventDetailsInfos__description">
+                        <p class="EventDetailsInfos__description__content">
+                            {description}
+                        </p>
+                    </div>
                 )}
                 {isOverdue && (
                     <div class="EventDetailsInfos__overdue">
@@ -479,7 +502,7 @@ const EventDetailsInfos = defineComponent({
                         )}
                     </div>
                 )}
-                <Totals booking={event} />
+                <Totals booking={event} withDuration />
             </div>
         );
     },

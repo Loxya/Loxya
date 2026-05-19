@@ -68,9 +68,7 @@ final class PropertiesTest extends ApiTestCase
             [
                 'id' => 6,
                 'name' => "Prix d'achat",
-                'entities' => [
-                    PropertyEntity::MATERIAL->value,
-                ],
+                'entities' => [PropertyEntity::MATERIAL->value],
                 'type' => CustomFieldType::FLOAT->value,
                 'unit' => "€",
                 'is_totalisable' => true,

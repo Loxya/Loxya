@@ -6,7 +6,6 @@ import { RequestError, HttpCode } from '@/globals/requester';
 import { ApiErrorCode } from '@/stores/api/@codes';
 import { ReturnInventoryMode } from '@/stores/api/settings';
 import apiEvents from '@/stores/api/events';
-import showModal from '@/utils/showModal';
 import { confirm } from '@/utils/alert';
 import Page from '@/themes/default/components/Page';
 import Loading from '@/themes/default/components/Loading';
@@ -201,7 +200,7 @@ const EventReturn = defineComponent({
     mounted() {
         this.fetchData();
 
-        // - Actualise le timestamp courant toutes les minutes.
+        // - Actualise le timestamp courant toutes les 10 secondes.
         this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 10_000);
     },
     beforeDestroy() {
@@ -250,8 +249,8 @@ const EventReturn = defineComponent({
             );
 
             const returnDate: DateTime | null | undefined = (
-                await showModal(this.$modal, FinishPrompt, {
-                    event: this.event,
+                await this.$modal.show(FinishPrompt, {
+                    event: this.event!,
                     hasBroken,
                 })
             );

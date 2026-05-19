@@ -1,0 +1,17 @@
+diff --git a/node_modules/vue-simple-calendar/dist/CalendarView.umd.js b/node_modules/vue-simple-calendar/dist/CalendarView.umd.js
+index e53a03d..1ef9683 100644
+--- a/node_modules/vue-simple-calendar/dist/CalendarView.umd.js
++++ b/node_modules/vue-simple-calendar/dist/CalendarView.umd.js
+@@ -5162,10 +5162,10 @@ are useful in displaying a calendar. It has no state.
+     onClickDay: function onClickDay(day, windowEvent) {
+       if (this.disablePast && this.isInPast(day)) return;
+       if (this.disableFuture && this.isInFuture(day)) return;
+-      this.$emit("click-date", day, this.findAndSortItemsInDateRange(day, day), windowEvent);
++      this.$emit("clickDate", day, this.findAndSortItemsInDateRange(day, day), windowEvent);
+     },
+     onClickItem: function onClickItem(calendarItem, windowEvent) {
+-      this.$emit("click-item", calendarItem, windowEvent);
++      this.$emit("clickItem", calendarItem, windowEvent);
+     },
+ 
+     /*

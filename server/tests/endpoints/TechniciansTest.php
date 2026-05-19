@@ -17,7 +17,6 @@ final class TechniciansTest extends ApiTestCase
         $technicians = new Collection([
             [
                 'id' => 1,
-                'user_id' => 2,
                 'first_name' => 'Roger',
                 'last_name' => 'Rabbit',
                 'full_name' => 'Roger Rabbit',
@@ -25,12 +24,12 @@ final class TechniciansTest extends ApiTestCase
                 'email' => 'tester2@loxya.com',
                 'phone' => null,
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => null,
+                'administrative_area' => null,
                 'locality' => null,
-                'country_id' => null,
-                'full_address' => null,
-                'country' => null,
-                'user' => UsersTest::data(2),
+                'country' => 'FR',
+                'address' => null,
                 'roles' => [
                     RolesTest::data(3),
                     RolesTest::data(1),
@@ -39,20 +38,19 @@ final class TechniciansTest extends ApiTestCase
             ],
             [
                 'id' => 2,
-                'user_id' => null,
                 'first_name' => 'Jean',
-                'last_name' => 'Technicien',
-                'full_name' => 'Jean Technicien',
+                'last_name' => 'Garcia',
+                'full_name' => 'Jean Garcia',
                 'nickname' => null,
-                'email' => 'client@technicien.com',
+                'email' => 'jg@loxya.fr',
                 'phone' => '+33645698520',
                 'street' => null,
+                'additional_street' => null,
                 'postal_code' => null,
+                'administrative_area' => null,
                 'locality' => null,
-                'country_id' => 2,
-                'full_address' => null,
-                'country' => CountriesTest::data(2),
-                'user' => null,
+                'country' => 'CH',
+                'address' => null,
                 'roles' => [
                     RolesTest::data(2),
                 ],
@@ -76,8 +74,8 @@ final class TechniciansTest extends ApiTestCase
         $this->client->get('/api/technicians');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(2, [
-            self::data(1),
             self::data(2),
+            self::data(1),
         ]);
     }
 
@@ -91,24 +89,24 @@ final class TechniciansTest extends ApiTestCase
         ]);
 
         // - Prénom nom
-        $this->client->get('/api/technicians?search=jean tec');
+        $this->client->get('/api/technicians?search=jean gar');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(1, [
-            self::data(2), // - Jean Technicien
+            self::data(2), // - Jean Garcia
         ]);
 
         // - Nom Prénom
-        $this->client->get('/api/technicians?search=technicien jean');
+        $this->client->get('/api/technicians?search=garcia jean');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(1, [
-            self::data(2), // - Jean Technicien
+            self::data(2), // - Jean Garcia
         ]);
 
         // - Email
-        $this->client->get('/api/technicians?search=client@technicien.com');
+        $this->client->get('/api/technicians?search=jg@loxya.fr');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponsePaginatedData(1, [
-            self::data(2), // - Jean Technicien (client@technicien.com)
+            self::data(2), // - Jean Garcia (jg@loxya.fr)
         ]);
 
         // - Nickname
@@ -146,22 +144,6 @@ final class TechniciansTest extends ApiTestCase
         $this->client->get('/api/technicians/while-event/2');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
-            array_merge(self::data(1), [
-                'events' => [
-                    [
-                        'id' => 1,
-                        'event_id' => 1,
-                        'event' => EventsTest::data(1),
-                        'technician_id' => 1,
-                        'period' => [
-                            'start' => '2018-12-17 09:00:00',
-                            'end' => '2018-12-18 22:00:00',
-                            'isFullDays' => false,
-                        ],
-                        'role' => RolesTest::data(1),
-                    ],
-                ],
-            ]),
             array_merge(self::data(2), [
                 'events' => [
                     [
@@ -178,13 +160,29 @@ final class TechniciansTest extends ApiTestCase
                     ],
                 ],
             ]),
+            array_merge(self::data(1), [
+                'events' => [
+                    [
+                        'id' => 1,
+                        'event_id' => 1,
+                        'event' => EventsTest::data(1),
+                        'technician_id' => 1,
+                        'period' => [
+                            'start' => '2018-12-17 09:00:00',
+                            'end' => '2018-12-18 22:00:00',
+                            'isFullDays' => false,
+                        ],
+                        'role' => RolesTest::data(1),
+                    ],
+                ],
+            ]),
         ]);
 
         $this->client->get('/api/technicians/while-event/1');
         $this->assertStatusCode(StatusCode::STATUS_OK);
         $this->assertResponseData([
-            array_merge(self::data(1), ['events' => []]),
             array_merge(self::data(2), ['events' => []]),
+            array_merge(self::data(1), ['events' => []]),
         ]);
 
         // - En spécifiant un rôle
@@ -210,43 +208,6 @@ final class TechniciansTest extends ApiTestCase
         // - Test simple avec pagination (page 1).
         $this->client->get('/api/technicians/with-assignments?period[start]=2018-12-01&period[end]=2018-12-31');
         $this->assertResponsePaginatedData(2, [
-            array_merge(self::data(1), [
-                'events' => [
-                    [
-                        'id' => 1,
-                        'event_id' => 1,
-                        'event' => EventsTest::data(1),
-                        'technician_id' => 1,
-                        'period' => [
-                            'start' => '2018-12-17 09:00:00',
-                            'end' => '2018-12-18 22:00:00',
-                            'isFullDays' => false,
-                        ],
-                        'role' => RolesTest::data(1),
-                    ],
-                ],
-            ]),
-        ]);
-
-        // - Test simple sans pagination.
-        $this->client->get('/api/technicians/with-assignments?paginated=0&period[start]=2018-12-01&period[end]=2018-12-31');
-        $this->assertResponseData([
-            array_merge(self::data(1), [
-                'events' => [
-                    [
-                        'id' => 1,
-                        'event_id' => 1,
-                        'event' => EventsTest::data(1),
-                        'technician_id' => 1,
-                        'period' => [
-                            'start' => '2018-12-17 09:00:00',
-                            'end' => '2018-12-18 22:00:00',
-                            'isFullDays' => false,
-                        ],
-                        'role' => RolesTest::data(1),
-                    ],
-                ],
-            ]),
             array_merge(self::data(2), [
                 'events' => [
                     [
@@ -260,6 +221,43 @@ final class TechniciansTest extends ApiTestCase
                             'isFullDays' => false,
                         ],
                         'role' => RolesTest::data(2),
+                    ],
+                ],
+            ]),
+        ]);
+
+        // - Test simple sans pagination.
+        $this->client->get('/api/technicians/with-assignments?paginated=0&period[start]=2018-12-01&period[end]=2018-12-31');
+        $this->assertResponseData([
+            array_merge(self::data(2), [
+                'events' => [
+                    [
+                        'id' => 2,
+                        'event_id' => 1,
+                        'event' => EventsTest::data(1),
+                        'technician_id' => 2,
+                        'period' => [
+                            'start' => '2018-12-18 14:00:00',
+                            'end' => '2018-12-18 18:00:00',
+                            'isFullDays' => false,
+                        ],
+                        'role' => RolesTest::data(2),
+                    ],
+                ],
+            ]),
+            array_merge(self::data(1), [
+                'events' => [
+                    [
+                        'id' => 1,
+                        'event_id' => 1,
+                        'event' => EventsTest::data(1),
+                        'technician_id' => 1,
+                        'period' => [
+                            'start' => '2018-12-17 09:00:00',
+                            'end' => '2018-12-18 22:00:00',
+                            'isFullDays' => false,
+                        ],
+                        'role' => RolesTest::data(1),
                     ],
                 ],
             ]),
@@ -349,6 +347,8 @@ final class TechniciansTest extends ApiTestCase
             'first_name' => 'Jean-j@cques',
             'email' => 'invalid',
             'nickname' => 'ilestvraimeeeentrèslongcesurnom',
+            'phone' => '04 11 22 33 44',
+            'country' => 'CH',
         ]);
         $this->assertApiValidationError([
             'nickname' => "Max. 30 characters.",
@@ -381,7 +381,7 @@ final class TechniciansTest extends ApiTestCase
             'street' => null,
             'postal_code' => '74000',
             'locality' => 'Annecy',
-            'country_id' => 2,
+            'country' => 'FR',
             'roles' => [1],
             'note' => null,
         ]);
@@ -389,7 +389,6 @@ final class TechniciansTest extends ApiTestCase
         $this->assertStatusCode(StatusCode::STATUS_CREATED);
         $this->assertResponseData([
             'id' => 3,
-            'user_id' => null,
             'first_name' => 'José',
             'last_name' => 'Gatillon',
             'nickname' => 'Gégé',
@@ -397,12 +396,12 @@ final class TechniciansTest extends ApiTestCase
             'full_name' => 'José Gatillon',
             'phone' => null,
             'street' => null,
+            'additional_street' => null,
             'postal_code' => '74000',
+            'administrative_area' => null,
             'locality' => 'Annecy',
-            'country_id' => 2,
-            'country' => CountriesTest::data(2),
-            'full_address' => '74000 Annecy',
-            'user' => null,
+            'country' => 'FR',
+            'address' => '74000 Annecy',
             'roles' => [
                 RolesTest::data(1),
             ],
@@ -416,9 +415,9 @@ final class TechniciansTest extends ApiTestCase
             'first_name' => 'José',
             'last_name' => 'Gatillon',
             'nickname' => 'Gégé',
-            'postal_code' => '74000',
-            'locality' => 'Annecy',
-            'country_id' => 2,
+            'postal_code' => '1000',
+            'locality' => 'Genève',
+            'country' => 'CH',
             'roles' => [1, 2],
         ]);
 
@@ -430,16 +429,10 @@ final class TechniciansTest extends ApiTestCase
                 'last_name' => 'Gatillon',
                 'nickname' => 'Gégé',
                 'full_name' => 'José Gatillon',
-                'postal_code' => '74000',
-                'locality' => 'Annecy',
-                'country_id' => 2,
-                'country' => CountriesTest::data(2),
-                'full_address' => '74000 Annecy',
-                'user' => [
-                    'first_name' => 'José',
-                    'last_name' => 'Gatillon',
-                    'full_name' => 'José Gatillon',
-                ],
+                'postal_code' => '1000',
+                'locality' => 'Genève',
+                'country' => 'CH',
+                'address' => "1000 Genève",
                 'roles' => [
                     RolesTest::data(1),
                     RolesTest::data(2),
