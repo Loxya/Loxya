@@ -116,16 +116,25 @@
                 <address class="seller__address">
                     {{ seller.address.format(withCountry: true)|nl2br }}
                 </address>
+                {%- set hasVatNumber = not isVatOutOfScope and seller.vatNumber is not empty -%}
+                {%- set hasIdentifiers = (
+                    seller.identifier is not empty or
+                    hasVatNumber
+                ) -%}
+                {%- if hasIdentifiers ~%}
                 <ul class="seller__identifiers">
+                    {%- if seller.identifier is not empty -%}
                     <li class="seller__identifiers__item">
                         {{- _self.registrationIdLabelled(seller) -}}
                     </li>
-                    {%- if not isVatOutOfScope and seller.vatNumber is not empty ~%}
+                    {%- endif ~%}
+                    {%- if hasVatNumber ~%}
                     <li class="seller__identifiers__item">
                         {{- _self.vatNumberLabelled(seller) -}}
                     </li>
                     {%- endif ~%}
                 </ul>
+                {%- endif -%}
                 {%- if seller.phone is not empty or seller.email is not empty ~%}
                 <ul class="seller__contact">
                     {%- if seller.email is not empty ~%}
@@ -291,7 +300,7 @@
                             <li class="buyer__identifiers__item">
                                 {{- _self.registrationIdLabelled(buyer) -}}
                             </li>
-                            {%~ endif %}
+                            {%- endif ~%}
                             {%- if showVatNumber ~%}
                             <li class="buyer__identifiers__item">
                                 {{- _self.vatNumberLabelled(buyer) -}}
@@ -1084,8 +1093,9 @@
             }),
         ]) -%}
     {%- endif -%}
+
     {#- Ligne 1. #}
-    {%- set line1 = [seller.name] -%}
+    {% set line1 = [] %}
     {%- if legalType is not null -%}
         {% set line1 = line1|merge([legalType]) -%}
     {%- endif -%}
@@ -1094,33 +1104,45 @@
         {% set activityCode = __([activityCodeTranslationKey, 'business-activity-code.generic'], seller.activityCode) -%}
         {% set line1 = line1|merge([activityCode]) -%}
     {%- endif -%}
-    {%- if sellerCountry.mustShowTradeRegister() and seller.tradeRegistryCity is not empty -%}
-        {%- set mainRegistrationId = sellerCountry.inferMainCompanyIdentifier(seller.identifier) -%}
-        {%- set fullRegistrationIdTranslationKey = 'business-registration-id-full.' ~ (sellerCountry.code ?? 'generic') -%}
-        {%- set registrationId = __(
-            [fullRegistrationIdTranslationKey, 'business-registration-id-full.generic'],
-            [seller.tradeRegistryCity, mainRegistrationId],
-        ) -%}
-    {%- else -%}
-        {%- set registrationId = _self.registrationIdLabelled(seller) -%}
-    {%- endif -%}
-    {%- set line1 = line1|merge([registrationId]) -%}
+    {% if seller.identifier is not empty %}
+        {%- if sellerCountry.mustShowTradeRegister() and seller.tradeRegistryCity is not empty -%}
+            {%- set mainRegistrationId = sellerCountry.inferMainCompanyIdentifier(seller.identifier) -%}
+            {%- set fullRegistrationIdTranslationKey = 'business-registration-id-full.' ~ (sellerCountry.code ?? 'generic') -%}
+            {%- set registrationId = __(
+                [fullRegistrationIdTranslationKey, 'business-registration-id-full.generic'],
+                [seller.tradeRegistryCity, mainRegistrationId],
+            ) -%}
+        {%- else -%}
+            {%- set registrationIdScheme = sellerCountry.getCompanyIdentifierScheme(seller.identifier) -%}
+            {%- set registrationIdTranslationKey = 'business-registration-id.' ~ (registrationIdScheme ? registrationIdScheme.value : 'generic') -%}
+            {%- set registrationId = __([registrationIdTranslationKey, 'business-registration-id.generic'], seller.identifier) -%}
+        {%- endif -%}
+        {%- set line1 = line1|merge([registrationId]) -%}
+    {% endif %}
+
     {#- Ligne 2. #}
     {%- set line2 = [] -%}
     {%- if seller.address is not empty -%}
         {%- set line2 = line2|merge([seller.address|replace({ "\n": " " })]) -%}
     {%- endif -%}
     {%- if not isVatOutOfScope and seller.vatNumber is not empty -%}
-        {% set line2 = line2|merge([_self.vatNumberLabelled(seller)]) -%}
+        {%- set vatNumberTranslationKey = 'vat-number.' ~ (sellerCountry.code ?? 'generic') -%}
+        {%- set vatNumber = __([vatNumberTranslationKey, 'vat-number.generic'], seller.vatNumber) -%}
+        {%- set line2 = line2|merge([vatNumber]) -%}
     {%- endif -%}
+
     {#- Output. #}
     {% if line1 is not empty -%}
+        {% set line1 = [seller.name]|merge(line1) %}
         {{- line1|join(' | ') -}}
         {%- if line2 is not empty -%}
             <br />
         {% endif %}
     {%- endif -%}
     {% if line2 is not empty -%}
+        {% if line1 is empty %}
+            {% set line2 = [seller.name]|merge(line2) %}
+        {% endif %}
         {{- line2|join(' | ') }}
     {% endif %}
 </footer>

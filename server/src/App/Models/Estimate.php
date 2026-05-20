@@ -103,7 +103,7 @@ use Respect\Validation\Rules as Rule;
  * @property-read ?string $path
  * @property-read ?string $url
  * @property string $seller_legal_name
- * @property string $seller_registration_id
+ * @property string|null $seller_registration_id
  * @property string|null $seller_vat_number
  * @property value-of<LegalTypeInterface>|null $seller_legal_type
  * @property Decimal|null $seller_share_capital
@@ -415,7 +415,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
 
     public function checkSellerRegistrationId(mixed $value)
     {
-        V::notEmpty()->length(null, 50)->check($value);
+        V::nullable(V::stringVal()->length(null, 50))->check($value);
 
         $formatRaw = $this->getAttributeUnsafeValue('format');
         $format = !V::enumValue(BillingFormat::class)->validate($formatRaw)
@@ -1130,14 +1130,16 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
             return true;
         }
 
-        // - Si on ne peut pas récupérer la devise du pays du vendeur, on ne peut pas aller plus loin.
-        $sellerCountryCurrency = $sellerCountry->getCurrency();
-        if ($sellerCountryCurrency === null) {
+        // - Si on ne peut pas récupérer les devises du pays du
+        //   vendeur, on ne peut pas aller plus loin.
+        $sellerCountryCurrencies = $sellerCountry->getCurrencies();
+        if (empty($sellerCountryCurrencies)) {
             return true;
         }
 
-        // - Sinon, elle doit correspondre à la devise du pays du vendeur.
-        return $sellerCountryCurrency === $value;
+        // - Sinon, elle doit correspondre à l'une des devises
+        //   supportées par le pays du vendeur.
+        return in_array($value, $sellerCountryCurrencies, true);
     }
 
     public function checkDegressiveRate(mixed $value)

@@ -60,6 +60,11 @@ class CountryMetadataFr implements CountryMetadataInterface
         ];
     }
 
+    public static function getCurrencies(): array
+    {
+        return ['EUR'];
+    }
+
     public static function mustShowLegalType(): bool
     {
         return true;
@@ -89,6 +94,11 @@ class CountryMetadataFr implements CountryMetadataInterface
 
         // - Sinon, si c'est un pays européen => "Oui".
         return $otherCountry->isEuVatMember();
+    }
+
+    public static function requireSellerRegistrationId(): bool
+    {
+        return true;
     }
 
     public static function requireBuyerRegistrationId(?Country $buyerCountry = null): bool

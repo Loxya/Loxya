@@ -73,7 +73,9 @@ final class AddWeightToMaterials extends AbstractMigration
             }
 
             $name = mb_strtolower($property['name']);
-            $config = json_decode($property['config'], true) ?? [];
+            $config = $property['config'] !== null
+                ? (json_decode($property['config'], true) ?? [])
+                : [];
 
             if (
                 $weightPropertyId === null

@@ -146,6 +146,7 @@ commands:
                     BE: "Numéro BCE"
                     CH: "Numéro IDE"
                     CA: "Numéro d'entreprise"
+                    CD: "Numéro RCCM"
                 trade-registry-city:
                     label: Ville du registre du commerce de l'organisation
                     hint: |-
@@ -173,6 +174,7 @@ commands:
                 vat-number:
                     generic: "Numéro de TVA"
                     CA: "Numéro de taxe"
+                    CD: "Numéro NIF"
                 vat-due-on-invoice:
                     label: "Option pour le paiement de la TVA d'après les débits ?"
                     hint:

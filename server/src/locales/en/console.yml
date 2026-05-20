@@ -145,6 +145,7 @@ commands:
                     FR: "SIRET number"
                     BE: "BCE number"
                     CH: "IDE number"
+                    CD: "RCCM number"
                 trade-registry-city:
                     label: City of the organization's trade registry
                     hint: |-
@@ -172,6 +173,7 @@ commands:
                 vat-number:
                     generic: "VAT number"
                     CA: "Tax number"
+                    CD: "NIF number"
                 vat-due-on-invoice:
                     label: Option for VAT payment upon invoicing?
                     hint: |-

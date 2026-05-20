@@ -389,16 +389,19 @@ registration-id:
     FR: SIRET / SIREN number
     BE: BCE number
     CH: IDE number
+    CD: RCCM number
 
 precise-registration-id:
     generic: Business registration number
     FR: SIRET number
     BE: BCE number
     CH: IDE number
+    CD: RCCM number
 
 vat-number:
     generic: VAT number
     CA: Tax number
+    CD: NIF number
 
 #
 # - Adresse

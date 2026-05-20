@@ -587,7 +587,7 @@ final class Country implements \JsonSerializable
      */
     public function getDefaultTimezone(): string|null
     {
-        return $this->getTimezones()[0] ?? null;
+        return Arr::first($this->getTimezones());
     }
 
     /**
@@ -651,14 +651,30 @@ final class Country implements \JsonSerializable
     }
 
     /**
-     * Retourne la devise du pays.
+     * Retourne la devise principale du pays.
      *
      * @return string|null Le code de devise ISO 4217 (e.g. `EUR`) ou `null` si indisponible.
      */
-    public function getCurrency(): string|null
+    public function getMainCurrency(): string|null
     {
+        return Arr::first($this->getCurrencies());
+    }
+
+    /**
+     * Retourne les devises supportées par le pays.
+     * Le premier élément est la devise principale.
+     *
+     * @return list<string> La liste des codes de devise ISO 4217 (e.g. `EUR`).
+     */
+    public function getCurrencies(): array
+    {
+        $metadataClass = $this->getMetadataClass();
+        if ($metadataClass !== null) {
+            return $metadataClass::getCurrencies();
+        }
+
         $currency = Currency::getCurrencyForTerritory($this->code);
-        return $currency === '' ? null : $currency;
+        return $currency === '' ? [] : [$currency];
     }
 
     /**
@@ -951,6 +967,20 @@ final class Country implements \JsonSerializable
             'BL', 'MF', 'PM', 'WF', 'TF' => 'FR',
             default => $this->code,
         };
+    }
+
+    /**
+     * Le numéro d'enregistrement (SIRET, BCE, ...) est-il
+     * requis pour un vendeur dans le présent pays ?
+     *
+     * @return bool `true` si le numéro d'enregistrement est requis, `false` sinon.
+     */
+    public function requireSellerRegistrationId(): bool
+    {
+        $metadataClass = $this->getMetadataClass();
+        return $metadataClass !== null
+            ? $metadataClass::requireSellerRegistrationId()
+            : false;
     }
 
     /**

@@ -229,6 +229,7 @@ business-registration-id:
     "0009": "N° SIRET\_: %s"
     "0208": "N° d'entreprise\_: %s"
     "0183": "N° IDE\_: %s"
+    "CD:RCCM": "N° RCCM\_: %s"
 
 business-registration-id-full:
     generic: "Enregistré à %s / n° %s"
@@ -249,6 +250,7 @@ billing-type:
 vat-number:
     generic: "N° TVA\_: %s"
     CA: "N° de taxe\_: %s"
+    CD: "N° NIF\_: %s"
 
 label-with-period-flag:
     mobilization: "[Mobilisation du matériel] %s"

@@ -29,6 +29,14 @@ interface CountryMetadataInterface
     public static function getCompanyIdentifiers(): array;
 
     /**
+     * Retourne la liste des devises supportées par le pays.
+     * Le premier élément est considéré comme la devise principale.
+     *
+     * @return list<string> La liste des codes de devise ISO 4217 (e.g. `EUR`).
+     */
+    public static function getCurrencies(): array;
+
+    /**
      * La forme juridique doit-elle être affichée sur les documents ?
      *
      * @return bool `true` si oui, `false` sinon.
@@ -65,6 +73,14 @@ interface CountryMetadataInterface
      * @return bool `true` si les deux pays sont membres d'un même zone T.V.A., `false` sinon.
      */
     public static function isSameVatArea(Country $otherCountry): bool;
+
+    /**
+     * Le numéro d'enregistrement (SIRET, BCE, ...) est-il
+     * requis pour un vendeur dans le pays ?
+     *
+     * @return bool `true` si le numéro d'enregistrement est requis, `false` sinon.
+     */
+    public static function requireSellerRegistrationId(): bool;
 
     /**
      * Le numéro d'enregistrement (SIRET, BCE, ...) est-il

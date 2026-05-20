@@ -216,7 +216,7 @@ final class InstallCommand extends Command
             ->add(
                 function (array $responses, string|null $previousResponse) use ($__, $getSavedValue) {
                     $mainCountryCurrency = (new Country($responses['mainCountry']))
-                        ->getCurrency();
+                        ->getMainCurrency();
 
                     return select(
                         label: $__('fields.currency.label'),
@@ -295,10 +295,10 @@ final class InstallCommand extends Command
                                     ?? $responses['mainCountry']
                             ),
                             validate: static function (string $value) use ($responses, $__) {
-                                $organizationCountryCurrency = (new Country($value))->getCurrency();
+                                $organizationCountryCurrencies = (new Country($value))->getCurrencies();
                                 if (
-                                    $organizationCountryCurrency !== null &&
-                                    $organizationCountryCurrency !== $responses['currency']
+                                    !empty($organizationCountryCurrencies) &&
+                                    !in_array($responses['currency'], $organizationCountryCurrencies, true)
                                 ) {
                                     return $__('fields.organization.country.errors.currency-mismatch');
                                 }
@@ -310,20 +310,23 @@ final class InstallCommand extends Command
                         ->add(
                             // phpcs:ignore Generic.Files.LineLength.TooLong
                             static function (array $responses, string|null $previousResponse) use ($__, $withBilling, $getSavedValue) {
+                                $country = new Country($responses['country']);
+                                $isMandatory = $withBilling && $country->requireSellerRegistrationId();
+
                                 $rawValue = text(
                                     label: $__([
                                         sprintf('fields.organization.registration-id.%s', $responses['country']),
                                         'fields.organization.registration-id.generic',
                                     ]),
-                                    required: $withBilling ? $__('global.mandatory-field') : false,
-                                    hint: !$withBilling ? $__('global.optional') : '',
+                                    required: $isMandatory ? $__('global.mandatory-field') : false,
+                                    hint: !$isMandatory ? $__('global.optional') : '',
                                     default: (
                                         $previousResponse
                                             ?? (string) $getSavedValue('organization.registrationId')
                                     ),
                                     transform: static fn (string $value) => trim($value),
-                                    validate: static function (string $value) use ($withBilling, $responses) {
-                                        if (empty($value) && !$withBilling) {
+                                    validate: static function (string $value) use ($isMandatory, $responses) {
+                                        if (empty($value) && !$isMandatory) {
                                             return null;
                                         }
 
@@ -334,7 +337,7 @@ final class InstallCommand extends Command
                                             ->diagnose($value);
                                     },
                                 );
-                                if (!$withBilling && empty($rawValue)) {
+                                if (empty($rawValue) && !$isMandatory) {
                                     return null;
                                 }
 
@@ -576,8 +579,12 @@ final class InstallCommand extends Command
                                     default: (
                                         $previousResponse
                                             ?? $getSavedValue('organization.vatNumber')
-                                            ?? (string) $country->inferVatNumberFromCompanyIdentifier(
-                                                $responses['registrationId'],
+                                            ?? (string) (
+                                                $responses['registrationId'] !== null
+                                                    ? $country->inferVatNumberFromCompanyIdentifier(
+                                                        $responses['registrationId'],
+                                                    )
+                                                    : null
                                             )
                                     ),
                                     validate: static fn (string $value) => (
@@ -1024,8 +1031,12 @@ final class InstallCommand extends Command
                                     default: (
                                         $previousResponse
                                             ?? $getSavedValue('invoices.routingIdentifier')
-                                            ?? (string) $country->inferDefaultInvoiceRoutingIdentifier(
-                                                $responses['organization']['registrationId'],
+                                            ?? (string) (
+                                                $responses['organization']['registrationId'] !== null
+                                                    ? $country->inferDefaultInvoiceRoutingIdentifier(
+                                                        $responses['organization']['registrationId'],
+                                                    )
+                                                    : null
                                             )
                                     ),
                                     validate: static fn (string $value) => (
