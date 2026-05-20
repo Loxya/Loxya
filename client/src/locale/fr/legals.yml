@@ -159,8 +159,8 @@ vat-exemptions:
         label: "Art. UE 309 - Voyages réalisés hors UE (agences)"
         excerpt: "Art. UE 309"
     VATEX-EU-AE:
-        label: "Autoliquidation"
-        excerpt: "Autoliquidation"
+        label: "Auto-liquidation"
+        excerpt: "Auto-liquidation"
     VATEX-EU-G:
         label: "Exportation hors UE"
         excerpt: "Exportation hors UE"
@@ -246,7 +246,7 @@ vat-exemptions:
         label: "Art. 295 du CGI - Territoires français (TFUE arts. 349 et 355(1))"
         excerpt: "Art. 295 du CGI"
     VATEX-FR-AE:
-        label: "Autoliquidation, art. 283-2 du CGI"
+        label: "Auto-liquidation, art. 283-2 du CGI"
         excerpt: "Art. 283-2 du CGI"
     CUSTOM-FR-G-SERVICE:
         label: "TVA non applicable, art. 259-1 du CGI"
@@ -258,5 +258,5 @@ vat-exemptions:
         label: "Régime particulier de franchise des petites entreprises"
         excerpt: "Franchise petite entreprise"
     CUSTOM-BE-AE:
-        label: "Autoliquidation / Cocontractant, AR CTVA n° 1, article 20"
+        label: "Auto-liquidation / Cocontractant, AR CTVA n° 1, article 20"
         excerpt: "AR CTVA n° 1, art. 20"
