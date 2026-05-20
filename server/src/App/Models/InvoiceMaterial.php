@@ -171,15 +171,12 @@ final class InvoiceMaterial extends BaseModel
             TaxRegime::EXEMPTED->value,
         ];
 
-        $isServiceRaw = $this->getAttributeUnsafeValue('is_service');
-        $isService = V::boolType()->validate($isServiceRaw)
-            ? $isServiceRaw
-            : null;
-
         // - Si on a les données de l'acheteur, on va récupérer les régimes applicables.
         //   Note: On utilise les données "gelées" de la facture plutôt que les données "live"
         //         du bénéficiaire car le pays ou l'adresse de l'acheteur a pu changer.
-        if ($isService !== null && $this->invoice !== null) {
+        //   Note: La location de matériel est considérée comme une prestation de service
+        //         au sens fiscal.
+        if ($this->invoice !== null) {
             $sellerCountry = $this->invoice->seller_country;
             $allowedRegimes = array_map(
                 static fn (TaxRegime|StrictTaxRegime $regime) => (
@@ -187,7 +184,7 @@ final class InvoiceMaterial extends BaseModel
                         ? $regime->regime->value
                         : $regime->value
                 ),
-                $sellerCountry->getLineAvailableTaxRegimes($this->invoice, $isService),
+                $sellerCountry->getLineAvailableTaxRegimes($this->invoice, isService: true),
             );
         }
 

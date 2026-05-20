@@ -23,7 +23,7 @@ enum TaxRegime: string
     /** Auto-liquidation, les taxes sont dues par le preneur. */
     case REVERSE_CHARGE = 'AE';
 
-    /** Autoliquidation pour cause de livraison intracommunautaire. */
+    /** Auto-liquidation pour cause de livraison intracommunautaire. */
     case REVERSE_CHARGE_SUPPLY = 'K';
 
     /** Export, non sujet à taxation. */

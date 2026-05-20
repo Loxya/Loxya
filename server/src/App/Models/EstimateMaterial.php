@@ -171,15 +171,10 @@ final class EstimateMaterial extends BaseModel
             TaxRegime::EXEMPTED->value,
         ];
 
-        $isServiceRaw = $this->getAttributeUnsafeValue('is_service');
-        $isService = V::boolType()->validate($isServiceRaw)
-            ? $isServiceRaw
-            : null;
-
         // - Si on a les données de l'acheteur, on va récupérer les régimes applicables.
         //   Note: On utilise les données "gelées" du devis plutôt que les données "live"
         //         du bénéficiaire car le pays ou l'adresse de l'acheteur a pu changer.
-        if ($isService !== null && $this->estimate !== null) {
+        if ($this->estimate !== null) {
             $sellerCountry = $this->estimate->seller_country;
             $allowedRegimes = array_map(
                 static fn (TaxRegime|StrictTaxRegime $regime) => (
@@ -187,7 +182,7 @@ final class EstimateMaterial extends BaseModel
                         ? $regime->regime->value
                         : $regime->value
                 ),
-                $sellerCountry->getLineAvailableTaxRegimes($this->estimate, $isService),
+                $sellerCountry->getLineAvailableTaxRegimes($this->estimate, isService: true),
             );
         }
 
