@@ -8,38 +8,31 @@ use Loxya\Models\Enums\LegalEntityType;
 use Loxya\Models\Invoice;
 use Loxya\Support\Country;
 use Loxya\Support\Data\IdentifierScheme;
-use Loxya\Support\Data\LegalType\LegalTypeCh;
 use Loxya\Support\Invoicing\BusinessProcessType\BusinessProcessTypeInterface;
 use Loxya\Support\Invoicing\BuyerInterface;
 use Loxya\Support\Invoicing\TaxRegime;
 use Loxya\Support\Invoicing\UblSpecification;
 
 /**
- * Métadonnées pour la Suisse.
+ * Métadonnées pour la République Démocratique du Congo.
  */
-class CountryMetadataCh implements CountryMetadataInterface
+class CountryMetadataCd implements CountryMetadataInterface
 {
     public static function getCompanyIdentifiers(): array
     {
-        // @see https://regex101.com/r/TXtXVj/1
-        $uidPattern = '/^CHE[.\s-]?(?<digits>\d{3}[.\s-]?\d{3}[.\s-]?\d{3})(?: .*)?$/i';
+        // - RCCM: "CD/<VILLE>/RCCM/<ANNÉE>-<TYPE>-<NUMÉRO>" (e.g. "CD/KIN/RCCM/14-B-00123").
+        $rccmPattern = '/^CD\/[A-Z]{2,4}\/RCCM\/\d{2,4}-?[A-Z]{1,2}-?\d{1,8}$/i';
 
         return [
             [
                 'isPrecise' => true,
-                'scheme' => IdentifierScheme::CH_IDE,
-                'pattern' => $uidPattern,
-                'normalize' => static function (string $raw) use ($uidPattern): string {
-                    if (!preg_match($uidPattern, $raw, $matches)) {
+                'scheme' => IdentifierScheme::CD_RCCM,
+                'pattern' => $rccmPattern,
+                'normalize' => static function (string $raw) use ($rccmPattern): string {
+                    if (!preg_match($rccmPattern, $raw)) {
                         throw new \InvalidArgumentException('Invalid value.');
                     }
-
-                    $digits = preg_replace('/[.\s-]/', '', $matches['digits']);
-                    return vsprintf('CHE-%s.%s.%s', [
-                        substr($digits, 0, 3),
-                        substr($digits, 3, 3),
-                        substr($digits, 6, 3),
-                    ]);
+                    return strtoupper($raw);
                 },
             ],
         ];
@@ -47,7 +40,14 @@ class CountryMetadataCh implements CountryMetadataInterface
 
     public static function getCurrencies(): array
     {
-        return ['CHF'];
+        // - Le franc congolais est la devise officielle, mais le dollar
+        //   américain est largement utilisé dans les transactions commerciales.
+        return ['CDF', 'USD'];
+    }
+
+    public static function requireSellerRegistrationId(): bool
+    {
+        return true;
     }
 
     public static function mustShowLegalType(): bool
@@ -77,15 +77,7 @@ class CountryMetadataCh implements CountryMetadataInterface
 
     public static function isSameVatArea(Country $otherCountry): bool
     {
-        // - Si Suisse => Suisse ou Liechtenstein => Oui.
-        return in_array($otherCountry->getCode(), ['CH', 'LI'], true);
-    }
-
-    public static function requireSellerRegistrationId(): bool
-    {
-        // - Le numéro IDE n'est pas obligatoire pour les
-        //   entreprises sans salariés sous CHF 100'000 de C.A.
-        return false;
+        return $otherCountry->getCode() === 'CD';
     }
 
     public static function requireBuyerAddress(bool $isCompany): bool
@@ -103,8 +95,8 @@ class CountryMetadataCh implements CountryMetadataInterface
         //
 
         if ($isCompany) {
-            // - Si l'entreprise cliente est aussi en Suisse ou au Liechtenstein...
-            if (in_array($buyerCountry->getCode(), ['CH', 'LI'], true)) {
+            // - Si l'entreprise cliente est aussi en R.D. du Congo...
+            if ($buyerCountry->getCode() === 'CD') {
                 return [TaxRegime::STANDARD, TaxRegime::EXEMPTED];
             }
 
@@ -120,8 +112,8 @@ class CountryMetadataCh implements CountryMetadataInterface
         // - B2C.
         //
 
-        // - Si le client est aussi en Suisse ou au Liechtenstein ou que c'est un service...
-        if (in_array($buyerCountry->getCode(), ['CH', 'LI'], true) || $isService) {
+        // - Si le client est aussi en R.D. du Congo ou que c'est un service...
+        if ($buyerCountry->getCode() === 'CD' || $isService) {
             return [TaxRegime::STANDARD, TaxRegime::EXEMPTED];
         }
 
@@ -170,29 +162,22 @@ class CountryMetadataCh implements CountryMetadataInterface
 
     public static function getVatNumberPattern(): string
     {
-        return '/^CHE[.\s-]?(?<digits>\d{3}[.\s-]?\d{3}[.\s-]?\d{3})\s+(?<suffix>TVA|IVA|MWST)$/i';
+        // - N.I.F. (Numéro d'Identification Fiscale) : entre 8 et 15 chiffres.
+        return '/^\d{8,15}$/';
     }
 
     public static function normalizeVatNumber(string $rawValue): string
     {
         $pattern = static::getVatNumberPattern();
-        if (!preg_match($pattern, $rawValue, $matches)) {
+        if (!preg_match($pattern, $rawValue)) {
             throw new \InvalidArgumentException('Invalid value.');
         }
-
-        $digits = preg_replace('/[.\s-]/', '', $matches['digits']);
-        $suffix = strtoupper($matches['suffix'] ?? 'TVA');
-        return vsprintf('CHE-%s.%s.%s %s', [
-            substr($digits, 0, 3),
-            substr($digits, 3, 3),
-            substr($digits, 6, 3),
-            $suffix,
-        ]);
+        return $rawValue;
     }
 
     public static function inferVatNumberFromCompanyIdentifier(string $companyIdentifier): string|null
     {
-        return static::normalizeVatNumber(sprintf('%s TVA', $companyIdentifier));
+        return null;
     }
 
     public static function inferBusinessProcessType(Invoice $invoice): ?BusinessProcessTypeInterface
@@ -202,21 +187,17 @@ class CountryMetadataCh implements CountryMetadataInterface
 
     public static function getActivityCodePattern(): string
     {
-        return '/^(?<code>\d{6})$/'; // - NOGA 2025.
+        return '/^.+$/';
     }
 
     public static function normalizeActivityCode(string $rawValue): string
     {
-        $pattern = static::getActivityCodePattern();
-        if (!preg_match($pattern, $rawValue, $matches)) {
-            throw new \InvalidArgumentException('Invalid value.');
-        }
         return $rawValue;
     }
 
     public static function getLegalTypes(): array
     {
-        return LegalTypeCh::cases();
+        return [];
     }
 
     public static function getGlobalVatExemptionCodes(): array
@@ -237,15 +218,14 @@ class CountryMetadataCh implements CountryMetadataInterface
     public static function getVatRates(?bool $extended = true): array
     {
         $baseRates = [
-            8.1, // Taux normal
-            3.8, // Taux réduit
-            2.6, // Taux super réduit
+            16.0, // - Taux normal.
+            8.0, // - Taux réduit (produits de première nécessité, livres, etc.).
         ];
 
         return !$extended ? $baseRates : [
             ...$baseRates,
 
-            // - Taux zéro.
+            // - Taux zéro (exportations).
             0,
         ];
     }

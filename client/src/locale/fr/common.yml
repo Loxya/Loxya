@@ -388,6 +388,7 @@ registration-id:
     BE: Numéro BCE
     CH: Numéro IDE
     CA: Numéro d'entreprise
+    CD: Numéro RCCM
 
 precise-registration-id:
     generic: Numéro d'enregistrement
@@ -395,10 +396,12 @@ precise-registration-id:
     BE: Numéro BCE
     CH: Numéro IDE
     CA: Numéro d'entreprise
+    CD: Numéro RCCM
 
 vat-number:
     generic: Numéro de TVA
     CA: Numéro de taxe
+    CD: Numéro NIF
 
 #
 # - Adresse

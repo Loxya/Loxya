@@ -17,4 +17,7 @@ enum IdentifierScheme: string
 
     /** Code IDE Suisse. */
     case CH_IDE = '0183';
+
+    /** Numéro RCCM (R.D. du Congo). */
+    case CD_RCCM = 'CD:RCCM';
 }

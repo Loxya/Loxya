@@ -12,6 +12,11 @@ use Loxya\Support\Invoicing\TaxRegime;
  */
 final class CountryMetadataWf extends CountryMetadataFr
 {
+    public static function getCurrencies(): array
+    {
+        return ['XPF'];
+    }
+
     public static function isSameVatArea(Country $otherCountry): bool
     {
         return $otherCountry->getCode() === 'WF';

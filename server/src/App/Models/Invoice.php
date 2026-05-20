@@ -120,7 +120,7 @@ use Respect\Validation\Rules as Rule;
  * @property-read ?string $path
  * @property-read ?array{ pdf: string, ubl: string|null } $url
  * @property string $seller_legal_name
- * @property string $seller_registration_id
+ * @property string|null $seller_registration_id
  * @property string|null $seller_vat_number
  * @property string|null $seller_routing_identifier
  * @property value-of<LegalTypeInterface>|null $seller_legal_type
@@ -466,7 +466,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
     public function checkSellerRegistrationId(mixed $value)
     {
-        V::notEmpty()->length(null, 50)->check($value);
+        V::nullable(V::stringVal()->length(null, 50))->check($value);
 
         $formatRaw = $this->getAttributeUnsafeValue('format');
         $format = !V::enumValue(BillingFormat::class)->validate($formatRaw)
@@ -483,8 +483,15 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
         if (!V::countryCode()->validate($sellerCountryCode)) {
             return true;
         }
+        $sellerCountry = new Country($sellerCountryCode);
 
-        return V::registrationId($sellerCountryCode, preciseOnly: true);
+        // - Si la valeur est `null` et que le numéro d'enregistrement n'est pas requis pour
+        //   les vendeurs dans le pays de l'organisation, on n'impose pas le remplissage.
+        if ($value === null && !$sellerCountry->requireSellerRegistrationId()) {
+            return true;
+        }
+
+        return V::notEmpty()->registrationId($sellerCountry, preciseOnly: true);
     }
 
     public function checkSellerVatNumber(mixed $value)
@@ -1559,14 +1566,16 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
             return true;
         }
 
-        // - Si on ne peut pas récupérer la devise du pays du vendeur, on ne peut pas aller plus loin.
-        $sellerCountryCurrency = $sellerCountry->getCurrency();
-        if ($sellerCountryCurrency === null) {
+        // - Si on ne peut pas récupérer les devises du pays du
+        //   vendeur, on ne peut pas aller plus loin.
+        $sellerCountryCurrencies = $sellerCountry->getCurrencies();
+        if (empty($sellerCountryCurrencies)) {
             return true;
         }
 
-        // - Sinon, elle doit correspondre à la devise du pays du vendeur.
-        return $sellerCountryCurrency === $value;
+        // - Sinon, elle doit correspondre à l'une des devises
+        //   supportées par le pays du vendeur.
+        return in_array($value, $sellerCountryCurrencies, true);
     }
 
     public function checkDegressiveRate(mixed $value)
@@ -2545,6 +2554,12 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
         // - Si c'est une ancienne facture, il n'y a pas de e-invoice possible.
         if ($this->format < BillingFormat::V3->value) {
+            return null;
+        }
+
+        // - Si on a n'a pas de numéro d'enregistrement pour le vendeur,
+        //   on ne peut pas générer de facture électronique en son nom.
+        if ($this->seller_registration_id === null) {
             return null;
         }
 
@@ -4192,6 +4207,12 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
         // - UBL est uniquement supporté pour les clients B2B.
         if ($this->buyer_type !== LegalEntityType::COMPANY->value) {
+            return null;
+        }
+
+        // - Si on a n'a pas de numéro d'enregistrement pour le vendeur,
+        //   on ne peut pas générer de facture électronique en son nom.
+        if ($this->seller_registration_id === null) {
             return null;
         }
 
@@ -6403,10 +6424,9 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     //   (Note: ce cas n'est pas censé arriver, l'identifiant est obligatoire).
-                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier()) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier(
-                            $organization['registrationId'],
-                        );
+                    $registrationId = $organization['registrationId'];
+                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
+                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -6466,7 +6486,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     $registrationId = $buyer->getBuyerRegistrationId();
                     if ($buyerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
+                        $identifier = $buyerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -6921,10 +6941,9 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     //   (Note: ce cas n'est pas censé arriver, l'identifiant est obligatoire).
-                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier()) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier(
-                            $organization['registrationId'],
-                        );
+                    $registrationId = $organization['registrationId'];
+                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
+                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -6984,7 +7003,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     $registrationId = $buyer->getBuyerRegistrationId();
                     if ($buyerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
+                        $identifier = $buyerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -7637,10 +7656,9 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     //   (Note: ce cas n'est pas censé arriver, l'identifiant est obligatoire).
-                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier()) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier(
-                            $organization['registrationId'],
-                        );
+                    $registrationId = $organization['registrationId'];
+                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
+                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -7700,7 +7718,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     $registrationId = $buyer->getBuyerRegistrationId();
                     if ($buyerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
+                        $identifier = $buyerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -7866,10 +7884,9 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
 
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     //   (Note: ce cas n'est pas censé arriver, l'identifiant est obligatoire).
-                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier()) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier(
-                            $organization['registrationId'],
-                        );
+                    $registrationId = $organization['registrationId'];
+                    if ($sellerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
+                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }
@@ -7929,7 +7946,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
                     // - Sinon, si c'est possible on déduit l'identifiant.
                     $registrationId = $buyer->getBuyerRegistrationId();
                     if ($buyerCountry->canInferDefaultInvoiceRoutingIdentifier() && $registrationId !== null) {
-                        $identifier = $sellerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
+                        $identifier = $buyerCountry->inferDefaultInvoiceRoutingIdentifier($registrationId);
                         if ($identifier !== null) {
                             return $identifier;
                         }

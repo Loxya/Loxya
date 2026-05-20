@@ -1,6 +1,7 @@
 import frMetadata from './fr';
 import beMetadata from './be';
 import chMetadata from './ch';
+import cdMetadata from './cd';
 import gfMetadata from './gf';
 import ytMetadata from './yt';
 import blMetadata from './bl';
@@ -15,6 +16,7 @@ export default new Map<string, CountryMetadata>([
     ['FR', frMetadata],
     ['BE', beMetadata],
     ['CH', chMetadata],
+    ['CD', cdMetadata],
     ['GF', gfMetadata],
     ['YT', ytMetadata],
     ['BL', blMetadata],
