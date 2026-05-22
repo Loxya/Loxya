@@ -1545,9 +1545,7 @@ final class InstallCommand extends Command
         $__ = $this->translateFactory();
 
         $title = $__('installation-wizard');
-        $version = sprintf("%s (Premium)", (
-            Str::chopEnd(Config::getVersion(), '-premium')
-        ));
+        $version = Str::chopEnd(Config::getVersion(), '-premium');
 
         $terminalSize = (new Terminal())->getWidth();
         $terminalSizeEven = $terminalSize % 2 !== 0

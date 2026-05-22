@@ -260,6 +260,13 @@ const BeneficiaryEditForm = defineComponent({
                         v-model={data.phone}
                         error={errors?.phone}
                     />
+                    <FormField
+                        label="email"
+                        type="email"
+                        autocomplete="off"
+                        v-model={data.email}
+                        error={errors?.email}
+                    />
                     <div class="BeneficiaryEditForm__address">
                         {addressFields.map((lineFields: AddressFieldDefinition[], index: number) => (
                             <div key={index} class="BeneficiaryEditForm__address__group">
