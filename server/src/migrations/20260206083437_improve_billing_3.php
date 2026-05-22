@@ -361,10 +361,6 @@ final class ImproveBilling3 extends AbstractMigration
                 'length' => 50,
                 'null' => false,
             ])
-            ->changeColumn('seller_registration_id', 'string', [
-                'length' => 50,
-                'null' => false,
-            ])
             ->changeColumn('seller_country', 'char', [
                 'length' => 2,
                 'null' => false,
@@ -763,10 +759,6 @@ final class ImproveBilling3 extends AbstractMigration
             //
 
             ->changeColumn('seller_legal_name', 'string', [
-                'length' => 50,
-                'null' => false,
-            ])
-            ->changeColumn('seller_registration_id', 'string', [
                 'length' => 50,
                 'null' => false,
             ])

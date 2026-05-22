@@ -7,7 +7,7 @@
         organization.vatNumber is not empty
     ) %}
     {%- if showLogo and organization.logo is not empty ~%}
-        <img src="{{ baseUrl }}/img/{{ organization.logo }}" style="width: 75mm;" />
+        <img src="img/{{ organization.logo }}" style="width: 75mm;" />
     {%- endif ~%}
     <div class="spaceBottom2 size12 strong">
         {% if organization.name is not empty %}
