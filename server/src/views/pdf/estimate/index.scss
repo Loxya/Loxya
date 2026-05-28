@@ -970,6 +970,7 @@ html {
     &__signature {
         display: flex;
         flex-direction: column;
+        align-self: flex-end;
         width: 100%;
         padding: 5mm 6mm;
         border: 1px solid var(--separator-color);

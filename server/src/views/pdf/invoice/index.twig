@@ -1054,7 +1054,7 @@
     <div class="extras__legal-mentions">
         {%- if specialMentions is not empty ~%}
         <p class="extras__legal-mentions__part extras__legal-mentions__part--special">
-            {{- specialMentions -}}
+            {{- specialMentions|nl2br -}}
         </p>
         {%- endif ~%}
         {%- if legalMentions|length > 0 ~%}

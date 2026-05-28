@@ -97,7 +97,7 @@ class Pdf implements PdfInterface
                     'uncompressed-pdf' => true,
                 ],
             );
-            $renderer->setTimeout(25); // - Secondes.
+            $renderer->setTimeout(60); // - Secondes.
             $renderer->setTemporaryFolder($tmpDir);
 
             $binary = $renderer->getOutputFromHtml($this->html);
