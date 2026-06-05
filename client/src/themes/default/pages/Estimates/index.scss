@@ -12,6 +12,11 @@
             &--number {
                 width: 120px;
                 text-align: center;
+                white-space: nowrap;
+            }
+
+            &--buyer {
+                min-width: 200px;
             }
 
             &--due-date,
@@ -63,6 +68,15 @@
     }
 
     &__buyer {
+        &__color {
+            display: inline-block;
+            width: 0.8em;
+            height: 0.8em;
+            margin-right: globals.$spacing-thin;
+            border-radius: globals.$border-radius-normal;
+            background-color: var(--color);
+        }
+
         &__primary {
             display: block;
         }

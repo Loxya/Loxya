@@ -308,65 +308,6 @@
         }
     }
 
-    &--grouped {
-        $group-item-max-height: 65px;
-
-        .vis-timeline {
-            background-color: color.scale(globals.$calendar-background-color, $alpha: -30%);
-
-            .vis-grid {
-                &.vis-today {
-                    border-color: $separator-color;
-                    background-color: transparent;
-
-                    + .vis-vertical {
-                        border-left-color: $separator-color;
-                    }
-                }
-            }
-        }
-
-        .vis-vertical {
-            background-color: globals.$calendar-background-color;
-        }
-
-        .vis-labelset {
-            max-width: 280px;
-            min-width: 180px;
-
-            .vis-label {
-                box-sizing: content-box;
-                border-bottom: 1px solid $separator-color;
-                color: globals.$text-base-color;
-            }
-
-            .vis-inner {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                min-height: max(100%, 55px);
-                padding: 10px;
-            }
-        }
-
-        .vis-foreground .vis-group {
-            box-sizing: content-box;
-            border-bottom: 1px solid $separator-color;
-        }
-
-        .vis-item {
-            &.vis-range {
-                max-height: $group-item-max-height;
-            }
-
-            .vis-item-overflow {
-                align-items: flex-start;
-                overflow: hidden;
-                max-height: calc(#{$group-item-max-height} - 1.2rem - 1.2rem);
-            }
-        }
-    }
-
     &__group-content {
         display: flex;
         align-items: center;
@@ -374,6 +315,10 @@
 
         &__name {
             flex: 1;
+            overflow: hidden;
+            min-width: 0;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         &__actions {
@@ -412,6 +357,85 @@
                 & + & {
                     margin-left: -($horizontal-padding * 0.66);
                 }
+            }
+        }
+    }
+
+    &--grouped {
+        $group-item-max-height: 65px;
+
+        .vis-timeline {
+            background-color: color.scale(globals.$calendar-background-color, $alpha: -30%);
+
+            .vis-grid {
+                &.vis-today {
+                    border-color: $separator-color;
+                    background-color: transparent;
+
+                    + .vis-vertical {
+                        border-left-color: $separator-color;
+                    }
+                }
+            }
+        }
+
+        .vis-vertical {
+            background-color: globals.$calendar-background-color;
+        }
+
+        .vis-labelset {
+            max-width: 120px;
+            min-width: 120px;
+
+            .vis-label {
+                box-sizing: content-box;
+                border-bottom: 1px solid $separator-color;
+                color: globals.$text-base-color;
+            }
+
+            .vis-inner {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-height: max(100%, 55px);
+                padding: 10px;
+            }
+        }
+
+        .vis-foreground .vis-group {
+            box-sizing: content-box;
+            border-bottom: 1px solid $separator-color;
+        }
+
+        .vis-item {
+            &.vis-range {
+                max-height: $group-item-max-height;
+            }
+
+            .vis-item-overflow {
+                align-items: flex-start;
+                overflow: hidden;
+                max-height: calc(#{$group-item-max-height} - 1.2rem - 1.2rem);
+            }
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        &--grouped {
+            .vis-labelset {
+                max-width: 180px;
+            }
+        }
+    }
+
+    @media (min-width: globals.$screen-desktop) {
+        &--grouped {
+            .vis-labelset {
+                max-width: 280px;
             }
         }
     }

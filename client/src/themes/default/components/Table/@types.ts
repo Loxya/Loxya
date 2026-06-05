@@ -76,6 +76,14 @@ export type Column<
     class?: JSX.NodeClass,
 
     /**
+     * La colonne doit-elle rester épinglée à gauche lorsque le
+     * tableau défile horizontalement ?
+     *
+     * @default false
+     */
+    sticky?: boolean,
+
+    /**
      * La colonne peut-elle être cachée par l'utilisateur ?
      *
      * Si non spécifié, la valeur par défaut est généralement `true`.
@@ -137,8 +145,11 @@ export type RawColumn<
     key: string,
     title: string | undefined,
     sortable: boolean,
+    sticky: boolean,
     render: RenderFunction<D, K> | undefined,
     class?: JSX.NodeClass,
+    stickyOffset?: number,
+    stickyLast?: boolean,
 };
 
 export type RawColumns<

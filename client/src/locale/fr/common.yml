@@ -205,6 +205,7 @@ confirm-event: Confirmer l'événement
 unconfirm-event: Remettre l'événement en attente
 delete-event: Supprimer l'événement
 duplicate-event: Dupliquer l'événement
+edit-event: Modifier l'événement
 print: Imprimer
 print-summary: Imprimer ce récapitulatif
 open: Ouvrir

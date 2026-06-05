@@ -18,6 +18,9 @@ type Props = {
     /** Doit-on afficher les informations liées à la facturation ? */
     withBilling: boolean,
 
+    /** Doit-on afficher la colonne des remises ? */
+    withDiscount: boolean,
+
     /**
      * La devise à utiliser pour les prix.
      *
@@ -37,6 +40,10 @@ const MaterialsSortedCategoryItem = defineComponent({
         },
         withBilling: {
             type: Boolean as PropType<Required<Props>['withBilling']>,
+            default: false,
+        },
+        withDiscount: {
+            type: Boolean as PropType<Required<Props>['withDiscount']>,
             default: false,
         },
         currency: {
@@ -96,6 +103,7 @@ const MaterialsSortedCategoryItem = defineComponent({
             discountRate,
             totalWithoutTaxes,
             withBilling,
+            withDiscount,
             hasDiscount,
             currency,
         } = this;
@@ -141,7 +149,7 @@ const MaterialsSortedCategoryItem = defineComponent({
                     />
                     {quantity}
                 </td>
-                {withBilling && (
+                {(withBilling && withDiscount) && (
                     <td
                         class={[
                             'MaterialsSortedCategoryItem__col',

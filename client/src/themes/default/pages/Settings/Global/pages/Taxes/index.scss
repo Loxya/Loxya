@@ -4,10 +4,10 @@
     height: 100%;
 
     &__form {
-        width: 800px;
+        max-width: 800px;
 
         .FormField {
-            --label-width: 220px;
+            --label-width: 200px;
         }
 
         &__actions {

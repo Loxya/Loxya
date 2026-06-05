@@ -12,6 +12,11 @@
             &--number {
                 width: 120px;
                 text-align: center;
+                white-space: nowrap;
+            }
+
+            &--buyer {
+                min-width: 200px;
             }
 
             &--due-date,

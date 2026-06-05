@@ -16,6 +16,7 @@ import Page from '@/themes/default/components/Page';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
 import { ServerTable } from '@/themes/default/components/Table';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import CriticalError from '@/themes/default/components/CriticalError';
 import StatusBadge from '@/themes/default/components/BadgeStatus/Estimate';
 import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
@@ -48,9 +49,11 @@ type Data = {
     isFetched: boolean,
     isEmpty: boolean,
     hasCriticalError: boolean,
+    isMobile: boolean,
 };
 
 type InstanceProperties = {
+    cancelScreenSizeObserver: (() => void) | undefined,
     refreshTableDebounced: (
         | DebouncedMethod<typeof Estimates, 'refreshTable'>
         | undefined
@@ -65,6 +68,7 @@ const Estimates = defineComponent({
     name: 'Estimates',
     setup: (): InstanceProperties => ({
         refreshTableDebounced: undefined,
+        cancelScreenSizeObserver: undefined,
     }),
     data(): Data {
         const filters: Filters = {
@@ -89,6 +93,7 @@ const Estimates = defineComponent({
         return {
             filters,
             appliedFilters: { ...filters },
+            isMobile: getScreenSize() === ScreenSize.MOBILE,
             isLoading: false,
             isFetched: false,
             isEmpty: false,
@@ -144,6 +149,7 @@ const Estimates = defineComponent({
                     ],
                     hideable: false,
                     sortable: true,
+                    sticky: true,
                     defaultSortDesc: true,
                     render: (h: CreateElement, estimate: Estimate) => {
                         if (!('number' in estimate) || estimate.number === undefined) {
@@ -312,9 +318,17 @@ const Estimates = defineComponent({
             DEBOUNCE_WAIT_DURATION.asMilliseconds(),
             { leading: false },
         );
+
+        // - Suit la taille du viewport pour adapter l'affichage.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -322,6 +336,10 @@ const Estimates = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         async handleShowDetails(estimate: Estimate) {
             await this.openDetails('estimate', estimate.id);
@@ -476,6 +494,7 @@ const Estimates = defineComponent({
             $options,
             isLoading,
             hasContent,
+            isMobile,
             hasCriticalError,
             hasActiveFilters,
             userCanCreate,
@@ -512,11 +531,11 @@ const Estimates = defineComponent({
         // - Actions de la page.
         const actions = [
             userCanCreate && (
-                <Button type="primary" icon="plus" onClick={handleCreate}>
+                <Button type="primary" icon="plus" onClick={handleCreate} collapsible>
                     {__('action')}
                 </Button>
             ),
-            hasContent && (
+            (hasContent && !isMobile) && (
                 <Dropdown>
                     <Button icon="table" onClick={handleConfigureColumns}>
                         {__('global.configure-columns')}

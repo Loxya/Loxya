@@ -16,6 +16,7 @@ import CriticalError from '@/themes/default/components/CriticalError';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
 import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import ViewModeSwitch from '../../components/ViewModeSwitch';
 import FiltersPanel from './components/Filters';
 import { ServerTable } from '@/themes/default/components/Table';
@@ -38,6 +39,7 @@ import type { Role } from '@/stores/api/roles';
 import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type InstanceProperties = {
+    cancelScreenSizeObserver: (() => void) | undefined,
     refreshTableDebounced: (
         | DebouncedMethod<typeof TechniciansListing, 'refreshTable'>
         | undefined
@@ -53,6 +55,7 @@ type Data = {
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
+    isMobile: boolean,
 };
 
 /** Page de listing des techniciens. */
@@ -60,6 +63,7 @@ const TechniciansListing = defineComponent({
     name: 'TechniciansListing',
     setup: (): InstanceProperties => ({
         refreshTableDebounced: undefined,
+        cancelScreenSizeObserver: undefined,
     }),
     data(): Data {
         const urlFilters = getFiltersFromRoute(this.$route);
@@ -93,6 +97,7 @@ const TechniciansListing = defineComponent({
             isLoading: false,
             isFetched: false,
             isEmpty: false,
+            isMobile: getScreenSize() === ScreenSize.MOBILE,
             hasCriticalError: false,
             isTrashDisplayed: false,
             shouldDisplayTrashed: false,
@@ -127,6 +132,7 @@ const TechniciansListing = defineComponent({
         columns(): Columns<Technician> {
             const {
                 __,
+                isMobile,
                 isTrashDisplayed,
                 handleRestoreItemClick,
                 handleDeleteItemClick,
@@ -287,14 +293,16 @@ const TechniciansListing = defineComponent({
                                         hash: '#infos',
                                     }}
                                 />
-                                <Button
-                                    icon="calendar-alt"
-                                    to={{
-                                        name: 'view-technician',
-                                        params: { id: id.toString() },
-                                        hash: '#schedule',
-                                    }}
-                                />
+                                {!isMobile && (
+                                    <Button
+                                        icon="calendar-alt"
+                                        to={{
+                                            name: 'view-technician',
+                                            params: { id: id.toString() },
+                                            hash: '#schedule',
+                                        }}
+                                    />
+                                )}
                                 <Dropdown>
                                     <Button
                                         type="edit"
@@ -354,9 +362,17 @@ const TechniciansListing = defineComponent({
             DEBOUNCE_WAIT_DURATION.asMilliseconds(),
             { leading: false },
         );
+
+        // - Suit la taille du viewport pour adapter l'affichage.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -364,6 +380,10 @@ const TechniciansListing = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         handleRowClick({ id }: Technician) {
             this.$router.push({
@@ -537,6 +557,7 @@ const TechniciansListing = defineComponent({
             $options,
             columns,
             filters,
+            isMobile,
             isLoading,
             hasContent,
             isTrashDisplayed,
@@ -620,7 +641,7 @@ const TechniciansListing = defineComponent({
                         <Button icon="tools" to={{ name: 'roles' }}>
                             {__('page.manage-roles')}
                         </Button>
-                        {hasContent && (
+                        {(hasContent && !isMobile) && (
                             <Button icon="table" onClick={handleConfigureColumns}>
                                 {__('global.configure-columns')}
                             </Button>

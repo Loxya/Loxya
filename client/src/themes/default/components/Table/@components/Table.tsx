@@ -1,10 +1,11 @@
+import warning from 'warning';
 import { computed, defineComponent } from 'vue';
 import Pagination from '@/themes/default/components/Pagination';
 import TableHead from './TableHead';
 import TableBody from './TableBody';
 import { Variant, PageKey, LimitKey, OrderByKey } from '../@constants';
 
-import type { PropType } from 'vue';
+import type { PropType, ComponentRef } from 'vue';
 import type {
     Datum,
     Identifier,
@@ -166,6 +167,16 @@ type Props<
     onRowDrag?(datum: D, newIndex: number): void,
 };
 
+type Data = {
+    stickyOffsets: Record<string, number>,
+    isScrolledHorizontally: boolean,
+    canScrollRight: boolean,
+};
+
+type InstanceProperties = {
+    stickyResizeObserver: ResizeObserver | undefined,
+};
+
 /** Un tableau. */
 const Table = defineComponent({
     name: 'Table',
@@ -291,16 +302,30 @@ const Table = defineComponent({
         },
     },
     emits: ['rowClick', 'rowDrag', 'orderBy', 'paginate'],
+    setup: (): InstanceProperties => ({
+        stickyResizeObserver: undefined,
+    }),
+    data: (): Data => ({
+        stickyOffsets: {},
+        isScrolledHorizontally: false,
+        canScrollRight: false,
+    }),
     computed: {
         isEmpty(): boolean {
             return (this.data ?? []).length === 0;
         },
 
         showHead(): boolean {
-            if (this.headless) {
+            if (this.headless || this.isEmpty) {
                 return false;
             }
-            return !this.isEmpty;
+
+            // - Si on a qu'une seule colonne affichée
+            //   et non triable, on masque l'entête.
+            return (
+                this.columns.length > 1 ||
+                !![...this.columns].shift()?.sortable
+            );
         },
 
         hasMultiplePages(): boolean {
@@ -309,6 +334,88 @@ const Table = defineComponent({
             }
             return Math.ceil(this.count / Math.max(this.limit, 1)) > 1;
         },
+
+        hasStickyColumns(): boolean {
+            // - Les colonnes épinglées étant forcément les premières,
+            //   il suffit de regarder la première colonne pour savoir
+            //   si on a des épinglées.
+            return [...this.columns].shift()?.sticky ?? false;
+        },
+
+        stickyColumnKeys(): Array<RawColumn['key']> {
+            const firstLooseIndex = this.columns.findIndex(
+                (column: RawColumn) => !column.sticky,
+            );
+
+            const stickyColumns = firstLooseIndex !== -1
+                ? this.columns.slice(0, firstLooseIndex)
+                : this.columns;
+
+            return stickyColumns.map((column: RawColumn) => column.key);
+        },
+
+        decoratedColumns(): RawColumns {
+            const { columns, stickyColumnKeys, stickyOffsets } = this;
+            const stickyKeys = new Set(stickyColumnKeys);
+            const lastStickyKey = stickyColumnKeys.at(-1);
+
+            return columns.map((column: RawColumn): RawColumn => {
+                if (!column.sticky) {
+                    return column;
+                }
+
+                // - Colonne épinglée non-contigu ...
+                //   => On l'ignore (rendue non épinglée), vu qu'elle ne
+                //      pourrait pas être positionnée.
+                if (!stickyKeys.has(column.key)) {
+                    return { ...column, sticky: false };
+                }
+
+                return {
+                    ...column,
+                    stickyOffset: stickyOffsets[column.key] ?? 0,
+                    stickyLast: column.key === lastStickyKey,
+                };
+            });
+        },
+    },
+    watch: {
+        data() {
+            this.$nextTick(() => { this.updateStickyOffsets(); });
+        },
+        columns() {
+            this.$nextTick(() => { this.updateStickyOffsets(); });
+        },
+    },
+    created() {
+        const allStickyCount = this.columns
+            .filter((column: RawColumn) => column.sticky)
+            .length;
+
+        warning(
+            allStickyCount === this.stickyColumnKeys.length,
+            'The sticky columns must be the leading, contiguous columns. ' +
+            'Any sticky column preceded by a non-sticky one will be ignored.',
+        );
+    },
+    mounted() {
+        this.updateStickyOffsets();
+        this.updateScrollState();
+
+        // - On observe le redimensionnement du wrapper pour mettre à jour les
+        //   états liés au colonnes épinglées et à la position de scroll.
+        const $wrapper = this.$refs.wrapper as HTMLElement | undefined;
+        if ($wrapper !== undefined && typeof ResizeObserver !== 'undefined') {
+            this.stickyResizeObserver = new ResizeObserver(() => {
+                this.updateStickyOffsets();
+                this.updateScrollState();
+            });
+            this.stickyResizeObserver.observe($wrapper);
+        }
+    },
+    beforeDestroy() {
+        this.stickyResizeObserver?.disconnect();
+        this.stickyResizeObserver = undefined;
     },
     methods: {
         // ------------------------------------------------------
@@ -316,6 +423,10 @@ const Table = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScroll() {
+            this.updateScrollState();
+        },
 
         handleRowClick(datum: Datum) {
             if (!this.clickable) {
@@ -344,6 +455,58 @@ const Table = defineComponent({
         handlePaginate(newPage: number) {
             this.$emit('paginate', newPage);
         },
+
+        // ------------------------------------------------------
+        // -
+        // -    Méthodes internes
+        // -
+        // ------------------------------------------------------
+
+        updateStickyOffsets() {
+            const { stickyColumnKeys } = this;
+            if (stickyColumnKeys.length === 0) {
+                return;
+            }
+
+            const $head = this.$refs.head as ComponentRef<typeof TableHead> | undefined;
+            const widths: Record<string, number> = $head?.getColumnWidths() ?? {};
+
+            // - Chaque colonne épinglée se décale de la largeur de celles qui la précèdent.
+            const [offsets] = stickyColumnKeys.reduce<[Record<string, number>, number]>(
+                ([carry, offset], key) => [
+                    { ...carry, [key]: offset },
+                    offset + (widths[key] ?? 0),
+                ],
+                [{}, 0],
+            );
+
+            const hasChanged = stickyColumnKeys.some((key: string) => (
+                this.stickyOffsets[key] !== offsets[key]
+            ));
+            if (hasChanged) {
+                this.stickyOffsets = offsets;
+            }
+        },
+
+        updateScrollState() {
+            const $wrapper = this.$refs.wrapper as HTMLElement | undefined;
+            if ($wrapper === undefined) {
+                return;
+            }
+
+            const isScrolled = $wrapper.scrollLeft > 0;
+            if (isScrolled !== this.isScrolledHorizontally) {
+                this.isScrolledHorizontally = isScrolled;
+            }
+
+            // - Reste-t-il du contenu masqué à droite ?
+            const canScrollRight = (
+                $wrapper.scrollWidth - $wrapper.clientWidth - $wrapper.scrollLeft > 1
+            );
+            if (canScrollRight !== this.canScrollRight) {
+                this.canScrollRight = canScrollRight;
+            }
+        },
     },
     render() {
         const {
@@ -355,16 +518,20 @@ const Table = defineComponent({
             variant,
             clickable,
             hasMultiplePages,
+            hasStickyColumns,
+            isScrolledHorizontally,
+            canScrollRight,
             isEmpty,
             sticky,
             showHead,
             paginated,
             orderable,
-            columns,
+            decoratedColumns: columns,
             rowClass,
             emptyMessage,
             uniqueKey,
             openDetails,
+            handleScroll,
             handleOrderBy,
             handleRowClick,
             handleRowDrag,
@@ -376,15 +543,19 @@ const Table = defineComponent({
             'Table--empty': isEmpty,
             'Table--headless': !showHead,
             'Table--clickable': clickable,
-            'Table--sticky': sticky,
+            'Table--with-sticky-header': sticky,
+            'Table--with-sticky-columns': hasStickyColumns,
+            'Table--with-scroll-x': canScrollRight,
+            'Table--scrolled-x': isScrolledHorizontally,
         }];
 
         return (
             <div class={className}>
-                <div class="Table__wrapper">
-                    <table class="Table__table">
+                <div ref="wrapper" class="Table__wrapper" onScroll={handleScroll}>
+                    <table ref="table" class="Table__table">
                         {showHead && (
                             <TableHead
+                                ref="head"
                                 columns={columns}
                                 onOrderBy={handleOrderBy}
                             />

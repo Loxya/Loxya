@@ -73,6 +73,7 @@ const TechniciansViewModeSwitch = defineComponent({
                 options={options}
                 value={mode}
                 onChange={handleChange}
+                collapsible
             />
         );
     },

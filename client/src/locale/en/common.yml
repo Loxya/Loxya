@@ -207,6 +207,7 @@ confirm-event: Confirm event
 unconfirm-event: Set event back on hold
 delete-event: Delete event
 duplicate-event: Duplicate event
+edit-event: Edit event
 print: Print
 print-summary: Print this summary
 open: Open

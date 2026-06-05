@@ -6,7 +6,7 @@ manage-properties: Gérer les caractéristiques
 print-complete-list: Imprimer la liste complète du matériel (PDF)
 period-to-display-available-quantities: Période à utiliser pour afficher les quantités disponibles.
 
-available-qty-total-qty: "Qté dispo.\_/\_Qté totale"
+available-qty-total-qty: "Qté dispo.\_/\_totale"
 
 confirm-delete: "Mettre ce matériel à la corbeille\_?"
 confirm-permanently-delete: "Voulez-vous vraiment supprimer définitivement ce matériel\_?"

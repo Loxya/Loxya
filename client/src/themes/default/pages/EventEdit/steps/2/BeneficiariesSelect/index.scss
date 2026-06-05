@@ -32,9 +32,21 @@
         }
     }
 
+    &__item__value,
+    &__option {
+        &__color {
+            display: inline-block;
+            width: 0.8em;
+            height: 0.8em;
+            margin-right: globals.$spacing-thin;
+            border-radius: globals.$border-radius-normal;
+            background-color: var(--color);
+            vertical-align: -1px;
+        }
+    }
+
     &__actions {
         margin-top: globals.$spacing-medium;
-        margin-left: $label-width;
     }
 
     //
@@ -44,6 +56,16 @@
     &--empty {
         #{$block}__actions {
             margin-left: 0;
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        #{$block}__actions {
+            margin-left: $label-width;
         }
     }
 }

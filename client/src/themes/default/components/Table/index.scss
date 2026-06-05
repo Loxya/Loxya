@@ -23,7 +23,7 @@
         $sub-block: &;
 
         position: relative;
-        padding: 10px 8px 13px;
+        padding: 10px 6px 13px;
         border-bottom: 1px solid #403f40;
         background-color: globals.$bg-color-body;
         color: globals.$text-soft-color;
@@ -75,7 +75,7 @@
     &__cell {
         $sub-block: &;
 
-        padding: 9px 8px;
+        padding: 9px 6px;
         border-bottom: 1px solid #403f40;
         background-color: #2e2d2f;
         color: globals.$text-base-color;
@@ -95,11 +95,11 @@
     &__heading,
     &__cell {
         &:first-child {
-            padding-left: 16px;
+            padding-left: 10px;
         }
 
         &:last-child {
-            padding-right: 16px;
+            padding-right: 10px;
         }
 
         &--actions {
@@ -110,7 +110,7 @@
     }
 
     &__details {
-        padding: 9px 16px;
+        padding: 9px 12px;
         border-bottom: 1px solid #403f40;
         background-color: #2e2d2f;
         color: globals.$text-base-color;
@@ -146,26 +146,6 @@
     }
 
     //
-    // - Modifier: Sticky.
-    //
-
-    &--sticky {
-        #{$block}__heading {
-            position: sticky !important;
-            z-index: 1;
-            top: 0;
-        }
-
-        &#{$block}--paginated {
-            #{$block}__pagination {
-                position: sticky;
-                bottom: -(globals.$spacing-medium);
-                background-color: globals.$bg-color-body;
-            }
-        }
-    }
-
-    //
     // - État: Vide
     //
 
@@ -190,7 +170,7 @@
         }
 
         #{$block}__heading {
-            padding: 8px 5px;
+            padding: 8px 4px;
             border-bottom: 0;
             background-color: transparent;
 
@@ -200,7 +180,7 @@
         }
 
         #{$block}__cell {
-            padding: 5px;
+            padding: 4px;
             border-bottom-color: transparent;
             background-color: transparent;
         }
@@ -208,17 +188,17 @@
         #{$block}__heading,
         #{$block}__cell {
             &:first-child {
-                padding-left: 5px;
+                padding-left: 4px;
             }
 
             &:last-child {
-                padding-right: 5px;
+                padding-right: 4px;
             }
         }
 
         #{$block}__details {
-            padding-right: 5px;
-            padding-left: 5px;
+            padding-right: 4px;
+            padding-left: 4px;
         }
     }
 
@@ -233,7 +213,7 @@
         }
 
         #{$block}__heading {
-            padding: 10px 8px;
+            padding: 10px 6px;
             border-bottom: 2px solid #383838;
             color: globals.$text-soft-color;
             font-weight: 600;
@@ -252,17 +232,17 @@
         #{$block}__heading,
         #{$block}__cell {
             &:first-child {
-                padding-left: 8px;
+                padding-left: 6px;
             }
 
             &:last-child {
-                padding-right: 8px;
+                padding-right: 6px;
             }
         }
 
         #{$block}__details {
-            padding-right: 8px;
-            padding-left: 8px;
+            padding-right: 6px;
+            padding-left: 6px;
         }
 
         &#{$block}--headless {
@@ -270,6 +250,193 @@
                 #{$block}__cell {
                     border-top: 1px solid #383838;
                 }
+            }
+        }
+    }
+
+    //
+    // - Avec entête sticky.
+    //
+
+    &--with-sticky-header {
+        #{$block}__heading {
+            position: sticky !important;
+            z-index: 1;
+            top: 0;
+        }
+
+        &#{$block}--paginated {
+            #{$block}__pagination {
+                position: sticky;
+                bottom: -(globals.$spacing-medium);
+                background-color: globals.$bg-color-body;
+            }
+        }
+    }
+
+    //
+    // - Avec colonnes épinglées.
+    //
+
+    &--with-sticky-columns {
+        position: relative;
+        min-height: 0;
+
+        #{$block}__wrapper {
+            overflow: auto;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 24px;
+            background: linear-gradient(
+                to left,
+                rgb(0 0 0 / 13%),
+                rgb(0 0 0 / 0%)
+            );
+            opacity: 0;
+            transition: opacity 150ms ease;
+            pointer-events: none;
+        }
+
+        #{$block}__heading--sticky,
+        #{$block}__cell--sticky {
+            position: sticky;
+            z-index: 1;
+        }
+
+        #{$block}__heading--sticky-last,
+        #{$block}__cell--sticky-last {
+            padding-right: globals.$spacing-medium;
+
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                width: 10px;
+                background: linear-gradient(
+                    to right,
+                    rgb(0 0 0 / 30%),
+                    rgb(0 0 0 / 0%)
+                );
+                transform: translateX(100%);
+                opacity: 0;
+                transition: opacity 150ms ease;
+                pointer-events: none;
+            }
+        }
+
+        // - La cellule d'en-tête épinglée cumule les deux axes (haut + gauche),
+        //   elle doit donc passer au-dessus du reste de l'en-tête épinglé.
+        &#{$block}--with-sticky-header {
+            #{$block}__heading--sticky {
+                z-index: 2;
+            }
+        }
+
+        // - On révèle l'ombre de frontière de la colonne épinglée
+        //   lorsqu'il y a un scroll horizontal.
+        &#{$block}--scrolled-x {
+            #{$block}__heading--sticky-last::after,
+            #{$block}__cell--sticky-last::after {
+                opacity: 1;
+            }
+        }
+
+        // - On révèle le dégradé du bord droit pour signaler
+        //   la possibilité de défiler vers la droite.
+        &#{$block}--with-scroll-x {
+            &::after {
+                opacity: 1;
+            }
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        &__heading {
+            padding: 10px 8px 13px;
+        }
+
+        &__cell {
+            padding: 9px 8px;
+        }
+
+        &__heading,
+        &__cell {
+            &:first-child {
+                padding-left: 16px;
+            }
+
+            &:last-child {
+                padding-right: 16px;
+            }
+        }
+
+        &__details {
+            padding: 9px 16px;
+        }
+
+        //
+        // - Variantes
+        //
+
+        &--minimalist {
+            #{$block}__heading {
+                padding: 8px 5px;
+            }
+
+            #{$block}__cell {
+                padding: 5px;
+            }
+
+            #{$block}__heading,
+            #{$block}__cell {
+                &:first-child {
+                    padding-left: 5px;
+                }
+
+                &:last-child {
+                    padding-right: 5px;
+                }
+            }
+
+            #{$block}__details {
+                padding-right: 5px;
+                padding-left: 5px;
+            }
+        }
+
+        &--light {
+            #{$block}__heading {
+                padding: 10px 8px;
+            }
+
+            #{$block}__heading,
+            #{$block}__cell {
+                &:first-child {
+                    padding-left: 8px;
+                }
+
+                &:last-child {
+                    padding-right: 8px;
+                }
+            }
+
+            #{$block}__details {
+                padding-right: 8px;
+                padding-left: 8px;
             }
         }
     }

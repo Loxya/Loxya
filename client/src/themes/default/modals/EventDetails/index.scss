@@ -8,7 +8,7 @@
     flex-direction: column;
     overflow: auto;
     height: 100%;
-    min-width: 850px;
+    min-width: 0;
 
     &__close {
         padding: 10px;
@@ -25,7 +25,7 @@
         flex-direction: column;
         overflow: auto;
         height: 100%;
-        padding: 20px;
+        padding: globals.$spacing-medium;
     }
 
     //
@@ -41,5 +41,19 @@
             flex: 1;
             padding-bottom: 50px;
         }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-mobile) {
+        &__body {
+            padding: 20px;
+        }
+    }
+
+    @media (min-width: globals.$screen-desktop) {
+        min-width: 850px;
     }
 }

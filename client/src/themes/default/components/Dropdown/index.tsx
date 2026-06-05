@@ -5,6 +5,7 @@ import { MountingPortal as Portal } from 'portal-vue';
 import Button, { TYPES } from '@/themes/default/components/Button';
 import Transition from './components/Transition';
 import {
+    shift,
     offset,
     autoUpdate,
     autoPlacement,
@@ -175,6 +176,7 @@ const Dropdown = defineComponent({
             const newPosition = await computePosition($button, $dropdown, {
                 placement: 'bottom',
                 middleware: [
+                    offset(10),
                     autoPlacement({
                         alignment: 'end',
                         allowedPlacements: [
@@ -184,7 +186,7 @@ const Dropdown = defineComponent({
                             'top-end',
                         ],
                     }),
-                    offset(10),
+                    shift({ padding: 8 }),
                 ],
             });
 

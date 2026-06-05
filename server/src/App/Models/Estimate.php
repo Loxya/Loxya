@@ -432,8 +432,15 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
         if (!V::countryCode()->validate($sellerCountryCode)) {
             return true;
         }
+        $sellerCountry = new Country($sellerCountryCode);
 
-        return V::registrationId($sellerCountryCode, preciseOnly: true);
+        // - Si la valeur est `null` et que le numéro d'enregistrement n'est pas requis pour
+        //   les vendeurs dans le pays de l'organisation, on n'impose pas le remplissage.
+        if ($value === null && !$sellerCountry->requireSellerRegistrationId()) {
+            return true;
+        }
+
+        return V::notEmpty()->registrationId($sellerCountry, preciseOnly: true);
     }
 
     public function checkSellerVatNumber(mixed $value)
@@ -1035,8 +1042,8 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
 
         V::notEmpty()->intVal()->check($value);
 
-        return match ($this->booking_type) {
-            Event::TYPE => Event::includes($value),
+        return match ($bookingType) {
+            Event::TYPE => Event::includes($value, withTrashed: true),
             default => false, // - Type inconnu.
         };
     }

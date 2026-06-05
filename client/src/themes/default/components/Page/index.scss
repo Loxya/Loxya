@@ -58,6 +58,8 @@
     }
 
     &__body {
+        position: relative;
+        z-index: 1;
         flex: 1;
         overflow: auto;
         width: 100%;

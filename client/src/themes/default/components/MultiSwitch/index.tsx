@@ -13,6 +13,17 @@ type Props = {
     value: string | number | null,
 
     /**
+     * Les options peuvent-elles être affichées de manière minimaliste
+     * (= uniquement l'icône) pour les petits écrans ?
+     *
+     * Quand cette prop. vaut `true`, pour les écrans plus petit que le format
+     * tablette, si les options comporte une icône, seule celle-ci sera affichée.
+     *
+     * @default false
+     */
+    collapsible?: boolean,
+
+    /**
      * Fonction appelée lorsque l'option active change.
      *
      * @param selectedValue - La nouvelle option à activer.
@@ -39,6 +50,10 @@ const MultiSwitch = defineComponent({
                 value === null
             ),
         },
+        collapsible: {
+            type: Boolean as PropType<Required<Props>['collapsible']>,
+            default: false,
+        },
         // eslint-disable-next-line vue/no-unused-properties
         onChange: {
             type: Function as PropType<Props['onChange']>,
@@ -57,7 +72,7 @@ const MultiSwitch = defineComponent({
         },
     },
     render() {
-        const { displayedOptions, value, handleSelect } = this;
+        const { displayedOptions, value, collapsible, handleSelect } = this;
 
         if (displayedOptions.length === 0) {
             return null;
@@ -70,6 +85,7 @@ const MultiSwitch = defineComponent({
                         key={option.value}
                         data={option}
                         active={value === option.value}
+                        collapsible={collapsible}
                         onSelect={handleSelect}
                     />
                 ))}

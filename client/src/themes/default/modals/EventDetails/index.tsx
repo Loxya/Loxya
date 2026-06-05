@@ -91,6 +91,7 @@ const EventDetails = defineComponent({
     name: 'EventDetails',
     modal: {
         dismissible: true,
+        fillOnMobile: true,
     },
     props: {
         id: {

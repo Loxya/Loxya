@@ -361,7 +361,7 @@
 
         #{$block}__body {
             order: 1;
-            flex: none;
+            flex: 1 0 auto;
         }
 
         #{$block}__sidebar {

@@ -40,7 +40,13 @@ const TableCell = defineComponent({
 
         const className = [column.class, 'Table__cell', {
             'Table__cell--actions': column.key === 'actions',
+            'Table__cell--sticky': column.sticky,
+            'Table__cell--sticky-last': column.stickyLast,
         }];
+
+        const style = column.sticky
+            ? { left: `${column.stickyOffset ?? 0}px` }
+            : undefined;
 
         const content: JSX.Node = (() => {
             if (typeof column.render !== 'undefined') {
@@ -54,7 +60,7 @@ const TableCell = defineComponent({
         })();
 
         return (
-            <td class={className}>
+            <td class={className} style={style}>
                 {content}
             </td>
         );

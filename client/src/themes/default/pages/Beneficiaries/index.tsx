@@ -17,6 +17,7 @@ import Button from '@/themes/default/components/Button';
 import Icon from '@/themes/default/components/Icon';
 import Link from '@/themes/default/components/Link';
 import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
 import { ServerTable } from '@/themes/default/components/Table';
 import {
@@ -44,9 +45,11 @@ type Data = {
     hasCriticalError: boolean,
     shouldDisplayTrashed: boolean,
     isTrashDisplayed: boolean,
+    isMobile: boolean,
 };
 
 type InstanceProperties = {
+    cancelScreenSizeObserver: (() => void) | undefined,
     refreshTableDebounced: (
         | DebouncedMethod<typeof Beneficiaries, 'refreshTable'>
         | undefined
@@ -61,6 +64,7 @@ const Beneficiaries = defineComponent({
     name: 'Beneficiaries',
     setup: (): InstanceProperties => ({
         refreshTableDebounced: undefined,
+        cancelScreenSizeObserver: undefined,
     }),
     data(): Data {
         const filters: Filters = {
@@ -81,6 +85,7 @@ const Beneficiaries = defineComponent({
         return {
             filters,
             appliedFilters: { ...filters },
+            isMobile: getScreenSize() === ScreenSize.MOBILE,
             isLoading: false,
             isFetched: false,
             isEmpty: false,
@@ -93,6 +98,10 @@ const Beneficiaries = defineComponent({
         shouldPersistSearch(): boolean {
             const session = this.$store.state.auth.user as Session;
             return !session.disable_search_persistence;
+        },
+
+        isBillingEnabled(): boolean {
+            return config.billingMode !== BillingMode.NONE;
         },
 
         hasActiveFilters(): boolean {
@@ -108,10 +117,6 @@ const Beneficiaries = defineComponent({
                 this.isFetched &&
                 (!this.isEmpty || this.hasActiveFilters)
             );
-        },
-
-        isBillingEnabled(): boolean {
-            return config.billingMode !== BillingMode.NONE;
         },
 
         columns(): Columns<Beneficiary> {
@@ -357,9 +362,17 @@ const Beneficiaries = defineComponent({
             DEBOUNCE_WAIT_DURATION.asMilliseconds(),
             { leading: false },
         );
+
+        // - Suit la taille du viewport pour adapter l'affichage.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -367,6 +380,10 @@ const Beneficiaries = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         async handleDeleteItemClick(e: MouseEvent, id: Beneficiary['id']) {
             e.stopPropagation();
@@ -512,6 +529,7 @@ const Beneficiaries = defineComponent({
             columns,
             isLoading,
             hasContent,
+            isMobile,
             isTrashDisplayed,
             hasCriticalError,
             hasActiveFilters,
@@ -584,7 +602,7 @@ const Beneficiaries = defineComponent({
                         {__('page.beneficiaries.action-add')}
                     </Button>,
                     <Dropdown>
-                        {hasContent && (
+                        {(hasContent && !isMobile) && (
                             <Button icon="table" onClick={handleConfigureColumns}>
                                 {__('configure-columns')}
                             </Button>

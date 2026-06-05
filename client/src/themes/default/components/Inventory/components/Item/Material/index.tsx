@@ -5,6 +5,11 @@ import Dropdown from '@/themes/default/components/Dropdown';
 import Button from '@/themes/default/components/Button';
 import { normalizeComment } from '../../../_utils';
 import { InventoryLock } from '../../../_types';
+import {
+    ScreenSize,
+    getScreenSize,
+    observeScreenSize,
+} from '@/utils/screenSize';
 
 // - Modales
 import CommentEdition from '../../../modals/CommentEdition';
@@ -75,6 +80,14 @@ type Props = {
     onChange?(newInventory: InventoryMaterialData): void,
 };
 
+type InstanceProperties = {
+    cancelScreenSizeObserver: (() => void) | undefined,
+};
+
+type Data = {
+    isMobile: boolean,
+};
+
 /** L'inventaire d'un materiel. */
 const InventoryItemMaterial = defineComponent({
     name: 'InventoryItemMaterial',
@@ -114,6 +127,12 @@ const InventoryItemMaterial = defineComponent({
         },
     },
     emits: ['change'],
+    setup: (): InstanceProperties => ({
+        cancelScreenSizeObserver: undefined,
+    }),
+    data: (): Data => ({
+        isMobile: getScreenSize() === ScreenSize.MOBILE,
+    }),
     computed: {
         hasMultipleParks(): boolean {
             return this.$store.state.parks.list.length > 1;
@@ -256,12 +275,26 @@ const InventoryItemMaterial = defineComponent({
             return this.brokenQuantity > 0;
         },
     },
+    mounted() {
+        // - Suit la taille de l'écran pour adapter les actions disponibles.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
+    },
+    beforeDestroy() {
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
+    },
     methods: {
         // ------------------------------------------------------
         // -
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         async handleModifyComment() {
             if (!this.withComments || this.isCommentLocked) {
@@ -371,6 +404,7 @@ const InventoryItemMaterial = defineComponent({
             error,
             locked,
             strict,
+            isMobile,
             inventoryComment,
             inheritedComment,
             location,
@@ -450,7 +484,7 @@ const InventoryItemMaterial = defineComponent({
                                 )}
                             </div>
                         )}
-                        {locked !== true && (
+                        {(locked !== true && (!isMobile || (withComments && !isCommentLocked))) && (
                             <div class="InventoryItemMaterial__actions">
                                 {(withComments && !isCommentLocked) && (
                                     <Dropdown icon="ellipsis-v" type="transparent">

@@ -70,6 +70,7 @@ const BookingsViewModeSwitch = defineComponent({
                 options={options}
                 value={mode}
                 onChange={handleChange}
+                collapsible
             />
         );
     },
