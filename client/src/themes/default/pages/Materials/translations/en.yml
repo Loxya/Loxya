@@ -6,7 +6,7 @@ manage-properties: Manage properties
 print-complete-list: Print the complete materials list (PDF)
 period-to-display-available-quantities: Period to use to display available quantities
 
-available-qty-total-qty: "Avail. qty\_/\_Total qty"
+available-qty-total-qty: "Qty avail.\_/\_total"
 
 confirm-delete: Move this material in trash bin?
 confirm-permanently-delete: Do you really want to permanently delete this material?

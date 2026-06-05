@@ -46,13 +46,8 @@
         // - Responsive
         //
 
-        @media (min-width: globals.$screen-mobile) {
-            &--address {
-                display: table-cell;
-            }
-        }
-
         @media (min-width: globals.$screen-tablet) {
+            &--address,
             &--opening-hours,
             &--total-amount {
                 display: table-cell;

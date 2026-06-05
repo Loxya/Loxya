@@ -8,6 +8,7 @@
 
         &--label {
             overflow: hidden;
+            max-width: 0;
             margin-bottom: 3px;
             padding-left: 0;
             white-space: nowrap;
@@ -45,6 +46,32 @@
             margin-right: 10px;
             color: globals.$text-light-color;
             font-size: 0.8rem;
+        }
+    }
+
+    //
+    // - Responsive.
+    //
+
+    @container (max-width: 500px) {
+        &__col {
+            padding: 10px 3px;
+
+            &--total {
+                width: 70px;
+                min-width: 70px;
+            }
+
+            &--quantity {
+                width: 45px;
+                min-width: 45px;
+                text-align: center;
+            }
+
+            &--price,
+            &--discount {
+                display: none;
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ $modal-shadow: transparent !default;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 10px;
     pointer-events: auto;
 
     &__overlay {
@@ -84,6 +85,19 @@ $modal-shadow: transparent !default;
                 transform: none;
             }
         }
+
+        //
+        // - Variante: Tout l'écran sur mobile.
+        //
+
+        &--fill-on-mobile {
+            @media (width <= #{globals.$screen-mobile}) {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
     }
 
     //
@@ -92,5 +106,13 @@ $modal-shadow: transparent !default;
 
     &--in-background {
         pointer-events: none;
+    }
+
+    //
+    // - Variante: Plein écran.
+    //
+
+    &--fullscreen {
+        padding: 0;
     }
 }

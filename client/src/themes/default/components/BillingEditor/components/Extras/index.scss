@@ -352,6 +352,36 @@
                     'total total total';
             }
         }
+
+        //
+        // - Conteneur étroit.
+        //
+
+        @container (max-width: 860px) {
+            #{$block}__item {
+                min-width: 0;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    'legend legend'
+                    'name type'
+                    'unit-price quantity'
+                    'taxes taxes'
+                    'discount discount'
+                    'total total';
+            }
+
+            &#{$block}--no-taxes {
+                #{$block}__item {
+                    grid-template-columns: 1fr;
+                    grid-template-areas:
+                        'legend legend'
+                        'name type'
+                        'unit-price quantity'
+                        'discount discount'
+                        'total total';
+                }
+            }
+        }
     }
 
     //

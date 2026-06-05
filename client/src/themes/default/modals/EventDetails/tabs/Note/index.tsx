@@ -212,6 +212,7 @@ const EventDetailsNote = defineComponent({
                         onInput={handleInput}
                         onChange={handleChange}
                         disabled={readOnly}
+                        class="EventDetailsNote__input"
                     />
                 </div>
                 {saveMode === SaveMode.MANUAL && (

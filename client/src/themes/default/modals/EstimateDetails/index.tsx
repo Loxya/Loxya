@@ -286,7 +286,7 @@ const EstimateDetailsModal = defineComponent({
             const { buyer } = estimate;
 
             // - Pas de facture à partir d'un brouillon.
-            if (this.isDraft) {
+            if (this.isDraft || this.isObsolete) {
                 return false;
             }
 
@@ -629,6 +629,7 @@ const EstimateDetailsModal = defineComponent({
             isDraft,
             isSaving,
             isFetched,
+            isObsolete,
             isDeleting,
             isFinalizing,
             isPreviewReady,
@@ -826,7 +827,7 @@ const EstimateDetailsModal = defineComponent({
                                 </div>
                             </div>
                             <div class="EstimateDetails__info-row">
-                                {!isDraft && (
+                                {(!isDraft && !isObsolete) && (
                                     <div class="EstimateDetails__info">
                                         <span class="EstimateDetails__info__label">
                                             {__('issue-date')}

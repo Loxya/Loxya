@@ -6,12 +6,11 @@
     gap: globals.$spacing-small;
 
     &__main {
-        display: flex;
+        display: none;
         align-items: stretch;
         gap: globals.$spacing-small;
 
         &__center-date {
-            display: none !important;
             width: 180px !important;
         }
     }
@@ -22,9 +21,7 @@
 
     @media (min-width: globals.$screen-mobile) {
         &__main {
-            &__center-date {
-                display: block !important;
-            }
+            display: flex;
         }
     }
 }

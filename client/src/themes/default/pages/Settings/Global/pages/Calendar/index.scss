@@ -26,11 +26,21 @@
 
     &__actions {
         position: fixed;
-        left: 500px;
+        left: 0;
         bottom: 0;
         right: 0;
         padding: globals.$spacing-medium globals.$spacing-small;
         background-color: globals.$bg-color-body;
         text-align: center;
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-desktop) {
+        &__actions {
+            left: 515px;
+        }
     }
 }

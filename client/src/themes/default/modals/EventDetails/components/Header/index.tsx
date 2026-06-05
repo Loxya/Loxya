@@ -13,9 +13,14 @@ import DuplicateEvent from '@/themes/default/modals/DuplicateEvent';
 import Icon from '@/themes/default/components/Icon';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 
 import type { PropType, Raw } from 'vue';
 import type { EventDetails } from '@/stores/api/events';
+
+const isNarrowScreen = (size: ScreenSize): boolean => (
+    size === ScreenSize.MOBILE || size === ScreenSize.TABLET
+);
 
 type Props = {
     /** L'événement dont on veut afficher le header. */
@@ -50,6 +55,7 @@ type Props = {
 
 type InstanceProperties = {
     nowTimer: ReturnType<typeof setInterval> | undefined,
+    cancelScreenSizeObserver: (() => void) | undefined,
 };
 
 type Data = {
@@ -57,6 +63,7 @@ type Data = {
     isConfirming: boolean,
     isArchiving: boolean,
     isDeleting: boolean,
+    isNarrow: boolean,
 };
 
 /** Header de la modale de détails d'un événement. */
@@ -96,12 +103,14 @@ const EventDetailsHeader = defineComponent({
     ],
     setup: (): InstanceProperties => ({
         nowTimer: undefined,
+        cancelScreenSizeObserver: undefined,
     }),
     data: (): Data => ({
         now: markRaw(DateTime.now()),
         isConfirming: false,
         isArchiving: false,
         isDeleting: false,
+        isNarrow: isNarrowScreen(getScreenSize()),
     }),
     computed: {
         icon(): string {
@@ -246,10 +255,18 @@ const EventDetailsHeader = defineComponent({
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
         this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
+
+        // - Suit la taille de l'écran pour basculer l'en-tête en mode condensé.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
     },
     beforeDestroy() {
         if (this.nowTimer) {
             clearInterval(this.nowTimer);
+        }
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
         }
     },
     methods: {
@@ -258,6 +275,10 @@ const EventDetailsHeader = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isNarrow = isNarrowScreen(size);
+        },
 
         async handleToggleConfirm() {
             const {
@@ -405,6 +426,7 @@ const EventDetailsHeader = defineComponent({
             isDepartureInventoryDone,
             isReturnInventoryPeriodOpen,
             isReturnInventoryDone,
+            isNarrow,
             handleDelete,
             handleDuplicate,
             handleToggleConfirm,
@@ -412,9 +434,9 @@ const EventDetailsHeader = defineComponent({
             handleClose,
         } = this;
 
-        const renderInventoryAction = (): JSX.Element | null => {
+        const getInventoryActions = (): JSX.Element[] => {
             if (!isTeamMember || isArchived || !hasMaterials) {
-                return null;
+                return [];
             }
 
             const isReturnInventoryViewable = isReturnInventoryPeriodOpen;
@@ -433,7 +455,7 @@ const EventDetailsHeader = defineComponent({
                 (isReturnInventoryViewable && isReturnInventoryUnavailable)
             );
             if (allInventoriesOpenAndUnavailable) {
-                return (
+                return [
                     <Button
                         icon="tasks"
                         type="primary"
@@ -441,8 +463,8 @@ const EventDetailsHeader = defineComponent({
                         disabled
                     >
                         {__('global.inventories')}
-                    </Button>
-                );
+                    </Button>,
+                ];
             }
 
             const actions = [];
@@ -495,25 +517,12 @@ const EventDetailsHeader = defineComponent({
                 );
             }
 
-            if (actions.length < 2) {
-                return actions.shift() ?? null;
-            }
-
-            const isAllInventoriesDone = isDepartureInventoryDone && isReturnInventoryDone;
-            return (
-                <Dropdown
-                    icon="tasks"
-                    type={!isAllInventoriesDone ? 'primary' : 'default'}
-                    label={__('global.inventories')}
-                >
-                    {actions}
-                </Dropdown>
-            );
+            return actions;
         };
 
-        const renderSecondaryActions = (): JSX.Element | null => {
+        const getSecondaryActions = (): JSX.Element[] => {
             if (!isTeamMember) {
-                return null;
+                return [];
             }
 
             const actions = [];
@@ -572,6 +581,73 @@ const EventDetailsHeader = defineComponent({
                 );
             }
 
+            return actions;
+        };
+
+        const getEditActions = (): JSX.Element[] => {
+            if (!isTeamMember || !isEditable) {
+                return [];
+            }
+
+            return [
+                <Button
+                    icon="edit"
+                    type={!hasStarted ? 'primary' : 'default'}
+                    to={{
+                        name: 'edit-event',
+                        params: { id: event.id.toString() },
+                    }}
+                >
+                    {__('global.edit-event')}
+                </Button>,
+            ];
+        };
+
+        const getPrintActions = (): JSX.Element[] => {
+            if (!isPrintable) {
+                return [];
+            }
+
+            const items = [
+                <Button icon="print" to={summaryPdfUrl} download>
+                    {__('global.print')}
+                </Button>,
+            ];
+            return items;
+        };
+
+        const renderInventoryAction = (): JSX.Element | null => {
+            const actions = getInventoryActions();
+            if (actions.length < 2) {
+                return actions.shift() ?? null;
+            }
+
+            const isAllInventoriesDone = isDepartureInventoryDone && isReturnInventoryDone;
+            return (
+                <Dropdown
+                    icon="tasks"
+                    type={!isAllInventoriesDone ? 'primary' : 'default'}
+                    label={__('global.inventories')}
+                >
+                    {actions}
+                </Dropdown>
+            );
+        };
+
+        const renderSecondaryActions = (): JSX.Element | null => {
+            const actions = getSecondaryActions();
+            return actions.length > 0
+                ? <Dropdown>{actions}</Dropdown>
+                : null;
+        };
+
+        const renderNarrowActions = (): JSX.Element | null => {
+            const actions = [
+                ...getEditActions(),
+                ...getInventoryActions(),
+                ...getPrintActions(),
+                ...getSecondaryActions(),
+            ];
             return actions.length > 0
                 ? <Dropdown>{actions}</Dropdown>
                 : null;
@@ -599,7 +675,7 @@ const EventDetailsHeader = defineComponent({
                     </div>
                 </div>
                 <div class="EventDetailsHeader__actions">
-                    {isPrintable && (
+                    {!isNarrow && isPrintable && (
                         <Button
                             icon="print"
                             to={summaryPdfUrl}
@@ -609,7 +685,7 @@ const EventDetailsHeader = defineComponent({
                             {__('global.print')}
                         </Button>
                     )}
-                    {(isTeamMember && isEditable) && (
+                    {!isNarrow && (isTeamMember && isEditable) && (
                         <Button
                             icon="edit"
                             type={!hasStarted ? 'primary' : 'default'}
@@ -621,8 +697,9 @@ const EventDetailsHeader = defineComponent({
                             {__('global.action-edit')}
                         </Button>
                     )}
-                    {renderInventoryAction()}
-                    {renderSecondaryActions()}
+                    {!isNarrow && renderInventoryAction()}
+                    {!isNarrow && renderSecondaryActions()}
+                    {isNarrow && renderNarrowActions()}
                 </div>
                 <Button
                     type="close"

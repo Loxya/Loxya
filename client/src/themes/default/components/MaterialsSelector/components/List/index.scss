@@ -13,18 +13,24 @@
 
     &__col {
         &--quantity {
+            display: none;
             width: 65px;
             color: globals.$text-light-color !important;
             font-weight: 600;
             text-align: right;
         }
 
+        &--name {
+            width: 100%;
+            max-width: 0;
+        }
+
         &--availability {
-            width: 200px;
             text-align: center;
         }
 
         &--price {
+            display: none;
             width: 120px;
             text-align: right;
             white-space: nowrap;
@@ -36,11 +42,12 @@
         }
 
         &--quantity-input {
-            width: 9rem;
+            width: auto;
             text-align: center;
         }
 
         &--amount {
+            display: none;
             width: 7rem;
             min-width: 5rem;
             text-align: right;
@@ -61,10 +68,14 @@
     &__item {
         &__name {
             display: block;
+            overflow: hidden;
             font-weight: 600;
 
             &__name {
                 display: block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
 
                 &--unsynced {
                     margin-bottom: 4px;
@@ -73,9 +84,17 @@
 
             &__reference {
                 display: block;
+                overflow: hidden;
                 color: globals.$text-light-color;
                 font-weight: 400;
+                white-space: nowrap;
+                text-overflow: ellipsis;
             }
+        }
+
+        &__availability {
+            margin-top: globals.$spacing-thin;
+            font-weight: 400;
         }
 
         &__name__name,
@@ -102,6 +121,53 @@
 
         #{$block}__table {
             display: none;
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @container (min-width: 560px) {
+        &__col {
+            &--quantity,
+            &--amount {
+                display: table-cell;
+            }
+        }
+    }
+
+    @container (min-width: 850px) {
+        &__col {
+            &--name {
+                width: auto;
+                max-width: none;
+            }
+
+            &--availability {
+                width: 200px;
+            }
+
+            &--price {
+                display: table-cell;
+            }
+
+            &--quantity-input {
+                width: 9rem;
+            }
+        }
+
+        &__item {
+            &__name {
+                overflow: visible;
+
+                &__name,
+                &__reference {
+                    overflow: visible;
+                    white-space: normal;
+                    text-overflow: clip;
+                }
+            }
         }
     }
 }

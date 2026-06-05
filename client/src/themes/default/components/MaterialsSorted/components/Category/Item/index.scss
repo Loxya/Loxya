@@ -8,6 +8,7 @@
         vertical-align: middle;
 
         &--label {
+            max-width: 0;
             padding-left: 0;
         }
 
@@ -62,6 +63,50 @@
             margin-right: 10px;
             color: globals.$text-light-color;
             font-size: 0.8rem;
+        }
+    }
+
+    //
+    // - Responsive.
+    //
+
+    @container (max-width: 500px) {
+        &__col {
+            padding: 5px 3px;
+
+            &--total {
+                width: 70px;
+                min-width: 70px;
+            }
+
+            &--quantity {
+                width: 45px;
+                min-width: 45px;
+                text-align: center;
+            }
+
+            &--price,
+            &--discount {
+                display: none;
+            }
+        }
+
+        &__label {
+            &__name,
+            &__ref {
+                max-width: 100%;
+            }
+
+            &__units {
+                display: block;
+                max-width: none;
+                margin-left: 0;
+                white-space: normal;
+
+                &::before {
+                    content: none;
+                }
+            }
         }
     }
 }

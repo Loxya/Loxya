@@ -73,12 +73,33 @@ const MaterialsSorted = defineComponent({
                 SortBy.NAME,
             );
         },
+
+        hasDiscount(): boolean {
+            const { withBilling, materials, extras } = this;
+            if (!withBilling) {
+                return false;
+            }
+
+            // - On n'affiche la colonne des remises que si au moins
+            //   une ligne (matériel ou extra), en comporte une.
+            return [...materials, ...extras].some((
+                (line: EmbeddedMaterial | EmbeddedExtra) => (
+                    'discount_rate' in line && !line.discount_rate.isZero()
+                )
+            ));
+        },
     },
     created() {
         this.$store.dispatch('categories/fetch');
     },
     render() {
-        const { sortedMaterials, extras, withBilling, currency } = this;
+        const {
+            extras,
+            hasDiscount,
+            withBilling,
+            sortedMaterials,
+            currency,
+        } = this;
 
         const renderMaterials = (): JSX.Element[] => (
             sortedMaterials.map(
@@ -87,6 +108,7 @@ const MaterialsSorted = defineComponent({
                         key={category.id ?? undefined}
                         data={category}
                         withBilling={withBilling}
+                        withDiscount={hasDiscount}
                         currency={currency}
                     />
                 ),
@@ -101,6 +123,7 @@ const MaterialsSorted = defineComponent({
                         <Extras
                             data={extras}
                             withBilling={withBilling}
+                            withDiscount={hasDiscount}
                             currency={currency}
                         />
                     </div>

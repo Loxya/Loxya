@@ -1,7 +1,7 @@
 import { defineComponent } from 'vue';
 import TableHeading from './TableHeading';
 
-import type { PropType } from 'vue';
+import type { PropType, ComponentRef } from 'vue';
 import type { RawColumn, RawColumns } from '../@types';
 
 type Props = {
@@ -44,6 +44,33 @@ const TableHead = defineComponent({
         handleOrderBy(columnKey: RawColumn['key']) {
             this.$emit('orderBy', columnKey);
         },
+
+        // ------------------------------------------------------
+        // -
+        // -    API Publique
+        // -
+        // ------------------------------------------------------
+
+        /**
+         * Retourne, par clé de colonne, la largeur rendue de l'en-tête des colonnes.
+         *
+         * @returns Un objet associant chaque clé de colonne à la
+         *          largeur (en pixels) de sa cellule d'en-tête.
+         */
+        getColumnWidths(): Record<RawColumn['key'], number> {
+            const widths: Record<RawColumn['key'], number> = {};
+
+            this.columns.forEach((column: RawColumn) => {
+                const $heading = this.$refs[`heading[${column.key}]`] as (
+                    ComponentRef<typeof TableHeading> | undefined
+                );
+                if ($heading !== undefined) {
+                    widths[column.key] = $heading.getWidth();
+                }
+            });
+
+            return widths;
+        },
     },
     render() {
         const { columns, handleOrderBy } = this;
@@ -54,6 +81,7 @@ const TableHead = defineComponent({
                     {columns.map((column: RawColumn) => (
                         <TableHeading
                             key={column.key}
+                            ref={`heading[${column.key}]`}
                             column={column}
                             onOrderBy={() => {
                                 handleOrderBy(column.key);

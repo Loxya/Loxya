@@ -26,6 +26,7 @@ import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
 import ViewModeSwitch from '../../components/ViewModeSwitch';
 import FiltersPanel from './components/Filters';
 import { ServerTable } from '@/themes/default/components/Table';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import {
     persistFilters,
     getPersistedFilters,
@@ -54,6 +55,7 @@ import type {
 
 type InstanceProperties = {
     nowTimer: ReturnType<typeof setInterval> | undefined,
+    cancelScreenSizeObserver: (() => void) | undefined,
     fetchSummariesQueue: Queue | undefined,
     refreshTableDebounced: (
         | DebouncedMethod<typeof ScheduleListing, 'refreshTable'>
@@ -74,6 +76,7 @@ type Data = {
     isLoading: boolean,
     isFetched: boolean,
     isEmpty: boolean,
+    isMobile: boolean,
     hasCriticalError: boolean,
     now: Raw<DateTime>,
 };
@@ -92,6 +95,7 @@ const ScheduleListing = defineComponent({
     name: 'ScheduleListing',
     setup: (): InstanceProperties => ({
         nowTimer: undefined,
+        cancelScreenSizeObserver: undefined,
         fetchSummariesQueue: undefined,
         refreshTableDebounced: undefined,
     }),
@@ -127,6 +131,7 @@ const ScheduleListing = defineComponent({
             filters,
             appliedFilters: { ...filters },
             ready: markRaw(Promise.withResolvers<void>()),
+            isMobile: getScreenSize() === ScreenSize.MOBILE,
             isLoading: false,
             isFetched: false,
             isEmpty: false,
@@ -224,6 +229,9 @@ const ScheduleListing = defineComponent({
                                     title={__('duration-days', { duration }, duration)}
                                 >
                                     {upperFirst(booking.operation_period.toReadable(__))}
+                                </div>
+                                <div class="ScheduleListing__mobilization-period">
+                                    {upperFirst(booking.mobilization_period.toReadable(__, PeriodReadableFormat.SHORT))}
                                 </div>
                             </Fragment>
                         );
@@ -457,6 +465,9 @@ const ScheduleListing = defineComponent({
     mounted() {
         // - Actualise le timestamp courant toutes les minutes.
         this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
+
+        // - Suit la taille du viewport pour adapter l'affichage.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
@@ -465,6 +476,11 @@ const ScheduleListing = defineComponent({
         if (this.nowTimer) {
             clearInterval(this.nowTimer);
         }
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -472,6 +488,10 @@ const ScheduleListing = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         async handleOpen({ booking }: LazyBooking) {
             let shouldRefetch = false;
@@ -643,6 +663,7 @@ const ScheduleListing = defineComponent({
             title,
             isLoading,
             hasContent,
+            isMobile,
             isTeamMember,
             hasCriticalError,
             hasActiveFilters,
@@ -724,7 +745,7 @@ const ScheduleListing = defineComponent({
                             {__('page.schedule.listing.add-event')}
                         </Button>
                     ),
-                    hasContent && (
+                    (hasContent && !isMobile) && (
                         <Dropdown>
                             <Button icon="table" onClick={handleConfigureColumns}>
                                 {__('configure-columns')}
@@ -755,6 +776,7 @@ const ScheduleListing = defineComponent({
                         class="ScheduleListing__table"
                         rowClass={getRowClass}
                         columns={columns}
+                        headless={isMobile}
                         fetcher={fetch}
                         emptyMessage={emptyMessage}
                         onRowClick={handleOpen}

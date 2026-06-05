@@ -463,6 +463,42 @@
                     'total total total';
             }
         }
+
+        //
+        // - Conteneur étroit.
+        //
+
+        @container (max-width: 860px) {
+            #{$block}__item {
+                min-width: 0;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    'legend legend'
+                    'price quantity'
+                    'taxes taxes'
+                    'discount discount'
+                    'total total';
+            }
+
+            #{$block}__item__field--quantity {
+                text-align: center;
+
+                #{$block}__item__field__value {
+                    justify-items: center;
+                }
+            }
+
+            &#{$block}--no-taxes {
+                #{$block}__item {
+                    grid-template-columns: minmax(0, 1fr) auto;
+                    grid-template-areas:
+                        'legend legend'
+                        'price quantity'
+                        'discount discount'
+                        'total total';
+                }
+            }
+        }
     }
 
     //

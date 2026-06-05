@@ -21,6 +21,17 @@ type Props = {
     active: boolean,
 
     /**
+     * L'option peut-elle être affichée de manière minimaliste
+     * (= uniquement l'icône) pour les petits écrans ?
+     *
+     * Quand cette prop. vaut `true`, pour les écrans plus petit que le format
+     * tablette, si l'option comporte une icône, seule celle-ci sera affichée.
+     *
+     * @default false
+     */
+    collapsible?: boolean,
+
+    /**
      * Fonction appelée lorsqu'un l'option est sélectionnée.
      *
      * @param value - La valeur de l'option.
@@ -43,6 +54,10 @@ const MultiSwitchOption = defineComponent({
         active: {
             type: Boolean as PropType<Required<Props>['active']>,
             default: true,
+        },
+        collapsible: {
+            type: Boolean as PropType<Required<Props>['collapsible']>,
+            default: false,
         },
         // eslint-disable-next-line vue/no-unused-properties
         onSelect: {
@@ -89,10 +104,12 @@ const MultiSwitchOption = defineComponent({
         },
     },
     render() {
-        const { uniqueId, data, normalizedIcon: icon, active, handleClick } = this;
+        const { uniqueId, data, normalizedIcon: icon, active, collapsible, handleClick } = this;
 
         const classNames = ['MultiSwitchOption', {
             'MultiSwitchOption--active': active,
+            'MultiSwitchOption--collapsible': collapsible,
+            'MultiSwitchOption--with-icon': !!icon,
         }];
 
         return (
@@ -105,7 +122,7 @@ const MultiSwitchOption = defineComponent({
                     onClick={handleClick}
                 />
                 {!!icon && <Icon {...{ props: icon } as any} class="MultiSwitchOption__icon" />}
-                {data.label}
+                <span class="MultiSwitchOption__label">{data.label}</span>
             </label>
         );
     },

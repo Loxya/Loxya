@@ -399,110 +399,116 @@ const EventDetailsInfos = defineComponent({
 
         return (
             <div class="EventDetailsInfos">
-                <div class="EventDetailsInfos__summary">
-                    {hasBeneficiaries && (
-                        <div class="EventDetailsInfos__summary__beneficiary">
-                            <div class="EventDetailsInfos__summary__beneficiary__content">
-                                <ul class="EventDetailsInfos__summary__beneficiary__names">
-                                    {beneficiaries.map((beneficiary: Beneficiary) => {
-                                        const { company, full_name: fullName } = beneficiary;
-                                        return (
-                                            <li class="EventDetailsInfos__summary__beneficiary__names__item">
-                                                <span class="EventDetailsInfos__summary__beneficiary__names__item__name">
-                                                    {`${fullName}${company ? ` (${company.legal_name})` : ''}`}
-                                                </span>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                                {!!(beneficiaryAddress || beneficiaryPhone || beneficiaryEmail) && (
-                                    <div class="EventDetailsInfos__summary__beneficiary__infos">
-                                        {!!beneficiaryAddress && (
-                                            <address class="EventDetailsInfos__summary__beneficiary__address">
-                                                {beneficiaryAddress}
-                                            </address>
-                                        )}
-                                        {!!(beneficiaryPhone || beneficiaryEmail) && (
-                                            <div class="EventDetailsInfos__summary__beneficiary__reachability">
-                                                {!!beneficiaryPhone && (
-                                                    <p class="EventDetailsInfos__summary__beneficiary__phone">
-                                                        {__('modal.event-details.infos.beneficiary-phone')}{' '}
-                                                        <a href={beneficiaryPhone.toURI()}>{beneficiaryPhone.toReadable()}</a>
-                                                    </p>
-                                                )}
-                                                {!!beneficiaryEmail && (
-                                                    <p class="EventDetailsInfos__summary__beneficiary__email">
-                                                        {__('modal.event-details.infos.beneficiary-email')}{' '}
-                                                        <a href={`mailto:${beneficiaryEmail}`}>{beneficiaryEmail}</a>
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                <div class="EventDetailsInfos__main">
+                    <div class="EventDetailsInfos__summary">
+                        {hasBeneficiaries && (
+                            <div class="EventDetailsInfos__summary__beneficiary">
+                                <div class="EventDetailsInfos__summary__beneficiary__content">
+                                    <ul class="EventDetailsInfos__summary__beneficiary__names">
+                                        {beneficiaries.map((beneficiary: Beneficiary) => {
+                                            const { company, full_name: fullName } = beneficiary;
+                                            return (
+                                                <li class="EventDetailsInfos__summary__beneficiary__names__item">
+                                                    <span class="EventDetailsInfos__summary__beneficiary__names__item__name">
+                                                        {`${fullName}${company ? ` (${company.legal_name})` : ''}`}
+                                                    </span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                    {!!(beneficiaryAddress || beneficiaryPhone || beneficiaryEmail) && (
+                                        <div class="EventDetailsInfos__summary__beneficiary__infos">
+                                            {!!beneficiaryAddress && (
+                                                <address class="EventDetailsInfos__summary__beneficiary__address">
+                                                    {beneficiaryAddress}
+                                                </address>
+                                            )}
+                                            {!!(beneficiaryPhone || beneficiaryEmail) && (
+                                                <div class="EventDetailsInfos__summary__beneficiary__reachability">
+                                                    {!!beneficiaryPhone && (
+                                                        <p class="EventDetailsInfos__summary__beneficiary__phone">
+                                                            {__('modal.event-details.infos.beneficiary-phone')}{' '}
+                                                            <a href={beneficiaryPhone.toURI()}>{beneficiaryPhone.toReadable()}</a>
+                                                        </p>
+                                                    )}
+                                                    {!!beneficiaryEmail && (
+                                                        <p class="EventDetailsInfos__summary__beneficiary__email">
+                                                            {__('modal.event-details.infos.beneficiary-email')}{' '}
+                                                            <a href={`mailto:${beneficiaryEmail}`}>{beneficiaryEmail}</a>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+                        )}
+                        {!hasBeneficiaries && (
+                            <div class="EventDetailsInfos__summary__no-beneficiary">
+                                {__('@event.warning-no-beneficiary')}
+                            </div>
+                        )}
+                        {details.length > 0 && (
+                            <div class="EventDetailsInfos__summary__details">
+                                {details}
+                            </div>
+                        )}
+                    </div>
+                    {description && (
+                        <div class="EventDetailsInfos__description">
+                            <p class="EventDetailsInfos__description__content">
+                                {description}
+                            </p>
                         </div>
                     )}
-                    {!hasBeneficiaries && (
-                        <div class="EventDetailsInfos__summary__no-beneficiary">
-                            {__('@event.warning-no-beneficiary')}
+                    {isOverdue && (
+                        <div class="EventDetailsInfos__overdue">
+                            {__('modal.event-details.infos.warning-overdue', {
+                                date: event.mobilization_period.end.toReadable(),
+                                duration: overduePeriod!.toReadableDuration(__),
+                            })}
                         </div>
                     )}
-                    {details.length > 0 && (
-                        <div class="EventDetailsInfos__summary__details">
-                            {details}
+                    {!hasMaterials && (
+                        <div class="EventDetailsInfos__no-material">
+                            {__('@event.warning-no-material')}
+                            {(isTeamMember && isEditable && !isPast) && (
+                                <p>
+                                    <Button
+                                        type="primary"
+                                        to={{
+                                            name: 'edit-event',
+                                            params: { id: event.id.toString() },
+                                        }}
+                                        icon="edit"
+                                    >
+                                        {__('modal.event-details.edit')}
+                                    </Button>
+                                </p>
+                            )}
+                        </div>
+                    )}
+                    {hasMaterials && !isPast && (
+                        <div
+                            class={[
+                                'EventDetailsInfos__confirmation',
+                                { 'EventDetailsInfos__confirmation--confirmed': isConfirmed },
+                            ]}
+                        >
+                            {(
+                                isConfirmed
+                                    ? __('@event.event-confirmed-help')
+                                    : __('@event.event-not-confirmed-help')
+                            )}
                         </div>
                     )}
                 </div>
-                {description && (
-                    <div class="EventDetailsInfos__description">
-                        <p class="EventDetailsInfos__description__content">
-                            {description}
-                        </p>
-                    </div>
-                )}
-                {isOverdue && (
-                    <div class="EventDetailsInfos__overdue">
-                        {__('modal.event-details.infos.warning-overdue', {
-                            date: event.mobilization_period.end.toReadable(),
-                            duration: overduePeriod!.toReadableDuration(__),
-                        })}
-                    </div>
-                )}
-                {!hasMaterials && (
-                    <div class="EventDetailsInfos__no-material">
-                        {__('@event.warning-no-material')}
-                        {(isTeamMember && isEditable && !isPast) && (
-                            <p>
-                                <Button
-                                    type="primary"
-                                    to={{
-                                        name: 'edit-event',
-                                        params: { id: event.id.toString() },
-                                    }}
-                                    icon="edit"
-                                >
-                                    {__('modal.event-details.edit')}
-                                </Button>
-                            </p>
-                        )}
-                    </div>
-                )}
-                {hasMaterials && !isPast && (
-                    <div
-                        class={[
-                            'EventDetailsInfos__confirmation',
-                            { 'EventDetailsInfos__confirmation--confirmed': isConfirmed },
-                        ]}
-                    >
-                        {(
-                            isConfirmed
-                                ? __('@event.event-confirmed-help')
-                                : __('@event.event-not-confirmed-help')
-                        )}
-                    </div>
-                )}
-                <Totals booking={event} withDuration />
+                <Totals
+                    class="EventDetailsInfos__totals"
+                    booking={event}
+                    withDuration
+                />
             </div>
         );
     },

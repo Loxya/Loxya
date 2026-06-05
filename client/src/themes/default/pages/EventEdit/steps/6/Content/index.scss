@@ -74,7 +74,7 @@
 
     &__participants {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         margin-top: globals.$spacing-large;
         font-size: 1.1rem;
         gap: globals.$spacing-medium globals.$spacing-small;
@@ -84,7 +84,6 @@
 
             flex: 1;
             flex-direction: column;
-            min-width: 350px;
 
             &__title {
                 margin: 0 0 globals.$spacing-small;
@@ -178,6 +177,16 @@
             background: globals.$bg-color-emphasis-light;
             background-color: globals.$bg-color-emphasis-danger;
             font-size: 1.1rem;
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-big-desktop) {
+        &__participants {
+            flex-flow: row wrap;
         }
     }
 }

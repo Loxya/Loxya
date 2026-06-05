@@ -3,6 +3,8 @@
 .BillingEditor {
     $block: &;
 
+    container-type: inline-size;
+
     &__lists {
         display: flex;
         flex-direction: column;
@@ -93,8 +95,6 @@
     //
 
     &--compact {
-        min-width: 860px;
-
         #{$block}__totals {
             align-self: stretch;
             margin-right: 0;

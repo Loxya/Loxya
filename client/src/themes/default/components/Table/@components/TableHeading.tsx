@@ -52,6 +52,12 @@ const TableHeading = defineComponent({
         },
     },
     methods: {
+        // ------------------------------------------------------
+        // -
+        // -    Handlers
+        // -
+        // ------------------------------------------------------
+
         handleClick() {
             if (!this.sortable) {
                 return;
@@ -65,6 +71,23 @@ const TableHeading = defineComponent({
             }
             this.$emit('orderBy');
         },
+
+        // ------------------------------------------------------
+        // -
+        // -    API Publique
+        // -
+        // ------------------------------------------------------
+
+        /**
+         * Retourne la largeur rendue de l'en-tête.
+         *
+         * @returns La largeur (en pixels).
+         */
+        getWidth(): number {
+            const $el = this.$el as HTMLElement;
+            return $el.getBoundingClientRect().width;
+        },
+
     },
     render() {
         const {
@@ -79,15 +102,22 @@ const TableHeading = defineComponent({
 
         const className = [column.class, 'Table__heading', {
             'Table__heading--actions': column.key === 'actions',
+            'Table__heading--sticky': column.sticky,
+            'Table__heading--sticky-last': column.stickyLast,
             'Table__heading--sortable': sortable,
             'Table__heading--sorted': sorted,
             'Table__heading--sorted-asc': sorted && orderBy!.ascending,
             'Table__heading--sorted-desc': sorted && !orderBy!.ascending,
         }];
 
+        const style = column.sticky
+            ? { left: `${column.stickyOffset ?? 0}px` }
+            : undefined;
+
         return (
             <th
                 class={className}
+                style={style}
                 tabindex={sortable ? 0 : undefined}
                 onClick={handleClick}
                 onKeypress={handleKeyPress}

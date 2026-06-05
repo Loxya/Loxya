@@ -1,25 +1,26 @@
 @use '~@/themes/default/style/globals';
 
 .EventDetailsEstimate {
-    $block: &;
-
-    display: flex;
+    display: grid;
     align-items: center;
-    gap: globals.$spacing-medium;
-    container-type: inline-size;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+        'icon heading actions'
+        'icon status actions';
+    gap: globals.$spacing-thin globals.$spacing-medium;
 
     &__icon {
-        flex: 0 0 auto;
         font-size: 1.5rem;
+        grid-area: icon;
     }
 
     &__heading {
-        flex: 1;
         display: flex;
         flex-direction: column;
         font-size: 1rem;
         line-height: 1.3;
         gap: 1px;
+        grid-area: heading;
 
         &__name {
             display: block;
@@ -32,7 +33,7 @@
     }
 
     &__date {
-        flex: 0 0 80px;
+        display: none;
         font-size: 0.9rem;
         text-align: center;
 
@@ -40,21 +41,48 @@
             color: globals.$text-light-color;
             font-style: italic;
         }
-
-        @container (max-width: 550px) {
-            display: none;
-        }
     }
 
     &__status {
-        flex: 0 0 160px;
-        text-align: center;
+        text-align: left;
+        grid-area: status;
     }
 
     &__actions {
-        flex: 0 0 auto;
         display: flex;
         align-items: center;
         gap: globals.$spacing-small;
+        grid-area: actions;
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        display: flex;
+        gap: globals.$spacing-medium;
+
+        &__icon {
+            flex: 0 0 auto;
+        }
+
+        &__heading {
+            flex: 1;
+        }
+
+        &__date {
+            flex: 0 0 80px;
+            display: block;
+        }
+
+        &__status {
+            flex: 0 0 160px;
+            text-align: center;
+        }
+
+        &__actions {
+            flex: 0 0 auto;
+        }
     }
 }

@@ -14,7 +14,7 @@
         width: 100%;
         max-width: 1000px;
         margin: 0 auto;
-        padding-bottom: globals.$spacing-medium;
+        padding: 0 5px globals.$spacing-medium;
         border-bottom: 1px solid globals.$divider-color;
         gap: globals.$spacing-small;
 
@@ -31,11 +31,15 @@
 
         &__title {
             margin: 0;
-            font-size: 1.8rem;
+            color: globals.$text-base-color;
+            font-size: 1.5rem;
         }
 
         &__sub-title {
-            color: globals.$text-light-color;
+            display: block;
+            color: globals.$text-soft-color;
+            font-size: 0.95rem;
+            text-wrap: balance;
         }
     }
 
@@ -73,6 +77,24 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        &__header {
+            padding: 0 0 globals.$spacing-medium;
+
+            &__title {
+                font-size: 1.8rem;
+            }
+
+            &__sub-title {
+                font-size: 1rem;
+            }
         }
     }
 }

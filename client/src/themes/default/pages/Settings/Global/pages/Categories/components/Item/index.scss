@@ -5,7 +5,7 @@
 
     max-width: 470px;
     margin: 5px;
-    padding: globals.$spacing-large;
+    padding: globals.$spacing-medium;
     border-radius: globals.$border-radius-large;
     background: globals.$bg-color-emphasis;
     list-style: none;
@@ -64,7 +64,12 @@
         }
     }
 
+    //
+    // - Responsive
+    //
+
     @media (min-width: globals.$screen-desktop) {
         margin: globals.$spacing-medium;
+        padding: globals.$spacing-large;
     }
 }

@@ -1,17 +1,53 @@
 @use '~@/themes/default/style/globals';
 
 .GlobalSettingsSidebar {
-    @extend %reset-list;
+    $block: &;
 
     display: flex;
     flex-direction: column;
-    overflow: auto;
-    height: 100%;
-    padding: globals.$spacing-small;
-    border-radius: globals.$border-radius-large;
-    background-color: globals.$bg-color-emphasis;
-    font-size: 1rem;
     gap: globals.$spacing-thin;
+
+    &__current {
+        @extend %reset-button;
+
+        display: flex;
+        align-items: center;
+        height: 48px;
+        padding: 0 16px;
+        border: none;
+        border-radius: globals.$border-radius-large;
+        background-color: globals.$bg-color-emphasis;
+        gap: globals.$spacing-medium;
+
+        &__icon {
+            width: 17px;
+            text-align: center;
+        }
+
+        &__title {
+            flex: 1;
+            overflow: hidden;
+            text-align: left;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        &__chevron {
+            color: globals.$text-soft-color;
+        }
+    }
+
+    &__list {
+        @extend %reset-list;
+
+        display: none;
+        flex-direction: column;
+        padding: globals.$spacing-small;
+        border-radius: globals.$border-radius-large;
+        background-color: globals.$bg-color-emphasis;
+        font-size: 1rem;
+        gap: globals.$spacing-thin;
+    }
 
     &__item {
         $sub-block: &;
@@ -61,10 +97,36 @@
     }
 
     //
+    // - Menu déroulant ouvert.
+    //
+
+    &--open {
+        #{$block}__list {
+            display: flex;
+        }
+    }
+
+    //
     // - Responsive
     //
 
     @media (min-width: globals.$screen-tablet) {
-        font-size: 1.1rem;
+        &__list {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (min-width: globals.$screen-desktop) {
+        height: 100%;
+
+        &__current {
+            display: none;
+        }
+
+        &__list {
+            display: flex;
+            overflow: auto;
+            height: 100%;
+        }
     }
 }

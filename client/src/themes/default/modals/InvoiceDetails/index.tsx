@@ -179,7 +179,7 @@ const InvoiceDetailsModal = defineComponent({
             if (this.invoice === null || !this.isTeamMember) {
                 return false;
             }
-            return this.isDraft;
+            return this.isDraft || this.isObsolete;
         },
 
         canFinalize(): boolean {
@@ -399,7 +399,7 @@ const InvoiceDetailsModal = defineComponent({
             const { buyer } = invoice;
 
             // - Pas d'avoir sur un brouillon.
-            if (this.isDraft) {
+            if (this.isDraft || this.isObsolete) {
                 return false;
             }
 
@@ -516,7 +516,7 @@ const InvoiceDetailsModal = defineComponent({
             const { invoice } = this;
 
             // - Pas de paiement sur un brouillon.
-            if (this.isDraft) {
+            if (this.isDraft || this.isObsolete) {
                 return false;
             }
 
@@ -966,6 +966,7 @@ const InvoiceDetailsModal = defineComponent({
             isDraft,
             isFetched,
             isDeleting,
+            isObsolete,
             isDeletable,
             isFinalizing,
             isCreditNote,
@@ -1296,7 +1297,7 @@ const InvoiceDetailsModal = defineComponent({
                             </div>
                             {(!isDraft || !isCreditNote) && (
                                 <div class="InvoiceDetails__info-row">
-                                    {!isDraft && (
+                                    {(!isDraft && !isObsolete) && (
                                         <div class="InvoiceDetails__info">
                                             <span class="InvoiceDetails__info__label">
                                                 {__('issue-date')}

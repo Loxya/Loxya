@@ -2,29 +2,37 @@
 
 .GlobalSettings {
     display: flex;
+    flex-direction: column;
+    overflow: auto;
     height: 100%;
-    gap: globals.$spacing-large;
+    gap: globals.$spacing-medium globals.$spacing-large;
 
     &__sidebar {
         flex: 0 0 auto;
-        overflow: auto;
-        width: 250px;
-        height: 100%;
+        width: 100%;
     }
 
     &__body {
-        overflow: auto;
         width: 100%;
-        height: 100%;
     }
 
     //
     // - Responsive
     //
 
-    @media (min-width: globals.$screen-tablet) {
+    @media (min-width: globals.$screen-desktop) {
+        flex-direction: row;
+        overflow: hidden;
+
         &__sidebar {
+            overflow: auto;
             width: 300px;
+            height: 100%;
+        }
+
+        &__body {
+            overflow: auto;
+            height: 100%;
         }
     }
 }

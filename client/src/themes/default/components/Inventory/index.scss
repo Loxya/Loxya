@@ -61,9 +61,10 @@
     //
 
     &--editable {
-        #{$block}__section__columns {
-            // - Colonne d'action + Gap.
-            margin-right: calc(36px + #{globals.$spacing-medium});
+        &#{$block}--with-comments {
+            #{$block}__section__columns {
+                margin-right: calc(36px + #{globals.$spacing-medium});
+            }
         }
     }
 
@@ -72,6 +73,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-tablet) {
+        &--editable {
+            #{$block}__section__columns {
+                margin-right: calc(36px + #{globals.$spacing-medium});
+            }
         }
     }
 }

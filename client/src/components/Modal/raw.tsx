@@ -19,6 +19,14 @@ type Props = {
     height?: number | `${number}%` | 'auto',
 
     /**
+     * Permet de faire en sorte que la modale occupe la quasi entièreté
+     * de l'écran sur mobile (avec simplement une petite marge autour).
+     *
+     * @default false
+     */
+    fillOnMobile?: boolean,
+
+    /**
      * Autorise l'utilisateur à fermer la modale via un clic sur
      * l'overlay ou la touche "Échap".
      *
@@ -73,6 +81,10 @@ const Modal = defineComponent({
         height: {
             type: [Number, String] as PropType<Required<Props>['height']>,
             default: 'auto',
+        },
+        fillOnMobile: {
+            type: Boolean as PropType<Required<Props>['fillOnMobile']>,
+            default: false,
         },
         dismissible: {
             type: Boolean as PropType<Required<Props>['dismissible']>,
@@ -187,6 +199,7 @@ const Modal = defineComponent({
             topmost,
             isShown,
             isFullscreen,
+            fillOnMobile,
             handleOpen,
             handleOpened,
             handleClosed,
@@ -196,6 +209,7 @@ const Modal = defineComponent({
 
         const classNames = ['Modal', {
             'Modal--in-background': !topmost,
+            'Modal--fullscreen': isFullscreen,
         }];
 
         return (
@@ -237,6 +251,7 @@ const Modal = defineComponent({
                             aria-modal="true"
                             class={['Modal__body', {
                                 'Modal__body--fullscreen': isFullscreen,
+                                'Modal__body--fill-on-mobile': fillOnMobile,
                             }]}
                             style={{
                                 width: dimensionToCss(width),

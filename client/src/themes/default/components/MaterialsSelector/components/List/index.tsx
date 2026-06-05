@@ -5,6 +5,7 @@ import stringIncludes from '@/utils/stringIncludes';
 import { defineComponent } from 'vue';
 import Fragment from '@/components/Fragment';
 import formatAmount from '@/utils/formatAmount';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import { UNCATEGORIZED } from '@/stores/api/materials';
 import { ClientTable } from '@/themes/default/components/Table';
 import StateMessage, { State } from '@/themes/default/components/StateMessage';
@@ -67,8 +68,12 @@ type Props = {
     onRequestShowAllMaterials?(): void,
 };
 
+type InstanceProperties = {
+    cancelScreenSizeObserver: (() => void) | undefined,
+};
+
 type Data = {
-    openChildRows: Array<SourceMaterial['id']>,
+    isMobile: boolean,
 };
 
 /** Liste de matériel d'un événement ou d'une réservation. */
@@ -110,8 +115,11 @@ const MaterialsSelectorList = defineComponent({
         'requestResyncMaterialData',
         'requestShowAllMaterials',
     ],
+    setup: (): InstanceProperties => ({
+        cancelScreenSizeObserver: undefined,
+    }),
     data: (): Data => ({
-        openChildRows: [],
+        isMobile: getScreenSize() === ScreenSize.MOBILE,
     }),
     computed: {
         filteredMaterials(): SourceMaterial[] {
@@ -214,6 +222,7 @@ const MaterialsSelectorList = defineComponent({
         columns(): Columns<SourceMaterial> {
             const {
                 __,
+                isMobile,
                 getQuantity,
                 setQuantity,
                 withBilling,
@@ -285,14 +294,30 @@ const MaterialsSelectorList = defineComponent({
                             </span>
                         );
 
-                        return material.is_deleted ? label : (
+                        const nameContent = material.is_deleted ? label : (
                             <MaterialPopover material={material}>
                                 {label}
                             </MaterialPopover>
                         );
+
+                        // - En mobile, la disponibilité est affichée sous le nom
+                        //   (sa colonne dédiée est masquée) pour gagner de la place.
+                        if (!isMobile || !isMaterialEditable(material)) {
+                            return nameContent;
+                        }
+
+                        return (
+                            <Fragment>
+                                {nameContent}
+                                <Availability
+                                    material={material}
+                                    class="MaterialsSelectorList__item__availability"
+                                />
+                            </Fragment>
+                        );
                     },
                 },
-                {
+                !isMobile && {
                     key: 'availability',
                     class: [
                         'MaterialsSelectorList__col',
@@ -480,12 +505,25 @@ const MaterialsSelectorList = defineComponent({
             $table.setPage(1);
         },
     },
+    created() {
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
+    },
+    beforeDestroy() {
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
+    },
     methods: {
         // ------------------------------------------------------
         // -
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         handleResyncMaterialData(materialId: SourceMaterial['id']) {
             if (!this.withResync) {
@@ -583,7 +621,6 @@ const MaterialsSelectorList = defineComponent({
             __,
             filters,
             columns,
-            openChildRows,
             isEditOnly,
             isMaterialsEmpty,
             isSelectionEmpty,
@@ -655,7 +692,6 @@ const MaterialsSelectorList = defineComponent({
                         columns={columns}
                         defaultOrderBy="name"
                         data={filteredMaterials}
-                        openDetails={openChildRows}
                         paginated={!filters.onlySelected}
                         rowClass="MaterialsSelectorList__item"
                         headless

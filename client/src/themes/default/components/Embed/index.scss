@@ -7,7 +7,7 @@
 
     --Embed--background-color: #{globals.$bg-color-body};
     --Embed--color: #{globals.$text-base-color};
-    --Embed--font-size: #{globals.$base-font-size};
+    --Embed--font-size: 13px;
 
     //
     // - Règles
@@ -16,4 +16,12 @@
     width: 100%;
     height: 300px;
     border: none;
+
+    //
+    // - Responsive
+    //
+
+    @media (width <= #{globals.$screen-mobile}) {
+        --Embed--font-size: 12px;
+    }
 }

@@ -8,6 +8,7 @@ use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MissingAttributeException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Expression;
 use Loxya\Support\Address;
 use Loxya\Support\Arr;
@@ -105,9 +106,19 @@ abstract class BaseModel extends Model
         return (new static())->edit($data);
     }
 
-    public static function includes($id): bool
+    public static function includes(mixed $id, bool $withTrashed = false): bool
     {
-        return static::where('id', $id)->exists();
+        $isSoftDeletable = in_array(SoftDeletes::class, class_uses_recursive(static::class), true);
+
+        return static::query()
+            ->when(
+                $withTrashed && $isSoftDeletable,
+                static fn (Builder $query) => (
+                    $query->withTrashed()
+                ),
+            )
+            ->whereKey($id)
+            ->exists();
     }
 
     // ------------------------------------------------------

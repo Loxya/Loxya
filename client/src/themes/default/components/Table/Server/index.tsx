@@ -319,6 +319,7 @@ const ServerTable = defineComponent({
                         key: column.key,
                         title: column.title,
                         sortable: !!column.sortable,
+                        sticky: !!column.sticky,
                         class: column.class,
                         render,
                     });

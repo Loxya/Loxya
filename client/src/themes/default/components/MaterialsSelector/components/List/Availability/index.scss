@@ -1,7 +1,7 @@
 @use '~@/themes/default/style/globals';
 
 .MaterialsSelectorListAvailability {
-    min-width: 205px;
+    min-width: 0;
 
     &__stock {
         display: block;
@@ -19,5 +19,13 @@
 
     &--danger {
         color: globals.$text-danger-color;
+    }
+
+    //
+    // - Responsive
+    //
+
+    @container (min-width: 850px) {
+        min-width: 205px;
     }
 }

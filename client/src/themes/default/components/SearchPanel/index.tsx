@@ -530,8 +530,10 @@ const SearchPanel = defineComponent({
                             <Button
                                 size="large"
                                 ref="modalButton"
+                                icon="filter"
                                 type={modalFiltersCount > 0 ? 'secondary' : 'default'}
                                 onClick={handleToggleModal}
+                                collapsible
                             >
                                 {__('filters')}
                             </Button>

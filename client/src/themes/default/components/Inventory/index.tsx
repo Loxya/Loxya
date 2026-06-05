@@ -349,6 +349,7 @@ const Inventory = defineComponent({
             isMaterialsEmpty,
             isFilteredEmpty,
             withComments,
+            isCommentSpecificallyLocked,
             withBrokenCount,
             displayGroup,
             getMaterialInventory,
@@ -390,6 +391,7 @@ const Inventory = defineComponent({
 
         const classNames = ['Inventory', {
             'Inventory--editable': locked !== true,
+            'Inventory--with-comments': withComments && !isCommentSpecificallyLocked,
             'Inventory--empty': isEmpty,
         }];
 

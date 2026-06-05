@@ -31,6 +31,7 @@
         &__title {
             display: flex;
             align-items: center;
+            min-width: 0;
             gap: globals.$spacing-medium;
         }
 
@@ -44,6 +45,7 @@
 
     &__title {
         overflow: hidden;
+        min-width: 0;
         margin: 0;
         color: #fff;
         font-size: 1.3rem;

@@ -6,6 +6,7 @@
     overflow: auto;
     height: 100%;
     min-width: 0;
+    container-type: inline-size;
 
     &__header {
         flex: 0 0 auto;

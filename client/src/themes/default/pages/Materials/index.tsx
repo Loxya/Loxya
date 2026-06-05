@@ -23,6 +23,7 @@ import Icon from '@/themes/default/components/Icon';
 import TagsList from '@/themes/default/components/TagsList';
 import { Group } from '@/stores/api/groups';
 import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import Quantities from './components/Quantities';
 import FiltersPanel, { FiltersSchema } from './components/Filters';
 import { getFiltersFromRoute } from './_utils';
@@ -48,6 +49,7 @@ import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 
 type InstanceProperties = {
     nowTimer: ReturnType<typeof setInterval> | undefined,
+    cancelScreenSizeObserver: (() => void) | undefined,
     refreshTableDebounced: (
         | DebouncedMethod<typeof Materials, 'refreshTable'>
         | undefined
@@ -57,6 +59,7 @@ type InstanceProperties = {
 type Data = {
     filters: Filters,
     appliedFilters: Filters,
+    isMobile: boolean,
     isLoading: boolean,
     isFetched: boolean,
     isEmpty: boolean,
@@ -74,8 +77,9 @@ const FILTERS_PERSISTENCE_KEY = 'Materials--filters';
 const Materials = defineComponent({
     name: 'Materials',
     setup: (): InstanceProperties => ({
-        refreshTableDebounced: undefined,
         nowTimer: undefined,
+        refreshTableDebounced: undefined,
+        cancelScreenSizeObserver: undefined,
     }),
     data(): Data {
         const urlFilters = getFiltersFromRoute(this.$route);
@@ -116,6 +120,7 @@ const Materials = defineComponent({
         return {
             filters,
             appliedFilters: { ...filters },
+            isMobile: getScreenSize() === ScreenSize.MOBILE,
             isLoading: false,
             isFetched: false,
             isEmpty: false,
@@ -439,6 +444,9 @@ const Materials = defineComponent({
         // - Actualise le timestamp courant toutes les minutes.
         this.nowTimer = setInterval(() => { this.now = markRaw(DateTime.now()); }, 60_000);
 
+        // - Suit la taille du viewport pour adapter l'affichage.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
+
         // - On redirige vers l'url canonique si on avait des filtres dans l'URL.
         if (Object.keys(this.$route?.query ?? {}).length > 0) {
             this.$router.replace({ query: {} });
@@ -450,6 +458,11 @@ const Materials = defineComponent({
         if (this.nowTimer) {
             clearInterval(this.nowTimer);
         }
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -457,6 +470,10 @@ const Materials = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         handleFiltersChange(newFilters: Filters) {
             // - Recherche textuelle.
@@ -676,6 +693,7 @@ const Materials = defineComponent({
             isAdmin,
             isSupervisor,
             hasContent,
+            isMobile,
             isLoading,
             filters,
             columns,
@@ -748,7 +766,7 @@ const Materials = defineComponent({
                         )}
                     </Fragment>
                 )}
-                {hasContent && (
+                {(hasContent && !isMobile) && (
                     <Button icon="table" onClick={handleConfigureColumns}>
                         {__('configure-columns')}
                     </Button>

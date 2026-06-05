@@ -3,7 +3,7 @@
 .EventDetailsHeader {
     display: flex;
     align-items: center;
-    padding: 10px 15px;
+    padding: globals.$spacing-small globals.$spacing-medium;
     background-color: globals.$bg-color-emphasis;
     gap: globals.$spacing-medium;
 
@@ -17,6 +17,7 @@
 
     &__title {
         flex: 1;
+        min-width: 0;
         color: globals.$text-soft-color;
 
         &__primary {
@@ -24,15 +25,16 @@
 
             margin: 0;
             color: globals.$text-base-color;
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 600;
+            line-height: 1.2;
             word-break: break-word;
         }
 
         &__secondary {
             margin: 0;
             color: globals.$text-soft-color;
-            font-size: 1.2rem;
+            font-size: 1.05rem;
         }
 
         &__in-progress {
@@ -49,5 +51,26 @@
 
     &__close-button {
         flex: 0 0 auto;
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-mobile) {
+        padding: 10px 15px;
+
+        &__title {
+            min-width: auto;
+
+            &__primary {
+                font-size: 1.4rem;
+                line-height: normal;
+            }
+
+            &__secondary {
+                font-size: 1.2rem;
+            }
+        }
     }
 }

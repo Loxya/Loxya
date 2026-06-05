@@ -1199,7 +1199,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
         V::notEmpty()->intVal()->check($value);
 
         return match ($this->booking_type) {
-            Event::TYPE => Event::includes($value),
+            Event::TYPE => Event::includes($value, withTrashed: true),
             default => false, // - Type inconnu.
         };
     }

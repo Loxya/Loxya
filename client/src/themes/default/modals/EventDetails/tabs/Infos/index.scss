@@ -4,9 +4,15 @@
     display: flex;
     flex-direction: column;
 
+    &__main {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
+
     &__summary {
         display: flex;
-        flex-wrap: nowrap;
+        flex-flow: column nowrap;
         justify-content: space-between;
         margin-bottom: globals.$spacing-large;
         font-size: 1.1rem;
@@ -19,7 +25,7 @@
 
         &__beneficiary {
             display: flex;
-            max-width: 70%;
+            max-width: none;
             gap: globals.$spacing-small;
 
             @include globals.icon('address-book') {
@@ -95,7 +101,7 @@
             &__item {
                 display: inline-flex;
                 align-items: baseline;
-                max-width: 350px;
+                max-width: none;
                 margin: 0;
 
                 &::before {
@@ -221,6 +227,24 @@
 
             @include globals.icon('check') {
                 width: 30px;
+            }
+        }
+    }
+
+    //
+    // - Responsive
+    //
+
+    @media (min-width: globals.$screen-desktop) {
+        &__summary {
+            flex-flow: row nowrap;
+
+            &__beneficiary {
+                max-width: 70%;
+            }
+
+            &__details__item {
+                max-width: 350px;
             }
         }
     }

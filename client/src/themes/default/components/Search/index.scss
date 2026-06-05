@@ -8,6 +8,7 @@
     position: relative;
     display: flex;
     width: 100%;
+    min-width: 0;
 
     &__body {
         display: flex;

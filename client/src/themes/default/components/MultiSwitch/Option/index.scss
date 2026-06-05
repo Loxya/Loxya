@@ -5,6 +5,8 @@
 
     display: flex;
     align-items: center;
+    justify-content: center;
+    min-width: 40px;
     padding: 8px 10px;
     border-radius: 0;
     background-color: rgb(97 97 97 / 50%);
@@ -27,6 +29,7 @@
         height: 1.1em;
         font-size: 1.1em;
         line-height: 1.15;
+        text-align: center;
     }
 
     &:first-of-type {
@@ -48,5 +51,23 @@
         color: globals.$text-soft-color;
         cursor: auto;
         box-shadow: none;
+    }
+
+    //
+    // - Responsive.
+    //
+
+    &--collapsible {
+        &#{$block}--with-icon {
+            #{$block}__label {
+                display: none;
+            }
+
+            @media (min-width: globals.$screen-desktop) {
+                #{$block}__label {
+                    display: inline;
+                }
+            }
+        }
     }
 }

@@ -13,6 +13,9 @@ type Props = {
     /** Doit-on afficher les informations liées à la facturation ? */
     withBilling: boolean,
 
+    /** Doit-on afficher la colonne des remises ? */
+    withDiscount: boolean,
+
     /**
      * La devise à utiliser pour les prix.
      *
@@ -34,6 +37,10 @@ const MaterialsSortedExtras = defineComponent({
             type: Boolean as PropType<Required<Props>['withBilling']>,
             default: false,
         },
+        withDiscount: {
+            type: Boolean as PropType<Required<Props>['withDiscount']>,
+            default: false,
+        },
         currency: {
             type: Object as PropType<Props['currency']>,
             default: undefined,
@@ -44,6 +51,7 @@ const MaterialsSortedExtras = defineComponent({
             $t: __,
             data,
             withBilling,
+            withDiscount,
             currency,
         } = this;
 
@@ -58,6 +66,7 @@ const MaterialsSortedExtras = defineComponent({
                             key={extra.uuid}
                             extra={extra}
                             withBilling={withBilling}
+                            withDiscount={withDiscount}
                             currency={currency}
                         />
                     ))}

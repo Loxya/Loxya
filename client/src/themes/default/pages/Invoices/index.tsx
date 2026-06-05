@@ -16,6 +16,7 @@ import Page from '@/themes/default/components/Page';
 import Button from '@/themes/default/components/Button';
 import Dropdown from '@/themes/default/components/Dropdown';
 import { ServerTable } from '@/themes/default/components/Table';
+import { ScreenSize, getScreenSize, observeScreenSize } from '@/utils/screenSize';
 import StatusBadge from '@/themes/default/components/BadgeStatus/Invoice';
 import CriticalError from '@/themes/default/components/CriticalError';
 import { EmptyMessageVariant } from '@/themes/default/components/EmptyMessage';
@@ -44,6 +45,7 @@ import type { EmptyMessage } from '@/themes/default/components/Table/@types';
 type Data = {
     filters: Filters,
     appliedFilters: Filters,
+    isMobile: boolean,
     isLoading: boolean,
     isFetched: boolean,
     isEmpty: boolean,
@@ -51,6 +53,7 @@ type Data = {
 };
 
 type InstanceProperties = {
+    cancelScreenSizeObserver: (() => void) | undefined,
     refreshTableDebounced: (
         | DebouncedMethod<typeof Invoices, 'refreshTable'>
         | undefined
@@ -65,6 +68,7 @@ const Invoices = defineComponent({
     name: 'Invoices',
     setup: (): InstanceProperties => ({
         refreshTableDebounced: undefined,
+        cancelScreenSizeObserver: undefined,
     }),
     data(): Data {
         const filters: Filters = {
@@ -89,6 +93,7 @@ const Invoices = defineComponent({
         return {
             filters,
             appliedFilters: { ...filters },
+            isMobile: getScreenSize() === ScreenSize.MOBILE,
             isLoading: false,
             isFetched: false,
             isEmpty: false,
@@ -144,6 +149,7 @@ const Invoices = defineComponent({
                     ],
                     hideable: false,
                     sortable: true,
+                    sticky: true,
                     defaultSortDesc: true,
                     render: (h: CreateElement, invoice: Invoice) => {
                         if (invoice.number === undefined) {
@@ -316,9 +322,17 @@ const Invoices = defineComponent({
             DEBOUNCE_WAIT_DURATION.asMilliseconds(),
             { leading: false },
         );
+
+        // - Suit la taille du viewport pour adapter l'affichage.
+        this.cancelScreenSizeObserver = observeScreenSize(this.handleScreenSizeChange);
     },
     beforeDestroy() {
         this.refreshTableDebounced?.cancel();
+
+        if (this.cancelScreenSizeObserver) {
+            this.cancelScreenSizeObserver();
+            this.cancelScreenSizeObserver = undefined;
+        }
     },
     methods: {
         // ------------------------------------------------------
@@ -326,6 +340,10 @@ const Invoices = defineComponent({
         // -    Handlers
         // -
         // ------------------------------------------------------
+
+        handleScreenSizeChange(size: ScreenSize) {
+            this.isMobile = size === ScreenSize.MOBILE;
+        },
 
         async handleShowDetails(invoice: Invoice) {
             await this.openDetails('invoice', invoice.id);
@@ -477,6 +495,7 @@ const Invoices = defineComponent({
             columns,
             filters,
             $options,
+            isMobile,
             isLoading,
             hasContent,
             hasCriticalError,
@@ -515,11 +534,11 @@ const Invoices = defineComponent({
         // - Actions de la page.
         const actions = [
             userCanCreate && (
-                <Button type="primary" icon="plus" onClick={handleCreate}>
+                <Button type="primary" icon="plus" onClick={handleCreate} collapsible>
                     {__('action')}
                 </Button>
             ),
-            hasContent && (
+            (hasContent && !isMobile) && (
                 <Dropdown>
                     <Button icon="table" onClick={handleConfigureColumns}>
                         {__('global.configure-columns')}

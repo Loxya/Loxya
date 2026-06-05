@@ -4,6 +4,8 @@
 .SearchPanel {
     $block: &;
 
+    min-width: 0;
+
     &__container {
         display: flex;
         flex-wrap: nowrap;
@@ -28,7 +30,6 @@
 
     &__modal-button {
         position: relative;
-        display: none;
 
         &__counter {
             position: absolute;
@@ -71,9 +72,11 @@
     // - Responsive
     //
 
-    @media (min-width: globals.$screen-desktop) {
+    @media (min-width: globals.$screen-tablet) {
         &__modal-button {
-            display: inline-block;
+            .Button__icon {
+                display: none;
+            }
         }
     }
 }
