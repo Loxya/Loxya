@@ -695,7 +695,7 @@ final class EstimateTest extends TestCase
         // - Test simple.
         $result = Estimate::findOrFail(1)->toPdf();
         $this->assertInstanceOf(Pdf::class, $result);
-        $this->assertSame('estimate-testing-corp-d-2021-00001-jean-fountain.pdf', $result->getName());
+        $this->assertSame('Estimate-Testing-Corp-D-2021-00001-Testing-Inc.pdf', $result->getName());
         $this->assertMatchesPdfSnapshot($result);
 
         // - Un événement à l'heure près.

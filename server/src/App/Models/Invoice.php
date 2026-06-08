@@ -2563,6 +2563,14 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
             return null;
         }
 
+        // - Si le client est une entité publique, on ne peut pas générer de Factur-X
+        //   tant que les cadres de facturation ne sont pas normalisés sur Chorus Pro.
+        //   TODO: Supprimer cette exception quand Chorus Pro prendra en charge les
+        //         cadres de facturation prévus dans la norme.
+        if ($this->buyer_is_public_entity) {
+            return null;
+        }
+
         $sellerCountry = $this->seller_country;
         $sellerMainIdentifier = $sellerCountry->inferMainCompanyIdentifier($this->seller_registration_id);
         $sellerMainIdentifierRaw = preg_replace('/[.\s-]/', '', $sellerMainIdentifier);
@@ -3582,7 +3590,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
             $this->seller_legal_name,
             $this->number,
             (
-                $this->buyer_type === LegalEntityType::COMPANY
+                $this->buyer_type === LegalEntityType::COMPANY->value
                     ? $this->buyer_legal_name
                     : $this->buyer_full_name
             ),
@@ -5320,7 +5328,7 @@ final class Invoice extends BaseModel implements Serializable, Pdfable, BuyerInt
             $this->seller_legal_name,
             $this->number,
             (
-                $this->buyer_type === LegalEntityType::COMPANY
+                $this->buyer_type === LegalEntityType::COMPANY->value
                     ? $this->buyer_legal_name
                     : $this->buyer_full_name
             ),

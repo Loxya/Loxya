@@ -3,7 +3,7 @@
     <head>
         <base href="http://loxya.test/" />
         <meta charset="UTF-8" />
-        <title>Facture n° 2026-00001</title>
+        <title>Facture</title>
         <meta name="generator" content="Loxya" />
 
         <style type="text/css">
@@ -997,6 +997,7 @@
         <div class="__document">
             <div class="__document__preview">
                 <div class="__document__preview__content">
+                    <div class="watermark" aria-hidden="true">BROUILLON</div>
                     <footer class="main-footer">
                         Testing corp. | SARL au capital de 1 000 € | Code APE : 7729Z | RCS TestGrandeVille 543210080<br />
                         5 rue des tests 05555 Testville | N° TVA : FR85543210080
@@ -1030,24 +1031,16 @@
                                         <dt class="main-infos__item__label">Type de vente</dt>
                                         <dd class="main-infos__item__value">Prestation de services</dd>
                                     </div>
-                                    <div class="main-infos__item">
-                                        <dt class="main-infos__item__label">Devis associé</dt>
-                                        <dd class="main-infos__item__value">Devis n° D-2026-00001</dd>
-                                    </div>
                                 </dl>
                             </div>
                         </div>
                         <div class="header__right">
                             <div class="meta">
                                 <h1 class="meta__title">
-                                    <span class="meta__title__type">Facture d&#039;acompte</span>
-                                    <span class="meta__title__number">2026-00001</span>
+                                    <span class="meta__title__type">Facture</span>
+                                    <span class="meta__title__number meta__title__number--placeholder">[Numéro à attribuer]</span>
                                 </h1>
                                 <dl class="meta__data">
-                                    <div class="meta__data__item">
-                                        <dt class="meta__data__item__label">Date d&#039;émission</dt>
-                                        <dd class="meta__data__item__value">22 octobre 2026</dd>
-                                    </div>
                                     <div class="meta__data__item">
                                         <dt class="meta__data__item__label">Conditions de paiement</dt>
                                         <dd class="meta__data__item__value">Paiement sous 15 jours</dd>
@@ -1059,11 +1052,28 @@
                                 <div class="buyer">
                                     <div class="buyer__heading">Bénéficiaire</div>
                                     <div class="buyer__infos">
-                                        <h2 class="buyer__name">Roger Rabbit</h2>
+                                        <h2 class="buyer__name">Testing, Inc</h2>
+                                        <address class="buyer__address">
+                                            10 avenue de la gare<br />
+                                            Bâtiment D<br />
+                                            74000 Annecy
+                                        </address>
+                                        <ul class="buyer__identifiers">
+                                            <li class="buyer__identifiers__item">N° SIRET : 12345678900001</li>
+                                            <li class="buyer__identifiers__item">N° TVA : FR32123456789</li>
+                                        </ul>
                                         <dl class="buyer__extras">
                                             <div class="buyer__extras__item">
+                                                <dt class="buyer__extras__item__label">Contact</dt>
+                                                <dd class="buyer__extras__item__value">Jean Fountain</dd>
+                                            </div>
+                                            <div class="buyer__extras__item">
+                                                <dt class="buyer__extras__item__label">Code service</dt>
+                                                <dd class="buyer__extras__item__value">SERVICE-B2G</dd>
+                                            </div>
+                                            <div class="buyer__extras__item">
                                                 <dt class="buyer__extras__item__label">Référence</dt>
-                                                <dd class="buyer__extras__item__value">0002</dd>
+                                                <dd class="buyer__extras__item__value">0001</dd>
                                             </div>
                                         </dl>
                                     </div>
@@ -1073,9 +1083,14 @@
                     </header>
 
                     <div class="main-title">
-                        <h1 class="main-title__main">Facture d&#039;acompte sur le devis n° D-2026-00001</h1>
+                        <h1 class="main-title__main">Premier événement</h1>
+                        <p class="main-title__subtitle">
+                            <span class="main-title__subtitle__part">
+                                <span class="main-title__subtitle__part__key">Période de l&#039;événement</span>
+                                <span class="main-title__subtitle__part__value">Du 17 décembre 2018 - 10:00 au 18 décembre 2018 - 18:00</span>
+                            </span>
+                        </p>
                     </div>
-
                     <div class="line-table">
                         <table class="line-table__table">
                             <thead class="line-table__table__header">
@@ -1088,25 +1103,89 @@
                                 </tr>
                             </thead>
                             <tbody class="line-table__table__body">
+                                <tr class="line-table__table__body__header">
+                                    <td class="line-table__table__body__header__cell" colspan="5">Lumière</td>
+                                </tr>
                                 <tr class="line-table__table__body__row line-table__table__item">
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">Acompte sur le devis n° D-2026-00001</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">Showtec SDS-6</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Référence</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">SDS-6-01</span>
+                                                </span>
+                                            </span>
+                                        </div>
+
+                                        <p class="line-table__table__item__description">Console DMX (jeu d&#039;orgue) Showtec 6 canaux</p>
+                                    </td>
                                     <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">19,59 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">27,91 €</td>
                                     <td class="line-table__table__body__cell line-table__table__body__cell--tax">
                                         <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20 %</span></span>
                                     </td>
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">19,59 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">27,91 €</td>
+                                </tr>
+                                <tr class="line-table__table__body__header">
+                                    <td class="line-table__table__body__header__cell" colspan="5">Son</td>
                                 </tr>
                                 <tr class="line-table__table__body__row line-table__table__item">
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">Acompte sur le devis n° D-2026-00001</td>
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">-19,56 €</td>
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
-                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">10 %</span></span>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">Console Yamaha CL3</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Référence</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">CL3</span>
+                                                </span>
+                                            </span>
+                                        </div>
+
+                                        <p class="line-table__table__item__description">Console numérique 64 entrées / 8 sorties + Master + Sub</p>
                                     </td>
-                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">-19,56 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">350,00 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20 %</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">350,00 €</td>
+                                </tr>
+                                <tr class="line-table__table__body__row line-table__table__item">
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--designation">
+                                        <div class="line-table__table__item__name">
+                                            <span class="line-table__table__item__name__main">DBX PA2</span>
+                                            <span class="line-table__table__item__name__sub">
+                                                <span class="line-table__table__item__name__sub__part">
+                                                    <span class="line-table__table__item__name__sub__part__key">Référence</span>
+                                                    <span class="line-table__table__item__name__sub__part__value">DBXPA2</span>
+                                                </span>
+                                            </span>
+                                        </div>
+
+                                        <p class="line-table__table__item__description">Système de diffusion numérique</p>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--qty">1</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--unit-price">44,63 €</td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--tax">
+                                        <span class="line-table__table__item__tax line-table__table__item__tax--standard"><span class="line-table__table__item__tax__part">20 %</span></span>
+                                    </td>
+                                    <td class="line-table__table__body__cell line-table__table__body__cell--total">44,63 €</td>
                                 </tr>
                             </tbody>
+                            <tfoot class="line-table__table__footer">
+                                <tr class="line-table__table__footer__row">
+                                    <td class="line-table__table__footer__cell" colspan="5">
+                                        <dl class="line-table__table__footer__data">
+                                            <div class="line-table__table__footer__data__item">
+                                                <dt class="line-table__table__footer__data__item__key">Montant total de remplacement</dt>
+                                                <dd class="line-table__table__footer__data__item__value line-table__table__footer__data__item__value--numeric">19 408,90 €</dd>
+                                            </div>
+                                        </dl>
+                                    </td>
+                                </tr>
+                                <tfoot></tfoot>
+                            </tfoot>
                         </table>
                     </div>
 
@@ -1125,13 +1204,8 @@
                                     <tbody class="vat-breakdown__table__body">
                                         <tr class="vat-breakdown__table__body__row vat-breakdown__table__body__row--standard">
                                             <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--rate">20 %</td>
-                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">19,59 €</td>
-                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">3,92 €</td>
-                                        </tr>
-                                        <tr class="vat-breakdown__table__body__row vat-breakdown__table__body__row--standard">
-                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--rate">10 %</td>
-                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">-19,56 €</td>
-                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">-1,96 €</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--base">380,29 €</td>
+                                            <td class="vat-breakdown__table__body__cell vat-breakdown__table__body__cell--total">76,06 €</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1140,13 +1214,25 @@
                         <div class="totals">
                             <dl class="totals__lines">
                                 <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Durée</dt>
+                                    <dd class="totals__lines__item__value">2 jours</dd>
+                                </div>
+                                <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Sous-total</dt>
+                                    <dd class="totals__lines__item__value">422,54 €</dd>
+                                </div>
+                                <div class="totals__lines__item">
+                                    <dt class="totals__lines__item__label">Remise (10 %)</dt>
+                                    <dd class="totals__lines__item__value">-42,25 €</dd>
+                                </div>
+                                <div class="totals__lines__item">
                                     <dt class="totals__lines__item__label">Total H.T.</dt>
-                                    <dd class="totals__lines__item__value">0,03 €</dd>
+                                    <dd class="totals__lines__item__value">380,29 €</dd>
                                 </div>
 
                                 <div class="totals__lines__item">
                                     <dt class="totals__lines__item__label">Total T.V.A.</dt>
-                                    <dd class="totals__lines__item__value">1,96 €</dd>
+                                    <dd class="totals__lines__item__value">76,06 €</dd>
                                 </div>
                             </dl>
                             <div class="totals__grand">
@@ -1154,11 +1240,11 @@
                                     <span class="totals__grand__label__sup"> Total T.T.C.</span>
                                     <span class="totals__grand__label__main">Net à payer</span>
                                 </span>
-                                <span class="totals__grand__value">1,99 €</span>
+                                <span class="totals__grand__value">456,35 €</span>
                             </div>
                         </div>
                     </div>
-                    <div class="extras">
+                    <div class="extras extras--with-all-boxes">
                         <div class="extras__box">
                             <div class="extras__box__title">Paiement</div>
                             <div class="extras__box__content">
@@ -1182,6 +1268,21 @@
                                         </dl>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="extras__box">
+                            <div class="extras__box__title">Caractéristiques</div>
+                            <div class="extras__box__content">
+                                <dl class="extras__properties">
+                                    <div class="extras__properties__item">
+                                        <dt class="extras__properties__item__label">Poids</dt>
+                                        <dd class="extras__properties__item__value">41,85&nbsp;kg</dd>
+                                    </div>
+                                    <div class="extras__properties__item">
+                                        <dt class="extras__properties__item__label">Puissance</dt>
+                                        <dd class="extras__properties__item__value">945&nbsp;W</dd>
+                                    </div>
+                                </dl>
                             </div>
                         </div>
                         <div class="extras__legal-mentions">
