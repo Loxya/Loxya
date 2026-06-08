@@ -27,7 +27,7 @@ class HybridPdf implements PdfInterface
 
     final public function __construct(string $name, string $html, string $xml) {
         $name = Str::slugify(preg_replace('/\.pdf$/i', '', $name));
-        $this->name = sprintf('%s.pdf', $name);
+        $this->name = sprintf('%s.pdf', Str::title($name));
 
         $this->html = $html;
         $this->xml = $xml;

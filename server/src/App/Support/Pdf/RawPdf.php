@@ -23,7 +23,7 @@ final class RawPdf implements PdfInterface
         Assert::file($path, "The related file does not exist or is not a file.");
 
         $name = Str::slugify(preg_replace('/\.pdf$/i', '', $name));
-        $this->name = sprintf('%s.pdf', $name);
+        $this->name = sprintf('%s.pdf', Str::title($name));
 
         $this->path = $path;
     }

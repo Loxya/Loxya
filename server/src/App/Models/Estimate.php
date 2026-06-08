@@ -2105,7 +2105,7 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
                     : $this->number
             ),
             (
-                $this->buyer_type === LegalEntityType::COMPANY
+                $this->buyer_type === LegalEntityType::COMPANY->value
                     ? $this->buyer_legal_name
                     : $this->buyer_full_name
             ),

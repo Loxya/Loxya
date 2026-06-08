@@ -803,7 +803,7 @@ final class InvoiceTest extends TestCase
             $company->saveOrFail();
         });
         $invoice = Invoice::createFromBooking(Event::findOrFail(1), User::findOrFail(2))->finalize();
-        $this->assertValidFacturx($invoice->toPdf());
+        $this->assertMatchesPdfSnapshot($invoice->toPdf());
 
         // - Facture d'acompte à montant fixe sur un devis comportant une ligne
         //   négative avec un taux de TVA différent (1000€ HT @ 20% + -998.56€ HT @ 10%).

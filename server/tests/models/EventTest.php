@@ -501,12 +501,12 @@ final class EventTest extends TestCase
 
         $result = Event::findOrFail(1)->toPdf(new I18n('fr_CH'));
         $this->assertInstanceOf(Pdf::class, $result);
-        $this->assertSame('fiche-de-sortie-testing-corp-premier-evenement.pdf', $result->getName());
+        $this->assertSame('Fiche-De-Sortie-Testing-Corp-Premier-Evenement.pdf', $result->getName());
         $this->assertMatchesPdfSnapshot($result);
 
         $result = Event::findOrFail(2)->toPdf(new I18n('en'));
         $this->assertInstanceOf(Pdf::class, $result);
-        $this->assertSame('release-sheet-testing-corp-second-evenement.pdf', $result->getName());
+        $this->assertSame('Release-Sheet-Testing-Corp-Second-Evenement.pdf', $result->getName());
         $this->assertMatchesPdfSnapshot($result);
     }
 

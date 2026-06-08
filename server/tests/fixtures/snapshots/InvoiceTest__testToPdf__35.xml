@@ -9,8 +9,8 @@
     </ram:GuidelineSpecifiedDocumentContextParameter>
   </rsm:ExchangedDocumentContext>
   <rsm:ExchangedDocument>
-    <ram:ID>2026-00001</ram:ID>
-    <ram:TypeCode>386</ram:TypeCode>
+    <ram:ID>2026-00002</ram:ID>
+    <ram:TypeCode>381</ram:TypeCode>
     <ram:IssueDateTime>
       <udt:DateTimeString format="102">20261022</udt:DateTimeString>
     </ram:IssueDateTime>
@@ -45,14 +45,14 @@
         <ram:LineID>1</ram:LineID>
       </ram:AssociatedDocumentLineDocument>
       <ram:SpecifiedTradeProduct>
-        <ram:Name>Acompte sur le devis n° D-2026-00001</ram:Name>
+        <ram:Name>Prestation principale</ram:Name>
       </ram:SpecifiedTradeProduct>
       <ram:SpecifiedLineTradeAgreement>
         <ram:GrossPriceProductTradePrice>
-          <ram:ChargeAmount>19.59</ram:ChargeAmount>
+          <ram:ChargeAmount>1000.00</ram:ChargeAmount>
         </ram:GrossPriceProductTradePrice>
         <ram:NetPriceProductTradePrice>
-          <ram:ChargeAmount>19.59</ram:ChargeAmount>
+          <ram:ChargeAmount>1000.00</ram:ChargeAmount>
         </ram:NetPriceProductTradePrice>
       </ram:SpecifiedLineTradeAgreement>
       <ram:SpecifiedLineTradeDelivery>
@@ -65,7 +65,7 @@
           <ram:RateApplicablePercent>20.00</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementLineMonetarySummation>
-          <ram:LineTotalAmount>19.59</ram:LineTotalAmount>
+          <ram:LineTotalAmount>1000.00</ram:LineTotalAmount>
         </ram:SpecifiedTradeSettlementLineMonetarySummation>
       </ram:SpecifiedLineTradeSettlement>
     </ram:IncludedSupplyChainTradeLineItem>
@@ -74,14 +74,14 @@
         <ram:LineID>2</ram:LineID>
       </ram:AssociatedDocumentLineDocument>
       <ram:SpecifiedTradeProduct>
-        <ram:Name>Acompte sur le devis n° D-2026-00001</ram:Name>
+        <ram:Name>Remise commerciale</ram:Name>
       </ram:SpecifiedTradeProduct>
       <ram:SpecifiedLineTradeAgreement>
         <ram:GrossPriceProductTradePrice>
-          <ram:ChargeAmount>19.56</ram:ChargeAmount>
+          <ram:ChargeAmount>100.00</ram:ChargeAmount>
         </ram:GrossPriceProductTradePrice>
         <ram:NetPriceProductTradePrice>
-          <ram:ChargeAmount>19.56</ram:ChargeAmount>
+          <ram:ChargeAmount>100.00</ram:ChargeAmount>
         </ram:NetPriceProductTradePrice>
       </ram:SpecifiedLineTradeAgreement>
       <ram:SpecifiedLineTradeDelivery>
@@ -91,10 +91,10 @@
         <ram:ApplicableTradeTax>
           <ram:TypeCode>VAT</ram:TypeCode>
           <ram:CategoryCode>S</ram:CategoryCode>
-          <ram:RateApplicablePercent>10.00</ram:RateApplicablePercent>
+          <ram:RateApplicablePercent>20.00</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementLineMonetarySummation>
-          <ram:LineTotalAmount>-19.56</ram:LineTotalAmount>
+          <ram:LineTotalAmount>-100.00</ram:LineTotalAmount>
         </ram:SpecifiedTradeSettlementLineMonetarySummation>
       </ram:SpecifiedLineTradeSettlement>
     </ram:IncludedSupplyChainTradeLineItem>
@@ -150,45 +150,31 @@
     </ram:ApplicableHeaderTradeDelivery>
     <ram:ApplicableHeaderTradeSettlement>
       <ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
-      <ram:SpecifiedTradeSettlementPaymentMeans>
-        <ram:TypeCode>20</ram:TypeCode>
-      </ram:SpecifiedTradeSettlementPaymentMeans>
-      <ram:SpecifiedTradeSettlementPaymentMeans>
-        <ram:TypeCode>58</ram:TypeCode>
-        <ram:PayeePartyCreditorFinancialAccount>
-          <ram:IBANID>FR7630006000011234567890189</ram:IBANID>
-          <ram:AccountName>Testing corp.</ram:AccountName>
-        </ram:PayeePartyCreditorFinancialAccount>
-        <ram:PayeeSpecifiedCreditorFinancialInstitution>
-          <ram:BICID>BNPAFRPPXXX</ram:BICID>
-        </ram:PayeeSpecifiedCreditorFinancialInstitution>
-      </ram:SpecifiedTradeSettlementPaymentMeans>
       <ram:ApplicableTradeTax>
-        <ram:CalculatedAmount>3.92</ram:CalculatedAmount>
+        <ram:CalculatedAmount>180.00</ram:CalculatedAmount>
         <ram:TypeCode>VAT</ram:TypeCode>
-        <ram:BasisAmount>19.59</ram:BasisAmount>
+        <ram:BasisAmount>900.00</ram:BasisAmount>
         <ram:CategoryCode>S</ram:CategoryCode>
         <ram:DueDateTypeCode>5</ram:DueDateTypeCode>
         <ram:RateApplicablePercent>20.00</ram:RateApplicablePercent>
-      </ram:ApplicableTradeTax>
-      <ram:ApplicableTradeTax>
-        <ram:CalculatedAmount>-1.96</ram:CalculatedAmount>
-        <ram:TypeCode>VAT</ram:TypeCode>
-        <ram:BasisAmount>-19.56</ram:BasisAmount>
-        <ram:CategoryCode>S</ram:CategoryCode>
-        <ram:DueDateTypeCode>5</ram:DueDateTypeCode>
-        <ram:RateApplicablePercent>10.00</ram:RateApplicablePercent>
       </ram:ApplicableTradeTax>
       <ram:SpecifiedTradePaymentTerms>
         <ram:Description>Paiement sous 15 jours</ram:Description>
       </ram:SpecifiedTradePaymentTerms>
       <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
-        <ram:LineTotalAmount>0.03</ram:LineTotalAmount>
-        <ram:TaxBasisTotalAmount>0.03</ram:TaxBasisTotalAmount>
-        <ram:TaxTotalAmount currencyID="EUR">1.96</ram:TaxTotalAmount>
-        <ram:GrandTotalAmount>1.99</ram:GrandTotalAmount>
-        <ram:DuePayableAmount>1.99</ram:DuePayableAmount>
+        <ram:LineTotalAmount>900.00</ram:LineTotalAmount>
+        <ram:TaxBasisTotalAmount>900.00</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="EUR">180.00</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>1080.00</ram:GrandTotalAmount>
+        <ram:DuePayableAmount>1080.00</ram:DuePayableAmount>
       </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+      <ram:InvoiceReferencedDocument>
+        <ram:IssuerAssignedID>2021-00003</ram:IssuerAssignedID>
+        <ram:TypeCode>380</ram:TypeCode>
+        <ram:FormattedIssueDateTime>
+          <qdt:DateTimeString format="102">20210801</qdt:DateTimeString>
+        </ram:FormattedIssueDateTime>
+      </ram:InvoiceReferencedDocument>
     </ram:ApplicableHeaderTradeSettlement>
   </rsm:SupplyChainTradeTransaction>
 </rsm:CrossIndustryInvoice>
