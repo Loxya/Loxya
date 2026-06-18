@@ -3,6 +3,8 @@
 # - Doit correspondre à la version du `.nvmrc`
 ARG NODE_VERSION=22.19.0
 
+ARG WEASYPRINT_VERSION=69.0
+
 FROM php:8.3-fpm-alpine AS app-base
 WORKDIR /
 
@@ -24,10 +26,33 @@ RUN set -eux; \
         unzip \
         dcron \
         logrotate \
-        weasyprint=66.0-r0 \
         fontconfig \
         ttf-dejavu \
         jq;
+
+# - WeasyPrint
+ARG WEASYPRINT_VERSION
+ENV WEASYPRINT_VENV=/opt/weasyprint
+RUN set -eux; \
+    apk add --no-cache \
+        python3 \
+        py3-pip \
+        pango; \
+    apk add --no-cache --virtual .weasyprint-build-deps \
+        gcc \
+        g++ \
+        musl-dev \
+        python3-dev \
+        libffi-dev \
+        jpeg-dev \
+        zlib-dev \
+        openjpeg-dev; \
+    python3 -m venv "${WEASYPRINT_VENV}"; \
+    "${WEASYPRINT_VENV}/bin/pip" install --no-cache-dir --upgrade pip; \
+    "${WEASYPRINT_VENV}/bin/pip" install --no-cache-dir "weasyprint==${WEASYPRINT_VERSION}"; \
+    ln -snf "${WEASYPRINT_VENV}/bin/weasyprint" /usr/bin/weasyprint; \
+    apk del .weasyprint-build-deps; \
+    weasyprint --version;
 
 # - User / Group "loxya"
 RUN set -eux; \

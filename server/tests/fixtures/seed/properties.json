@@ -1,7 +1,7 @@
 [
     {
         "id": 1,
-        "name": "Poids",
+        "name": "Poids emballé",
         "entities": ["material"],
         "type": "float",
         "config": {
