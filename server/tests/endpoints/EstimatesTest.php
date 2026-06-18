@@ -116,7 +116,7 @@ final class EstimatesTest extends ApiTestCase
                 'date' => '2026-05-10 10:00:00',
                 'due_date' => null,
                 'due_delay' => 30,
-                'status' => EstimateStatus::PENDING->value,
+                'status' => EstimateStatus::EXPIRED->value,
                 'url' => 'http://loxya.test/estimates/4/pdf',
                 'buyer' => BeneficiariesTest::data(2, Beneficiary::SERIALIZE_SUMMARY),
                 'has_final_invoice' => false,
@@ -254,7 +254,7 @@ final class EstimatesTest extends ApiTestCase
                 ],
                 [],
             ],
-            [['status' => 'expired'], [2]],
+            [['status' => 'expired'], [4, 2]],
             [['status' => 'sent'], []],
             [['status' => 'accepted'], [3, 5]],
             [['status' => 'partially-invoiced'], [1]],
@@ -912,11 +912,11 @@ final class EstimatesTest extends ApiTestCase
 
     public function testGetOne(): void
     {
-        // - Avec une devis inexistante.
+        // - Avec un devis inexistant.
         $this->client->get('/api/estimates/999');
         $this->assertStatusCode(StatusCode::STATUS_NOT_FOUND);
 
-        // - Avec des devis valides
+        // - Avec des devis valides.
         $ids = array_column(static::data(null), 'id');
         foreach ($ids as $id) {
             $this->client->get(sprintf('/api/estimates/%d', $id));

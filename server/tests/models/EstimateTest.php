@@ -406,8 +406,14 @@ final class EstimateTest extends TestCase
             'metadata' => [
                 'properties' => [
                     [
-                        'id' => 1,
                         'name' => 'Poids',
+                        'type' => 'float',
+                        'unit' => 'kg',
+                        'value' => 86.3,
+                    ],
+                    [
+                        'id' => 1,
+                        'name' => 'Poids emballé',
                         'type' => 'float',
                         'unit' => 'kg',
                         'value' => 113.9,
@@ -641,8 +647,14 @@ final class EstimateTest extends TestCase
             'metadata' => [
                 'properties' => [
                     [
+                        'name' => 'Weight',
+                        'type' => 'float',
+                        'unit' => 'kg',
+                        'value' => 33.9,
+                    ],
+                    [
                         'id' => 1,
-                        'name' => 'Poids',
+                        'name' => 'Poids emballé',
                         'type' => 'float',
                         'unit' => 'kg',
                         'value' => 41.85,

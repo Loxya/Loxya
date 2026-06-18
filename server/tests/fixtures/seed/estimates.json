@@ -99,8 +99,14 @@
         "metadata": {
             "properties": [
                 {
-                    "id": 1,
                     "name": "Poids",
+                    "type": "float",
+                    "unit": "kg",
+                    "value": "33.9"
+                },
+                {
+                    "id": 1,
+                    "name": "Poids emballé",
                     "type": "float",
                     "unit": "kg",
                     "value": "41.85"
@@ -187,8 +193,14 @@
         "metadata": {
             "properties": [
                 {
-                    "id": 1,
                     "name": "Poids",
+                    "type": "float",
+                    "unit": "kg",
+                    "value": "33.9"
+                },
+                {
+                    "id": 1,
+                    "name": "Poids emballé",
                     "type": "float",
                     "unit": "kg",
                     "value": "41.85",

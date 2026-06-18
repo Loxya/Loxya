@@ -21,6 +21,7 @@ use Loxya\Models\Casts\AsCountry;
 use Loxya\Models\Casts\AsDecimal;
 use Loxya\Models\Enums\BillingFormat;
 use Loxya\Models\Enums\BillingType;
+use Loxya\Models\Enums\CustomFieldType;
 use Loxya\Models\Enums\EstimateStatus;
 use Loxya\Models\Enums\LegalEntityType;
 use Loxya\Models\Traits\Serializer;
@@ -3434,6 +3435,9 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
         ));
 
         return dbTransaction(static function () use ($organization, $booking, $buyer, $creator, $additionalData) {
+            $lang = $buyer->user?->language ?? Config::get('defaultLang');
+            $i18n = new I18n($lang);
+
             $estimate = new static([
                 'status' => EstimateStatus::DRAFT->value,
 
@@ -3501,19 +3505,27 @@ final class Estimate extends BaseModel implements Serializable, Pdfable, BuyerIn
                 'is_vat_due_on_invoice' => $organization['isVatDueOnInvoice'] ?? false,
                 'total_replacement' => $booking->total_replacement,
                 'currency' => $booking->currency,
-                'lang' => (
-                    $buyer->user?->language
-                        ?? Config::get('defaultLang')
-                ),
+                'lang' => $lang,
 
                 // - Métadonnées.
-                'metadata' => [
-                    'properties' => $booking->totalisable_properties
+                'metadata' => (static function () use ($booking, $i18n) {
+                    $properties = $booking->totalisable_properties
                         ->map(static fn (Property $property) => (
                             $property->serialize(Property::SERIALIZE_SUMMARY)
                         ))
-                        ->values(),
-                ],
+                        ->values();
+
+                    if (!$booking->total_weight->isZero()) {
+                        $properties->prepend([
+                            'name' => $i18n->translate('weight'),
+                            'type' => CustomFieldType::FLOAT->value,
+                            'value' => $booking->total_weight->toFloat(),
+                            'unit' => Config::get('measurementUnits.materials.weight')->value,
+                        ]);
+                    }
+
+                    return compact('properties');
+                })(),
 
                 // - Données personnalisables.
                 ...Arr::only($additionalData, [

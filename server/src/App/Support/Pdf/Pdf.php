@@ -75,13 +75,9 @@ class Pdf implements PdfInterface
         }
 
         $this->binary = increaseMemory('1G', function () {
-            // - Dossier de cache / temporaire
-            $cacheDir = CACHE_FOLDER . DS . 'pdf';
             $tmpDir = TMP_FOLDER . DS . 'pdf';
-            foreach ([$cacheDir, $tmpDir] as $dir) {
-                if (!is_dir($dir)) {
-                    @mkdir($dir, 0777, true);
-                }
+            if (!is_dir($tmpDir)) {
+                @mkdir($tmpDir, 0777, true);
             }
 
             $renderer = new PdfRenderer(
@@ -90,7 +86,6 @@ class Pdf implements PdfInterface
                     'pdf-variant' => 'pdf/a-3b',
                     'base-url' => PUBLIC_FOLDER,
                     'media-type' => 'print',
-                    'cache-folder' => $cacheDir,
                     'presentational-hints' => true,
                     'optimize-images' => true,
                     'custom-metadata' => true,

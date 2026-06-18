@@ -739,7 +739,7 @@ final class MaterialsTest extends ApiTestCase
                 ],
                 [
                     'id' => 1,
-                    'name' => 'Poids',
+                    'name' => 'Poids emballé',
                     'entities' => [PropertyEntity::MATERIAL->value],
                     'type' => CustomFieldType::FLOAT->value,
                     'unit' => 'kg',
