@@ -204,6 +204,7 @@ const SearchPanel = defineComponent({
             handler(newValues: Filters) {
                 const generate = generateTokens(this.coreDefinitions);
                 this.tokens = generate(newValues, this.tokens);
+                [this.search] = newValues.search;
             },
             immediate: true,
             deep: true,

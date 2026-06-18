@@ -1516,7 +1516,7 @@ final class EventTest extends TestCase
         $expected = [
             1 => [
                 'id' => 1,
-                'name' => 'Poids',
+                'name' => 'Poids emballé',
                 'value' => 41.85,
                 'unit' => 'kg',
             ],
@@ -1534,7 +1534,7 @@ final class EventTest extends TestCase
         $expected = [
             1 => [
                 'id' => 1,
-                'name' => 'Poids',
+                'name' => 'Poids emballé',
                 'value' => 113.9,
                 'unit' => 'kg',
             ],
