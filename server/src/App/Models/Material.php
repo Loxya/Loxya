@@ -927,7 +927,9 @@ final class Material extends BaseModel implements Serializable
     protected array $orderable = [
         'name',
         'reference',
+        'description',
         'rental_price',
+        'replacement_price',
         'stock_quantity',
         'out_of_order_quantity',
     ];

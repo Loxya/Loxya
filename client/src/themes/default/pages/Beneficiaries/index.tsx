@@ -277,9 +277,7 @@ const Beneficiaries = defineComponent({
                     class: 'Beneficiaries__cell Beneficiaries__cell--note',
                     defaultHidden: true,
                     render: (h: CreateElement, beneficiary: Beneficiary) => (
-                        beneficiary.company
-                            ? beneficiary.company.note
-                            : beneficiary.note
+                        beneficiary.company?.note ?? beneficiary.note
                     ),
                 },
                 {
