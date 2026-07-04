@@ -107,6 +107,9 @@ enum LegalTypeFr: string implements LegalTypeInterface
     /** Universités & grands établissements (EPSCP) */
     case EPSCP = 'FR.EPSCP';
 
+    /** Établissement public de coopération culturelle (EPCC) */
+    case EPCC = 'FR.EPCC';
+
     /** Groupement d'intérêt public */
     case GIP = 'FR.GIP';
 
