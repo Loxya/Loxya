@@ -141,11 +141,11 @@
 {{ include('blocks/materials/event-summary-by-parks.twig') }}
 {% endif %}
 
-{% if totalisableProperties is not empty or totalWeight is not empty %}
+{% if totalisableProperties is not empty or (totalWeight is not empty and not totalWeight.isZero()) %}
 <h2>{{ __('properties-totals') }}</h2>
 <table class="half spaceBottom5 size8">
     <tbody>
-        {% if totalWeight is not empty -%}
+        {% if (totalWeight is not empty and not totalWeight.isZero()) -%}
         <tr>
             <td>{{ __('weight') }}</td>
             <td>

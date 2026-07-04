@@ -69,6 +69,9 @@ legal-types:
         EPSCP:
             short: "EPSCP"
             long: "Université / grand établissement"
+        EPCC:
+            short: "EPCC"
+            long: "Établissement public de coopération culturelle"
         GIP:
             short: "GIP"
             long: "Groupement d'intérêt public"
