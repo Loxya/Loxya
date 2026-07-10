@@ -226,7 +226,7 @@ const MaterialsFilters = defineComponent({
                 normalizedNewFilters[TokenType.PARK] = null;
             }
             if (
-                newFilters[TokenType.CATEGORY] === null &&
+                newFilters[TokenType.CATEGORY] !== this.values[TokenType.CATEGORY] &&
                 newFilters[TokenType.SUB_CATEGORY] !== null
             ) {
                 normalizedNewFilters[TokenType.SUB_CATEGORY] = null;
