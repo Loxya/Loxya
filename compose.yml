@@ -45,6 +45,7 @@ services:
             - --mysql-native-password=ON
             - --character-set-server=utf8mb4
             - --collation-server=utf8mb4_unicode_ci
+            - --authentication-policy=mysql_native_password
         env_file:
             - path: .env
               required: false

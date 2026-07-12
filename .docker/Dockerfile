@@ -8,11 +8,17 @@ ARG WEASYPRINT_VERSION=69.0
 FROM php:8.3-fpm-alpine AS app-base
 WORKDIR /
 
+# - Métadonnées.
 LABEL description="Application de gestion de location de matériel simple, efficace, modulable et open-source."
 LABEL maintainer="Loxya Team <technical@loxya.com>"
+LABEL org.opencontainers.image.vendor="Loxya" \
+      org.opencontainers.image.title="Loxya" \
+      org.opencontainers.image.description="Application de gestion de location de matériel simple, efficace, modulable et open-source." \
+      org.opencontainers.image.authors="Loxya Team <technical@loxya.com>"
 
 ENV TZ=Europe/Paris
 ENV LANG=fr_FR.UTF-8
+ENV LOXYA_CONTAINERIZED=true
 
 # - Persistent / Runtime dependencies
 RUN set -eux; \
@@ -54,11 +60,15 @@ RUN set -eux; \
     apk del .weasyprint-build-deps; \
     weasyprint --version;
 
-# - User / Group "loxya"
+# - User / Group "loxya" (`www-data` du host (`33` sous Debian))
+ARG LOXYA_UID=33
+ARG LOXYA_GID=33
 RUN set -eux; \
-    addgroup -S loxya; \
+    deluser xfs 2>/dev/null || true; \
+    delgroup xfs 2>/dev/null || true; \
+    addgroup -S -g "${LOXYA_GID}" loxya; \
     mkdir -p /home/loxya; \
-    adduser -S -D -H -h /home/loxya -s /sbin/nologin -G loxya -g loxya loxya; \
+    adduser -S -D -H -h /home/loxya -s /sbin/nologin -G loxya -g loxya -u "${LOXYA_UID}" loxya; \
     addgroup loxya www-data; \
     chown -R loxya:loxya /home/loxya; \
     chown -R loxya:loxya /run;

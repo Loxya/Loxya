@@ -100,6 +100,13 @@ else
 fi
 
 #
+# - Dossier du socket unix de nginx.
+#
+
+mkdir -p /run/loxya
+chown loxya:loxya /run/loxya
+
+#
 # - Supprime le cache de l'application.
 #
 

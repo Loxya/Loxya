@@ -76,13 +76,13 @@ final class Logger
         $logger = new \Monolog\Logger($name);
         $logger->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
-        // - Handler
-        $path = LOGS_FOLDER . DS . Str::slugify($name) . '.log';
-        $handler = new Handler\RotatingFileHandler(
-            $path,
-            $this->settings['max_files'],
-            $this->settings['level'],
-        );
+        $handler = isContainerized()
+            ? new Handler\StreamHandler('php://stderr', $this->settings['level'])
+            : new Handler\RotatingFileHandler(
+                LOGS_FOLDER . DS . Str::slugify($name) . '.log',
+                $this->settings['max_files'],
+                $this->settings['level'],
+            );
         $handler->setFormatter(new LineFormatter(null, null, true, true));
         $logger->pushHandler($handler);
 

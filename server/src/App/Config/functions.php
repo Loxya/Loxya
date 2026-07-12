@@ -191,6 +191,19 @@ function isCI(): bool
 }
 
 /**
+ * Permet de savoir si l'application s'exécute au sein d'un conteneur.
+ *
+ * L'information est fournie par l'image via la variable d'environnement
+ * `LOXYA_CONTAINERIZED` (cf. `/.docker/Dockerfile`).
+ *
+ * @return bool `true` si l'application tourne dans un conteneur, `false` sinon.
+ */
+function isContainerized(): bool
+{
+    return filter_var(env('LOXYA_CONTAINERIZED'), FILTER_VALIDATE_BOOLEAN);
+}
+
+/**
  * Permet de savoir si une fonctionnalité est activée.
  *
  * @param Feature $feature La fonctionnalité à vérifier.
