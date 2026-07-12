@@ -3,8 +3,11 @@
 ROOT="$(dirname "$(dirname "$(readlink -f "$0")")")"
 cd $ROOT
 
+IMAGE_NAME="loxya/loxya"
+
 VERSION_NUMBER=''
 PRE_RELEASE=''
+PUSH=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --pre-release)
@@ -14,6 +17,10 @@ while [[ $# -gt 0 ]]; do
             fi
             PRE_RELEASE="$2"
             shift 2
+        ;;
+        --push)
+            PUSH=true
+            shift
         ;;
         -*)
             echo -e "\e[1m\e[31m\nERREUR: Option inconnue : \`$1\`.\e[0m" >&2
@@ -150,9 +157,10 @@ cd "$ROOT"
 
 echo -e "\e[1m\e[34m-> Création de l'image Docker liée...\e[0m"
 docker build \
+    --platform linux/amd64 \
     --target app-release \
     --build-context source="$BUILD_PATH" \
-    -t "loxya/loxya:${VERSION}" \
+    -t "${IMAGE_NAME}:${VERSION}" \
     ./.docker
 
 if ! $isPreRelease; then
@@ -160,9 +168,21 @@ if ! $isPreRelease; then
     MINOR_VERSION="$(echo "$VERSION_NUMBER" | cut -d. -f1-2)"
     MAJOR_VERSION="$(echo "$VERSION_NUMBER" | cut -d. -f1)"
 
-    docker tag "loxya/loxya:${VERSION}" "loxya/loxya:${MINOR_VERSION}"
-    docker tag "loxya/loxya:${VERSION}" "loxya/loxya:${MAJOR_VERSION}"
-    docker tag "loxya/loxya:${VERSION}" "loxya/loxya:latest"
+    docker tag "${IMAGE_NAME}:${VERSION}" "${IMAGE_NAME}:${MINOR_VERSION}"
+    docker tag "${IMAGE_NAME}:${VERSION}" "${IMAGE_NAME}:${MAJOR_VERSION}"
+    docker tag "${IMAGE_NAME}:${VERSION}" "${IMAGE_NAME}:latest"
+fi
+
+if $PUSH; then
+    echo -e "\e[1m\e[34m-> Envoi de l'image...\e[0m"
+    PUSH_TAGS=("${VERSION}")
+    if ! $isPreRelease; then
+        PUSH_TAGS+=("${MINOR_VERSION}" "${MAJOR_VERSION}" "latest")
+    fi
+    for tag in "${PUSH_TAGS[@]}"; do
+        docker push "${IMAGE_NAME}:${tag}"
+        docker rmi "${IMAGE_NAME}:${tag}"
+    done
 fi
 
 echo -e "\e[1m\e[34m-> Empaquetage de la release dans un fichier ZIP...\e[0m"
@@ -174,5 +194,9 @@ echo -e "\e[1m\e[34m-> Suppression du dossier temporaire...\e[0m"
 rm -rf "$BUILD_PATH"
 
 echo -e "\e[1m\e[32m\nTerminé !!\e[0m"
-echo -e "\n=> L'image docker \`loxya/loxya:${VERSION}\` est prête à être poussée sur le registre."
+if $PUSH; then
+    echo -e "\n=> L'image docker \`${IMAGE_NAME}:${VERSION}\` a été envoyée sur le registre."
+else
+    echo -e "\n=> L'image docker \`${IMAGE_NAME}:${VERSION}\` est prête à être poussée sur le registre."
+fi
 echo -e "\n=> Vous pouvez maintenant récupérer le distribuable \`./dist/${RELEASE_NAME}.zip\`."

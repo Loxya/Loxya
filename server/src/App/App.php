@@ -179,7 +179,7 @@ final class App
         $this->app->add([$this->container->get('auth'), 'middleware']);
         $this->app->add(Middlewares\InstallCheck::class);
         $this->app->add(new Middlewares\BodyParser());
-        $this->app->add(new IpAddressMiddleware(false, null, 'ip'));
+        $this->app->add(new IpAddressMiddleware(isContainerized(), null, 'ip'));
         $this->app->add(Middlewares\SessionStart::class);
     }
 

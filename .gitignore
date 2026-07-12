@@ -28,6 +28,7 @@ Thumbs.db
 
 .idea
 .vscode
+.claude
 *.suo
 *.ntvs*
 *.njsproj

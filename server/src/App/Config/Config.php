@@ -799,7 +799,9 @@ final class Config
             return static::$testConfig !== null;
         }
 
-        return file_exists(static::FILE);
+        // - Un fichier vide est considéré comme un fichier de configuration absent.
+        //   (notamment dans le cadre d'un déploiement conteneurisé avec volume)
+        return file_exists(static::FILE) && filesize(static::FILE) > 0;
     }
 
     public static function saveCustomConfig(array $customConfig): void
