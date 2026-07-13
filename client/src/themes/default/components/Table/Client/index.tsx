@@ -402,6 +402,9 @@ const ClientTable = defineComponent({
                         if (typeof bVal === 'string') {
                             bVal = bVal.toLowerCase();
                         }
+                        if (typeof aVal === 'string' && typeof bVal === 'string') {
+                            return aVal.localeCompare(bVal) * dir;
+                        }
                         return aVal > bVal ? dir : -dir;
                     }
                 );
