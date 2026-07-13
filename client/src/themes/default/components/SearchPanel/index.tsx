@@ -355,7 +355,15 @@ const SearchPanel = defineComponent({
             const $ancestors = e.composedPath();
             $ancestors.unshift($target);
 
+            // - Vérifie qu'il ne s'agit pas d'une option de `Select`, qui peut être placé
+            //   visuellement dans la modale alors qu'en fait l'élément du DOM est placé
+            //   à la racine du body (voir l'option `appendToBody` du component `Select`).
+            const isSelectOption = (
+                $target.classList.contains('vs__dropdown-option') ||
+                $target.classList.contains('Select__option')
+            );
             const isOutside = (
+                !isSelectOption &&
                 !$modal.contains($target) &&
                 !$ancestors.includes($modal)
             );
