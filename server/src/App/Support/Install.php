@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Loxya\Support;
 
+use Illuminate\Database\Connection;
+use Illuminate\Database\QueryException;
 use Loxya\Config\Config;
 
 final class Install
@@ -38,13 +40,25 @@ final class Install
     }
 
     /**
-     * Indique si l'installation de l'application est complète ou non.
+     * Indique si l'application nécessite une mise à jour :
+     * - Soit la configuration n'est plus au format de la version courante,
+     * - Soit des migrations de la base de données restent à appliquer.
+     *
+     * @return bool `true` si une mise à jour est requise, `false` sinon.
+     */
+    public static function isOutdated(): bool
+    {
+        return Config::isOutdated() || static::hasPendingMigrations();
+    }
+
+    /**
+     * Indique si l'installation de l'application est complète.
      *
      * @return bool `true` si l'installation est complète, `false` sinon.
      */
     public static function isComplete(): bool
     {
-        return static::isConfigured();
+        return static::isConfigured() && !static::isOutdated();
     }
 
     /**
@@ -118,5 +132,56 @@ final class Install
                 'isValid' => empty($missingExtensions),
             ],
         ];
+    }
+
+    /**
+     * Indique si des migrations de la base de données restent à appliquer.
+     *
+     * @return bool `true` s'il existe des migrations non appliquées, `false` sinon.
+     */
+    private static function hasPendingMigrations(): bool
+    {
+        if (!static::isConfigured()) {
+            return false;
+        }
+
+        // - Si cette version de l'application est déjà marquée
+        //   comme migrée, on ne va pas plus loin.
+        $cache = container('cache');
+        $useCache = Config::getEnv() === 'production';
+        $cacheEntry = $cache->getItem(sprintf('migrations.up-to-date.%s', Config::getVersionNumber()));
+        if ($useCache && $cacheEntry->isHit()) {
+            return false;
+        }
+
+        // - Récupère les migrations disponibles.
+        $available = [];
+        foreach (glob(MIGRATIONS_FOLDER . DS . '*.php') ?: [] as $file) {
+            if (preg_match('/^(\d+)/', basename($file), $matches)) {
+                $available[] = $matches[1];
+            }
+        }
+        if (empty($available)) {
+            return false;
+        }
+
+        try {
+            /** @var Connection $dbConnection */
+            $dbConnection = container('database')->getConnection();
+            $applied = $dbConnection
+                ->table('phinxlog')
+                ->pluck('version')
+                ->all();
+        } catch (QueryException $e) {
+            // - Si la table Phinx est absente (`42S02`) => Migrations en attente.
+            return $e->getCode() === '42S02';
+        }
+
+        // - Une migration est en attente si elle est disponible mais absente des logs.
+        $isUpToDate = array_diff($available, $applied) === [];
+        if ($isUpToDate && $useCache) {
+            $cache->save($cacheEntry->set(true));
+        }
+        return !$isUpToDate;
     }
 }

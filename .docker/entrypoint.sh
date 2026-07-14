@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+log_error() { printf '\033[0;31m%s\033[0m\n' "$*"; }
+log_warning() { printf '\033[38;5;208m%s\033[0m\n' "$*"; }
+
 round() {
     awk "BEGIN { print int($1 + 0.5) }"
 }
@@ -56,7 +59,7 @@ echo "   pm.max_spare_servers = $MAX_SPARE_SERVERS"
 echo "   pm.start_servers = $START_SERVERS"
 
 #
-# - Mise en a place des tâches CRON
+# - Mise en place des tâches CRON
 #
 
 echo "[Entrypoint] Génération des tâches CRON..."
@@ -112,6 +115,32 @@ chown loxya:loxya /run/loxya
 
 echo "[Entrypoint] Suppression du cache de l'application..."
 rm -rf /var/loxya/cache/*
+
+#
+# - Migrations de la configuration et de la base de données.
+#
+
+run_console() {
+    su -s /bin/sh -c "/opt/loxya/bin/console $*" loxya
+}
+
+echo "[Entrypoint] Migration de la configuration et de la base de données..."
+if [ ! -s "/etc/loxya/settings.json" ]; then
+    echo "=> Application non configurée, migrations ignorées."
+else
+    if run_console "migrations:migrate --no-interaction"; then
+        migrate_status=0
+    else
+        migrate_status=$?
+    fi
+
+    if [ "$migrate_status" -eq 78 ]; then
+        log_warning "=> La configuration est à mettre à jour manuellement via la commande \`console install\`."
+    elif [ "$migrate_status" -ne 0 ] && [ "$migrate_status" -ne 3 ]; then
+        log_error "=> Échec de la migration de la base de données."
+        exit 1
+    fi
+fi
 
 #
 # - Fin de l'entrypoint.

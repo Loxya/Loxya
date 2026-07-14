@@ -66,8 +66,8 @@ return [
     'console.commands' => static function (ContainerInterface $container) {
         $isTest = Config::getEnv() === 'test';
         $isDev = Config::getEnv() === 'development';
-        $isConfigured = Install::isConfigured() || $isTest;
-        $isInstallComplete = Install::isComplete() || $isTest;
+        $isConfigured = $isTest || Install::isConfigured();
+        $isInstallComplete = $isTest || Install::isComplete();
 
         $allCommands = [
             Command\Setup\InstallCommand::class => true,
