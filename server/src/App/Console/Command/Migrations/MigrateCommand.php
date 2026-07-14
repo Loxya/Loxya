@@ -50,9 +50,16 @@ final class MigrateCommand extends CoreMigrateCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        // - En environnement de test, la configuration est en mémoire...
+        //   => On migre directement.
+        if (Config::getEnv() === 'test') {
+            return $this->executeMigration($input, $output);
+        }
+
         // - S'il n'y a pas de configuration, les migrations ne peuvent pas être exécutées.
         if (!Config::customConfigExists()) {
-            $output->writeln("<error>L'application n'est pas configurée, les migrations ne peuvent pas être exécutées.</error>");
+            $output->writeln("<error>L'application doit être configurée avant le lancement des migrations.</error>");
+            $output->writeln("<comment>Installez l'application via `bin/console install`.</comment>");
             return Command::FAILURE;
         }
 
