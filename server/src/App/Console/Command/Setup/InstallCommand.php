@@ -125,7 +125,10 @@ final class InstallCommand extends Command
                 placeholder: $__('fields.base-url.placeholder'),
                 hint: $__('fields.base-url.hint'),
                 required: $__('global.mandatory-field'),
-                default: (string) $getSavedValue('baseUrl', false),
+                default: (string) (
+                    $getSavedValue('baseUrl', false) ??
+                        Config::getBaseUrl()
+                ),
                 transform: static fn (string $value) => (
                     rtrim(trim($value), '/')
                 ),
@@ -141,7 +144,10 @@ final class InstallCommand extends Command
                 options: $this->getAllCountries(),
                 hint: $__('fields.main-country.hint'),
                 required: $__('global.mandatory-field'),
-                default: (string) $getSavedValue('mainCountry'),
+                default: (string) (
+                    $getSavedValue('mainCountry', false)
+                        ?? $getSavedValue('organization.country', false)
+                ),
             )
 
             // - Langue par défaut de l'application.
@@ -1622,124 +1628,7 @@ final class InstallCommand extends Command
         if (!Config::customConfigExists()) {
             return [];
         }
-
-        $config = array_replace(Config::getCustomConfig(), [
-            'baseUrl' => Config::getBaseUrl(),
-        ]);
-
-        // - Rétro-compatibilité: `'currency' => ['iso' => '...']`.
-        if (is_array($config['currency'] ?? null)) {
-            $config['currency'] = $config['currency']['iso']
-                ?? Config::getDefault('currency');
-        }
-
-        // - Rétro-compatibilité: `'companyData' => ['country' => 'France']`.
-        $rawCountry = Arr::get($config, 'companyData.country');
-        $hasLegacyCountry = (
-            !empty($rawCountry) &&
-            (
-                strlen($rawCountry) !== 2 ||
-                strtoupper($rawCountry) !== $rawCountry
-            )
-        );
-        if ($hasLegacyCountry) {
-            $config['companyData']['country'] = Country::tryFrom($rawCountry)?->getCode();
-        }
-
-        // - Rétro-compatibilité: `'companyData' => ['zipCode']` => `'postalCode'`.
-        if (Arr::has($config, 'companyData.zipCode')) {
-            $config['companyData']['postalCode'] = Arr::get($config, 'companyData.zipCode');
-            unset($config['companyData']['zipCode']);
-        }
-
-        // - Rétro-compatibilité: `'companyData' => ['street']` => `'street[0]'`.
-        if (Arr::has($config, 'companyData.street')) {
-            $config['companyData']['street'] = [Arr::get($config, 'companyData.street')];
-        }
-
-        // - Rétro-compatibilité: `'companyData' => ['legalNumbers' => ['name' => '...', 'value' => '...]]`
-        $rawLegalNumbers = Arr::pull($config, 'companyData.legalNumbers');
-        if ($rawLegalNumbers !== null && is_array($rawLegalNumbers)) {
-            $legalNumbers = (new Collection($rawLegalNumbers))
-                ->filter(static fn ($item) => isset($item['name'], $item['value']))
-                ->mapWithKeys(static fn ($item) => [strtoupper($item['name']) => $item['value']])
-                ->all();
-
-            $migrationMatrix = [
-                'FR' => [
-                    'SIRET' => 'registrationId',
-                    'APE' => 'activityCode',
-                ],
-                'BE' => [
-                    'BCE' => 'registrationId',
-                    'NACE' => 'activityCode',
-                ],
-                'CH' => [
-                    'IDE' => 'registrationId',
-                    'NOGA' => 'activityCode',
-                ],
-            ];
-            foreach ($migrationMatrix as $country => $migrations) {
-                if (!in_array($config['companyData']['country'], [$country, null], true)) {
-                    continue;
-                }
-
-                foreach ($migrations as $legacyName => $configKey) {
-                    if (!empty($config['companyData'][$configKey]) || empty($legalNumbers[$legacyName])) {
-                        continue;
-                    }
-                    $config['companyData'][$configKey] = $legalNumbers[$legacyName];
-                }
-            }
-        }
-
-        // - Rétro-compatibilité: `'companyData'` => `'organization'`.
-        if (array_key_exists('companyData', $config)) {
-            $config['organization'] = array_replace(
-                $config['organization'] ?? [],
-                $config['companyData'],
-            );
-            unset($config['companyData']);
-        }
-
-        // - Rétro-compatibilité: `'legacy' => ['companyData']` => `'legacy' => ['organization']`.
-        if (Arr::has($config, 'legacy.companyData')) {
-            Arr::set($config, 'legacy.organization', Arr::pull($config, 'legacy.companyData'));
-        }
-
-        // - Rétro-compatibilité: Pays d'utilisation principal.
-        $organizationCountry = Arr::get($config, 'organization.country');
-        if (empty($config['mainCountry']) && $organizationCountry !== null) {
-            $config['mainCountry'] = $organizationCountry;
-        }
-
-        // - Rétro-compatibilité: Champs supprimés.
-        Arr::forget($config, [
-            'httpAuthHeader',
-            'db.options',
-            'db.charset',
-            'db.collation',
-        ]);
-
-        // - Données legacy.
-        $legacyData = [
-            'defaultTags',
-            'organization.vatRate',
-            'degressiveRateFunction',
-        ];
-        foreach ($legacyData as $legacyField) {
-            if (!Arr::has($config, $legacyField)) {
-                continue;
-            }
-
-            Arr::set(
-                $config,
-                sprintf('legacy.%s', $legacyField),
-                Arr::pull($config, $legacyField),
-            );
-        }
-
-        return $config;
+        return Config::getUpgradedCustomConfig();
     }
 
     private function getAllCurrencies(): array

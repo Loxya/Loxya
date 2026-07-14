@@ -11,3 +11,11 @@ not-installed:
 
         If you are the administrator of this instance, please
         refer to the documentation to finalize Loxya's installation.
+
+needs-update:
+    title: Update required
+    content: |-
+        The application has been updated, but the update must be finalized before it can be used.
+
+        If you are the administrator of this instance, please run the
+        installation wizard again to complete Loxya's update.

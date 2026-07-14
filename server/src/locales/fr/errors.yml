@@ -11,3 +11,11 @@ not-installed:
 
         Si vous êtes l'administrateur de cette instance, veuillez
         consulter la documentation afin de finaliser l'installation de Loxya.
+
+needs-update:
+    title: Mise à jour requise
+    content: |-
+        L'application a été mise à jour, mais celle-ci doit être finalisée avant de pouvoir être utilisée.
+
+        Si vous êtes l'administrateur de cette instance, veuillez exécuter à
+        nouveau l'assistant d'installation afin de terminer la mise à jour de Loxya.
