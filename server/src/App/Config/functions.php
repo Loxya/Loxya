@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use DI\Container;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Loxya\Config\Config;
 use Loxya\Config\Enums\Feature;
@@ -84,6 +85,7 @@ function getExecutionTime(?float $start = null): string
  */
 function dbTransaction(callable $callback): mixed
 {
+    /** @var Connection $dbConnection */
     $dbConnection = container('database')->getConnection();
 
     try {

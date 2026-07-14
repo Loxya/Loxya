@@ -29,16 +29,26 @@ final class InstallCheck implements MiddlewareInterface
             throw new \InvalidArgumentException('Not a Loxya request.');
         }
 
-        if (Install::isComplete()) {
-            return $handler->handle($request);
+        // - Application pas encore configurée.
+        if (!Install::isConfigured()) {
+            if ($request->isApi()) {
+                throw new HttpServiceUnavailableException($request, "Application not installed.");
+            }
+
+            $response = $this->responseFactory->createResponse(503);
+            return $this->view->render($response, 'errors/not-installed.twig');
         }
 
-        // - Si on est dans un contexte d'API.
-        if ($request->isApi()) {
-            throw new HttpServiceUnavailableException($request, "Application not installed.");
+        // - L'application nécessite une mise à jour.
+        if (Install::isOutdated()) {
+            if ($request->isApi()) {
+                throw new HttpServiceUnavailableException($request, "Application needs to be updated.");
+            }
+
+            $response = $this->responseFactory->createResponse(503);
+            return $this->view->render($response, 'errors/needs-update.twig');
         }
 
-        $response = $this->responseFactory->createResponse(503);
-        return $this->view->render($response, 'errors/not-installed.twig');
+        return $handler->handle($request);
     }
 }

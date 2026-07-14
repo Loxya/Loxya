@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Loxya\Config;
 
+use Illuminate\Support\Collection;
 use Loxya\Config\Enums\BillingMode;
 use Loxya\Config\Enums\ReturnPolicy;
 use Loxya\Config\Enums\WeightUnit;
@@ -584,6 +585,14 @@ final class Config
             : $defaults;
     }
 
+    /**
+     * Permet de récupérer l'environnement dans lequel s'exécute l'application.
+     *
+     * @param bool $envOnly Si `true`, seule la variable d'environnement `APP_ENV` sera
+     *                      consultée, sans se rabattre sur la configuration. Par défaut: `false`.
+     *
+     * @return string L'environnement courant, parmi `development`, `production` ou `test`.
+     */
     public static function getEnv(bool $envOnly = false)
     {
         $env = env('APP_ENV');
@@ -596,6 +605,11 @@ final class Config
         return $env;
     }
 
+    /**
+     * Retourne la version complète de la version de l'application (e.g. `1.0.0-premium`).
+     *
+     * @return string La version complète de l'application.
+     */
     public static function getVersion()
     {
         if (!static::$versionCached) {
@@ -604,6 +618,40 @@ final class Config
         return static::$versionCached;
     }
 
+    /**
+     * Retourne la version "numérique" de la version de l'application (e.g. `1.0.0`).
+     *
+     * @return string La version "numérique" de l'application.
+     */
+    public static function getVersionNumber(): string
+    {
+        return Str::chopEnd(static::getVersion(), '-premium');
+    }
+
+    /**
+     * Version de l'application d'origine (= au moment de la première installation).
+     *
+     * @return string|null La version d'installation, ou `null` si inconnue.
+     */
+    public static function getInstallVersion(): ?string
+    {
+        if (!static::customConfigExists()) {
+            return null;
+        }
+        return static::get('since');
+    }
+
+    /**
+     * Permet de récupérer la configuration de connexion à la base de données.
+     *
+     * @param array $options Options de génération de la configuration :
+     *                       - `noDatabase` (bool): Si `true`, le nom de la base n'est pas
+     *                                              ajouté au DSN. Par défaut: `false`.
+     *                       - `noCharset` (bool): Si `true`, le charset n'est pas ajouté
+     *                                             au DSN. Par défaut: `false`.
+     *
+     * @return array La configuration de connexion à la base de données.
+     */
     public static function getDbConfig(array $options = []): array
     {
         $options = Arr::defaults($options, [
@@ -664,6 +712,17 @@ final class Config
         return $dbConfig;
     }
 
+    /**
+     * Permet de récupérer une instance PDO connectée à la base de données.
+     *
+     * @param bool $withDatabase Si `true`, la connexion est établie en sélectionnant la
+     *                           base de données configurée. Si `false`, la connexion est
+     *                           établie sans sélectionner de base. Par défaut: `true`.
+     *
+     * @return \PDO L'instance PDO connectée à la base de données.
+     *
+     * @throws \PDOException Si la connexion à la base de données échoue.
+     */
     public static function getPDO(bool $withDatabase = true): \PDO
     {
         $dbConfig = self::getDbConfig(['noDatabase' => !$withDatabase]);
@@ -789,6 +848,15 @@ final class Config
     // -
     // ------------------------------------------------------
 
+    /**
+     * Permet de savoir si une configuration personnalisée existe.
+     *
+     * En environnement de test, l'existence est vérifiée sur la configuration stockée en
+     * mémoire. Sinon, elle repose sur la présence du fichier de configuration (un fichier
+     * vide étant considéré comme absent).
+     *
+     * @return bool `true` si une configuration personnalisée existe, `false` sinon.
+     */
     public static function customConfigExists(): bool
     {
         if (isset(static::$configCached)) {
@@ -804,90 +872,33 @@ final class Config
         return file_exists(static::FILE) && filesize(static::FILE) > 0;
     }
 
+    /**
+     * Permet de sauvegarder la configuration personnalisée.
+     *
+     * La configuration fournie est validée par rapport au schéma attendu avant d'être
+     * sauvegardée. En environnement de test, la configuration est stockée en mémoire
+     * plutôt que dans le fichier.
+     *
+     * @param array $customConfig La configuration personnalisée à sauvegarder.
+     *
+     * @throws \InvalidArgumentException Si la configuration est vide ou ne respecte pas le schéma.
+     * @throws \RuntimeException Si l'écriture du fichier de configuration échoue.
+     */
     public static function saveCustomConfig(array $customConfig): void
     {
-        if (empty($customConfig)) {
-            throw new \InvalidArgumentException("Empty configuration.");
+        if (!static::isValid($customConfig)) {
+            throw new \InvalidArgumentException("Invalid configuration.");
         }
 
-        $parseConfig = static function (array $config, ?string $path = null) use (&$parseConfig) {
-            $schema = $path !== null ? Arr::getOptional(self::SCHEMA, $path) : self::SCHEMA;
-            foreach ($schema as $field => $type) {
-                $isRequired = substr($field, -1) !== '?';
-                $field = rtrim($field, '?');
-                $fullField = ($path !== null ? sprintf('%s.', $path) : '') . $field;
+        // - Version d'installation d'origine.
+        $since = static::customConfigExists()
+            ? (static::getCustomConfig()['since'] ?? null)
+            : static::getVersionNumber();
 
-                if (!array_key_exists($field, $config) || $config[$field] === null) {
-                    if ($isRequired) {
-                        throw new \InvalidArgumentException(sprintf(
-                            "Required configuration field `%s` is missing.",
-                            $fullField,
-                        ));
-                    }
-                    continue;
-                }
-
-                if (is_array($type)) {
-                    if (!is_array($config[$field])) {
-                        throw new \InvalidArgumentException(vsprintf(
-                            "Configuration field `%s` must be of type `array`.",
-                            [$fullField],
-                        ));
-                    }
-                    $config[$field] = $parseConfig($config[$field], $fullField);
-                    continue;
-                }
-
-                if (is_a($type, \BackedEnum::class, true)) {
-                    /** @var class-string<\BackedEnum> $type */
-
-                    $enumValue = is_string($config[$field])
-                        ? $type::tryFrom($config[$field])
-                        : $config[$field];
-
-                    if (!($enumValue instanceof $type)) {
-                        throw new \InvalidArgumentException(vsprintf(
-                            "Configuration field `%s` must be of type `%s`.",
-                            [$fullField, $type],
-                        ));
-                    }
-
-                    /** @var \BackedEnum $enumValue */
-                    $config[$field] = $enumValue->value;
-                    continue;
-                }
-
-                if (is_a($type, EnumFactory::class, true)) {
-                    /** @var class-string<EnumFactory> $type */
-
-                    $enumClass = $type::getEnumInterface();
-                    $enumValue = is_string($config[$field])
-                        ? $type::tryFrom($config[$field])
-                        : $config[$field];
-
-                    if (!($enumValue instanceof $enumClass)) {
-                        throw new \InvalidArgumentException(vsprintf(
-                            "Configuration field `%s` must be of type `%s`.",
-                            [$fullField, $enumClass],
-                        ));
-                    }
-
-                    /** @var \BackedEnum $enumValue */
-                    $config[$field] = $enumValue->value;
-                    continue;
-                }
-
-                $functionTest = sprintf('is_%s', $type);
-                if (!$functionTest($config[$field])) {
-                    throw new \InvalidArgumentException(vsprintf(
-                        "Configuration field `%s` must be of type `%s`.",
-                        [$fullField, $type],
-                    ));
-                }
-            }
-            return $config;
-        };
-        $customConfig = $parseConfig($customConfig);
+        $customConfig = [
+            ...($since !== null ? ['since' => $since] : []),
+            ...Arr::except($customConfig, ['since']),
+        ];
 
         static::$configCached = null;
 
@@ -906,6 +917,12 @@ final class Config
         }
     }
 
+    /**
+     * Permet de supprimer la configuration personnalisée.
+     *
+     * En environnement de test, la configuration stockée en mémoire est réinitialisée.
+     * Sinon, le fichier de configuration est supprimé s'il existe.
+     */
     public static function deleteCustomConfig(): void
     {
         if (static::getEnv(true) === 'test') {
@@ -918,6 +935,13 @@ final class Config
         }
     }
 
+    /**
+     * Permet de récupérer la configuration personnalisée.
+     *
+     * @return array La configuration personnalisée.
+     *
+     * @throws \RuntimeException Si la configuration est absente, illisible ou corrompue.
+     */
     public static function getCustomConfig(): array
     {
         if (isset(static::$configCached)) {
@@ -925,7 +949,7 @@ final class Config
         }
 
         if (!static::customConfigExists()) {
-            throw new \RuntimeException('Config file is missing. Please create one.');
+            throw new \RuntimeException('Configuration file is missing.');
         }
 
         if (static::getEnv(true) !== 'test') {
@@ -974,5 +998,199 @@ final class Config
         }
 
         return static::$configCached = $rawConfig;
+    }
+
+    /**
+     * Récupère la configuration personnalisée avec prise en charge de la rétro-compatibilité.
+     *
+     * @return array La configuration au format courant.
+     *
+     * @throws \RuntimeException Si la configuration est absente.
+     */
+    public static function getUpgradedCustomConfig(): array
+    {
+        if (!static::customConfigExists()) {
+            throw new \RuntimeException('Configuration file is missing.');
+        }
+        $config = static::getCustomConfig();
+
+        // - Rétro-compatibilité: `'apiUrl'` => `'baseUrl'`.
+        if (empty($config['baseUrl'] ?? null) && !empty($config['apiUrl'] ?? null)) {
+            $config['baseUrl'] = $config['apiUrl'];
+        }
+        unset($config['apiUrl']);
+
+        // - Rétro-compatibilité: `'currency' => ['iso' => '...']`.
+        if (is_array($config['currency'] ?? null)) {
+            $config['currency'] = $config['currency']['iso'] ?? null;
+        }
+
+        // - Rétro-compatibilité: `'companyData' => ['country' => 'France']`.
+        $rawCountry = Arr::get($config, 'companyData.country');
+        $hasLegacyCountry = (
+            !empty($rawCountry) &&
+            (
+                strlen($rawCountry) !== 2 ||
+                strtoupper($rawCountry) !== $rawCountry
+            )
+        );
+        if ($hasLegacyCountry) {
+            $config['companyData']['country'] = Country::tryFrom($rawCountry)?->getCode();
+        }
+
+        // - Rétro-compatibilité: `'companyData' => ['zipCode']` => `'postalCode'`.
+        if (Arr::has($config, 'companyData.zipCode')) {
+            $config['companyData']['postalCode'] = Arr::get($config, 'companyData.zipCode');
+            unset($config['companyData']['zipCode']);
+        }
+
+        // - Rétro-compatibilité: `'companyData' => ['street']` => `'street[0]'`.
+        if (Arr::has($config, 'companyData.street')) {
+            $config['companyData']['street'] = [Arr::get($config, 'companyData.street')];
+        }
+
+        // - Rétro-compatibilité: `'companyData' => ['legalNumbers' => ['name' => '...', 'value' => '...]]`
+        $rawLegalNumbers = Arr::pull($config, 'companyData.legalNumbers');
+        if ($rawLegalNumbers !== null && is_array($rawLegalNumbers)) {
+            $legalNumbers = (new Collection($rawLegalNumbers))
+                ->filter(static fn ($item) => isset($item['name'], $item['value']))
+                ->mapWithKeys(static fn ($item) => [strtoupper($item['name']) => $item['value']])
+                ->all();
+
+            $migrationMatrix = [
+                'FR' => [
+                    'SIRET' => 'registrationId',
+                    'APE' => 'activityCode',
+                ],
+                'BE' => [
+                    'BCE' => 'registrationId',
+                    'NACE' => 'activityCode',
+                ],
+                'CH' => [
+                    'IDE' => 'registrationId',
+                    'NOGA' => 'activityCode',
+                ],
+            ];
+            foreach ($migrationMatrix as $country => $migrations) {
+                if (!in_array($config['companyData']['country'], [$country, null], true)) {
+                    continue;
+                }
+
+                foreach ($migrations as $legacyName => $configKey) {
+                    if (!empty($config['companyData'][$configKey]) || empty($legalNumbers[$legacyName])) {
+                        continue;
+                    }
+                    $config['companyData'][$configKey] = $legalNumbers[$legacyName];
+                }
+            }
+        }
+
+        // - Rétro-compatibilité: `'companyData'` => `'organization'`.
+        if (array_key_exists('companyData', $config)) {
+            $config['organization'] = array_replace(
+                $config['organization'] ?? [],
+                $config['companyData'],
+            );
+            unset($config['companyData']);
+        }
+
+        // - Rétro-compatibilité: `'legacy' => ['companyData']` => `'legacy' => ['organization']`.
+        if (Arr::has($config, 'legacy.companyData')) {
+            Arr::set($config, 'legacy.organization', Arr::pull($config, 'legacy.companyData'));
+        }
+
+        // - Rétro-compatibilité: Champs supprimés.
+        Arr::forget($config, [
+            'httpAuthHeader',
+            'db.options',
+            'db.charset',
+            'db.collation',
+        ]);
+
+        // - Données legacy.
+        $legacyData = [
+            'defaultTags',
+            'organization.vatRate',
+            'degressiveRateFunction',
+        ];
+        foreach ($legacyData as $legacyField) {
+            if (!Arr::has($config, $legacyField)) {
+                continue;
+            }
+
+            Arr::set(
+                $config,
+                sprintf('legacy.%s', $legacyField),
+                Arr::pull($config, $legacyField),
+            );
+        }
+
+        return $config;
+    }
+
+    /**
+     * Indique si la configuration existe mais n'est plus au format de la version
+     * courante de l'application (une migration de la configuration est requise).
+     *
+     * @return bool `true` si la configuration n'est pas à jour, `false` sinon.
+     */
+    public static function isOutdated(): bool
+    {
+        return static::customConfigExists() && !static::isValid();
+    }
+
+    /**
+     * Indique si une configuration est potentiellement valide.
+     *
+     * @param array|null $config La configuration à valider, ou `null` pour valider la
+     *                           configuration personnalisée courante.
+     *
+     * @return bool `true` si la configuration est valide, `false` sinon.
+     */
+    public static function isValid(?array $config = null): bool
+    {
+        $config ??= static::customConfigExists() ? static::getCustomConfig() : [];
+        $isValid = static function (array $config, ?string $path = null) use (&$isValid): bool {
+            $schema = $path !== null ? Arr::getOptional(self::SCHEMA, $path) : self::SCHEMA;
+            foreach ($schema as $field => $type) {
+                $isRequired = substr($field, -1) !== '?';
+                $field = rtrim($field, '?');
+
+                $value = $config[$field] ?? null;
+                if ($value === null) {
+                    if ($isRequired) {
+                        return false;
+                    }
+                    continue;
+                }
+
+                if (is_array($type)) {
+                    $childPath = ($path !== null ? sprintf('%s.', $path) : '') . $field;
+                    if (!is_array($value) || !$isValid($value, $childPath)) {
+                        return false;
+                    }
+                    continue;
+                }
+
+                if (is_a($type, \BackedEnum::class, true) || is_a($type, EnumFactory::class, true)) {
+                    $enumClass = is_a($type, EnumFactory::class, true) ? $type::getEnumInterface() : $type;
+                    $isEnumValid = (
+                        $value instanceof $enumClass ||
+                        (is_string($value) && $type::tryFrom($value) !== null)
+                    );
+                    if (!$isEnumValid) {
+                        return false;
+                    }
+                    continue;
+                }
+
+                $functionTest = sprintf('is_%s', $type);
+                if (!$functionTest($value)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        return $isValid($config);
     }
 }
