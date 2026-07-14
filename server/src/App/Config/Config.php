@@ -459,6 +459,7 @@ final class Config
 
     private const SCHEMA = [
         'baseUrl' => 'string',
+        'mainCountry' => 'string',
         'enableCORS?' => 'bool',
         'JWTSecret' => 'string',
         'sessionExpireHours?' => 'int',
@@ -469,6 +470,7 @@ final class Config
         'currency' => 'string',
         'db?' => 'array',
         'organization' => [
+            'name' => 'string',
             'legalType?' => LegalTypeFactory::class,
             'isVatExempted?' => 'bool',
             'vatExemptionCode?' => VatExemptionCodeFactory::class,
