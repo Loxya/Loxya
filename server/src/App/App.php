@@ -173,13 +173,19 @@ final class App
 
     protected function configureMiddlewares(): void
     {
+        $isContainerized = isContainerized();
+
         // NOTE: Les middlewares sont appelés du dernier ajouté au premier.
         $this->app->add(Middlewares\Pagination::class);
         $this->app->add(Middlewares\Acl::class);
         $this->app->add([$this->container->get('auth'), 'middleware']);
         $this->app->add(Middlewares\InstallCheck::class);
         $this->app->add(new Middlewares\BodyParser());
-        $this->app->add(new IpAddressMiddleware(isContainerized(), null, 'ip'));
+        $this->app->add(new IpAddressMiddleware(
+            $isContainerized,
+            $isContainerized ? [] : null,
+            'ip',
+        ));
         $this->app->add(Middlewares\SessionStart::class);
     }
 
