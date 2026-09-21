@@ -23,15 +23,12 @@ ENV LOXYA_CONTAINERIZED=true
 # - Persistent / Runtime dependencies
 RUN set -eux; \
     apk add --no-cache \
-        autoconf \
-        gcc \
         curl \
         nginx \
         supervisor \
         tzdata \
         unzip \
         dcron \
-        logrotate \
         fontconfig \
         ttf-dejavu \
         jq;
@@ -73,15 +70,12 @@ RUN set -eux; \
     chown -R loxya:loxya /home/loxya; \
     chown -R loxya:loxya /run;
 
-# - Rotation des logs
-COPY ./config/logrotate /etc/logrotate.d/loxya
-
 # - PHP Extension Installer
 COPY --from=mlocati/php-extension-installer:2.9.20 /usr/bin/install-php-extensions /usr/local/bin/
 
 # - PHP extensions
 RUN \
-    --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/cache/apk \
     install-php-extensions \
         apcu \
         bcmath \
@@ -184,6 +178,8 @@ COPY --from=composer:2.9.2 /usr/bin/composer /usr/bin/composer
 WORKDIR /opt/loxya
 
 FROM app-base AS app-release
+
+RUN echo 'opcache.validate_timestamps = 0' >> ${PHP_INI_DIR}/conf.d/custom.ini
 
 RUN set -eux; \
     mkdir -p \

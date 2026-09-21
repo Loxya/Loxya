@@ -89,7 +89,7 @@ if [ -f "$LOXYA_CRON_SOURCE" ]; then
             schedule="$minute $hour $day $month $weekday"
         fi
 
-        full_command="OUTPUT=\`/opt/loxya/bin/console $command 2>&1\` || echo \"[ERROR] \$(date) - \$OUTPUT\" >> /var/loxya/logs/cron.log; exit 0"
+        full_command="OUTPUT=\`/opt/loxya/bin/console $command 2>&1\` || echo \"[ERROR] \$(date) - \$OUTPUT\" >&2; exit 0"
         echo "$schedule $full_command" >> "$LOXYA_CRON_PATH"
     done
 

@@ -157,6 +157,7 @@ cd "$ROOT"
 
 echo -e "\e[1m\e[34m-> Création de l'image Docker liée...\e[0m"
 docker build \
+    --pull \
     --platform linux/amd64 \
     --target app-release \
     --build-context source="$BUILD_PATH" \
