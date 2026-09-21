@@ -80,34 +80,32 @@ COPY ./config/logrotate /etc/logrotate.d/loxya
 COPY --from=mlocati/php-extension-installer:2.9.20 /usr/bin/install-php-extensions /usr/local/bin/
 
 # - PHP extensions
-RUN \
-    --mount=type=cache,target=/var/cache/apt \
-    install-php-extensions \
-        apcu \
-        bcmath \
-        curl \
-        dom \
-        fileinfo \
-        ftp \
-        gd \
-        gettext \
-        iconv \
-        imagick \
-        intl \
-        json \
-        mbstring \
-        mysqli \
-        opcache \
-        openssl \
-        pcre \
-        pdo \
-        pdo_mysql \
-        soap \
-        sockets \
-        ssh2 \
-        xml \
-        xsl \
-        zip
+RUN install-php-extensions \
+    apcu \
+    bcmath \
+    curl \
+    dom \
+    fileinfo \
+    ftp \
+    gd \
+    gettext \
+    iconv \
+    imagick \
+    intl \
+    json \
+    mbstring \
+    mysqli \
+    opcache \
+    openssl \
+    pcre \
+    pdo \
+    pdo_mysql \
+    soap \
+    sockets \
+    ssh2 \
+    xml \
+    xsl \
+    zip
 
 # - PHP Configuration
 COPY ./config/php.ini ${PHP_INI_DIR}/conf.d/custom.ini

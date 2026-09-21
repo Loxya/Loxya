@@ -128,7 +128,7 @@ echo "[Entrypoint] Migration de la configuration et de la base de données..."
 if [ ! -s "/etc/loxya/settings.json" ]; then
     echo "=> Application non configurée, migrations ignorées."
 else
-    if run_console "migrations:migrate --no-interaction"; then
+    if run_console "migrations:migrate"; then
         migrate_status=0
     else
         migrate_status=$?
